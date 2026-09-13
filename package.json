@@ -2,8 +2,13 @@
   "name": "comal-local",
   "version": "0.2.0",
   "private": true,
+  "description": "Sistema local de turnos listos para recoger de Comal++.",
+  "author": "Comal++",
   "type": "module",
-  "engines": { "node": ">=22.13.0" },
+  "main": "electron/main.cjs",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:client": "vite --host 127.0.0.1",
@@ -11,7 +16,10 @@
     "build": "tsc --noEmit -p tsconfig.json && vite build && tsc -p tsconfig.server.json",
     "start": "node build/server/main.js",
     "start:server": "tsx server/main.ts",
-    "test": "tsx --test tests/*.test.ts"
+    "desktop": "electron .",
+    "desktop:build": "npm run build && electron-builder --win",
+    "desktop:dir": "npm run build && electron-builder --dir",
+    "test": "tsx --tsconfig tests/backend.tsconfig.json --test tests/*.test.ts"
   },
   "dependencies": {
     "@fontsource/montserrat": "^5.2.6",
@@ -34,9 +42,28 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.3",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^7.1.5"
+  },
+  "build": {
+    "appId": "mx.uaq.comal.local",
+    "productName": "Comal++",
+    "directories": { "output": "release" },
+    "files": ["dist/**/*", "build/**/*", "electron/**/*", "package.json"],
+    "extraResources": [
+      { "from": "data/music", "to": "data/music", "filter": ["**/*"] }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

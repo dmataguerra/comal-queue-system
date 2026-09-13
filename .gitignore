@@ -8,3 +8,5 @@ data/*.db-*
 .env
 *.log
 test-results/
+release/
+release-test/
