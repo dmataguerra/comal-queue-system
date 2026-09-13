@@ -13,11 +13,6 @@
 .sidebar-display > .icon { width: 18px; height: 18px; }.sidebar-display > .icon:last-child { width: 12px; height: 12px; margin-left: auto; color: #7388aa; }
 .sidebar-display:hover { color: #e1e9f8; }
 .sidebar-bottom { margin-top: auto; padding-top: 35px; }
-.sidebar-coffee { margin: 0 12px 28px; padding: 23px 0; }
-.sidebar-coffee > .icon { width: 24px; height: 24px; color: #8aa1c6; margin-bottom: 14px; }
-.sidebar-coffee p { color: #a4b4cc; font-size: 17px; line-height: 1.5; letter-spacing: -.6px; }
-.sidebar-coffee p strong { font-weight: 500; color: #dce5f5; }
-.sidebar-coffee > span { display: block; margin-top: 16px; color: #71839e; font-size: 9px; letter-spacing: 1.3px; }
 .sidebar-session { display: flex; gap: 10px; padding: 21px 6px; border-top: 1px solid var(--line); align-items: center; }
 .session-avatar { width: 33px; height: 33px; border-radius: 11px; background: #1a2740; border: 1px solid #b2c9f117; display: grid; place-items: center; }.session-avatar .icon { width: 16px; height: 16px; color: #9eb3d4; }
 .sidebar-session strong,.sidebar-session div > span { display: block; }.sidebar-session strong { font-size: 11px; font-weight: 500; color: #d1dcec; }.sidebar-session div > span { font-size: 10px; color: #8192ad; margin-top: 3px; }

@@ -24,7 +24,6 @@ export function CashierPage(){
    <nav aria-label="Navegación principal">{([['turns','receipt','Turnos'],['multimedia','media','Multimedia'],['settings','settings','Configuración']] as const).map(([id,icon,label]) => <button className={page===id?'active':''} onClick={()=>{setPage(id);window.scrollTo({top:0});}} key={id} aria-current={page===id?'page':undefined} aria-label={label} title={label}><Icon name={icon}/><span>{label}</span>{page===id&&<i className="nav-active-dot"/>}</button>)}</nav>
    <a className="sidebar-display" href="/pantalla" target="_blank" rel="noopener"><Icon name="monitor"/><span>Pantalla pública</span><Icon name="external"/></a>
    <div className="sidebar-bottom">
-    <div className="sidebar-coffee"><Icon name="coffee"/><p>El café también<br/><strong>nos une.</strong></p><span>COMAL++ · CAFETERÍA</span></div>
     <div className="sidebar-session"><span className="session-avatar"><Icon name="counter"/></span><div><strong>Estación de caja</strong><span>Operación local</span></div></div>
    </div>
   </aside>
