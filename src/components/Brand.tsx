@@ -1,1 +1,1 @@
-export function Brand({compact=false}:{compact?:boolean}){return <div className={`brand ${compact?'brand-compact':''}`}><div className="brand-stroke"/><strong>COMAL <span>++</span></strong><p>Sistema de turnos</p></div>;}
+export function Brand({compact=false}:{compact?:boolean}){return <div className={`brand ${compact?'brand-compact':''}`}><span className="brand-mark" aria-hidden="true">c<span>++</span></span><div className="brand-wordmark"><strong>COMAL<span>++</span></strong><p>Sistema de turnos</p></div></div>;}

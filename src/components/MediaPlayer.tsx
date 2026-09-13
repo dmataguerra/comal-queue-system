@@ -49,7 +49,7 @@ export function MediaPlayer({config,playlists,ducked,audioEnabled}:Props){
  function resume(){if(config.type==='youtube'){if(error){setRetry(x=>x+1);return;}player.current?.playVideo();if(audioEnabled&&!ducked&&!config.muted)player.current?.unMute();setBlocked(false);}else{void audio.current?.play().then(()=>setBlocked(false));}}
  const fallback=config.type!=='youtube'||!online||Boolean(error);
  return <div className="media-stage" data-media-type={config.type} data-muted={ducked||config.muted||!audioEnabled} data-playback-time={playbackTime.toFixed(1)} data-player-status={playerStatus}>
-  <div className={`coffee-fallback ${fallback?'visible':''}`} role="img" aria-label="Café servido en una cafetería"/>
+  <div className={`coffee-fallback ${fallback?'visible':''}`} role="img" aria-hidden={!fallback} aria-label="Café servido en una cafetería"/>
   {config.type==='youtube'&&online&&<div ref={host} className={`youtube-host ${error?'has-error':''}`} aria-label="Reproductor de YouTube"/>}
   {config.type==='local'&&track&&<audio ref={audio} src={track.url} preload="auto" onEnded={()=>setTrackIndex(index=>(index+1)%tracks.length)} onError={()=>{setError('No se pudo reproducir esta pista local. Comprueba el archivo en la biblioteca.');}}/>}
   {config.type==='local'&&track&&<div className="local-now-playing"><Icon name="music"/><div><span>{playlist?.name}</span><strong>{track.title}</strong></div><span className={`equalizer ${config.playing?'playing':''}`} aria-label={config.playing?'Música en reproducción':'Música en pausa'}><i/><i/><i/><i/></span></div>}
