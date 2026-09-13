@@ -2,8 +2,8 @@ import {useEffect,useRef,useState} from 'react';
 import type {Multimedia,Playlist,YouTubePlayer} from '../types';
 import {loadYouTubeAPI,parseYouTube} from '../services/youtube';
 import {Icon} from './Icon';
-interface Props {config:Multimedia;playlists:Playlist[];ducked:boolean;audioEnabled:boolean}
-export function MediaPlayer({config,playlists,ducked,audioEnabled}:Props){
+interface Props {config:Multimedia;playlists:Playlist[];ducked:boolean;audioEnabled:boolean;onYoutubeActivityChange?:(active:boolean)=>void}
+export function MediaPlayer({config,playlists,ducked,audioEnabled,onYoutubeActivityChange}:Props){
  const host=useRef<HTMLDivElement>(null),player=useRef<YouTubePlayer|null>(null),audio=useRef<HTMLAudioElement>(null);
  const [error,setError]=useState(''),[blocked,setBlocked]=useState(false),[youtubeReady,setYoutubeReady]=useState(false),[trackIndex,setTrackIndex]=useState(0),[retry,setRetry]=useState(0);
  const [playerStatus,setPlayerStatus]=useState(''),[playbackTime,setPlaybackTime]=useState(0);
@@ -11,6 +11,8 @@ export function MediaPlayer({config,playlists,ducked,audioEnabled}:Props){
  const latest=useRef({config,ducked,audioEnabled});latest.current={config,ducked,audioEnabled};
  const previousMute=useRef<{muted:boolean;volume:number}|null>(null);
  const playlist=playlists.find(p=>p.id===config.playlistId),tracks=playlist?.tracks??[],track=tracks[trackIndex%Math.max(1,tracks.length)];
+ const youtubeActive=config.type==='youtube'&&Boolean(config.url)&&config.playing&&online&&youtubeReady&&!error&&!blocked&&playerStatus==='Reproduciendo';
+ useEffect(()=>{onYoutubeActivityChange?.(youtubeActive);return()=>onYoutubeActivityChange?.(false);},[youtubeActive,onYoutubeActivityChange]);
  useEffect(()=>{const yes=()=>setOnline(true),no=()=>setOnline(false);window.addEventListener('online',yes);window.addEventListener('offline',no);return()=>{window.removeEventListener('online',yes);window.removeEventListener('offline',no);};},[]);
  useEffect(()=>{setTrackIndex(0);setError('');setBlocked(false);},[config.type,config.playlistId,config.url]);
  useEffect(()=>{
@@ -47,7 +49,7 @@ export function MediaPlayer({config,playlists,ducked,audioEnabled}:Props){
  },[config.playing,config.type,track?.url,audioEnabled]);
  useEffect(()=>{const id=setInterval(()=>{if(config.type==='youtube'&&player.current?.getCurrentTime)setPlaybackTime(player.current.getCurrentTime());else if(config.type==='local'&&audio.current)setPlaybackTime(audio.current.currentTime);},500);return()=>clearInterval(id);},[config.type]);
  function resume(){if(config.type==='youtube'){if(error){setRetry(x=>x+1);return;}player.current?.playVideo();if(audioEnabled&&!ducked&&!config.muted)player.current?.unMute();setBlocked(false);}else{void audio.current?.play().then(()=>setBlocked(false));}}
- const fallback=config.type!=='youtube'||!online||Boolean(error);
+ const fallback=config.type!=='youtube'||!config.playing||!online||Boolean(error)||blocked;
  return <div className="media-stage" data-media-type={config.type} data-muted={ducked||config.muted||!audioEnabled} data-playback-time={playbackTime.toFixed(1)} data-player-status={playerStatus}>
   <div className={`coffee-fallback ${fallback?'visible':''}`} role="img" aria-hidden={!fallback} aria-label="Café servido en una cafetería"/>
   {config.type==='youtube'&&online&&<div ref={host} className={`youtube-host ${error?'has-error':''}`} aria-label="Reproductor de YouTube"/>}

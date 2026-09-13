@@ -13,7 +13,7 @@ const fallback: Multimedia = {type:'fallback',url:null,playlistId:null,playing:f
 export function PublicPage() {
   const {state, connected} = useSystem();
   const {current, audioEnabled, audioError, enableAudio} = useAnnouncements();
-  const [page, setPage] = useState(0), [controls, setControls] = useState(false);
+  const [page, setPage] = useState(0), [youtubeActive, setYoutubeActive] = useState(false);
   const turns = state?.turns ?? [], pages = Math.max(1, Math.ceil(turns.length / 5));
   useEffect(() => { setPage(0); }, [turns[0]?.id, turns[0]?.lastAnnouncedAt]);
   useEffect(() => {
@@ -23,12 +23,10 @@ export function PublicPage() {
   }, [pages, state?.settings.autoRotate]);
   const visible = turns.slice((page % pages) * 5, (page % pages) * 5 + 5);
   const latest = turns[0];
+  const multimedia = state?.multimedia ?? fallback;
   useEffect(() => { document.title = 'Comal++ · Turnos listos'; }, []);
 
-  return <div className={`public-screen ${current ? 'is-announcing' : ''}`}>
-    <section className="public-media" aria-label="Multimedia y anuncios">
-      <MediaPlayer config={state?.multimedia ?? fallback} playlists={state?.playlists ?? []} ducked={Boolean(current)} audioEnabled={audioEnabled}/>
-    </section>
+  return <div className={`public-screen ${current ? 'is-announcing' : ''} ${youtubeActive ? 'has-active-youtube' : 'has-media-fallback'}`}>
     <section className="public-queue glass-panel" aria-labelledby="public-title">
       <header className="public-queue-heading">
         <div className="public-title-row"><h1 id="public-title">Turnos listos</h1></div>
@@ -45,7 +43,9 @@ export function PublicPage() {
       </div>
       <div className="public-queue-bottom"><span><Icon name="receipt"/>Presenta tu ticket al recoger</span>{pages > 1 && <div className="public-pagination"><span>{page % pages + 1} / {pages}</span>{state?.settings.autoRotate === false && <button onClick={() => setPage(p => (p + 1) % pages)} aria-label="Siguiente página de turnos"><Icon name="arrow"/></button>}</div>}</div>
     </section>
-    <section className="public-focus" aria-label="Último llamado">
+    <section className="public-media-frame" aria-label="Multimedia y anuncios">
+      <div className="public-media"><MediaPlayer config={multimedia} playlists={state?.playlists ?? []} ducked={Boolean(current)} audioEnabled={audioEnabled} onYoutubeActivityChange={setYoutubeActive}/></div>
+      {(current || !youtubeActive) && <section className="public-focus" aria-label={current?'Anuncio de turno':'Contenido de espera'}>
       {current ? <div className="announcement-backdrop" role="status" aria-live="assertive" aria-atomic="true">
         <div className="announcement-card glass-panel" key={current.id}>
           <StatusBadge tone="ready">Tu pedido está listo</StatusBadge>
@@ -56,13 +56,11 @@ export function PublicPage() {
           <p><Icon name="receipt"/>Presenta tu ticket en el mostrador</p>
         </div>
       </div> : <div className="public-resting">
-        {latest ? <div className="latest-call glass-panel" key={`${latest.id}-${latest.lastAnnouncedAt}`}><div><span className="eyebrow">ÚLTIMO LLAMADO</span><strong>{latest.number}</strong></div><div className="latest-call-copy">{latest.counter !== 0 ? <CounterLabel counter={latest.counter}/> : <span>Acércate por tu pedido</span>}<p>Disfruta tu momento.</p></div><Icon name="arrow"/></div> : <div className="welcome-copy"><span className="eyebrow">BIENVENIDO A COMAL++</span><h2>El café también<br/>nos une.</h2><p>Un momento para ti, mientras esperas.</p></div>}
+        <div className="welcome-copy"><span className="eyebrow">BIENVENIDO A COMAL++</span><h2>El café también<br/>nos une.</h2><p>Un momento para ti, mientras esperas.</p></div>
+        {latest && <div className="latest-call glass-panel" key={`${latest.id}-${latest.lastAnnouncedAt}`}><div><span className="eyebrow">ÚLTIMO LLAMADO</span><strong>{latest.number}</strong></div><div className="latest-call-copy">{latest.counter !== 0 ? <CounterLabel counter={latest.counter}/> : <span>Acércate por tu pedido</span>}<p>Disfruta tu momento.</p></div><Icon name="arrow"/></div>}
       </div>}
+      </section>}
     </section>
-    <div className={`public-tools ${controls ? 'show' : ''}`}>
-      <button className="public-tool-toggle" onClick={() => setControls(c => !c)} aria-label="Opciones de la pantalla" aria-expanded={controls} aria-controls="display-options"><Icon name="settings"/></button>
-      <div className="public-tool-options" id="display-options"><a href="/" className="icon-button" aria-label="Panel del cajero"><Icon name="ticket"/></a><button className="icon-button" onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})} aria-label="Pantalla completa"><Icon name="expand"/></button><button className="icon-button" onClick={enableAudio} aria-label="Activar audio"><Icon name="volume"/></button></div>
-    </div>
     <div className="display-notices">
       {!audioEnabled && <button className="audio-activation" onClick={enableAudio}><Icon name="volume"/>Activar audio de esta pantalla<Icon name="arrow"/></button>}
       {audioError && <div className="audio-warning" role="alert">{audioError}</div>}
