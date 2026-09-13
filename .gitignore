@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+data/*.sqlite
+data/*.sqlite-*
+data/*.db
+data/*.db-*
+.env
+*.log
+test-results/
