@@ -6,7 +6,8 @@ export function PublicFooter({messages}:{messages:string[]}){
  const tickerMessages=messages.length?messages:['Presenta tu ticket al recoger tu pedido'];
  const duration=Math.max(28,Math.min(72,tickerMessages.join(' ').length*.32+24));
  const sequence=(hidden=false)=><div className="footer-ticker-sequence" aria-hidden={hidden||undefined}>
-  <span className="footer-brand"><span className="footer-brand-mark">C<sup>++</sup></span><span>COMAL++</span></span>
+  <span className="footer-brand"><span className="footer-logo-plate troyanos"><img src="/assets/troyanos-logo.png" alt="Troyanos · Facultad de Informática UAQ"/></span></span>
+  <span className="footer-brand"><span className="footer-logo-plate uaq"><img src="/assets/uaq-informatica-logo.png" alt="Universidad Autónoma de Querétaro · Facultad de Informática"/></span></span>
   <span className="footer-ticker-item"><Icon name="calendar"/>{clock.date}</span>
   <span className="footer-ticker-item footer-time"><Icon name="clock"/><strong>{clock.time}</strong></span>
   {tickerMessages.map((message,index)=><span className="footer-ticker-item" key={`${index}-${message}`}><Icon name={index%2===0?'receipt':'coffee'}/>{message}</span>)}

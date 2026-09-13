@@ -24,7 +24,8 @@ export function PublicPage() {
   const visible = turns.slice((page % pages) * 5, (page % pages) * 5 + 5);
   const latest = turns[0];
   const multimedia = state?.multimedia ?? fallback;
-  useEffect(() => { document.title = 'Comal++ · Turnos listos'; }, []);
+  const footerMessages = (state?.settings.footerMessages ?? ['El café también nos une','Presenta tu ticket al recoger tu pedido']).map(message=>message.replace(/Comal\+\+/gi,'Troyanos'));
+  useEffect(() => { document.title = 'Troyanos · Turnos listos'; }, []);
 
   return <div className={`public-screen ${current ? 'is-announcing' : ''} ${youtubeActive ? 'has-active-youtube' : 'has-media-fallback'}`}>
     <section className="public-queue glass-panel" aria-labelledby="public-title">
@@ -56,7 +57,7 @@ export function PublicPage() {
           <p><Icon name="receipt"/>Presenta tu ticket en el mostrador</p>
         </div>
       </div> : <div className="public-resting">
-        <div className="welcome-copy"><span className="eyebrow">BIENVENIDO A COMAL++</span><h2>El café también<br/>nos une.</h2><p>Un momento para ti, mientras esperas.</p></div>
+        <div className="welcome-copy"><span className="welcome-logo-plate"><img src="/assets/uaq-informatica-logo.png" alt="Universidad Autónoma de Querétaro · Facultad de Informática"/></span><h2>El café también<br/>nos une.</h2><p>Un momento para ti, mientras esperas.</p></div>
         {latest && <div className="latest-call glass-panel" key={`${latest.id}-${latest.lastAnnouncedAt}`}><div><span className="eyebrow">ÚLTIMO LLAMADO</span><strong>{latest.number}</strong></div><div className="latest-call-copy">{latest.counter !== 0 ? <CounterLabel counter={latest.counter}/> : <span>Acércate por tu pedido</span>}<p>Disfruta tu momento.</p></div><Icon name="arrow"/></div>}
       </div>}
       </section>}
@@ -66,6 +67,6 @@ export function PublicPage() {
       {audioError && <div className="audio-warning" role="alert">{audioError}</div>}
       {!connected && <div className="public-connection-warning" role="alert"><Icon name="warning"/>{state ? 'Sin conexión local. La información puede estar desactualizada. Consulta en caja.' : 'Conectando con el servidor local…'}</div>}
     </div>
-    <PublicFooter messages={state?.settings.footerMessages ?? ['El café también nos une','Presenta tu ticket al recoger tu pedido']}/>
+    <PublicFooter messages={footerMessages}/>
   </div>;
 }

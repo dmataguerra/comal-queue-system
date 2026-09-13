@@ -28,7 +28,7 @@ export function CashierPage(){
    </div>
   </aside>
   <div className="admin-workspace">
-   <header className="admin-topbar"><div className="breadcrumb">Comal++<Icon name="chevron"/><span>{titles[page][0]}</span></div><span className={`connection-status ${connected?'connected':'disconnected'}`}><i/>{connected?'Conectado':'Sin conexión local'}</span><span className="topbar-divider"/><label className="automatic-view">Vista automática<button className={`switch ${state?.settings.autoRotate!==false?'on':''}`} role="switch" aria-checked={state?.settings.autoRotate!==false} aria-label="Vista automática" disabled={!connected} onClick={async()=>{try{await api.settings({autoRotate:state?.settings.autoRotate===false});}catch(e){notify((e as Error).message,true);}}}><span/></button></label></header>
+   <header className="admin-topbar"><div className="breadcrumb">Troyanos<Icon name="chevron"/><span>{titles[page][0]}</span></div><span className={`connection-status ${connected?'connected':'disconnected'}`}><i/>{connected?'Conectado':'Sin conexión local'}</span><span className="topbar-divider"/><label className="automatic-view">Vista automática<button className={`switch ${state?.settings.autoRotate!==false?'on':''}`} role="switch" aria-checked={state?.settings.autoRotate!==false} aria-label="Vista automática" disabled={!connected} onClick={async()=>{try{await api.settings({autoRotate:state?.settings.autoRotate===false});}catch(e){notify((e as Error).message,true);}}}><span/></button></label></header>
    <main id="admin-main" className="admin-main" tabIndex={-1}>
     <div className="page-heading"><div><span className="eyebrow">{page==='turns'?'OPERACIÓN DIARIA':page==='multimedia'?'PANTALLAS Y SONIDO':'TU ESPACIO'}</span><h1>{titles[page][0]}</h1><p>{titles[page][1]}</p></div><div className="workspace-clock"><strong>{clock.time}</strong><span>{clock.date}</span></div></div>
     {!connected&&<div className="connection-banner" role="alert"><Icon name="warning"/><span>{state?'Se perdió la conexión local. Los turnos guardados siguen visibles; los cambios están deshabilitados.':'Conectando con el servidor local…'}</span></div>}
@@ -52,7 +52,7 @@ export function CashierPage(){
      </div>
      <MultimediaPanel notify={notify}/>
     </>:page==='multimedia'?<MultimediaPanel expanded notify={notify}/>:<SettingsPanel notify={notify}/>}
-    <footer className="workspace-footer"><span>Comal++ <i/> Hecho para compartir</span><span>El café también nos une.</span></footer>
+    <footer className="workspace-footer"><span>Facultad de Informática <i/> UAQ</span><span>Crear · crecer · consolidar</span></footer>
    </main>
   </div>
   {message&&page!=='turns'&&<div className={`toast ${isError?'error':''}`} role="status"><Icon name={isError?'warning':'checkCircle'}/>{message}</div>}

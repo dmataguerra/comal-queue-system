@@ -1,1 +1,1 @@
-export function Brand({compact=false}:{compact?:boolean}){return <div className={`brand ${compact?'brand-compact':''}`}><span className="brand-mark" aria-hidden="true">c<span>++</span></span><div className="brand-wordmark"><strong>COMAL<span>++</span></strong><p>Sistema de turnos</p></div></div>;}
+export function Brand({compact=false}:{compact?:boolean}){return <div className={`brand ${compact?'brand-compact':''}`}><span className="brand-logo-plate"><img className="brand-logo" src="/assets/troyanos-logo.png" alt="Troyanos · Facultad de Informática UAQ"/></span></div>;}
