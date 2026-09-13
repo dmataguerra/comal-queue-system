@@ -54,6 +54,7 @@
     "productName": "Comal++",
     "directories": { "output": "release" },
     "files": ["dist/**/*", "build/**/*", "electron/**/*", "package.json"],
+    "asarUnpack": ["dist/**/*", "build/**/*", "node_modules/**/*"],
     "extraResources": [
       { "from": "data/music", "to": "data/music", "filter": ["**/*"] }
     ],

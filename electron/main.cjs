@@ -8,7 +8,9 @@ let serverProcess;
 let isQuitting = false;
 
 function appRoot() {
-  return app.getAppPath();
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked')
+    : app.getAppPath();
 }
 
 function startServer() {
