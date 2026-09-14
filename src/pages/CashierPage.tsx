@@ -7,6 +7,7 @@ import {Icon} from '../components/Icon';
 import {ReadyList} from '../components/ReadyList';
 import {MultimediaPanel} from '../components/MultimediaPanel';
 import {SettingsPanel} from '../components/SettingsPanel';
+import {AnimatedBackground} from '../components/AnimatedBackground';
 import type {Counter} from '../types';
 export function CashierPage(){
  const {state,connected}=useSystem(),clock=useClock();const [page,setPage]=useState<'turns'|'multimedia'|'settings'>('turns');
@@ -17,6 +18,7 @@ export function CashierPage(){
  async function reannounce(e:React.FormEvent){e.preventDefault();const id=state?.turns.find(t=>t.id===repeat)?.id||state?.turns[0]?.id;if(!id||busy||!connected)return;setBusy(true);try{const turn=await api.announce(id,newRequestId());notify(`Turno ${turn.number} anunciado de nuevo.`);}catch(e){notify((e as Error).message,true);}finally{setBusy(false);}}
  const titles = {turns: ['Panel de caja', 'Cada pedido, en su momento.'], multimedia: ['Multimedia', 'El ambiente también es parte de la experiencia.'], settings: ['Configuración', 'Todo listo para una buena jornada.']};
  return <div className="admin-shell">
+  <AnimatedBackground/>
   <a href="#admin-main" className="skip-link">Ir al contenido</a>
   <aside className="sidebar">
    <Brand/>
@@ -28,7 +30,7 @@ export function CashierPage(){
    </div>
   </aside>
   <div className="admin-workspace">
-   <header className="admin-topbar"><div className="breadcrumb">Troyanos<Icon name="chevron"/><span>{titles[page][0]}</span></div><span className={`connection-status ${connected?'connected':'disconnected'}`}><i/>{connected?'Conectado':'Sin conexión local'}</span><span className="topbar-divider"/><label className="automatic-view">Vista automática<button className={`switch ${state?.settings.autoRotate!==false?'on':''}`} role="switch" aria-checked={state?.settings.autoRotate!==false} aria-label="Vista automática" disabled={!connected} onClick={async()=>{try{await api.settings({autoRotate:state?.settings.autoRotate===false});}catch(e){notify((e as Error).message,true);}}}><span/></button></label></header>
+   <header className="admin-topbar"><div className="breadcrumb">Troyanos<Icon name="chevron"/><span>{titles[page][0]}</span></div><span className={`connection-status ${connected?'connected':'disconnected'}`}><i/>{connected?'Conectado':'Sin conexión local'}</span><span className="topbar-divider"/><label className="automatic-view">Rotación de turnos<button className={`switch ${state?.settings.autoRotate!==false?'on':''}`} role="switch" aria-checked={state?.settings.autoRotate!==false} aria-label="Rotación automática de páginas de turnos" title="Cambia de página automáticamente cuando hay más de cinco turnos" disabled={!connected} onClick={async()=>{try{await api.settings({autoRotate:state?.settings.autoRotate===false});}catch(e){notify((e as Error).message,true);}}}><span/></button></label></header>
    <main id="admin-main" className="admin-main" tabIndex={-1}>
     <div className="page-heading"><div><span className="eyebrow">{page==='turns'?'OPERACIÓN DIARIA':page==='multimedia'?'PANTALLAS Y SONIDO':'TU ESPACIO'}</span><h1>{titles[page][0]}</h1><p>{titles[page][1]}</p></div><div className="workspace-clock"><strong>{clock.time}</strong><span>{clock.date}</span></div></div>
     {!connected&&<div className="connection-banner" role="alert"><Icon name="warning"/><span>{state?'Se perdió la conexión local. Los turnos guardados siguen visibles; los cambios están deshabilitados.':'Conectando con el servidor local…'}</span></div>}
