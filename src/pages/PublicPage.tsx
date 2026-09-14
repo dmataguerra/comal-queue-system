@@ -6,6 +6,7 @@ import {PublicFooter} from '../components/PublicFooter';
 import {MediaPlayer} from '../components/MediaPlayer';
 import {Icon} from '../components/Icon';
 import {StatusBadge} from '../components/StatusBadge';
+import {AnimatedBackground} from '../components/AnimatedBackground';
 import type {Multimedia} from '../types';
 
 const fallback: Multimedia = {type:'fallback',url:null,playlistId:null,playing:false,muted:false,volume:55};
@@ -28,6 +29,7 @@ export function PublicPage() {
   useEffect(() => { document.title = 'Troyanos · Turnos listos'; }, []);
 
   return <div className={`public-screen ${current ? 'is-announcing' : ''} ${youtubeActive ? 'has-active-youtube' : 'has-media-fallback'}`}>
+    <AnimatedBackground/>
     <section className="public-queue glass-panel" aria-labelledby="public-title">
       <header className="public-queue-heading">
         <div className="public-title-row"><h1 id="public-title">Turnos listos</h1></div>
