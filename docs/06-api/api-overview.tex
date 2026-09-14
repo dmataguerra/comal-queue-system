@@ -1,0 +1,24 @@
+\chapter{HTTP API}
+\section{API overview}
+
+The NestJS application exposes unversioned JSON routes below \Code{/api} and file delivery below \Code{/media}. There is no OpenAPI/Swagger definition, authentication, rate limiting, pagination metadata, request correlation header, or documented stability policy.
+
+\subsection*{Conventions}
+
+\begin{itemize}
+  \item JSON request bodies use \Code{Content-Type: application/json}; validators reject non-objects, arrays, and unknown fields.
+  \item The frontend uses relative URLs, an eight-second timeout, and displays the server's string \Code{message} when available.
+  \item POST creation returns Nest's default 201; recall and playlist refresh explicitly return 200. GET, PUT, and PATCH use 200 on success.
+  \item Turn IDs in paths are UUID strings in normal operation, but path syntax itself is not validated before database lookup.
+  \item All routes are unauthenticated and have no enforced role.
+\end{itemize}
+
+\subsection*{Base URLs}
+
+Development frontend requests are proxied from \Code{http://127.0.0.1:5173} to \Code{http://127.0.0.1:3001}. A built server serves API and UI from port 3001 by default. Host and port are configurable outside the Electron launcher.
+
+\subsection*{Realtime complement}
+
+HTTP mutations return their direct result, while every successful mutation also publishes a fresh \Code{state} Socket.IO event. Create and recall publish an additional \Code{announcement} unless the request is an idempotent replay.
+
+\Evidence{server/app.controller.ts; server/bootstrap.ts; src/services/api.ts; vite.config.ts}

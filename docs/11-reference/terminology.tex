@@ -1,0 +1,24 @@
+\chapter{Reference}
+\section{Terminology and naming rules}
+
+Use these names consistently in technical work:
+
+\begin{longtable}{p{0.27\textwidth}p{0.27\textwidth}p{0.36\textwidth}}
+\toprule
+Canonical documentation term & Source/UI aliases & Rule \\
+\midrule
+COMAL Queue & Comal++, \Code{comal-local}, Troyanos & Use COMAL Queue for the system until stakeholders choose final product branding; quote UI/package names when exact. \\
+Turn & turno, ready order, ticket record & Use ``turn'' for the stored queue entity; ``ticket number'' only for visible number. \\
+Ready & listo, listo para recoger & Only active status; do not call it waiting/preparing. \\
+Delivered & entregado & Terminal stored status; not deleted. \\
+Cancelled & retirado, capture error & Terminal stored status; avoid ``deleted'' unless discussing nonexistent physical deletion. \\
+Recall & volver a anunciar & Same ready entity, new rank/timestamp/announcement. \\
+Cashier workspace & panel de caja, admin workspace & Current combined operational/configuration page; not an authenticated admin console. \\
+Public display & pantalla pública, client display & Read-only React page at \Code{/pantalla}. \\
+Counter & mostrador, pickup point & Domain values 0/1/2; 0 means no assigned counter. \\
+Announcement & llamado, call & Ephemeral live event/overlay; not a turn status or table. \\
+Local service & servidor local & NestJS/Socket.IO process serving API and state. \\
+\bottomrule
+\end{longtable}
+
+The Spanish UI replaces configured occurrences of ``Comal++'' in footer messages with ``Troyanos'' at render time. This behavior is presentation-specific and should not be mistaken for data migration.

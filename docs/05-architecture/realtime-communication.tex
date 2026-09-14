@@ -1,0 +1,28 @@
+\section{Realtime communication}
+
+The application uses Socket.IO with WebSocket-only frontend transport. It does not use polling, SSE, Redis, or a message broker.
+
+\begin{longtable}{p{0.18\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.34\textwidth}}
+\toprule
+Event & Producer & Consumer & Payload/purpose \\
+\midrule
+\Code{state} & EventsGateway & all frontend views & Full \Code{AppState}: active turns, multimedia, catalog, settings. Emitted on connection and after every successful mutation/refresh. \\
+\Code{announcement} & EventsGateway & live frontend views & Announcement ID, turn ID, number, counter, ISO creation time. Emitted only after non-replayed create/recall. \\
+\Code{connect} & Socket.IO client runtime & SystemProvider & Marks the client connected; state normally follows from gateway connection handling. \\
+\Code{disconnect} / \Code{connect_error} & Socket.IO client runtime & SystemProvider & Marks disconnected; announcement queue is cleared by the public hook. \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Connection lifecycle}
+
+The client enables reconnection with delay starting at 800 ms and capped at 5 seconds. No custom connection authentication, namespace, room, heartbeat setting, maximum reconnect count, or application acknowledgement is defined. Socket.IO defaults apply where the repository is silent.
+
+\subsection*{Ordering and failure behavior}
+
+Full-state broadcasts reduce incremental reconciliation complexity. Announcement delivery is best effort: it is not persisted as an event stream, acknowledged, or replayed. The public hook serializes received announcements, discards duplicate IDs in a bounded in-memory set, skips events whose turn has closed, and aborts on disconnect. Multiple server processes would not share gateway broadcasts.
+
+\subsection*{Test evidence}
+
+The integration test connects two clients, verifies initial snapshots, one announcement for an idempotent retry, recall ordering, media state broadcast, reconnect restoration without old audio, and close propagation.
+
+\Evidence{server/events.gateway.ts; src/hooks/useSystem.tsx; src/hooks/useAnnouncements.ts; tests/backend.test.ts}

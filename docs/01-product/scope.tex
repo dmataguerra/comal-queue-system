@@ -1,0 +1,34 @@
+\section{Scope}
+
+\subsection*{Current scope}
+
+\begin{itemize}
+  \item \Implemented: manually create ready turns numbered \Code{01}--\Code{99}, with optional counter 1 or 2.
+  \item \Implemented: reject duplicate active numbers and safely replay identical create/announce requests.
+  \item \Implemented: reorder a recalled turn, edit its counter, mark it delivered, or cancel it.
+  \item \Implemented: persist turns, request records, multimedia selection, and display settings in local SQLite.
+  \item \Implemented: synchronize state and new announcement events through Socket.IO.
+  \item \Implemented: show up to five turns per public-display page, automatically or manually rotate pages, and display a visual announcement.
+  \item \Implemented: catalog and serve local music; configure fallback, local, or YouTube media.
+  \item \Implemented: build a Windows x64 NSIS Electron package.
+\end{itemize}
+
+\subsection*{Partial scope}
+
+\begin{itemize}
+  \item \Partial: public audio. Assets, sequencing, Web Audio playback, media ducking, and a cashier-side test exist, but the public display never calls the exposed audio-enablement function.
+  \item \Partial: multi-screen deployment. The server can bind to a configured host, but the packaged Electron launcher forces loopback. The historical three-screen configuration is not codified.
+  \item \Partial: administration. Media and display settings exist inside the cashier workspace, with no distinct administrator identity or permission boundary.
+  \item \Partial: history. The API returns the newest 200 records, but no history screen, filtering, export, retention, or purge exists.
+  \item \Partial: responsive and accessible presentation. Semantic labels, focus styling, a skip link, and reduced-motion CSS exist, but no automated accessibility or browser matrix is present.
+\end{itemize}
+
+\subsection*{Planned or evidenced scope}
+
+The old README calls for a defined backup/restore procedure and reliable offline voice announcements. Those are \Status{PLANNED_OR_REFERENCED}; no backup automation exists and public audio activation is incomplete. The repository contains unused mascot and reference image artifacts, but their mere presence is not treated as a committed feature.
+
+\subsection*{Explicitly documented out of scope}
+
+The previous README explicitly excludes preparation tracking, kitchen workflow, POS integration, charges, refunds, inventory, invoicing, item management, and ticket printing. Current source contains none of these capabilities. Cloud hosting and Internet access are not required for the core queue, although YouTube is an optional connected feature.
+
+\Evidence{server/state.service.ts; server/database.ts; server/events.gateway.ts; src/; electron/main.cjs; README.md at audit baseline}

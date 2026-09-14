@@ -1,0 +1,24 @@
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=25mm]{geometry}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!60!black}
+\setlist{nosep,leftmargin=*}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\newcommand{\Status}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\Code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\Evidence}[1]{\textbf{Evidence:} \Code{#1}}
+\newcommand{\Unknown}{\Status{Requires stakeholder validation}}
+\newcommand{\Confirmed}{\Status{CONFIRMED}}
+\newcommand{\Implemented}{\Status{IMPLEMENTED}}
+\newcommand{\Partial}{\Status{PARTIALLY_IMPLEMENTED}}
+\newcommand{\Missing}{\Status{NOT_IMPLEMENTED}}
+\newcommand{\Unclear}{\Status{UNCLEAR}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}

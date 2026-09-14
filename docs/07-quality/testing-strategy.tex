@@ -1,0 +1,39 @@
+\section{Testing strategy}
+
+\subsection*{Current automated testing}
+
+\Code{npm test} executes \Code{tests/backend.test.ts} through \Code{tsx} and Node's test runner. The five tests cover:
+\begin{enumerate}
+  \item ready lifecycle, ordering, duplicate/retry behavior, counter edit, closure, and number reuse;
+  \item malformed payloads and media/settings validation without unintended mutation;
+  \item SQLite persistence of turns, ordering, idempotency, media, and settings after reopen;
+  \item local catalog discovery and rejection of unlisted/traversal-like paths;
+  \item a real Nest HTTP server with two WebSocket clients, state/announcement broadcast, recall ordering, media broadcast, reconnect, close, and health.
+\end{enumerate}
+
+\Code{node tooling/audio/verify-audio.mjs} is a standalone asset check, not part of \Code{npm test}. TypeScript compilation is enforced by \Code{npm run build} but no type-check-only npm script exists.
+
+\subsection*{Current manual testing evidence}
+
+The superseded redesign note claimed manual viewport, offline, media, YouTube fallback, queue action, and audio activation checks. Those results are historical and not reproducible from a committed test script/report. Actual YouTube playback was explicitly unverified. They are not treated as current automated assurance.
+
+\subsection*{Critical untested workflows}
+
+Public audio activation/playback, React rendering/actions, public empty state, pagination, media duck/resume, autoplay policy, multiple real screens, browser compatibility, Electron install/upgrade, LAN exposure, corrupted/locked database recovery, large queues/history, settings UI/server-boundary mismatch, accessibility, and backup/restore.
+
+\subsection*{Recommended layers}
+
+Retain service/integration tests; add component tests for validation and controls, browser tests for two synchronized pages and audio activation with mocked media, packaged-app smoke tests, and operational recovery tests. Add load/security tests only after requirements are defined.
+
+\subsection*{How tests are run}
+
+\begin{verbatim}
+npm ci
+npm test
+npx tsc --noEmit -p tsconfig.json
+npx tsc --noEmit -p tsconfig.server.json
+node tooling/audio/verify-audio.mjs
+npm run build
+\end{verbatim}
+
+The final build command writes generated output; the preceding TypeScript commands are non-emitting checks.

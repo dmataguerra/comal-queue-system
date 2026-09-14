@@ -1,0 +1,26 @@
+\section{Requirements traceability}
+
+\small
+\begin{longtable}{p{0.14\textwidth}p{0.14\textwidth}p{0.25\textwidth}p{0.20\textwidth}p{0.13\textwidth}}
+\toprule
+Requirement & Story & Main implementation & API/event & Verification \\
+\midrule
+FR-QUEUE-001 & US-QUEUE-001 & \Code{CashierPage}; \Code{StateService.create} & \Code{POST /api/turns} & automated \\
+FR-QUEUE-002 & US-QUEUE-001 & service + \Code{one_active_number} & 409 conflict & automated \\
+FR-QUEUE-003 & US-QUEUE-001 & form, validation, update & POST/PATCH turns & automated backend \\
+FR-QUEUE-004 & US-QUEUE-002 & \Code{StateService.announce} & announce + state events & automated \\
+FR-QUEUE-005 & US-QUEUE-003/004 & \Code{ReadyList}; update & \Code{PATCH /api/turns/:id} & automated backend \\
+FR-QUEUE-008 & US-QUEUE-001/002 & requests table; replay/record & create/announce & automated \\
+FR-DISPLAY-001 & US-DISPLAY-001 & \Code{PublicPage} & state event & manual only \\
+FR-DISPLAY-002 & US-SET-001 & \Code{PublicPage}; topbar switch & settings + state & manual only \\
+FR-AUDIO-001 & US-AUDIO-001 & announcements/audio/media player & announcement event & incomplete \\
+FR-MEDIA-001 & US-MEDIA-001 & \Code{MediaService}; \Code{MediaPlayer} & refresh; media GET & backend automated \\
+FR-MEDIA-002 & US-MEDIA-001/002 & multimedia panel/service & multimedia PUT & automated backend \\
+FR-MEDIA-003 & US-MEDIA-002 & URL parsers/validation & multimedia PUT & automated backend \\
+FR-SYNC-001 & all live stories & \Code{EventsGateway}; \Code{useSystem} & state/announcement & integration automated \\
+FR-AUTH-001 & US-SEC-001 & none & all routes open & not implemented \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+``Automated backend'' does not imply browser behavior is covered. Test identifiers and manual gaps are detailed in \Code{07-quality/test-cases.tex}.

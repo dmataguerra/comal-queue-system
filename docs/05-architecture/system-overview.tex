@@ -1,0 +1,32 @@
+\chapter{Architecture}
+\section{System overview}
+
+COMAL Queue is a TypeScript monorepository without workspace packages. One React bundle provides cashier and public views. One NestJS process serves JSON endpoints, Socket.IO, local media, and the production SPA. SQLite and filesystem audio are local process dependencies.
+
+\begin{verbatim}
+Cashier browser / Electron window       Public display browser(s)
+              | HTTP mutations                  | read-only UI
+              +--------------+------------------+
+                             |
+                  NestJS + Socket.IO process
+                     |                 |
+                StateService       MediaService
+                     |                 |
+             SQLite Database       data/music files
+                             |
+          state snapshots + ephemeral announcement events
+
+Optional: Public browser -> YouTube IFrame API (Internet)
+\end{verbatim}
+
+\subsection*{Runtime modes}
+
+\textbf{Development:} \Code{npm run dev} starts the Nest server on 127.0.0.1:3001 and Vite on 127.0.0.1:5173; Vite proxies API, media, and Socket.IO paths.
+
+\textbf{Built server:} \Code{npm run build} generates the SPA and server JavaScript; \Code{npm start} serves both from port 3001 by default.
+
+\textbf{Electron:} a single-instance Windows desktop shell starts the compiled server on loopback, uses an application user-data SQLite path, loads the cashier root route, and stops the child server on quit.
+
+No cloud service, reverse proxy, container, authentication service, ORM, migration framework, job queue, analytics system, or observability platform is present.
+
+\Evidence{package.json; vite.config.ts; server/bootstrap.ts; electron/main.cjs}

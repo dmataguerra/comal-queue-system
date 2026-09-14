@@ -1,0 +1,31 @@
+\section{User stories}
+
+\subsection*{US-QUEUE-001 --- Record a ready ticket}
+\textbf{Status:} \Implemented. As a queue operator, I want to copy the existing ticket number when an order is ready so that waiting customers can see it. Related: FR-QUEUE-001/002/003.
+
+\subsection*{US-QUEUE-002 --- Repeat a call}
+\textbf{Status:} \Implemented. As a queue operator, I want to reannounce a ready turn without duplicating it so that a customer gets another prompt. Related: FR-QUEUE-004/008.
+
+\subsection*{US-QUEUE-003 --- Complete pickup}
+\textbf{Status:} \Implemented. As a queue operator, I want to mark a turn delivered so that it leaves the public ready list while remaining in history. Related: FR-QUEUE-005/006.
+
+\subsection*{US-QUEUE-004 --- Correct an erroneous capture}
+\textbf{Status:} \Implemented. As a queue operator, I want to confirm removal of a wrongly entered turn so that it no longer appears. Related: FR-QUEUE-005.
+
+\subsection*{US-DISPLAY-001 --- Identify a ready order}
+\textbf{Status:} \Implemented visually. As a waiting customer, I want to see large ready numbers and their pickup counters so that I can recognize my order. Related: FR-DISPLAY-001.
+
+\subsection*{US-AUDIO-001 --- Hear a call}
+\textbf{Status:} \Partial. As a waiting customer, I want to hear my number and pickup instruction so that I do not need to watch continuously. Playback code and assets exist, but the public display cannot enable them. Related: FR-AUDIO-001.
+
+\subsection*{US-MEDIA-001 --- Use local waiting media}
+\textbf{Status:} \Implemented with muted-audio limitation. As an operator, I want to select a local playlist so that the display has offline media. Related: FR-MEDIA-001/002.
+
+\subsection*{US-MEDIA-002 --- Use optional YouTube media}
+\textbf{Status:} \Implemented with environmental dependency. As an operator, I want to configure a YouTube video or playlist so that connected displays can play it without making queue operation depend on it. Related: FR-MEDIA-002/003/004.
+
+\subsection*{US-SET-001 --- Configure the display}
+\textbf{Status:} \Implemented. As an operator, I want to adjust announcement time, page rotation, and footer messages so that the display matches daily operation. Related: FR-SET-001.
+
+\subsection*{US-SEC-001 --- Restrict operational changes}
+\textbf{Status:} \Missing; stakeholder requirement not formalized. As an operator/owner, I may need mutations restricted to authorized staff. Related: FR-AUTH-001.

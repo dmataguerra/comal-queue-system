@@ -1,0 +1,19 @@
+\section{Backup and recovery}
+
+\Status{NOT_IMPLEMENTED} as an operational procedure.
+
+The durable state is a SQLite database plus operator-provided local music. In standalone mode the default database is \Code{data/comal.sqlite}; Electron stores \Code{comal.sqlite} in \Code{app.getPath('userData')}, whose resolved directory varies by platform/user. SQLite WAL mode means copying only the main file while the app is writing may produce an inconsistent/incomplete backup.
+
+\subsection*{Recovery facts}
+
+At normal restart, the database reopens, startup DDL ensures the current schema exists, and ready turns/configuration/request IDs are retained. Missing database creates an empty one. There is no corruption detection, automatic repair, backup discovery, restore UI/command, version compatibility check, or remote replica.
+
+\subsection*{Procedure requiring approval}
+
+Stakeholders must define what to back up (database, WAL/SHM where applicable, music, installer/config), frequency, retention, destination, access protection, recovery point/time, acceptable downtime, and who tests restores. A safe implementation should use SQLite's online backup mechanism or a controlled shutdown/checkpoint rather than an ad hoc live file copy. This is a recommendation, not an existing feature.
+
+\subsection*{Manual continuity}
+
+Printed tickets and verbal calls are the only repository-described contingency for service/power failure. The organization must validate and rehearse it.
+
+\Evidence{server/database.ts; electron/main.cjs; .gitignore; historical README}

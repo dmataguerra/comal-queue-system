@@ -1,0 +1,23 @@
+\section{Production considerations}
+
+The repository can produce runnable artifacts, but it does not establish production readiness.
+
+\subsection*{Required before operational acceptance}
+
+\begin{enumerate}
+  \item Fix and verify public-display audio activation on every target display/browser.
+  \item Approve physical/network topology and decide whether API authentication or isolation is required.
+  \item Define/test SQLite backup, restore, retention, integrity check, and upgrade migration.
+  \item Validate target Windows version, hardware, displays, speakers, browser/Electron autoplay behavior, storage, and power-loss recovery.
+  \item Add repeatable frontend/E2E/package smoke checks and a release checklist.
+  \item Decide process supervision, startup, logs/rotation, health monitoring, incident fallback, and ownership.
+  \item Resolve licensing for application, dependencies, logos/images, synthesized audio, and distribution.
+\end{enumerate}
+
+\subsection*{Capacity and reliability}
+
+No queue-size, client-count, latency, storage, uptime, or recovery target exists. Full snapshots contain all active turns and every catalog entry; history/requests grow in SQLite. Load testing is absent. Do not infer capacity from a successful two-client integration test.
+
+\subsection*{Operational fallback}
+
+The prior README proposes printed tickets and verbal calls when local service, link, or power fails. That is a documented manual fallback, not an implemented recovery system, and requires stakeholder validation/training.

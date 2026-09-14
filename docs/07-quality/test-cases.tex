@@ -1,0 +1,63 @@
+\section{Critical test cases}
+
+\subsection*{TC-QUEUE-001 --- Create and broadcast a ready turn}
+\textbf{Preconditions:} empty test database; two connected clients.
+\textbf{Steps:} POST valid number/counter/request ID; observe response and both sockets.
+\textbf{Expected:} 201, one ready row, state on both clients, one announcement.
+\textbf{Automation:} automated.
+
+\subsection*{TC-QUEUE-002 --- Reject active duplicate and allow closed reuse}
+\textbf{Preconditions:} number 01 ready.
+\textbf{Steps:} create 01 with another request ID; deliver original; create 01 again.
+\textbf{Expected:} first attempt 409; later creation succeeds with new UUID.
+\textbf{Automation:} automated at service level.
+
+\subsection*{TC-QUEUE-003 --- Idempotent request handling}
+\textbf{Steps:} submit identical create twice with one request ID, then reuse that ID with a different payload.
+\textbf{Expected:} exact replay returns same turn/announcement without second broadcast; mismatch returns 409.
+\textbf{Automation:} automated (broadcast checked for create).
+
+\subsection*{TC-QUEUE-004 --- Recall ordering}
+\textbf{Preconditions:} two ready turns.
+\textbf{Steps:} recall older turn.
+\textbf{Expected:} it receives newest rank/timestamp, sorts first, and emits one fresh announcement.
+\textbf{Automation:} automated.
+
+\subsection*{TC-QUEUE-005 --- Counter update and closure}
+\textbf{Steps:} change a ready turn to counter 1, mark delivered, then attempt a different update.
+\textbf{Expected:} counter is broadcast; delivered leaves snapshot; later mutation conflicts.
+\textbf{Automation:} service lifecycle automated; full UI manual.
+
+\subsection*{TC-SYNC-001 --- Reconnect without repeated call}
+\textbf{Steps:} create turns, disconnect a client, reconnect.
+\textbf{Expected:} restored snapshot contains ready turns and no historical announcement is emitted.
+\textbf{Automation:} automated.
+
+\subsection*{TC-PERSIST-001 --- Restart persistence}
+\textbf{Steps:} write turns/media/settings, close SQLite, reopen.
+\textbf{Expected:} snapshot and idempotency response remain equal.
+\textbf{Automation:} automated.
+
+\subsection*{TC-MEDIA-001 --- Catalog allow-list}
+\textbf{Steps:} add supported/unsupported files and custom genre, refresh, request listed and traversal-like keys.
+\textbf{Expected:} supported canonical files appear; unsupported/unlisted paths do not resolve.
+\textbf{Automation:} automated with fixture files.
+
+\subsection*{TC-MEDIA-002 --- YouTube fallback}
+\textbf{Steps:} configure valid YouTube, simulate offline/script/provider/blocked states.
+\textbf{Expected:} queue remains visible; carousel/notice appears; retry is offered where applicable.
+\textbf{Automation:} recommended browser test; current status manual/historical only.
+
+\subsection*{TC-AUDIO-001 --- Public announcement sequence}
+\textbf{Steps:} activate audio on public display, create two rapid turns with/without counters.
+\textbf{Expected:} calls play once, serially, number then suffix; media ducks and resumes.
+\textbf{Automation:} blocked by current missing public activation; required after fix.
+
+\subsection*{TC-AUTH-001 --- Prevent unauthorized mutation}
+\textbf{Expected requirement:} requires stakeholder definition.
+\textbf{Current result:} every caller with network access can mutate.
+\textbf{Automation:} not applicable until authentication/authorization is implemented.
+
+\subsection*{TC-RECOVERY-001 --- Backup and restore}
+\textbf{Steps/expected:} TBD pending an approved WAL-aware backup procedure and recovery objectives.
+\textbf{Automation:} not implemented.

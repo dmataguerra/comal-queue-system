@@ -1,0 +1,49 @@
+\section{Repository map}
+
+\begin{verbatim}
+comal-queue-system/
+|-- README.md                    concise Markdown entry point
+|-- docs/                        LaTeX product/process source of truth
+|   |-- technical-documentation.tex
+|   |-- preamble.tex
+|   |-- 01-product/ ... 11-reference/
+|-- src/
+|   |-- pages/                   cashier and public composition
+|   |-- components/              queue/media/settings/display UI
+|   |-- hooks/                   socket state, announcements, clock
+|   |-- services/                HTTP, YouTube, announcement audio
+|   `-- styles/                  base/admin/public CSS
+|-- server/
+|   |-- app.controller.ts        HTTP endpoints
+|   |-- state.service.ts         queue/config domain
+|   |-- database.ts              SQLite/schema
+|   |-- events.gateway.ts        Socket.IO
+|   |-- dto/validation.ts        input validation
+|   `-- media/media.service.ts   local catalog and allow-list
+|-- tests/backend.test.ts        all automated tests
+|-- electron/main.cjs            desktop shell/server lifecycle
+|-- scripts/dev.mjs              dev process orchestration
+|-- tooling/audio/               asset generation/verification
+|-- public/                      images, logos, announcement WAVs
+|-- data/music/                  local/demo music
+|-- package.json                 commands/dependencies/packaging
+|-- vite.config.ts               frontend build/dev proxies
+`-- tsconfig*.json               frontend/backend TypeScript
+\end{verbatim}
+
+\subsection*{Feature-to-code index}
+
+\begin{longtable}{p{0.30\textwidth}p{0.60\textwidth}}
+\toprule
+Question & Start here \\
+\midrule
+How is a turn created/closed? & \Code{server/state.service.ts}; \Code{server/dto/validation.ts}; \Code{src/pages/CashierPage.tsx}; \Code{ReadyList.tsx} \\
+How is state synchronized? & \Code{server/events.gateway.ts}; \Code{src/hooks/useSystem.tsx} \\
+How are calls queued/played? & \Code{src/hooks/useAnnouncements.ts}; \Code{src/services/announcementAudio.ts} \\
+How is media discovered/served? & \Code{server/media/media.service.ts}; \Code{MediaController} \\
+How is media rendered? & \Code{src/components/MediaPlayer.tsx}; \Code{src/services/youtube.ts} \\
+Where is the database model? & startup DDL in \Code{server/database.ts}; types in \Code{server/models/state.ts} \\
+What is tested? & \Code{tests/backend.test.ts}; \Code{tooling/audio/verify-audio.mjs} \\
+How is Windows packaged? & \Code{package.json} build block; \Code{electron/main.cjs} \\
+\bottomrule
+\end{longtable}

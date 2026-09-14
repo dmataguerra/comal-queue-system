@@ -1,0 +1,77 @@
+\section{Endpoints}
+
+\subsection*{GET /api/health}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} process readiness probe.
+\textbf{Response:} \Code{"ok": true, "service": "comal-local"}.
+\textbf{Related code:} \Code{AppController.health}; used by Electron startup.
+
+\subsection*{GET /api/state}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} return current ready turns, multimedia configuration, discovered playlists, and settings.
+\textbf{Response:} \Code{AppState}.
+\textbf{Notes:} the current frontend obtains this data from Socket.IO rather than this route.
+
+\subsection*{GET /api/history}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} return up to 200 turns of all statuses, ordered by rank descending.
+\textbf{Parameters:} none; no pagination/filtering.
+\textbf{Response:} \Code{Turn[]}.
+\textbf{Related code:} \Code{StateService.history}.
+
+\subsection*{POST /api/turns}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} create a turn directly in ready state and announce it.
+\textbf{Body:} \Code{number} (required exact two-digit string 01--99), \Code{counter} (optional 0/1/2, default 0), \Code{requestId} (required 8--100-character allow-listed string).
+\textbf{Success:} 201 with \Code{Turn}.
+\textbf{Errors:} 400 invalid/unknown fields; 409 active duplicate or mismatched request-ID reuse.
+\textbf{Side effects:} transactionally writes turn/request; emits state and, unless replayed, announcement.
+
+\subsection*{POST /api/turns/:id/announce}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} recall an active ready turn.
+\textbf{Body:} required \Code{requestId}.
+\textbf{Success:} 200 with updated \Code{Turn}.
+\textbf{Errors:} 400 invalid body; 404 unknown turn; 409 closed turn or mismatched request-ID reuse.
+\textbf{Side effects:} new rank/timestamp and request record; emits state and, unless replayed, announcement.
+
+\subsection*{PATCH /api/turns/:id}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} change counter and/or status.
+\textbf{Body:} at least one of \Code{counter} (0/1/2) and \Code{status} (ready/delivered/cancelled); unknown fields rejected.
+\textbf{Success:} 200 with \Code{Turn}.
+\textbf{Errors:} 400 invalid/empty body; 404 unknown turn; 409 attempt to change a closed turn.
+\textbf{Side effects:} updates turn and emits state; no announcement.
+
+\subsection*{PUT /api/multimedia}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} merge and persist multimedia configuration.
+\textbf{Body:} non-empty subset of \Code{type}, \Code{url}, \Code{playlistId}, \Code{playing}, \Code{volume}, \Code{muted}.
+\textbf{Success:} 200 with normalized \Code{Multimedia}.
+\textbf{Errors:} 400 for invalid type/value, invalid YouTube URL, missing/empty local playlist.
+\textbf{Normalization:} YouTube clears playlist ID; local clears URL; fallback clears both and forces stopped.
+\textbf{Side effects:} persists JSON and emits state.
+
+\subsection*{PUT /api/settings}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} merge and persist public-display settings.
+\textbf{Body:} non-empty subset of integer \Code{announcementSeconds} (3--30), boolean \Code{autoRotate}, and \Code{footerMessages} (1--10 nonblank strings, each at most 120 characters).
+\textbf{Success:} 200 with \Code{Settings}; messages are trimmed.
+\textbf{Errors:} 400 invalid/unknown/empty input.
+\textbf{Side effects:} persists JSON and emits state.
+
+\subsection*{POST /api/playlists/refresh}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} rescan configured music directories.
+\textbf{Body:} ignored; frontend sends an empty object.
+\textbf{Success:} 200 with \Code{Playlist[]}.
+\textbf{Side effects:} replaces in-memory catalog and emits state; does not persist catalog rows.
+
+\subsection*{GET /media/:genre/:filename}
+\textbf{Authentication/authorization:} none.
+\textbf{Purpose:} stream a file already present in the MediaService allow-list.
+\textbf{Success:} Express \Code{sendFile} response.
+\textbf{Errors:} 404 if key is absent or file no longer exists.
+\textbf{Security boundary:} route values are used only as a lookup key; the response path comes from the canonical catalog map.
+
+\Evidence{server/app.controller.ts; server/state.service.ts; server/dto/validation.ts; server/media/media.service.ts}

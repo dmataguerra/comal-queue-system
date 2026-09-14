@@ -1,0 +1,29 @@
+\section{Functional requirements}
+
+\begin{longtable}{p{0.15\textwidth}p{0.42\textwidth}p{0.17\textwidth}p{0.18\textwidth}}
+\toprule
+ID & Requirement & Status & Evidence \\
+\midrule
+FR-QUEUE-001 & Accept a manually entered ticket from \Code{01} through \Code{99} and create it directly as ready. & \Implemented & \Code{CashierPage.tsx}; \Code{state.service.ts} \\
+FR-QUEUE-002 & Reject a second ready turn with the same visible number. & \Implemented & partial unique index and service conflict \\
+FR-QUEUE-003 & Allow counter 0, 1, or 2 on creation and on an active turn. & \Implemented & validation, UI, service \\
+FR-QUEUE-004 & Reannounce only ready turns, raise their display rank, and emit a new call. & \Implemented & \Code{announce()} and tests \\
+FR-QUEUE-005 & Close a ready turn as delivered or cancelled and exclude it from active snapshots. & \Implemented & \Code{update()} and tests \\
+FR-QUEUE-006 & Permit reuse of a number after its prior turn closes, with a new internal ID. & \Implemented & tests and unique-index predicate \\
+FR-QUEUE-007 & Return up to 200 historical turns ordered by rank descending. & \Implemented & \Code{history()} \\
+FR-QUEUE-008 & Prevent repeated create/announce requests with the same ID from duplicating their mutation or announcement. & \Implemented & \Code{requests} table and tests \\
+FR-DISPLAY-001 & Show ready turns newest/recalled first, five per page, with counter or pickup text. & \Implemented & \Code{PublicPage.tsx} \\
+FR-DISPLAY-002 & Auto-rotate pages every eight seconds unless disabled; allow manual next-page action when disabled. & \Implemented & \Code{PublicPage.tsx} \\
+FR-DISPLAY-003 & Show each live announcement for at least the configured duration and serialize queued announcements. & \Implemented visually & \Code{useAnnouncements.ts} \\
+FR-AUDIO-001 & Play a bundled turn clip followed by a counter/ready suffix and duck media during the call. & \Partial & playback exists; public activation is unreachable \\
+FR-MEDIA-001 & Discover allow-listed local audio files by genre and serve only catalogued files. & \Implemented & \Code{MediaService}; tests \\
+FR-MEDIA-002 & Persist fallback/local/YouTube selection, playing state, volume, and mute. & \Implemented & validation/service/database \\
+FR-MEDIA-003 & Accept only HTTPS YouTube URLs for supported hosts and valid video or playlist IDs on the server. & \Implemented & \Code{validateYoutubeUrl()} \\
+FR-MEDIA-004 & Show local carousel/notice when YouTube is offline, blocked, invalid, or unavailable. & \Implemented & \Code{MediaPlayer.tsx} \\
+FR-SET-001 & Persist announcement duration, page rotation, and one to ten footer messages. & \Implemented & settings validation/service \\
+FR-SYNC-001 & Emit a complete state snapshot on connection and after mutation; emit announcements only for new/recall actions. & \Implemented & gateway and integration test \\
+FR-AUTH-001 & Authenticate operators and authorize mutations. & \Missing & no auth dependency, guard, user, token, or session \\
+\bottomrule
+\end{longtable}
+
+No requirement exists for deleting historical database rows; UI ``removal'' maps to \Code{cancelled}, not SQL deletion.
