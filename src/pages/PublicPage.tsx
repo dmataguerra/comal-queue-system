@@ -13,7 +13,7 @@ const fallback: Multimedia = {type:'fallback',url:null,playlistId:null,playing:f
 
 export function PublicPage() {
   const {state, connected} = useSystem();
-  const {current, audioEnabled, audioError, enableAudio} = useAnnouncements();
+  const {current, audioEnabled, audioError} = useAnnouncements();
   const [page, setPage] = useState(0), [youtubeActive, setYoutubeActive] = useState(false);
   const turns = state?.turns ?? [], pages = Math.max(1, Math.ceil(turns.length / 5));
   useEffect(() => { setPage(0); }, [turns[0]?.id, turns[0]?.lastAnnouncedAt]);
@@ -64,11 +64,10 @@ export function PublicPage() {
       </div>}
       </section>}
     </section>
-    <div className="display-notices">
-      {!audioEnabled && <button className="audio-activation" onClick={enableAudio}><Icon name="volume"/>Activar audio de esta pantalla<Icon name="arrow"/></button>}
+    {(audioError || !connected) && <div className="display-notices">
       {audioError && <div className="audio-warning" role="alert">{audioError}</div>}
       {!connected && <div className="public-connection-warning" role="alert"><Icon name="warning"/>{state ? 'Sin conexión local. La información puede estar desactualizada. Consulta en caja.' : 'Conectando con el servidor local…'}</div>}
-    </div>
+    </div>}
     <PublicFooter messages={footerMessages}/>
   </div>;
 }
