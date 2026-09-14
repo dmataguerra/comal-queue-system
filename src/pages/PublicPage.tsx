@@ -7,6 +7,7 @@ import {MediaPlayer} from '../components/MediaPlayer';
 import {Icon} from '../components/Icon';
 import {StatusBadge} from '../components/StatusBadge';
 import {AnimatedBackground} from '../components/AnimatedBackground';
+import {TrojanMascot} from '../components/TrojanMascot';
 import type {Multimedia} from '../types';
 
 const fallback: Multimedia = {type:'fallback',url:null,playlistId:null,playing:false,muted:false,volume:55};
@@ -48,6 +49,7 @@ export function PublicPage() {
     </section>
     <section className="public-media-frame" aria-label="Multimedia y anuncios">
       <div className="public-media"><MediaPlayer config={multimedia} playlists={state?.playlists ?? []} ducked={Boolean(current)} audioEnabled={audioEnabled} onYoutubeActivityChange={setYoutubeActive}/></div>
+      <TrojanMascot/>
       {current && <section className="public-focus" aria-label="Anuncio de turno">
         <div className="announcement-backdrop" role="status" aria-live="assertive" aria-atomic="true">
         <div className="announcement-card glass-panel" key={current.id}>
