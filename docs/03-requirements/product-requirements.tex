@@ -1,9 +1,9 @@
-\chapter{Requirements}
-\section{Product requirements baseline}
+\section{Requirements}
+\subsection{Product requirements baseline}
 
 This baseline reconstructs requirements from code, tests, UI copy, and the previous README. It is descriptive, not a substitute for owner approval.
 
-\begin{longtable}{p{0.15\textwidth}p{0.50\textwidth}p{0.22\textwidth}}
+\begin{longtable}{P{0.15\textwidth}P{0.50\textwidth}P{0.22\textwidth}}
 \toprule
 ID & Product requirement & Evidence/status \\
 \midrule
@@ -12,7 +12,7 @@ PR-002 & Core queue entry, display, persistence, and synchronization operate on 
 PR-003 & A connected public display presents ready ticket numbers and pickup counter information. & Source/tests; \Implemented. \\
 PR-004 & A new or recalled turn produces a visual and audible call without duplicate calls from retried requests. & Visual/idempotency implemented; public audio \Partial. \\
 PR-005 & Optional connected media must not prevent the local queue from operating. & YouTube fallback code; \Implemented for queue independence. \\
-PR-006 & Closed turns stop appearing but remain persistently recorded. & SQLite/service/tests; \Implemented. \\
+PR-006 & Closed turns stop appearing but remain persistently recorded. & SQLite, service, and tests; \Implemented. \\
 PR-007 & Operational changes are restricted to authorized staff. & Security expectation inferred from interface; \Missing and requires stakeholder confirmation. \\
 PR-008 & Data retention, backup, recovery, and production support are defined. & Prior README only; \Status{PLANNED_OR_REFERENCED}. \\
 \bottomrule

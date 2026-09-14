@@ -1,10 +1,10 @@
-\section{Cashier interface}
+\subsection{Cashier interface}
 
-\subsection*{Purpose and main user}
+\subsubsection*{Purpose and main user}
 
 The cashier workspace supports day-to-day ready-list operation and display configuration. Its main user is the queue operator; because authorization is absent, this is a UX role rather than a security identity.
 
-\subsection*{Components and actions}
+\subsubsection*{Components and actions}
 
 \begin{itemize}
   \item \textbf{Sidebar/top bar:} choose Turns, Multimedia, or Settings; open the public display; view local connection state; toggle automatic turn-page rotation.
@@ -15,11 +15,11 @@ The cashier workspace supports day-to-day ready-list operation and display confi
   \item \textbf{Settings:} set announcement duration and footer lines, test local announcement audio in the cashier browser context, and open the public display.
 \end{itemize}
 
-\subsection*{State and dependencies}
+\subsubsection*{State and dependencies}
 
 The page reads snapshots and connection status from \Code{SystemProvider}, then writes through \Code{src/services/api.ts}. All mutation controls associated with queue/media state are intended to be disabled while disconnected. Feedback is shown in an inline live region on the Turns section and a toast elsewhere.
 
-\subsection*{UX constraints and discrepancies}
+\subsubsection*{UX constraints and discrepancies}
 
 \begin{itemize}
   \item The interface does not search or filter a long ready list.

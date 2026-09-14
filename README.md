@@ -75,6 +75,12 @@ The production server defaults to `http://127.0.0.1:3001`.
 
 Start with [`docs/README.tex`](docs/README.tex). The complete documentation set is assembled by [`docs/technical-documentation.tex`](docs/technical-documentation.tex); all detailed documents use `.tex` as requested.
 
+The LaTeX sources use Overleaf's `ol-softwaremanual` technical-document template. Its class is vendored in `docs/` so local and Overleaf builds use the same layout. To build locally, run this from `docs/`:
+
+```powershell
+latexmk -pdf -shell-escape -interaction=nonstopmode -halt-on-error technical-documentation.tex
+```
+
 Key entry points:
 
 - [Current status](docs/10-planning/current-status.tex)

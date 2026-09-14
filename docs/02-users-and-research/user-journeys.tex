@@ -1,8 +1,8 @@
-\section{User journeys}
+\subsection{User journeys}
 
-\subsection*{Ready-to-pickup journey}
+\subsubsection*{Ready-to-pickup journey}
 
-\begin{verbatim}
+\begin{CodeBlock}
 Preparation outside COMAL Queue
         |
 Operator enters existing ticket and optional counter
@@ -16,11 +16,11 @@ Public display shows turn and visual announcement
 Customer presents ticket and collects order
         |
 Operator marks DELIVERED; turn leaves active display
-\end{verbatim}
+\end{CodeBlock}
 
-\subsection*{Capture-error journey}
+\subsubsection*{Capture-error journey}
 
-\begin{verbatim}
+\begin{CodeBlock}
 READY turn selected in cashier list
         |
 Operator chooses "Retirar por error de captura"
@@ -30,26 +30,26 @@ Confirmation dialog
 PATCH status=CANCELLED
         |
 Turn remains in history but leaves active display
-\end{verbatim}
+\end{CodeBlock}
 
-\subsection*{Recall journey}
+\subsubsection*{Recall journey}
 
-\begin{verbatim}
+\begin{CodeBlock}
 Operator selects READY turn -> POST announce
  -> rank and last-announced time change
  -> new ephemeral announcement emitted
  -> turn becomes first in ready order
-\end{verbatim}
+\end{CodeBlock}
 
-\subsection*{Local-media journey}
+\subsubsection*{Local-media journey}
 
-\begin{verbatim}
+\begin{CodeBlock}
 Maintainer copies supported audio into data/music/<genre>
  -> operator refreshes catalog
  -> server resolves and allow-lists files
  -> operator selects playlist
  -> public client requests /media/<genre>/<filename>
  -> tracks advance on ended events
-\end{verbatim}
+\end{CodeBlock}
 
 The intended audio step in the pickup journey is not included as achieved behavior: assets and playback code exist, but the public screen cannot set \Code{audioEnabled} to true.

@@ -1,6 +1,6 @@
-\section{UX guidelines}
+\subsection{UX guidelines}
 
-\subsection*{Current conventions}
+\subsubsection*{Current conventions}
 
 \begin{itemize}
   \item Spanish (Mexico) interface copy, two-digit tabular ticket numbers, and canonical ``turno''/``mostrador'' labels.
@@ -11,14 +11,14 @@
   \item Connection loss remains visible and mutation controls are disabled while cached state stays on screen.
 \end{itemize}
 
-\subsection*{Guidelines for changes}
+\subsubsection*{Guidelines for changes}
 
 Preserve two independent identifiers (visible number and UUID), do not introduce preparation language, keep destructive cancellation confirmed, and ensure every successful-looking mutation is backed by a successful server response. New configuration must state whether it is local, persistent, per-browser, or broadcast.
 
-\subsection*{Required validation}
+\subsubsection*{Required validation}
 
 Viewing distance, minimum contrast/font size, screen orientation, browser/TV compatibility, keyboard-only behavior, assistive-technology behavior, touch targets, Spanish terminology, and reduced-motion acceptance all require formal testing. Existing CSS is evidence of intent, not proof of standards conformance.
 
-\subsection*{Historical redesign notes migrated}
+\subsubsection*{Historical redesign notes migrated}
 
 The removed \Code{docs/UI-REDESIGN.md} described the Troyanos blue/white visual identity, glass surfaces, responsive layouts, public-display pagination, and local assets. Those claims were retained here only where the current source still supports them. Its statements that public audio and a coffee welcome image were operational are superseded by current code evidence.

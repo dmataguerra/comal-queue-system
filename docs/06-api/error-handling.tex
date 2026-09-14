@@ -1,6 +1,6 @@
-\section{Error handling}
+\subsection{Error handling}
 
-\subsection*{Backend}
+\subsubsection*{Backend}
 
 Validation and domain failures use Nest exceptions:
 \begin{itemize}
@@ -11,19 +11,19 @@ Validation and domain failures use Nest exceptions:
 
 Nest's default exception serialization is relied upon; no repository-defined error code, envelope, localization contract, or global exception filter exists. Unexpected SQLite/filesystem/programming errors become framework 500 responses and server logs. Transactions roll back synchronous exceptions.
 
-\subsection*{Frontend HTTP}
+\subsubsection*{Frontend HTTP}
 
 Requests abort after eight seconds. The client attempts JSON parsing and displays a returned string \Code{message}; otherwise it uses a generic local-connection message. There is no retry except user repetition, no offline mutation queue, and no differentiation among validation, conflict, timeout, and server failure beyond text.
 
-\subsection*{Realtime}
+\subsubsection*{Realtime}
 
 Disconnect/connect-error sets a visible offline state. The last snapshot stays in memory, cashier mutations are disabled, the public display warns about staleness, and pending announcement audio is aborted. Reconnection replaces state. There is no durable missed-event recovery, but state itself is restored.
 
-\subsection*{Multimedia}
+\subsubsection*{Multimedia}
 
 YouTube load timeout, script failure, provider errors, embed restriction, autoplay block, and offline events produce fallback UI; some allow retry. Local audio element failure produces a notice. Queue state remains independent. Public audio activation failure is not currently surfaced because activation is never attempted there.
 
-\subsection*{Inconsistencies}
+\subsubsection*{Inconsistencies}
 
 Client and server YouTube validation differ; settings duration UI caps 20 while the server caps 30; no global React error boundary exists; MediaService startup filesystem failures can prevent server start. These are registered as technical debt.
 

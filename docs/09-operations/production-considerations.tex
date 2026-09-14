@@ -1,8 +1,8 @@
-\section{Production considerations}
+\subsection{Production considerations}
 
 The repository can produce runnable artifacts, but it does not establish production readiness.
 
-\subsection*{Required before operational acceptance}
+\subsubsection*{Required before operational acceptance}
 
 \begin{enumerate}
   \item Fix and verify public-display audio activation on every target display/browser.
@@ -14,10 +14,10 @@ The repository can produce runnable artifacts, but it does not establish product
   \item Resolve licensing for application, dependencies, logos/images, synthesized audio, and distribution.
 \end{enumerate}
 
-\subsection*{Capacity and reliability}
+\subsubsection*{Capacity and reliability}
 
 No queue-size, client-count, latency, storage, uptime, or recovery target exists. Full snapshots contain all active turns and every catalog entry; history/requests grow in SQLite. Load testing is absent. Do not infer capacity from a successful two-client integration test.
 
-\subsection*{Operational fallback}
+\subsubsection*{Operational fallback}
 
 The prior README proposes printed tickets and verbal calls when local service, link, or power fails. That is a documented manual fallback, not an implemented recovery system, and requires stakeholder validation/training.

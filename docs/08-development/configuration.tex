@@ -1,8 +1,8 @@
-\section{Configuration}
+\subsection{Configuration}
 
-\subsection*{Server defaults}
+\subsubsection*{Server defaults}
 
-\begin{longtable}{p{0.28\textwidth}p{0.23\textwidth}p{0.39\textwidth}}
+\begin{longtable}{P{0.28\textwidth}P{0.23\textwidth}P{0.39\textwidth}}
 \toprule
 Setting & Default & Source/behavior \\
 \midrule
@@ -14,17 +14,17 @@ Allowed origins & localhost/127.0.0.1 on 5173, 4173, and server port & Expanded 
 \bottomrule
 \end{longtable}
 
-\subsection*{Persisted application defaults}
+\subsubsection*{Persisted application defaults}
 
 If no configuration row exists, multimedia is fallback/stopped at volume 65 and unmuted. Settings use an 8-second visual announcement, automatic page rotation, and three Spanish footer messages. Writes merge partial input into current/default values and store the whole JSON document.
 
-\subsection*{Frontend/build configuration}
+\subsubsection*{Frontend/build configuration}
 
 Vite development uses fixed port 5173 with strict-port behavior and proxies \Code{/api}, \Code{/media}, and \Code{/socket.io}. The production build outputs \Code{dist}. The server serves static content only when \Code{dist/index.html} exists. TypeScript targets ES2022 and strict mode.
 
 Electron packages Windows x64 NSIS, uses per-user installation by default, permits changing installation directory, includes \Code{dist}, \Code{build}, \Code{electron}, package metadata, and copies \Code{data/music} as extra resources.
 
-\subsection*{Runtime configuration limits}
+\subsubsection*{Runtime configuration limits}
 
 Settings are global to the database, not per screen. Media playback progress/audio permission is browser-local. Environment variables are process settings only; there is no \Code{.env} loader, configuration file parser, or UI for server settings.
 

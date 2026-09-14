@@ -1,12 +1,12 @@
-\section{Database}
+\subsection{Database}
 
-\subsection*{Technology and lifecycle}
+\subsubsection*{Technology and lifecycle}
 
 The backend uses Node's experimental built-in \Code{node:sqlite} \Code{DatabaseSync} API. Default path is \Code{data/comal.sqlite}; Electron overrides it with \Code{app.getPath('userData')/comal.sqlite}. Parent directories and tables/indexes are created during provider construction. There are no versioned migrations or seed records.
 
-\subsection*{Logical model}
+\subsubsection*{Logical model}
 
-\begin{verbatim}
+\begin{CodeBlock}
 turns                 requests                 configuration
 -----                 --------                 -------------
 id (PK)               id (PK)                  key (PK)
@@ -18,18 +18,18 @@ rank
 
 No declared foreign-key relationships.
 requests.response embeds a turn and announcement; requests has no FK to turns.
-\end{verbatim}
+\end{CodeBlock}
 
-\subsection*{Turns table}
+\subsubsection*{Turns table}
 
-\begin{longtable}{p{0.22\textwidth}p{0.25\textwidth}p{0.43\textwidth}}
+\begin{longtable}{P{0.22\textwidth}P{0.25\textwidth}P{0.43\textwidth}}
 \toprule
 Column & Type/constraint & Meaning \\
 \midrule
 \Code{id} & TEXT primary key & Server-generated UUID. \\
 \Code{number} & TEXT, two digits, integer 1--99 & Visible ticket number, including leading zero. \\
 \Code{counter} & INTEGER in 0,1,2; default 0 & No assigned counter, counter 1, or counter 2. \\
-\Code{status} & TEXT in ready/delivered/cancelled & Ready is active; other values are terminal in service logic. \\
+\Code{status} & TEXT in ready, delivered, or cancelled & Ready is active; other values are terminal in service logic. \\
 \Code{created_at} & TEXT not null & ISO time at creation. \\
 \Code{ready_at} & TEXT not null & Same creation time; never subsequently changed. \\
 \Code{last_announced_at} & TEXT not null & Creation or latest recall time. \\
@@ -39,11 +39,11 @@ Column & Type/constraint & Meaning \\
 
 Indexes are \Code{one_active_number}, a unique partial index on number where status is ready, and \Code{turn_display_order} on status plus descending rank.
 
-\subsection*{Configuration and requests}
+\subsubsection*{Configuration and requests}
 
 \Code{configuration} stores JSON under \Code{multimedia} and \Code{settings}; defaults are code constants and are not written until changed. \Code{requests} stores idempotency kind, input fingerprint, serialized mutation result, and timestamp. Neither table has retention or corruption recovery logic.
 
-\subsection*{Durability and recovery characteristics}
+\subsubsection*{Durability and recovery characteristics}
 
 WAL mode, foreign keys, and a 5000 ms busy timeout are enabled. Writes in StateService use a transaction helper. No schema version, backup, restore, integrity-check command, compaction policy, encryption, or automated recovery exists.
 

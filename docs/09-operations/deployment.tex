@@ -1,7 +1,7 @@
-\chapter{Operations}
-\section{Deployment}
+\section{Operations}
+\subsection{Deployment}
 
-\subsection*{Current deployment capability}
+\subsubsection*{Current deployment capability}
 
 \textbf{Combined Node server.} \Code{npm run build} creates a Vite SPA and compiled Nest server. \Code{npm start} serves the API, Socket.IO, media, and explicit SPA routes from one process. Default access is loopback. An external process manager/service definition is not provided.
 
@@ -9,15 +9,15 @@
 
 \textbf{Development only.} Vite/Nest split-process mode is not a production deployment.
 
-\subsection*{Assets included}
+\subsubsection*{Assets included}
 
 The Electron package includes the frontend, compiled backend, Electron entry point, package metadata, Node dependencies required by packaging, and \Code{data/music}. Announcement/image assets are part of \Code{dist}. Music is copied outside ASAR as an extra resource; runtime catalog mutation/write behavior in the installed resource location is not documented.
 
-\subsection*{Absent deployment mechanisms}
+\subsubsection*{Absent deployment mechanisms}
 
 No Dockerfile, Compose, Nginx/reverse-proxy config, systemd/Windows service definition, cloud manifest, Kubernetes/Helm, CI/CD pipeline, code-signing config, auto-update, release channel, or rollback automation exists.
 
-\subsection*{Topology decision required}
+\subsubsection*{Topology decision required}
 
 For three physical displays described historically, stakeholders must choose either one mirrored graphics output or separate browser devices. The Electron server's forced loopback supports the former directly; the latter requires a secured LAN-bound server and validated CORS/firewall/startup behavior.
 

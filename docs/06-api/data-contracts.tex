@@ -1,9 +1,10 @@
-\section{Data contracts}
+\subsection{Data contracts}
 
 All timestamps emitted by the server are ISO 8601 strings created by \Code{new Date().toISOString()}.
 
-\subsection*{Turn}
-\begin{verbatim}
+\subsubsection*{Turn}
+\begin{listing}[!htbp]
+\begin{CodeBlock}
 {
   id: string,                  // UUID
   number: string,              // "01" through "99"
@@ -14,18 +15,26 @@ All timestamps emitted by the server are ISO 8601 strings created by \Code{new D
   lastAnnouncedAt: string,     // ISO date-time
   rank: number                 // positive monotonic integer
 }
-\end{verbatim}
+\end{CodeBlock}
+\caption{Turn response contract}
+\label{lst:turn-contract}
+\end{listing}
 
-\subsection*{Announcement}
-\begin{verbatim}
+\subsubsection*{Announcement}
+\begin{listing}[!htbp]
+\begin{CodeBlock}
 {
   id: string, turnId: string, number: string,
   counter: 0 | 1 | 2, createdAt: string
 }
-\end{verbatim}
+\end{CodeBlock}
+\caption{Announcement event contract}
+\label{lst:announcement-contract}
+\end{listing}
 
-\subsection*{Multimedia and settings}
-\begin{verbatim}
+\subsubsection*{Multimedia and settings}
+\begin{listing}[!htbp]
+\begin{CodeBlock}
 Multimedia = {
   type: "fallback" | "youtube" | "local",
   url: string | null,
@@ -38,19 +47,26 @@ Settings = {
   autoRotate: boolean,
   footerMessages: string[]
 }
-\end{verbatim}
+\end{CodeBlock}
+\caption{Multimedia and settings contracts}
+\label{lst:multimedia-settings-contract}
+\end{listing}
 
 Server defaults are fallback media, stopped, volume 65, unmuted; announcement duration 8 seconds; automatic rotation enabled; and three Spanish footer messages.
 
-\subsection*{Playlist catalog}
-\begin{verbatim}
+\subsubsection*{Playlist catalog}
+\begin{listing}[!htbp]
+\begin{CodeBlock}
 Track = { id: string, title: string, url: string }
 Playlist = { id: string, name: string, cover: string, tracks: Track[] }
 AppState = { turns: Turn[], multimedia: Multimedia,
              playlists: Playlist[], settings: Settings }
-\end{verbatim}
+\end{CodeBlock}
+\caption{Playlist catalog and application-state contracts}
+\label{lst:playlist-state-contract}
+\end{listing}
 
-\subsection*{Contract debt}
+\subsubsection*{Contract debt}
 
 \Code{src/types.ts} incorrectly declares turn/announcement timestamps as numbers and makes \Code{Settings.autoRotate} optional, while server contracts use ISO strings and require the field in snapshots. Client and server models are duplicated. No schema generation or runtime response validation exists.
 

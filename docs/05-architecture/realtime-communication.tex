@@ -1,8 +1,8 @@
-\section{Realtime communication}
+\subsection{Realtime communication}
 
 The application uses Socket.IO with WebSocket-only frontend transport. It does not use polling, SSE, Redis, or a message broker.
 
-\begin{longtable}{p{0.18\textwidth}p{0.19\textwidth}p{0.19\textwidth}p{0.34\textwidth}}
+\begin{longtable}{P{0.18\textwidth}P{0.19\textwidth}P{0.19\textwidth}P{0.34\textwidth}}
 \toprule
 Event & Producer & Consumer & Payload/purpose \\
 \midrule
@@ -13,15 +13,15 @@ Event & Producer & Consumer & Payload/purpose \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Connection lifecycle}
+\subsubsection*{Connection lifecycle}
 
 The client enables reconnection with delay starting at 800 ms and capped at 5 seconds. No custom connection authentication, namespace, room, heartbeat setting, maximum reconnect count, or application acknowledgement is defined. Socket.IO defaults apply where the repository is silent.
 
-\subsection*{Ordering and failure behavior}
+\subsubsection*{Ordering and failure behavior}
 
 Full-state broadcasts reduce incremental reconciliation complexity. Announcement delivery is best effort: it is not persisted as an event stream, acknowledged, or replayed. The public hook serializes received announcements, discards duplicate IDs in a bounded in-memory set, skips events whose turn has closed, and aborts on disconnect. Multiple server processes would not share gateway broadcasts.
 
-\subsection*{Test evidence}
+\subsubsection*{Test evidence}
 
 The integration test connects two clients, verifies initial snapshots, one announcement for an idempotent retry, recall ordering, media state broadcast, reconnect restoration without old audio, and close propagation.
 

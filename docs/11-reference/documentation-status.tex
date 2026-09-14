@@ -1,11 +1,11 @@
-\section{Documentation status and confidence}
+\subsection{Documentation status and confidence}
 
-\begin{longtable}{p{0.25\textwidth}p{0.17\textwidth}p{0.19\textwidth}p{0.25\textwidth}}
+\begin{longtable}{P{0.25\textwidth}P{0.17\textwidth}P{0.19\textwidth}P{0.25\textwidth}}
 \toprule
 Area & Status & Evidence quality & Stakeholder input needed \\
 \midrule
 Product vision & Partial & Medium & Yes: brand, owner, goals \\
-Business context & Partial & Medium & Yes: hardware/topology/operation \\
+Business context & Partial & Medium & Yes: hardware, topology, and operation \\
 Current scope & Documented & High & Yes for acceptance \\
 Out-of-scope boundary & Documented historical intent & Medium & Yes if scope changes \\
 User groups & Documented as UI roles & High & Yes for real responsibilities \\
@@ -29,12 +29,12 @@ License & Not documented & High absence evidence & Yes \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Validation record}
+\subsubsection*{Validation record}
 
 The documentation was checked against all tracked TypeScript/TSX source, package/build configuration, tests, current Markdown documents, audio tooling, assets/catalog metadata, environment-variable references, routes, domain terms, and recent Git history. Source paths cited in documents existed at the audit baseline. The backend suite, frontend/backend TypeScript checks, production build, and audio asset verifier passed.
 
-LaTeX compilation is \Status{NOT_VALIDATED} because no TeX engine is installed in the audit environment. A static pass confirmed that all 58 master \Code{\\input} targets exist, only the root README remains Markdown, all 76 begin/end environment delimiters are paired, and raw brace counts are balanced across 60 TeX files.
+LaTeX compilation is \Status{VALIDATED}. The combined document builds with the vendored \Code{ol-softwaremanual} class, A4 geometry, table of contents, and code-listing index. A static pass confirmed that all 58 master \Code{\\input} targets exist, only the root README remains Markdown, environment delimiters are paired, and raw brace counts are balanced across 60 TeX files. The resulting PDF was rasterized and visually inspected page by page.
 
-\subsection*{Known superseded documentation}
+\subsubsection*{Known superseded documentation}
 
 The previous root README claimed the repository contained no executable application; source contradicts it. \Code{docs/UI-REDESIGN.md} and \Code{tooling/audio/README.md} were removed after verified content was migrated into this hierarchy. Current code, tests, and this status matrix supersede those claims.

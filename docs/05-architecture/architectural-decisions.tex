@@ -1,42 +1,42 @@
-\section{Observed architectural decisions}
+\subsection{Observed architectural decisions}
 
 These are retrospective records of implemented choices. Original rationale is not documented unless stated.
 
-\subsection*{AD-001 --- Local SQLite persistence}
+\subsubsection*{AD-001 --- Local SQLite persistence}
 \textbf{Decision:} use synchronous \Code{node:sqlite} with a local file.
 \textbf{Observed context:} local-first queue and Electron target.
 \textbf{Original rationale:} not documented.
 \textbf{Implications:} simple deployment and restart persistence; experimental Node API, single-file recovery concerns, synchronous access, no migrations.
 
-\subsection*{AD-002 --- Snapshot-based realtime state}
+\subsubsection*{AD-002 --- Snapshot-based realtime state}
 \textbf{Decision:} broadcast complete state after mutations and on connect, plus separate ephemeral announcements.
 \textbf{Observed context:} small state shape and multiple displays.
 \textbf{Original rationale:} not documented.
 \textbf{Implications:} easy reconnection; payload grows with active turns/catalog and announcements are best-effort.
 
-\subsection*{AD-003 --- Ready-only domain}
+\subsubsection*{AD-003 --- Ready-only domain}
 \textbf{Decision:} create turns directly in \Code{ready}; closed states are delivered/cancelled.
 \textbf{Observed context:} ticket creation and preparation occur outside the system.
 \textbf{Original rationale:} explicitly stated in prior README.
 \textbf{Implications:} small workflow; no preparation metrics or upstream integration.
 
-\subsection*{AD-004 --- Idempotency by caller request ID}
+\subsubsection*{AD-004 --- Idempotency by caller request ID}
 \textbf{Decision:} persist request kind, fingerprint, and response for create/recall.
 \textbf{Observed context:} prevent double-click/network retry duplicates and duplicate calls.
 \textbf{Original rationale:} prior requirements and code comments imply retry safety.
 \textbf{Implications:} deterministic retry behavior; unbounded request table and no expiry.
 
-\subsection*{AD-005 --- Client-side multimedia players}
+\subsubsection*{AD-005 --- Client-side multimedia players}
 \textbf{Decision:} persist configuration centrally but run local/YouTube playback independently in each public browser.
 \textbf{Original rationale:} not documented.
 \textbf{Implications:} simple server and optional provider; screens are not position-synchronized and autoplay/audio permission is per browser.
 
-\subsection*{AD-006 --- One SPA for operator and public views}
+\subsubsection*{AD-006 --- One SPA for operator and public views}
 \textbf{Decision:} select the page by raw pathname, with no router or route guards.
 \textbf{Original rationale:} not documented.
 \textbf{Implications:} minimal dependency; route aliases are misleading and administration is not separated.
 
-\subsection*{AD-007 --- Windows desktop packaging}
+\subsubsection*{AD-007 --- Windows desktop packaging}
 \textbf{Decision:} Electron starts the built server on loopback and loads the cashier root in a single window.
 \textbf{Original rationale:} not documented.
 \textbf{Implications:} local single-instance operation; remote displays require a different topology or mirrored output.

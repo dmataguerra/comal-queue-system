@@ -1,10 +1,10 @@
-\section{Backend architecture}
+\subsection{Backend architecture}
 
-\subsection*{Bootstrap and module}
+\subsubsection*{Bootstrap and module}
 
 \Code{server/main.ts} validates \Code{PORT}, selects \Code{HOST}, and starts a NestJS 11 Express application. \Code{bootstrap.ts} enables CORS, shutdown hooks, production static assets, and five explicit SPA routes. \Code{AppModule} wires two controllers and four singleton providers.
 
-\subsection*{Layers}
+\subsubsection*{Layers}
 
 \begin{itemize}
   \item \textbf{Controllers:} map HTTP routes and broadcast after successful service mutations. No authentication decorators or API version prefix exist.
@@ -15,11 +15,11 @@
   \item \textbf{EventsGateway:} emits a snapshot at connect and broadcasts state plus optional announcement events.
 \end{itemize}
 
-\subsection*{Dependency direction}
+\subsubsection*{Dependency direction}
 
 Controllers depend on StateService, EventsGateway, and MediaService. StateService depends on LocalDatabase and MediaService. EventsGateway depends on StateService. MediaService and LocalDatabase depend only on Node APIs. There is no repository abstraction, ORM, CQRS/event store, or domain-module separation.
 
-\subsection*{Concurrency model}
+\subsubsection*{Concurrency model}
 
 Database writes are synchronous and wrapped in \Code{BEGIN IMMEDIATE}; this serializes writers inside the Node process/SQLite file. There is no distributed lock or multi-process coordination beyond SQLite. Reusing one database from multiple packaged processes is not documented or tested.
 

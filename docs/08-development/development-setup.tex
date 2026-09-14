@@ -1,7 +1,7 @@
-\chapter{Development process}
-\section{Development setup}
+\section{Development process}
+\subsection{Development setup}
 
-\subsection*{Prerequisites}
+\subsubsection*{Prerequisites}
 
 \begin{itemize}
   \item Node.js 22.13.0 or newer (the audit used 22.19.0); \Code{node:sqlite} is required.
@@ -10,74 +10,74 @@
   \item Windows is required for the configured NSIS packaging target and PowerShell announcement generator; ordinary web development is not explicitly restricted by configuration.
 \end{itemize}
 
-\subsection*{Install and run both development processes}
+\subsubsection*{Install and run both development processes}
 
-\begin{verbatim}
+\begin{CodeBlock}
 npm ci
 npm run dev
-\end{verbatim}
+\end{CodeBlock}
 
 This starts Nest at \Code{http://127.0.0.1:3001} and Vite at \Code{http://127.0.0.1:5173}. Open the latter root for the cashier and \Code{/pantalla} for the public display. Vite proxies API/media/Socket.IO to Nest.
 
 Separate commands are available:
-\begin{verbatim}
+\begin{CodeBlock}
 npm run dev:server
 npm run dev:client
-\end{verbatim}
+\end{CodeBlock}
 
-\subsection*{Database and local media}
+\subsubsection*{Database and local media}
 
 No manual initialization is required. The server creates \Code{data/comal.sqlite}, tables, indexes, and built-in music directories at startup. Override data locations with environment variables when isolation is needed. Committed demo music is already available.
 
 To add local music, put supported files below \Code{data/music/<genre>/} and invoke refresh from the UI. Supported extensions are MP3, WAV, OGG, M4A, AAC, and FLAC.
 
-\subsection*{Checks}
+\subsubsection*{Checks}
 
-\begin{verbatim}
+\begin{CodeBlock}
 npm test
 npx tsc --noEmit -p tsconfig.json
 npx tsc --noEmit -p tsconfig.server.json
 node tooling/audio/verify-audio.mjs
-\end{verbatim}
+\end{CodeBlock}
 
 There is no lint or format command. All four checks were validated during this audit.
 
-\subsection*{Build and run}
+\subsubsection*{Build and run}
 
-\begin{verbatim}
+\begin{CodeBlock}
 npm run build
 npm start
-\end{verbatim}
+\end{CodeBlock}
 
 The build checks frontend types, creates \Code{dist/}, and compiles the server into \Code{build/}. The start command serves the combined app at loopback port 3001 by default. \Code{npm run start:server} runs the TypeScript server directly and expects an existing \Code{dist/} if the SPA is needed.
 
 For desktop development after a build:
-\begin{verbatim}
+\begin{CodeBlock}
 npm run build
 npm run desktop
-\end{verbatim}
+\end{CodeBlock}
 
 For Windows artifacts:
-\begin{verbatim}
+\begin{CodeBlock}
 npm run desktop:dir
 npm run desktop:build
-\end{verbatim}
+\end{CodeBlock}
 
 These run electron-builder; signing, installer acceptance, and clean-machine verification are not configured/documented.
 
-\subsection*{Regenerating optional audio assets}
+\subsubsection*{Regenerating optional audio assets}
 
 Runtime uses committed WAV files and does not require a synthesizer. On Windows, announcements can be regenerated with an existing eSpeak NG executable:
-\begin{verbatim}
+\begin{CodeBlock}
 pwsh -ExecutionPolicy Bypass -File \
   tooling/audio/generate-announcements.ps1 \
   -EspeakPath 'C:\path\to\espeak-ng.exe'
-\end{verbatim}
+\end{CodeBlock}
 
 The optional \Code{-PrepareEngine} downloads pinned eSpeak NG 1.52.0, verifies its SHA-256, and extracts it locally using 7-Zip; it requires Internet but does not install the engine. Demo music is deterministic:
-\begin{verbatim}
+\begin{CodeBlock}
 node tooling/audio/generate-demo-music.mjs
 node tooling/audio/verify-audio.mjs
-\end{verbatim}
+\end{CodeBlock}
 
 Regeneration changes committed binary assets and should be reviewed deliberately.

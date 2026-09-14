@@ -1,6 +1,6 @@
-\section{Environment variables}
+\subsection{Environment variables}
 
-\begin{longtable}{p{0.22\textwidth}p{0.13\textwidth}p{0.20\textwidth}p{0.35\textwidth}}
+\begin{longtable}{P{0.22\textwidth}P{0.13\textwidth}P{0.20\textwidth}P{0.35\textwidth}}
 \toprule
 Variable & Required & Component & Purpose/default \\
 \midrule
@@ -16,12 +16,12 @@ Variable & Required & Component & Purpose/default \\
 No secret-valued environment variable is referenced. The repository ignores \Code{.env} but does not load it automatically; environment provisioning belongs to the shell/process supervisor. Do not commit real data paths or future secrets.
 
 \textbf{Example for a LAN-bound standalone server (security review required):}
-\begin{verbatim}
+\begin{CodeBlock}
 $env:HOST = '0.0.0.0'
 $env:PORT = '3001'
 $env:DATABASE_PATH = 'C:\comal-data\comal.sqlite'
 $env:MUSIC_PATH = 'C:\comal-data\music'
 npm start
-\end{verbatim}
+\end{CodeBlock}
 
 Exposing the current unauthenticated API to a network is not a production recommendation; it merely illustrates actual variable use.

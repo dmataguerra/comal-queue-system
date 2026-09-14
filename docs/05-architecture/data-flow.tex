@@ -1,29 +1,29 @@
-\section{Data flow}
+\subsection{Data flow}
 
-\subsection*{Create/recall mutation}
+\subsubsection*{Create/recall mutation}
 
-\begin{verbatim}
+\begin{CodeBlock}
 UI -> fetch JSON -> Controller -> StateService validation/invariants
    -> BEGIN IMMEDIATE -> turns + requests -> COMMIT
    -> Controller -> Socket.IO state -> every client
                          + announcement -> every live client
    <- HTTP turn response
-\end{verbatim}
+\end{CodeBlock}
 
 The HTTP response confirms the mutation to the caller; client lists update from the separately broadcast state. An exact retry returns the stored response and deliberately omits a second broadcast announcement.
 
-\subsection*{Other mutation}
+\subsubsection*{Other mutation}
 
 Counter/status, multimedia, settings, and catalog refresh operations mutate SQLite or the in-memory catalog, then broadcast a full snapshot. They do not emit announcement events.
 
-\subsection*{Connection/reconnection}
+\subsubsection*{Connection/reconnection}
 
 When a socket connects, the gateway immediately calculates and emits a full snapshot. The frontend replaces its current state. No prior announcement is replayed, because announcements are not selected from SQLite during connection.
 
-\subsection*{Local media request}
+\subsubsection*{Local media request}
 
 Catalog refresh maps \Code{genre/filename} keys to canonical real paths. The browser requests an encoded \Code{/media/:genre/:filename} URL. The controller asks MediaService for the mapped path and Express sends that file. Uncatalogued, unsupported, removed, or traversal-like paths return not found.
 
-\subsection*{YouTube flow}
+\subsubsection*{YouTube flow}
 
 The cashier validates a URL client-side, then the server applies a stricter HTTPS allow-list and persists it. Each public browser loads the remote IFrame API directly and manages its own player. Playback position is not synchronized between screens or persisted.

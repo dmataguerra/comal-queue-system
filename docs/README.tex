@@ -1,9 +1,24 @@
-\documentclass[11pt]{article}
+\documentclass{ol-softwaremanual}
 \input{preamble}
+\title{COMAL Queue\\Documentation Index}
+\version{1.0}
+\author{Comal++ / Troyanos Engineering}
+\date{14 September 2026}
+\softwarelogo{%
+  \vspace*{1.2cm}%
+  \includegraphics[width=8cm]{troyanos-logo.png}\\[2.2cm]%
+}
+\hypersetup{pdftitle={COMAL Queue Documentation Index},pdfauthor={Comal++ / Troyanos Engineering}}
 \begin{document}
-\section*{COMAL Queue documentation index}
+\pagenumbering{roman}
+\maketitle
+\pagenumbering{arabic}
+\tableofcontents
+\clearpage
 
-This directory is the repository's documentation source of truth. The root \Code{README.md} remains Markdown for repository discovery; every detailed document is LaTeX. \Code{technical-documentation.tex} assembles the complete set, and \Code{preamble.tex} defines shared formatting commands.
+\section{Documentation index}
+
+This directory is the repository's documentation source of truth. The root \Code{README.md} remains Markdown for repository discovery; every detailed document is LaTeX. \Code{technical-documentation.tex} assembles the complete set, \Code{preamble.tex} defines shared formatting commands, and \Code{ol-softwaremanual.cls} vendors the Overleaf Software Manual class required for reproducible builds.
 
 \subsection*{Evidence policy}
 
@@ -19,7 +34,7 @@ Implementation labels are \Status{IMPLEMENTED}, \Status{PARTIALLY_IMPLEMENTED}, 
 
 \subsection*{Navigation}
 
-\begin{longtable}{p{0.25\textwidth}p{0.67\textwidth}}
+\begin{longtable}{P{0.25\textwidth}P{0.67\textwidth}}
 \toprule
 Directory & Purpose \\
 \midrule
@@ -39,12 +54,12 @@ Directory & Purpose \\
 
 \subsection*{Building the combined document}
 
-No TeX distribution or documentation build script is declared by the repository. If a local TeX distribution is available, run the following from \Code{docs/}; a second pass resolves the table of contents.
+Run the following from \Code{docs/}. Shell escape is enabled for the template's \Code{minted} package, and \Code{latexmk} performs the additional passes needed for the table of contents and code-listing index.
 
-\begin{verbatim}
-pdflatex technical-documentation.tex
-pdflatex technical-documentation.tex
-\end{verbatim}
+\begin{CodeBlock}
+latexmk -pdf -shell-escape -interaction=nonstopmode \
+  -halt-on-error technical-documentation.tex
+\end{CodeBlock}
 
-The audit environment did not contain \Code{pdflatex}, \Code{xelatex}, or \Code{latexmk}; therefore compilation is \Status{NOT_VALIDATED}. Structural validation is described in \Code{11-reference/documentation-status.tex}.
+The A4 PDF build was validated with MiKTeX pdfTeX on 14 September 2026. Every rendered page was also rasterized and visually inspected. Full validation details are recorded in \Code{11-reference/documentation-status.tex}.
 \end{document}

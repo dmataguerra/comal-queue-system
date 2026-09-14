@@ -1,14 +1,14 @@
-\section{Technical debt register}
+\subsection{Technical debt register}
 
 \small
-\begin{longtable}{p{0.10\textwidth}p{0.16\textwidth}p{0.28\textwidth}p{0.12\textwidth}p{0.25\textwidth}}
+\begin{longtable}{P{0.10\textwidth}P{0.16\textwidth}P{0.28\textwidth}P{0.12\textwidth}P{0.25\textwidth}}
 \toprule
 ID & Area & Problem/impact & Priority & Suggested resolution \\
 \midrule
 TD-001 & Audio & Public activation path is not wired; audible calls and media sound do not work. & P0 & Add explicit user activation on each public screen and browser tests for calls/ducking. \\
 TD-002 & Security & All state/history/media mutations are unauthenticated. & P0 if LAN-exposed & Define trust model, then implement authorization or constrain network/host. \\
 TD-003 & Recovery & No backup/restore procedure for SQLite/WAL. & P0 before live use & Define RPO/RTO; implement and exercise WAL-safe backup/restore. \\
-TD-004 & Tests & No frontend/E2E/accessibility/packaging automation. & P1 & Add browser/component tests and CI gates. \\
+TD-004 & Tests & No frontend, E2E, accessibility, or packaging automation. & P1 & Add browser/component tests and CI gates. \\
 TD-005 & Schema & Startup DDL has no schema version/migrations. & P1 & Introduce migration tracking before schema evolution. \\
 TD-006 & Retention & turns/requests grow indefinitely; history hides records after 200. & P1 & Define retention, archival, and idempotency-key expiry. \\
 TD-007 & Contracts & Duplicated client/server types disagree on timestamps and optional settings. & P1 & Share or generate schema/contracts; validate responses. \\

@@ -1,7 +1,7 @@
-\section{Requirements traceability}
+\subsection{Requirements traceability}
 
 \small
-\begin{longtable}{p{0.14\textwidth}p{0.14\textwidth}p{0.25\textwidth}p{0.20\textwidth}p{0.13\textwidth}}
+\begin{longtable}{P{0.14\textwidth}P{0.14\textwidth}P{0.25\textwidth}P{0.20\textwidth}P{0.13\textwidth}}
 \toprule
 Requirement & Story & Main implementation & API/event & Verification \\
 \midrule
@@ -13,11 +13,11 @@ FR-QUEUE-005 & US-QUEUE-003/004 & \Code{ReadyList}; update & \Code{PATCH /api/tu
 FR-QUEUE-008 & US-QUEUE-001/002 & requests table; replay/record & create/announce & automated \\
 FR-DISPLAY-001 & US-DISPLAY-001 & \Code{PublicPage} & state event & manual only \\
 FR-DISPLAY-002 & US-SET-001 & \Code{PublicPage}; topbar switch & settings + state & manual only \\
-FR-AUDIO-001 & US-AUDIO-001 & announcements/audio/media player & announcement event & incomplete \\
+FR-AUDIO-001 & US-AUDIO-001 & announcements, audio, and media player & announcement event & incomplete \\
 FR-MEDIA-001 & US-MEDIA-001 & \Code{MediaService}; \Code{MediaPlayer} & refresh; media GET & backend automated \\
 FR-MEDIA-002 & US-MEDIA-001/002 & multimedia panel/service & multimedia PUT & automated backend \\
 FR-MEDIA-003 & US-MEDIA-002 & URL parsers/validation & multimedia PUT & automated backend \\
-FR-SYNC-001 & all live stories & \Code{EventsGateway}; \Code{useSystem} & state/announcement & integration automated \\
+FR-SYNC-001 & all live stories & \Code{EventsGateway}; \Code{useSystem} & state and announcement & integration automated \\
 FR-AUTH-001 & US-SEC-001 & none & all routes open & not implemented \\
 \bottomrule
 \end{longtable}

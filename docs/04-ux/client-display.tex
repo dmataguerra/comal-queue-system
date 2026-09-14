@@ -1,10 +1,10 @@
-\section{Client/public display}
+\subsection{Client/public display}
 
-\subsection*{Purpose and main user}
+\subsubsection*{Purpose and main user}
 
 The display lets waiting customers match a printed ticket with a ready number and, where assigned, a pickup counter. It is read-only at the component level.
 
-\subsection*{Rendered regions}
+\subsubsection*{Rendered regions}
 
 \begin{itemize}
   \item a five-row ready-turn panel ordered newest/recalled first;
@@ -16,11 +16,11 @@ The display lets waiting customers match a printed ticket with a ready number an
   \item connection, audio, and provider-failure notices when those states occur.
 \end{itemize}
 
-\subsection*{Behavior}
+\subsubsection*{Behavior}
 
 A new or recalled turn resets pagination to page 1. Announcements are queued, deduplicated by announcement ID in memory, skipped if their turn has already closed, and cancelled on disconnect. Media is intended to mute during an announcement and resume afterward.
 
-\subsection*{Current gaps}
+\subsubsection*{Current gaps}
 
 \begin{itemize}
   \item \textbf{Audio activation:} \Code{useAnnouncements} returns \Code{enableAudio} and \Code{testAudio}, but \Code{PublicPage} does not use either. Its \Code{audioEnabled} value remains false, so announcement playback is bypassed and local/YouTube media is kept muted.

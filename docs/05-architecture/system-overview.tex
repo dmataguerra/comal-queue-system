@@ -1,9 +1,9 @@
-\chapter{Architecture}
-\section{System overview}
+\section{Architecture}
+\subsection{System overview}
 
 COMAL Queue is a TypeScript monorepository without workspace packages. One React bundle provides cashier and public views. One NestJS process serves JSON endpoints, Socket.IO, local media, and the production SPA. SQLite and filesystem audio are local process dependencies.
 
-\begin{verbatim}
+\begin{CodeBlock}
 Cashier browser / Electron window       Public display browser(s)
               | HTTP mutations                  | read-only UI
               +--------------+------------------+
@@ -17,9 +17,9 @@ Cashier browser / Electron window       Public display browser(s)
           state snapshots + ephemeral announcement events
 
 Optional: Public browser -> YouTube IFrame API (Internet)
-\end{verbatim}
+\end{CodeBlock}
 
-\subsection*{Runtime modes}
+\subsubsection*{Runtime modes}
 
 \textbf{Development:} \Code{npm run dev} starts the Nest server on 127.0.0.1:3001 and Vite on 127.0.0.1:5173; Vite proxies API, media, and Socket.IO paths.
 

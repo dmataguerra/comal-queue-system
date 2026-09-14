@@ -1,6 +1,6 @@
-\section{Multimedia architecture}
+\subsection{Multimedia architecture}
 
-\subsection*{Modes}
+\subsubsection*{Modes}
 
 \begin{description}
   \item[Fallback] Persisted type with null URL/playlist and forced \Code{playing=false}. The current public implementation shows a looping campus image carousel.
@@ -8,21 +8,21 @@
   \item[YouTube] Persisted URL identifies a video or playlist. The public client loads the remote IFrame API, creates its own player, loops it, and exposes retry/error/autoplay-blocked behavior.
 \end{description}
 
-\subsection*{Local catalog}
+\subsubsection*{Local catalog}
 
 Built-in genres are \Code{lo-fi}, \Code{jazz}, and \Code{rock}; they appear even when empty. Additional directory names matching \Code{[a-z0-9_-]} (1--64 characters) appear only when they contain a supported extension: MP3, WAV, OGG, M4A, AAC, or FLAC. Files sort by Spanish locale. Canonical real-path checks and a catalog map prevent arbitrary filesystem reads.
 
 Six short generated demo WAVs are committed across the three built-in genres. The repository also commits 99 number announcements plus three suffixes. Generation is optional developer tooling; runtime does not download speech assets.
 
-\subsection*{Playback, fallback, and synchronization}
+\subsubsection*{Playback, fallback, and synchronization}
 
 Multimedia selection/playing/volume/mute is shared via SQLite and snapshots. Track index, YouTube position, provider readiness, online status, and autoplay state are per browser and not synchronized. The fallback carousel remains visible for local-audio mode and whenever YouTube is inactive or unavailable. YouTube requires Internet; queue UI and local state remain usable on provider failure.
 
-\subsection*{Announcements and ducking}
+\subsubsection*{Announcements and ducking}
 
 The intended call sequence is \Code{/audio/turns/NN.wav} followed by either \Code{/audio/counters/1|2.wav} or \Code{/audio/ready.wav}. \Code{MediaPlayer} mutes during a current call. This end-to-end feature is \Partial because \Code{PublicPage} never activates its Web Audio context or changes \Code{audioEnabled} from false.
 
-\subsection*{Validation discrepancy}
+\subsubsection*{Validation discrepancy}
 
 The frontend parser accepts HTTP or HTTPS and returns a playlist in preference to a co-present video. The server rejects non-HTTPS and has slightly different identifier bounds. Server validation is authoritative, but the mismatch can produce client/server error differences.
 

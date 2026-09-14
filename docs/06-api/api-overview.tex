@@ -1,9 +1,9 @@
-\chapter{HTTP API}
-\section{API overview}
+\section{HTTP API}
+\subsection{API overview}
 
 The NestJS application exposes unversioned JSON routes below \Code{/api} and file delivery below \Code{/media}. There is no OpenAPI/Swagger definition, authentication, rate limiting, pagination metadata, request correlation header, or documented stability policy.
 
-\subsection*{Conventions}
+\subsubsection*{Conventions}
 
 \begin{itemize}
   \item JSON request bodies use \Code{Content-Type: application/json}; validators reject non-objects, arrays, and unknown fields.
@@ -13,11 +13,11 @@ The NestJS application exposes unversioned JSON routes below \Code{/api} and fil
   \item All routes are unauthenticated and have no enforced role.
 \end{itemize}
 
-\subsection*{Base URLs}
+\subsubsection*{Base URLs}
 
 Development frontend requests are proxied from \Code{http://127.0.0.1:5173} to \Code{http://127.0.0.1:3001}. A built server serves API and UI from port 3001 by default. Host and port are configurable outside the Electron launcher.
 
-\subsection*{Realtime complement}
+\subsubsection*{Realtime complement}
 
 HTTP mutations return their direct result, while every successful mutation also publishes a fresh \Code{state} Socket.IO event. Create and recall publish an additional \Code{announcement} unless the request is an idempotent replay.
 

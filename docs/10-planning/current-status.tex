@@ -1,17 +1,17 @@
-\chapter{Planning}
-\section{Current engineering status}
+\section{Planning}
+\subsection{Current engineering status}
 
 \textbf{Baseline:} commit \Code{bf71e73927fc7a24ec01501c38122327a64ffa4f}, audited 14 September 2026.
 
-\begin{longtable}{p{0.24\textwidth}p{0.20\textwidth}p{0.46\textwidth}}
+\begin{longtable}{P{0.24\textwidth}P{0.20\textwidth}P{0.46\textwidth}}
 \toprule
 Area & Classification & Evidence-based assessment \\
 \midrule
 Project stage & Prototype / pre-production & Runnable local web and Electron implementation exists; operational acceptance/release policy does not. \\
 Product definition & Partial & Ready-only workflow is clear; ownership, canonical brand, measurable outcomes, topology, and acceptance authority are undefined. \\
-Frontend & \Implemented with gaps & Cashier/public pages and media/settings UI exist; no automated frontend tests, missing public empty state and audio activation. \\
+Frontend & \Implemented; gaps remain & Cashier/public pages and media/settings UI exist; no automated frontend tests, missing public empty state and audio activation. \\
 Backend & \Implemented & Nest endpoints, validation, domain service, media service, and gateway function; architecture is single-module/local. \\
-Database & \Implemented with gaps & SQLite schema, constraints, WAL, persistence work; migrations, retention, audit metadata, integrity/recovery absent. \\
+Database & \Implemented; gaps remain & SQLite schema, constraints, WAL, persistence work; migrations, retention, audit metadata, integrity/recovery absent. \\
 Authentication & \Missing & No identity, session, guard, role, or permission enforcement. \\
 Queue management & \Implemented & Create ready, duplicate prevention, request replay, recall, counter update, deliver, cancel, reuse. \\
 Client display & \Partial & Ready list, paging, visual callout, footer, media/fallback and disconnect warning work; no explicit empty state or audio activation. \\
@@ -19,12 +19,12 @@ Multimedia & \Partial & Local catalog and optional YouTube/fallback are implemen
 Realtime & \Implemented & Full snapshots and ephemeral announcements with reconnect restoration; best-effort only and single-process. \\
 Testing & Partial & Five backend/service/integration tests pass; type checks pass; frontend, E2E, accessibility, packaging, load, and recovery absent. \\
 Deployment & Partial & Combined server and Windows NSIS build configured; no CI/CD, service supervision, signing, upgrade/rollback, or approved multi-screen topology. \\
-Operations & \Missing/unclear & Basic health/logs only; monitoring, backup/restore, retention, incident ownership, and procedures undefined. \\
-Documentation & Rebuilt / validation pending & Structured LaTeX set reflects current source; compilation could not be run because no TeX engine is installed in the audit environment. \\
+Operations & \Missing; unclear & Basic health/logs only; monitoring, backup/restore, retention, incident ownership, and procedures undefined. \\
+Documentation & Rebuilt / validated & Structured LaTeX set reflects current source and uses the vendored Overleaf Software Manual template; the A4 PDF compiles and has been visually inspected. \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Validation results}
+\subsubsection*{Validation results}
 
 \begin{itemize}
   \item \Code{npm test}: 5 tests, 5 passed, 0 failed (validated 14 September 2026).
@@ -32,9 +32,9 @@ Documentation & Rebuilt / validation pending & Structured LaTeX set reflects cur
   \item Backend TypeScript \Code{--noEmit}: passed.
   \item Production build: passed; Vite transformed 84 modules and backend compilation completed.
   \item Audio assets: passed; 102 announcement WAVs and six demo music tracks were structurally valid, PCM 16-bit, 22,050 Hz, mono, and non-silent.
-  \item TeX compilation: not run; no \Code{pdflatex}, \Code{xelatex}, or \Code{latexmk} installed.
+  \item TeX compilation: \Code{latexmk} with MiKTeX pdfTeX completed successfully; the resulting A4 PDF was rasterized and visually inspected page by page.
 \end{itemize}
 
-\subsection*{Critical gaps before production}
+\subsubsection*{Critical gaps before production}
 
 Public audio activation, deployment trust/security decision, recovery procedure, frontend/system acceptance tests, target hardware validation, operational supervision, release/licensing decisions, and canonical product naming.
