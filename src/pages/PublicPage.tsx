@@ -48,8 +48,8 @@ export function PublicPage() {
     </section>
     <section className="public-media-frame" aria-label="Multimedia y anuncios">
       <div className="public-media"><MediaPlayer config={multimedia} playlists={state?.playlists ?? []} ducked={Boolean(current)} audioEnabled={audioEnabled} onYoutubeActivityChange={setYoutubeActive}/></div>
-      {(current || !youtubeActive) && <section className="public-focus" aria-label={current?'Anuncio de turno':'Contenido de espera'}>
-      {current ? <div className="announcement-backdrop" role="status" aria-live="assertive" aria-atomic="true">
+      {current && <section className="public-focus" aria-label="Anuncio de turno">
+        <div className="announcement-backdrop" role="status" aria-live="assertive" aria-atomic="true">
         <div className="announcement-card glass-panel" key={current.id}>
           <StatusBadge tone="ready">Tu pedido está listo</StatusBadge>
           <span className="announcement-caption">TURNO</span>
@@ -58,10 +58,7 @@ export function PublicPage() {
           <div className="announcement-rule"/>
           <p><Icon name="receipt"/>Presenta tu ticket en el mostrador</p>
         </div>
-      </div> : <div className="public-resting">
-        <div className="welcome-copy"><span className="welcome-logo-plate"><img src="/assets/uaq-informatica-logo.png" alt="Universidad Autónoma de Querétaro · Facultad de Informática"/></span><h2>El café también<br/>nos une.</h2><p>Un momento para ti, mientras esperas.</p></div>
-        {latest && <div className="latest-call glass-panel" key={`${latest.id}-${latest.lastAnnouncedAt}`}><div><span className="eyebrow">ÚLTIMO LLAMADO</span><strong>{latest.number}</strong></div><div className="latest-call-copy">{latest.counter !== 0 ? <CounterLabel counter={latest.counter}/> : <span>Acércate por tu pedido</span>}<p>Disfruta tu momento.</p></div><Icon name="arrow"/></div>}
-      </div>}
+        </div>
       </section>}
     </section>
     {(audioError || !connected) && <div className="display-notices">

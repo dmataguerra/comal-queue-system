@@ -51,7 +51,14 @@ export function MediaPlayer({config,playlists,ducked,audioEnabled,onYoutubeActiv
  function resume(){if(config.type==='youtube'){if(error){setRetry(x=>x+1);return;}player.current?.playVideo();if(audioEnabled&&!ducked&&!config.muted)player.current?.unMute();setBlocked(false);}else{void audio.current?.play().then(()=>setBlocked(false));}}
  const fallback=config.type!=='youtube'||!config.playing||!online||Boolean(error)||blocked;
  return <div className="media-stage" data-media-type={config.type} data-muted={ducked||config.muted||!audioEnabled} data-playback-time={playbackTime.toFixed(1)} data-player-status={playerStatus}>
-  <div className={`coffee-fallback ${fallback?'visible':''}`} role="img" aria-hidden={!fallback} aria-label="Café servido en una cafetería"/>
+  <div className={`campus-carousel ${fallback?'visible':''}`} role="region" aria-hidden={!fallback} aria-label="Imágenes de la Facultad de Informática">
+   <div className="campus-carousel-track">
+    <img src="/assets/comal-image-1.jpg" alt="Estudiantes de la Facultad de Informática"/>
+    <img src="/assets/comal-image-2.jpg" alt="Instalaciones de la Facultad de Informática"/>
+    <img src="/assets/comal-image-1.jpg" alt="" aria-hidden="true"/>
+    <img src="/assets/comal-image-2.jpg" alt="" aria-hidden="true"/>
+   </div>
+  </div>
   {config.type==='youtube'&&online&&<div ref={host} className={`youtube-host ${error?'has-error':''}`} aria-label="Reproductor de YouTube"/>}
   {config.type==='local'&&track&&<audio ref={audio} src={track.url} preload="auto" onEnded={()=>setTrackIndex(index=>(index+1)%tracks.length)} onError={()=>{setError('No se pudo reproducir esta pista local. Comprueba el archivo en la biblioteca.');}}/>}
   {config.type==='local'&&track&&<div className="local-now-playing"><Icon name="music"/><div><span>{playlist?.name}</span><strong>{track.title}</strong></div><span className={`equalizer ${config.playing?'playing':''}`} aria-label={config.playing?'Música en reproducción':'Música en pausa'}><i/><i/><i/><i/></span></div>}
