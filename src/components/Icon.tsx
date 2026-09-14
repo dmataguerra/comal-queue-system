@@ -1,5 +1,9 @@
 import type {CSSProperties} from 'react';
 const paths:Record<string,string>={
+ coffee:'M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Zm12 1h2a3 3 0 0 1 0 6h-2M7 2v2m4-2v2m4-2v2M2 23h18',
+ receipt:'M5 3h14v18l-3-2-4 2-4-2-3 2V3Zm4 5h6m-6 4h6',
+ counter:'M3 10h18v11H3V10Zm-1 4h20M7 10V6h10v4M9 3h6',
+ headphones:'M3 14v-2a9 9 0 0 1 18 0v2M3 13h4v8H3v-8Zm14 0h4v8h-4v-8Z',
  ticket:'M4 12h16l-1 9H5l-1-9Zm4-8h7v4a3.5 3.5 0 0 1-7 0V4Zm7 1h2a2 2 0 0 1 0 4h-2M9 1h4',
  play:'m9 5 11 7-11 7V5Z', youtube:'M3 6c1-2 17-2 18 0s1 10 0 12-17 2-18 0-1-10 0-12Zm7 3 5 3-5 3V9Z',
  media:'M3 4h18v16H3V4Zm6 4 7 4-7 4V8Z',settings:'m10 2-.6 3-2 1.1L4.5 5l-2 3.5L5 10v3l-2.5 1.5 2 3.5 2.9-1.1 2 1.1.6 3h4l.6-3 2-1.1 2.9 1.1 2-3.5L19 13v-3l2.5-1.5-2-3.5-2.9 1.1-2-1.1L14 2h-4Zm5 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',

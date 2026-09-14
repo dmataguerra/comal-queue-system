@@ -52,6 +52,7 @@
   "build": {
     "appId": "mx.uaq.comal.local",
     "productName": "Comal++",
+    "electronDist": "node_modules/electron/dist",
     "directories": { "output": "release" },
     "files": ["dist/**/*", "build/**/*", "electron/**/*", "package.json"],
     "asarUnpack": ["dist/**/*", "build/**/*", "node_modules/**/*"],
