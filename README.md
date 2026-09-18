@@ -1,104 +1,86 @@
-# Comal++ · Turnos listos para recoger
+# Turnero El Comal · Troyanos
 
-Sistema local de llamados para la cafetería Comal++ de la Facultad de Informática de la Universidad Autónoma de Querétaro (UAQ).
+Anunciador de pedidos listos para la cafetería de la Facultad de Informática (UAQ). Quien atiende
+la barra teclea el número del ticket y presiona Enter: la TV lo muestra grande y una voz lo anuncia.
 
-El cajero introduce manualmente el código de un ticket cuando el pedido ya está listo. Al registrarlo, se añade directamente a la lista de turnos listos para recoger y se muestra en la pantalla de clientes.
+- Requerimientos y casos de uso: [docs/casos-de-uso.md](docs/casos-de-uso.md)
+- Arquitectura y decisiones: [docs/arquitectura.md](docs/arquitectura.md)
 
-## Estado del proyecto
+Funciona **sin internet, sin red y sin base de datos**. Es una aplicación de Electron con dos
+ventanas: la del operador en el monitor de la barra y la pública en pantalla completa en la TV
+(topología A).
 
-Proyecto en redefinición de alcance. Se eliminó la implementación anterior y su documentación complementaria para comenzar desde estos requisitos. El repositorio conserva únicamente este README y los archivos de Git; todavía no contiene una nueva aplicación ejecutable.
+## Requisitos
 
-Este documento sustituye el enfoque anterior de registro al cobrar y seguimiento de preparación. La selección de tecnologías y el diseño definitivo quedan pendientes de adecuarse al nuevo alcance.
+- Windows 11 con dos pantallas (monitor del operador y TV por HDMI).
+- Node.js 22.13 o superior, solo para desarrollar o empaquetar.
 
-## Requisitos confirmados
+## Uso diario
 
-1. **Captura exclusivamente manual.** No se tiene acceso al software de tickets. El cajero captura el código impreso; no habrá integración con dicho software, importación automática ni generación de una segunda numeración.
-2. **Solo turnos listos.** El sistema registra y gestiona pedidos que ya están listos para recoger. No existe un estado, lista ni panel de pedidos en preparación. Registrar un ticket equivale a añadirlo directamente a los listos.
-3. **Funcionamiento completo sin internet.** La operación principal debe poder arrancar, registrar tickets, mostrar turnos, reproducir llamados y confirmar entregas sin conexión a internet.
-4. **Todo local.** La aplicación, los datos y los recursos necesarios se ejecutan y almacenan en el equipo o infraestructura local de la cafetería. No se requiere alojamiento en la nube ni servicios externos para operar.
-5. **Funciones conectadas opcionales.** Podrán añadirse funciones que utilicen internet, pero serán complementarias. Su ausencia o falla no deberá bloquear ni degradar el flujo local de turnos.
-6. **Diseño basado en referencias.** La paleta de colores será similar a las imágenes que proporcione el usuario. Las imágenes están pendientes; aún no se fijan colores ni se adopta la paleta del mockup anterior.
+| Acción | Cómo |
+|---|---|
+| Llamar un turno | Teclear el ticket y presionar **Enter**. Solo cuentan los dos últimos dígitos: `213298` → **98**. |
+| Repetir un anuncio | Teclear el mismo número. |
+| Corregir una captura | **Ctrl+Z** quita el último llamado de la TV, sin anunciar (un solo nivel). |
+| Ayuda | **F1** |
 
-## Flujo de operación
+La TV muestra el turno actual y hasta 5 llamados. Al día siguiente la lista arranca vacía; si se
+va la luz a media jornada, al volver se recupera lo que estaba en pantalla. Si no hay una segunda
+pantalla, la vista pública **no** se abre y el operador ve un aviso, para que el campo de captura
+nunca aparezca en la TV.
 
-El cobro, la impresión de tickets y la preparación se realizan fuera del sistema de turnos.
+## Desarrollo
 
-1. Cuando el pedido está listo, el cajero introduce manualmente el código de su ticket.
-2. El sistema valida el código y guarda el turno localmente como **Listo para recoger**.
-3. La pantalla pública muestra el código y reproduce su llamado por voz con recursos locales.
-4. Si es necesario, el cajero puede repetir el llamado sin crear otro turno.
-5. El cliente presenta su ticket y recoge su pedido.
-6. El cajero confirma la entrega; el turno deja de aparecer en la lista pública de listos.
-
-```mermaid
-flowchart LR
-    A[Pedido ya listo] --> B[Cajero captura el código del ticket]
-    B --> C[Validar y guardar localmente]
-    C --> D[Mostrar en turnos listos y anunciar]
-    D --> E[Cliente recoge con su ticket]
-    E --> F[Confirmar entrega y retirar de pantalla]
+```powershell
+npm install
+npm run dev      # Vite + compilación del proceso principal + Electron
+npm test         # núcleo, persistencia, store, configuración y contenido
+npm run build    # typecheck, vistas en dist/ y proceso principal en build/
+npm start        # abre la app compilada
 ```
 
-## Interfaces y acciones
+En desarrollo, con una sola pantalla, la vista pública se abre en una ventana normal para poder
+verla. Empaquetada, respeta RF-13 al pie de la letra.
 
-### Panel de caja
+## Empaquetar
 
-- Capturar y añadir directamente un ticket listo para recoger.
-- Consultar y buscar turnos pendientes de recoger.
-- Repetir el llamado de un turno.
-- Confirmar la entrega y retirarlo de la lista de listos.
-- Retirar un ticket capturado por error, con confirmación. Para corregirlo, retirar el registro incorrecto y capturar el código correcto; nunca enviarlo a preparación.
-- Mostrar errores de validación, guardado o disponibilidad local sin presentar acciones fallidas como confirmadas.
+```powershell
+npm run desktop:build   # instalador NSIS en release/
+npm run desktop:dir     # carpeta sin instalador en release/win-unpacked
+```
 
-### Pantalla pública
+## Carpeta de datos
 
-- Mostrar códigos grandes y legibles de los pedidos listos para recoger.
-- Destacar el llamado más reciente y mantener visibles los demás turnos pendientes.
-- Indicar que el cliente debe presentar su ticket.
-- Mostrar «No hay pedidos listos para recoger» cuando la lista esté vacía.
-- Reproducir llamados en español, uno por uno, con activación y prueba de audio.
-- Avisar si se pierde la comunicación local y la información puede estar desactualizada.
-- Ser de consulta: los clientes no modifican los turnos.
+Junto al `.exe` (en desarrollo, la raíz del proyecto; se puede cambiar con `TURNERO_DATOS`):
 
-## Reglas de los tickets
+| Ruta | Qué es |
+|---|---|
+| `contenido/videos/` | Videos musicales `.mp4` (H.264 + AAC) o `.webm`. Se reproducen en orden aleatorio sin repetir. Sin videos, entra el modo banner. |
+| `contenido/banner/` | Imágenes `.jpg`, `.png` o `.webp` del modo banner. |
+| `contenido/voz/` | `00.wav` … `99.wav`, una frase por número. Ver [tooling/audio](tooling/audio/README.md). |
+| `contenido/aviso.wav` | El *tin-tin* previo a cada anuncio. |
+| `config.json` | Configuración. Se crea con valores por defecto en el primer arranque. |
+| `estado.json` | Turno actual y llamados del día. Lo escribe la app de forma atómica. |
+| `turnero.log` | Archivos ignorados, fallos de reproducción y avisos. |
 
-- Se conserva el código del ticket existente. El formato confirmado previamente es `01`–`99`, incluidos los ceros iniciales; cualquier cambio de formato deberá validarse antes de implementar.
-- El código visible y el identificador interno del registro son independientes.
-- Se rechaza un código que ya esté en la lista de listos pendientes de recoger, sin sobrescribir ni cerrar el turno anterior.
-- Un código puede reutilizarse cuando su registro anterior haya sido entregado o retirado, creando un registro nuevo.
-- Los turnos se muestran según su registro como listos, sin asumir un orden numérico de entrega.
-- Un doble clic no debe duplicar registros ni llamados automáticos. Repetir un llamado es una acción explícita.
-- Los turnos permanecen hasta confirmar su entrega o retirarlos por error. No se borran automáticamente al recargar, reiniciar el equipo o cambiar de día.
-- Confirmar entrega o retirar un turno no modifica cobros ni procesa devoluciones.
+Agregar o quitar archivos de `contenido/` y editar `config.json` se aplica sin reiniciar; un cambio
+de configuración vale desde el siguiente llamado.
 
-## Operación local y sin internet
+### `config.json`
 
-- Distribuir localmente todos los recursos necesarios: interfaz, fuentes, iconos y audios. No depender de CDN, APIs remotas, autenticación en línea ni descargas durante el arranque o la operación habitual.
-- Guardar los turnos y sus cambios en almacenamiento persistente local y recuperarlos después de reiniciar.
-- Usar audios incluidos con la instalación o una voz española instalada y comprobada sin internet. Un servicio de voz remoto no cumple este requisito.
-- Actualizar la pantalla mediante comunicación local. Si se usan varios equipos, la red local debe seguir funcionando sin acceso a internet; el montaje no debe depender de Wi-Fi.
-- Mantener el funcionamiento normal si solo falla internet. Si falla el servicio local, el enlace entre equipos o el suministro eléctrico, mostrar el problema cuando sea posible y usar los tickets impresos y el llamado verbal como respaldo.
-- Definir un mecanismo local de respaldo y recuperación de datos antes de la operación definitiva.
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `repeticiones` | `2` | Veces que se dice «Turno N» (1 o 2). |
+| `volumenVoz` | `1` | Volumen del aviso y la voz, de 0 a 1. |
+| `volumenMusica` | `0.6` | Volumen de los videos, de 0 a 1. |
+| `atenuacionMusica` | `0.15` | Factor al que baja la música durante un anuncio. |
+| `segundosBanner` | `8` | Segundos por imagen en modo banner. |
+| `pantallaPublica` | `null` | Id del display de la TV; `null` elige el primero que no es el principal. Los ids aparecen en `turnero.log`. |
+| `recargaDiaria` | `"04:00"` | Hora de la recarga preventiva de la pantalla pública. |
+| `mensajes` | 3 mensajes | Textos del ticker inferior de la TV. |
 
-## Contexto de instalación
+## Arranque automático (RNF-07)
 
-Se mantiene como contexto previo una cafetería y una caja, con tres pantallas que mostrarán el mismo contenido y bocinas disponibles. El equipo de caja permite instalar programas, pero sus especificaciones y el cableado siguen pendientes de validación. Se evaluará una salida pública replicada mediante HDMI o una conexión local cableada, sin depender de internet.
-
-La planificación anterior contemplaba dos estudiantes, seis horas semanales por persona y un prototipo en cuatro semanas, con instalación definitiva posterior. El calendario deberá actualizarse conforme al nuevo alcance y a la fecha de reinicio acordada.
-
-## Fuera del alcance principal
-
-- Seguimiento de pedidos en preparación, registro al cobrar o panel de cocina.
-- Acceso o integración con el software actual de tickets.
-- Cobros, inventario, facturación, impresión de tickets o gestión de artículos del pedido.
-- Servicios en la nube o conexión a internet como requisitos de funcionamiento.
-
-## Pendientes antes de implementar
-
-- Recibir las imágenes de referencia y definir la paleta de colores.
-- Validar el equipo, sistema operativo, pantallas, bocinas y distribución física.
-- Elegir las tecnologías y el formato de instalación que cumplan la operación completamente local.
-- Concretar acceso de operadores, conservación del historial y procedimiento de respaldo.
-- Actualizar el calendario y acordar criterios de aceptación del nuevo prototipo.
-
-La validación deberá incluir el flujo completo sin internet, persistencia después de reiniciar, rechazo de duplicados, reutilización de códigos cerrados, retiro de capturas incorrectas y reproducción de llamados con recursos locales.
+No es código, es configuración de Windows en la PC de la cafetería: inicio de sesión automático,
+tarea programada «al iniciar sesión» con reinicio si falla, plan de energía sin suspensión y horas
+activas de Windows Update de 8:00 a 16:00. Detalle en [docs/arquitectura.md §10](docs/arquitectura.md).

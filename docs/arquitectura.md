@@ -1,6 +1,6 @@
 # Turnero El Comal — Arquitectura
 
-> v0.1 · 11 sep 2026
+> v0.2 · 14 sep 2026 — implementada la topología A sin base de datos; ver ADR-02 (§3.1) y §5.
 
 ---
 
@@ -138,6 +138,35 @@ medición de la distancia deja de ser un bloqueo y pasa a ser un flag en `config
 **Lo que esta decisión no arriesga.** Toda la lógica de negocio vive en `nucleo/`, que es
 JavaScript puro sin dependencias. Si el stack cambia, el núcleo y sus pruebas se llevan intactos.
 
+### 3.1 ADR-02 — Implementación: TypeScript en todo y React en las vistas
+
+**Decisión:** el núcleo y el proceso principal se escriben en TypeScript; las vistas se
+construyen con React + Vite, reutilizando la identidad visual Troyanos que ya existía. Se
+eliminan SQLite, NestJS y Socket.IO: el estado vive en el proceso principal y viaja por IPC.
+
+**Por qué**
+
+- El prototipo anterior ya tenía la interfaz pública y la del operador en React (paleta, vidrio,
+  ticker, mascota). Reescribirlas en HTML plano costaba días sin cambiar ningún requerimiento.
+- El contrato de §2 se cumple igual: las vistas solo reciben `Instantanea` y despachan `Accion`
+  a través de `window.turnero` (`main/contrato.ts`). No importan el store ni tocan disco.
+- TypeScript tipa ese contrato de punta a punta. `nucleo/turnos.ts` sigue sin dependencias ni
+  efectos; se prueba con `node:test` a través de `tsx`.
+
+**Diferencias con el texto original, a propósito**
+
+| Decía | Quedó | Motivo |
+|---|---|---|
+| Vistas en HTML/CSS/JS plano | React + Vite, una página por ventana | Reuso del trabajo visual |
+| `nucleo/` en JavaScript | TypeScript, cero dependencias | Contrato tipado; mismo espíritu |
+| `voz/*.mp3` | `voz/*.wav` | Ya estaban generados y verificados |
+| La elección de pantalla se recuerda en `config.json` | `pantallaPublica` la fija el administrador; la app no escribe `config.json` | Evita pisar ediciones y ciclos con el vigilante |
+| Reinicio diario al arrancar | También al despachar y en la recarga de las 04:00 | Si la PC nunca se apaga, el estado de ayer sobreviviría |
+| Franja superior (RF-08) | Ticker inferior | Ajuste visual pendiente de F5 |
+
+**Topología B** sigue sin implementarse: un adaptador WebSocket implementaría la misma
+interfaz `TurneroApi` sin tocar el núcleo ni las vistas.
+
 ---
 
 ## 4. El núcleo: una sola función
@@ -244,46 +273,49 @@ entregable de pruebas más barato posible, y es real.
 
 ## 5. Estructura del proyecto
 
+Estructura implementada (ADR-02):
+
 ```
 turnero/
 ├── docs/
 │   ├── casos-de-uso.md
 │   └── arquitectura.md
-├── nucleo/                    ← lógica de negocio, JS puro, sin dependencias
-│   ├── turnos.js
-│   └── turnos.test.js
+├── nucleo/                    ← lógica de negocio, TypeScript sin dependencias
+│   ├── turnos.ts
+│   └── turnos.test.ts            las 11 pruebas de §4
 ├── main/                      ← proceso principal de Electron
-│   ├── main.js                   arranque, ciclo de vida
-│   ├── ventanas.js               displays, pantalla completa, RF-13
-│   ├── store.js                  despachar/suscribir, envuelve el núcleo
-│   ├── persistencia.js           estado.json atómico, reinicio diario
-│   ├── config.js                 lee y vigila config.json
-│   └── contenido.js              inventario de la carpeta de contenido
-├── vistas/
-│   ├── operador/              ← RF-01, RF-07, RF-16
-│   │   ├── index.html
-│   │   ├── operador.css
-│   │   └── operador.js
-│   └── publica/               ← RF-02, RF-05, RF-08, RF-09
-│       ├── index.html
-│       ├── publica.css
-│       ├── publica.js
-│       ├── contenido.js          video y banner, RF-10 a RF-12
-│       └── anuncio.js            secuenciador de audio, RF-03, RF-11
-├── assets/
-│   ├── fuentes/               ← Futura o su sustituto
-│   └── logos/                 ← oficiales, cuando lleguen (RF-08)
+│   ├── main.ts                   arranque, protocolo turnero://, recarga de las 04:00
+│   ├── ventanas.ts               displays, pantalla completa, RF-13
+│   ├── store.ts                  despachar/suscribir, envuelve el núcleo
+│   ├── persistencia.ts           estado.json atómico, reinicio diario
+│   ├── config.ts                 lee, valida y vigila config.json
+│   ├── contenido.ts              inventario y vigilancia de la carpeta de contenido
+│   ├── contrato.ts               tipos compartidos con las vistas (TurneroApi)
+│   ├── adaptador-ipc.ts          topología A
+│   ├── preload.cts               expone window.turnero
+│   ├── log.ts                    turnero.log
+│   └── *.test.ts                 persistencia, store, config y contenido
+├── vistas/                    ← React + Vite, una página por ventana
+│   ├── operador/                 RF-01, RF-07, RF-16, RF-17
+│   ├── publica/                  RF-02, RF-05, RF-08 a RF-12
+│   │   ├── Contenido.tsx            video y banner
+│   │   ├── useAnuncios.ts           secuenciador de audio
+│   │   └── audio.ts                 AudioBuffers precargados
+│   └── comun/                    componentes, estilos, proveedor useTurnero
+├── public/assets/             ← logos y mascota (RF-08)
 ├── contenido/                 ← EDITABLE POR EL ADMINISTRADOR (RF-14)
-│   ├── videos/                   *.mp4
-│   ├── banner/                   *.jpg *.png
-│   ├── voz/                      00.mp3 … 99.mp3
-│   └── aviso.mp3
-├── config.json                ← RF-15
+│   ├── videos/                   *.mp4 *.webm
+│   ├── banner/                   *.jpg *.png *.webp
+│   ├── voz/                      00.wav … 99.wav
+│   └── aviso.wav
+├── config.json                ← RF-15, se crea con valores por defecto si falta
 └── estado.json                ← generado, RNF-09
 ```
 
-`contenido/` y `config.json` quedan **fuera del empaquetado**, junto al `.exe`, para que el
-administrador pueda tocarlos sin reinstalar nada.
+`contenido/` queda **fuera del empaquetado**, junto al `.exe`, para que el administrador pueda
+tocarlo sin reinstalar nada. `config.json` y `estado.json` también viven ahí; la app crea
+`config.json` en el primer arranque, así que una actualización nunca pisa lo que el
+administrador editó.
 
 ---
 
@@ -393,6 +425,8 @@ La prueba de aceptación de RNF-06 es literal: dejar la aplicación corriendo co
   fecha calendario es suficiente y no tiene casos borde.
 - **`deshacer` no se persiste.** Es de la sesión. Después de un corte de luz no quieres poder
   deshacer hacia un estado anterior al corte.
+- **Si la PC no se apaga en la noche**, la fecha también se revisa en cada despacho y en la
+  recarga de las 04:00: el primer llamado del día siguiente arranca de cero (ADR-02).
 
 Esto satisface a la vez «sin base de datos» y «que el estado sobreviva a una recarga»: un archivo
 de texto de una línea, sin motor, sin esquema, sin instalación.

@@ -64,12 +64,13 @@ if (-not $EspeakPath) {
 }
 
 $comalVoiceRoot = [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($EspeakPath))
-$comalOutput = Join-Path $comalProject 'public\audio'
-New-Item -ItemType Directory -Path (Join-Path $comalOutput 'turns'), (Join-Path $comalOutput 'counters') -Force | Out-Null
+$comalOutput = Join-Path $comalProject 'contenido\voz'
+New-Item -ItemType Directory -Path $comalOutput -Force | Out-Null
 
 function Get-ComalSpanishNumber([int]$number) {
     $comalSmall = @('', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve')
     $comalTens = @('', '', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa')
+    if ($number -eq 0) { return 'cero cero' }
     if ($number -lt 30) { return $comalSmall[$number] }
     $comalText = $comalTens[[math]::Floor($number / 10)]
     if ($number % 10 -ne 0) { $comalText += ' y ' + $comalSmall[$number % 10] }
@@ -83,11 +84,9 @@ function Write-ComalSpeech([string]$RelativePath, [string]$Speech) {
     if ((Get-Item -LiteralPath $comalTarget).Length -lt 4096) { throw "Generated audio is unexpectedly short: $RelativePath" }
 }
 
-for ($comalNumber = 1; $comalNumber -le 99; $comalNumber++) {
+# Con dos dígitos el catálogo completo son 100 frases (arquitectura §7): 00 a 99, sin concatenar.
+for ($comalNumber = 0; $comalNumber -le 99; $comalNumber++) {
     $comalCode = $comalNumber.ToString('00')
-    Write-ComalSpeech "turns\$comalCode.wav" ('Turno ' + (Get-ComalSpanishNumber $comalNumber) + '.')
+    Write-ComalSpeech "$comalCode.wav" ('Turno ' + (Get-ComalSpanishNumber $comalNumber) + '.')
 }
-Write-ComalSpeech 'counters\1.wav' 'Favor de pasar al mostrador uno.'
-Write-ComalSpeech 'counters\2.wav' 'Favor de pasar al mostrador dos.'
-Write-ComalSpeech 'ready.wav' 'Su pedido está listo.'
-Write-Output 'Generated 99 Spanish turn announcements and 3 suffixes. Run node tooling/audio/verify-audio.mjs to verify.'
+Write-Output 'Generated 100 Spanish turn announcements (00-99) in contenido/voz. Run node tooling/audio/verify-audio.mjs to verify.'
