@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { URL_CONTENIDO, inventariar } from './contenido.js';
+import { URL_CONTENIDO, inventariar, sembrarContenido } from './contenido.js';
 
 test('inventario: videos, banner, voz por número y aviso; lo no soportado se ignora y se registra una vez', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-contenido-'));
@@ -29,5 +29,29 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
 
     inventariar(raiz, (m) => registro.push(m), reportados);
     assert.equal(registro.length, 3);
+  } finally { rmSync(raiz, { recursive: true, force: true }); }
+});
+
+test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el administrador no vuelve', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-sembrar-'));
+  const fabrica = join(raiz, 'fabrica'), datos = join(raiz, 'datos', 'contenido');
+  try {
+    for (const archivo of ['voz/08.wav', 'banner/logo.png', 'aviso.wav']) {
+      mkdirSync(join(fabrica, archivo, '..'), { recursive: true });
+      writeFileSync(join(fabrica, archivo), archivo);
+    }
+    mkdirSync(join(raiz, 'datos'));
+    sembrarContenido(fabrica, datos);
+    assert.equal(readFileSync(join(datos, 'voz/08.wav'), 'utf8'), 'voz/08.wav');
+    assert.equal(existsSync(join(datos, 'aviso.wav')), true);
+    assert.equal(existsSync(`${datos}.tmp`), false);
+
+    unlinkSync(join(datos, 'banner/logo.png'));
+    sembrarContenido(fabrica, datos);
+    assert.equal(existsSync(join(datos, 'banner/logo.png')), false);
+
+    const registro: string[] = [];
+    sembrarContenido(join(raiz, 'no-existe'), join(raiz, 'otro'), (m) => registro.push(m));
+    assert.deepEqual([existsSync(join(raiz, 'otro')), registro], [false, []]);
   } finally { rmSync(raiz, { recursive: true, force: true }); }
 });

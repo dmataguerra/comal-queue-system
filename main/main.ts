@@ -5,7 +5,7 @@ import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import { conectarIpc } from './adaptador-ipc.js';
 import { leerConfig, msHastaHora, vigilarConfig } from './config.js';
-import { TIPOS_MIME, vigilarContenido } from './contenido.js';
+import { TIPOS_MIME, sembrarContenido, vigilarContenido } from './contenido.js';
 import type { Config, Inventario, Pantallas } from './contrato.js';
 import { crearRegistro } from './log.js';
 import { crearStore } from './store.js';
@@ -19,9 +19,14 @@ protocol.registerSchemesAsPrivileged([
 const desarrollo = !app.isPackaged;
 const urlDesarrollo = process.env.TURNERO_DEV_URL;
 const raizApp = app.getAppPath();
-// config.json, contenido/ y estado.json viven junto al .exe para que el administrador los edite (§5).
-const carpetaDatos = process.env.TURNERO_DATOS ? resolve(process.env.TURNERO_DATOS) : app.isPackaged ? dirname(process.execPath) : raizApp;
+// config.json, contenido/ y estado.json van en Documentos para que el administrador los edite (§5).
+// Junto al .exe no: el desinstalador de NSIS borra esa carpeta en cada actualización, y en
+// Program Files no se puede escribir. En desarrollo, la raíz del proyecto.
+const carpetaDatos = process.env.TURNERO_DATOS ? resolve(process.env.TURNERO_DATOS)
+  : app.isPackaged ? join(app.getPath('documents'), 'Turnero Comal') : raizApp;
 const carpetaContenido = join(carpetaDatos, 'contenido');
+// El instalador deja el contenido de fábrica junto al .exe (extraFiles); se copia en el primer arranque.
+const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : raizApp, 'contenido');
 const carpetaVistas = join(raizApp, 'dist');
 
 mkdirSync(carpetaDatos, { recursive: true });
@@ -110,6 +115,7 @@ async function iniciar() {
     registrar,
   });
 
+  sembrarContenido(contenidoDeFabrica, carpetaContenido, registrar);
   const contenido = vigilarContenido(carpetaContenido, (nuevo) => { inventario = nuevo; ipc.difundirContenido(nuevo); }, registrar);
   inventario = contenido.inicial;
 

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, watch } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, watch } from 'node:fs';
 import { extname, join } from 'node:path';
 import type { Inventario } from './contrato.js';
 import type { Registrar } from './log.js';
@@ -55,6 +55,24 @@ export function inventariar(raiz: string, registrar: Registrar = () => {}, repor
     voz,
     aviso: existsSync(join(raiz, 'aviso.wav')) ? `${base}/aviso.wav` : null,
   };
+}
+
+/**
+ * Primer arranque: copia el contenido de fábrica (el que el instalador deja junto al .exe) a la
+ * carpeta de datos. Si ya existe no se toca: desde ahí es del administrador, y lo que borre no
+ * vuelve. Se copia a un temporal y se renombra, para que un corte a medias se reintente completo.
+ */
+export function sembrarContenido(origen: string, destino: string, registrar: Registrar = () => {}): void {
+  if (existsSync(destino) || !existsSync(origen)) return;
+  const temporal = `${destino}.tmp`;
+  try {
+    rmSync(temporal, { recursive: true, force: true });
+    cpSync(origen, temporal, { recursive: true });
+    renameSync(temporal, destino);
+    registrar(`contenido: se copió el contenido de fábrica a ${destino}`);
+  } catch (error) {
+    registrar(`contenido: no se pudo copiar el contenido de fábrica (${(error as Error).message})`);
+  }
 }
 
 /** Vigila la carpeta completa: copiar o borrar archivos se refleja sin reiniciar (RF-14). */

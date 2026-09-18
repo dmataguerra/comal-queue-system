@@ -312,10 +312,12 @@ turnero/
 └── estado.json                ← generado, RNF-09
 ```
 
-`contenido/` queda **fuera del empaquetado**, junto al `.exe`, para que el administrador pueda
-tocarlo sin reinstalar nada. `config.json` y `estado.json` también viven ahí; la app crea
-`config.json` en el primer arranque, así que una actualización nunca pisa lo que el
-administrador editó.
+`contenido/`, `config.json` y `estado.json` viven **fuera de la instalación**, en
+`Documentos\Turnero Comal`, para que el administrador pueda tocarlos sin reinstalar nada. No van
+junto al `.exe`: el desinstalador de NSIS borra esa carpeta en cada actualización, y si se
+instala en Program Files no se puede escribir ahí. El instalador deja el contenido de fábrica
+junto al `.exe` y la app lo copia a Documentos en el primer arranque; la app crea `config.json`
+si falta. Así una actualización nunca pisa lo que el administrador editó.
 
 ---
 

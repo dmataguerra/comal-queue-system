@@ -51,7 +51,13 @@ npm run desktop:dir     # carpeta sin instalador en release/win-unpacked
 
 ## Carpeta de datos
 
-Junto al `.exe` (en desarrollo, la raíz del proyecto; se puede cambiar con `TURNERO_DATOS`):
+Instalada, en `Documentos\Turnero Comal` del usuario de Windows; en desarrollo, la raíz del
+proyecto. Se puede cambiar con la variable de entorno `TURNERO_DATOS`. No vive junto al `.exe`
+porque el instalador borra esa carpeta en cada actualización.
+
+En el primer arranque se copia ahí el contenido de fábrica (voces, aviso y banner). Desde entonces
+la carpeta es del administrador: lo que borre no vuelve. Para restaurar el contenido de fábrica,
+borrar `contenido/` y reiniciar la app.
 
 | Ruta | Qué es |
 |---|---|
