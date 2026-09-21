@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -42,21 +42,23 @@ function inspect(relative) {
   return { path: relative, duration, peak, rms, sampleRate, channels };
 }
 
+// contenido/voz/00.wav … 99.wav y contenido/aviso.wav (arquitectura §7).
 const announcements = [];
-for (let turn = 1; turn <= 99; turn++) announcements.push(inspect(`public/audio/turns/${String(turn).padStart(2, '0')}.wav`));
-announcements.push(...['public/audio/counters/1.wav', 'public/audio/counters/2.wav', 'public/audio/ready.wav'].map(inspect));
-const music = [];
-for (const genre of ['lo-fi', 'jazz', 'rock']) {
-  const files = readdirSync(resolve(root, 'data/music', genre)).filter(file => file.endsWith('.wav'));
-  assert(files.length >= 2, `Expected at least two demo tracks: ${genre}`);
-  for (const file of files) music.push(inspect(`data/music/${genre}/${file}`));
+const missing = [];
+for (let turn = 0; turn <= 99; turn++) {
+  const relative = `contenido/voz/${String(turn).padStart(2, '0')}.wav`;
+  // El catálogo ya está completo; se tolera que falte 00 solo porque la app degrada sola
+  // (ese turno sonaría con el aviso nada más), pero queda avisado y listado en `missing`.
+  if (turn === 0 && !existsSync(resolve(root, relative))) { missing.push(relative); continue; }
+  announcements.push(inspect(relative));
 }
+const chime = inspect('contenido/aviso.wav');
+for (const file of missing) console.warn(`Aviso: falta ${file}; ese turno sonará solo con el aviso.`);
 console.log(JSON.stringify({
   success: true,
-  announcements: announcements.length,
-  turns: 99,
-  musicTracks: music.length,
-  announcementSeconds: [Math.min(...announcements.map(item => item.duration)), Math.max(...announcements.map(item => item.duration))],
-  musicSeconds: music.map(item => ({ path: item.path, seconds: Number(item.duration.toFixed(2)) })),
+  voices: announcements.length,
+  missing,
+  voiceSeconds: [Math.min(...announcements.map(item => item.duration)), Math.max(...announcements.map(item => item.duration))],
+  chimeSeconds: Number(chime.duration.toFixed(2)),
   format: 'PCM 16-bit, 22050 Hz, mono',
 }, null, 2));

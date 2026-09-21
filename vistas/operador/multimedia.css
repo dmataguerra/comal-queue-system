@@ -1,0 +1,29 @@
+.multimedia-workspace { display:grid; gap:22px; }
+.media-overview,.media-library-panel { padding:24px; }
+.media-overview { display:flex; justify-content:space-between; align-items:center; gap:24px; }
+.media-overview h2 { color:#073e70; font-size:20px; margin:6px 0; }
+.media-overview p,.media-library-heading p,.media-empty p,.media-note { color:#5d7891; font-size:12px; }
+.media-flow,.media-flow span,.media-actions,.media-library-heading { display:flex; align-items:center; gap:12px; }
+.media-flow { flex-wrap:wrap; }
+.media-flow span { padding:10px; border-radius:12px; background:#edf4fa; white-space:nowrap; }
+.media-flow span.active { color:#0758bd; background:#dcecf8; }
+.media-library-layout { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+.media-library-heading { flex-wrap:wrap; }
+.media-library-heading h2 { font-size:19px; color:#073e70; }
+.media-count { margin-left:auto; font-size:11px; color:#5d7891; }
+.media-actions { margin:20px 0; flex-wrap:wrap; }
+.media-file-grid { display:grid; gap:12px; }
+.media-file { display:flex; align-items:center; gap:12px; border:1px solid #c8dbea; border-radius:12px; padding:10px; background:#fff; }
+.media-preview { width:100px; height:64px; flex-shrink:0; position:relative; border-radius:8px; overflow:hidden; background:#e9f3fb; }
+.media-preview img,.media-preview video { width:100%; height:100%; object-fit:cover; }
+.media-preview>span { position:absolute; bottom:3px; right:3px; color:white; background:#073e70; border-radius:5px; padding:2px; }
+.media-preview .icon { width:16px; height:16px; }
+.media-file-info { min-width:0; flex:1; }
+.media-file-info strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.media-file-info small { color:#5d7891; font-size:10px; }
+.media-empty { display:flex; gap:14px; padding:24px 0; align-items:center; }
+.media-empty strong { color:#294f70; }
+.media-note { display:flex; gap:12px; align-items:flex-start; }
+.admin-shell .toast { position:fixed; z-index:100; bottom:24px; right:24px; max-width:min(520px,calc(100vw - 48px)); display:flex; align-items:center; gap:12px; padding:18px; border:1px solid #91c3ae; border-radius:14px; background:#f0fff7; color:#165c40; box-shadow:0 10px 30px #123a5e25; }
+.admin-shell .toast.error { color:#8a2935; border-color:#ddb9be; background:#fff1f2; }
+@media(max-width:1100px) { .media-library-layout { grid-template-columns:1fr; }.media-overview { align-items:flex-start; flex-direction:column; } }
