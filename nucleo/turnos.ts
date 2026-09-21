@@ -64,6 +64,28 @@ export function llamar(estado: Estado, entrada: unknown, maxLlamados = MAX_LLAMA
   };
 }
 
+/**
+ * Quita un número de la pantalla, sin anunciar (corrección manual desde el operador).
+ *
+ * La pantalla pública es una sola lista: `[actual, ...llamados]`, del más reciente al más
+ * viejo. Quitar es sacar ese elemento y dejar el resto en su orden; no hay turno «promovido»
+ * ni hueco. Si el número no está en pantalla no pasa nada.
+ */
+export function quitar(estado: Estado, n: number): Transicion {
+  if (estado.actual !== n && !estado.llamados.includes(n)) return { estado, efecto: null };
+  const [actual = null, ...llamados] = [
+    ...(estado.actual === null ? [] : [estado.actual]),
+    ...estado.llamados,
+  ].filter((x) => x !== n);
+
+  // Queda deshacible como cualquier otro cambio: si no, Ctrl+Z restauraría una foto vieja
+  // y el número quitado volvería a la TV (CU-03).
+  return {
+    estado: { actual, llamados, deshacer: { actual: estado.actual, llamados: estado.llamados } },
+    efecto: null,
+  };
+}
+
 /** CU-03 — un solo nivel, y silencioso */
 export function deshacer(estado: Estado): Transicion {
   if (!estado.deshacer) return { estado, efecto: null }; // CU-03 1a

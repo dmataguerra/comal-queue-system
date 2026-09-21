@@ -14,7 +14,7 @@ const pantallaTexto={tv:'Pantalla pública en la TV',ventana:'Pantalla pública 
 export function OperadorPage(){
  const {instantanea,pantallas,despachar}=useTurnero(),clock=useClock();
  const {actual,llamados,puedeDeshacer}=instantanea;
- const [entrada,setEntrada]=useState(''),[ocupado,setOcupado]=useState(false),[mensaje,setMensaje]=useState(''),[esError,setEsError]=useState(false),[ayuda,setAyuda]=useState(false);
+ const [entrada,setEntrada]=useState(''),[ocupado,setOcupado]=useState(false),[mensaje,setMensaje]=useState(''),[esError,setEsError]=useState(false),[ayuda,setAyuda]=useState(false),[menu,setMenu]=useState<number|null>(null);
  const input=useRef<HTMLInputElement>(null),timer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const previa=normalizar(entrada);
  function notificar(texto:string,error=false){setMensaje(texto);setEsError(error);if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>setMensaje(''),8000);}
@@ -33,17 +33,44 @@ export function OperadorPage(){
   catch(error){notificar((error as Error).message,true);}
   finally{setOcupado(false);input.current?.focus();}
  }
+ async function accionDeFila(hacer:()=>Promise<void>){
+  if(ocupado)return;setMenu(null);setOcupado(true);
+  try{await hacer();}catch(error){notificar((error as Error).message,true);}
+  finally{setOcupado(false);input.current?.focus();}
+ }
+ const anunciarDeNuevo=(n:number)=>accionDeFila(async()=>{
+  await despachar({tipo:'LLAMAR',entrada:String(n)});
+  notificar(`Turno ${formatear(n)} anunciado de nuevo.`);
+ });
+ const quitarTurno=(n:number)=>accionDeFila(async()=>{
+  await despachar({tipo:'QUITAR',n});
+  notificar(`Turno ${formatear(n)} quitado de la TV. Ctrl+Z lo devuelve.`);
+ });
  const atajos=useRef({deshacerUltimo});atajos.current={deshacerUltimo};
+ // El menú abierto se cierra con Escape, al hacer clic fuera y cuando la TV cambia por otra vía.
+ useEffect(()=>{
+  if(menu===null)return;
+  const cerrar=()=>setMenu(null);
+  window.addEventListener('click',cerrar);
+  return()=>window.removeEventListener('click',cerrar);
+ },[menu]);
+ useEffect(()=>{setMenu(null);},[actual,llamados]);
  useEffect(()=>{
   function tecla(e:KeyboardEvent){
    if(e.key==='F1'){e.preventDefault();setAyuda(true);}
    else if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();void atajos.current.deshacerUltimo();}
+   else if(e.key==='Escape')setMenu(null);
   }
   const enfocar=()=>input.current?.focus();
   window.addEventListener('keydown',tecla);window.addEventListener('focus',enfocar);
   return()=>{window.removeEventListener('keydown',tecla);window.removeEventListener('focus',enfocar);};
  },[]);
  useEffect(()=>{document.title='Troyanos · Operador';},[]);
+ // La TV es una sola lista: el actual arriba y detrás los llamados, del más reciente al más viejo.
+ const filas=[
+  ...(actual===null?[]:[{n:actual,destacada:true,nota:''}]),
+  ...llamados.map((n,i)=>({n,destacada:false,nota:i===0?'Llamado anterior':`Hace ${i+1} llamados`})),
+ ];
  const pista=!entrada.trim()?'Se usan los dos últimos dígitos del ticket.':previa===null?'Solo números, de 1 a 6 dígitos.':previa===actual?'Ya está en la TV: solo se repite el anuncio.':llamados.includes(previa)?'Está en llamados: vuelve a ser el turno actual.':'Turno nuevo.';
  return <div className="admin-shell">
   <AnimatedBackground/>
@@ -71,10 +98,9 @@ export function OperadorPage(){
        <form onSubmit={llamar}>
         <label htmlFor="turn-number">Número del ticket <span className="input-format">1 a 6 dígitos</span></label>
         <div className="call-entry">
-         <input className="turn-number-input" id="turn-number" ref={input} type="text" inputMode="numeric" maxLength={6} placeholder="213298" autoComplete="off" autoFocus value={entrada} onChange={e=>setEntrada(e.target.value)} aria-invalid={Boolean(entrada.trim())&&previa===null} aria-describedby="call-preview-hint ticket-feedback"/>
-         <div className={`call-preview ${previa===null?'empty':''}`} aria-live="polite"><span>Se anunciará</span><strong>{previa===null?'––':formatear(previa)}</strong></div>
+         <input className="turn-number-input" id="turn-number" ref={input} type="text" inputMode="numeric" maxLength={6} placeholder="213298" autoComplete="off" autoFocus value={entrada} onChange={e=>setEntrada(e.target.value)} aria-invalid={Boolean(entrada.trim())&&previa===null} aria-describedby="call-hint ticket-feedback"/>
         </div>
-        <p id="call-preview-hint" className="field-hint">{pista}</p>
+        <p id="call-hint" className="field-hint">{pista}</p>
         <button className="button primary register-button" disabled={ocupado}><Icon name="volume"/>Anunciar en la TV<kbd>Enter</kbd></button>
        </form>
        <div id="ticket-feedback" className={`form-feedback ${mensaje?(esError?'error':'success'):'neutral'}`} role="status" aria-live="polite"><Icon name={mensaje?(esError?'warning':'checkCircle'):'info'}/><span>{mensaje||'Cada llamado suena en la TV con aviso y voz.'}</span></div>
@@ -87,8 +113,17 @@ export function OperadorPage(){
      <section className="panel ready-panel" aria-labelledby="screen-heading">
       <div className="ready-heading"><div><span className="eyebrow">LO QUE VE EL CLIENTE</span><h2 id="screen-heading">En pantalla <span className="count-badge">{actual===null?0:llamados.length+1}</span></h2></div><StatusBadge tone={pantallas.publica==='ninguna'?'neutral':'ready'}>{pantallas.publica==='ninguna'?'Sin TV':'En vivo'}</StatusBadge></div>
       <div className="cashier-ready-list">
-       {actual!==null&&<div className="cashier-turn most-recent"><div className="cashier-ticket"><strong>{formatear(actual)}</strong><span>Turno actual</span></div><div className="cashier-counter"><span className="row-ready"><i/>Destacado en la TV</span></div></div>}
-       {llamados.map((n,i)=><div className="cashier-turn" key={n}><div className="cashier-ticket"><strong>{formatear(n)}</strong></div><div className="cashier-counter"><span className="counter-dash">{i===0?'Llamado anterior':`Hace ${i+1} llamados`}</span></div></div>)}
+       {filas.map(({n,destacada,nota})=><div className={`cashier-turn ${destacada?'most-recent':''}`} key={n}>
+        <div className="cashier-ticket"><strong>{formatear(n)}</strong>{destacada&&<span>Turno actual</span>}</div>
+        <div className="cashier-counter">{destacada?<span className="row-ready"><i/>Destacado en la TV</span>:<span className="counter-dash">{nota}</span>}</div>
+        <div className="turn-menu">
+         <button className="icon-button" aria-haspopup="menu" aria-expanded={menu===n} aria-label={`Acciones del turno ${formatear(n)}`} title={`Acciones del turno ${formatear(n)}`} onClick={e=>{e.stopPropagation();setMenu(menu===n?null:n);}}><Icon name="more"/></button>
+         {menu===n&&<div className="turn-menu-popup" role="menu" onClick={e=>e.stopPropagation()}>
+          <button role="menuitem" disabled={ocupado} onClick={()=>void anunciarDeNuevo(n)}><Icon name="volume"/>Anunciar de nuevo</button>
+          <button role="menuitem" className="danger" disabled={ocupado} onClick={()=>void quitarTurno(n)}><Icon name="trash"/>Quitar de la pantalla</button>
+         </div>}
+        </div>
+       </div>)}
        {actual===null&&<div className="empty-state"><span className="empty-icon"><Icon name="checkCircle"/></span><h3>Sin llamados en esta jornada</h3><p>El primer número que anuncies aparecerá aquí y en la TV.</p></div>}
       </div>
       <div className="ready-list-footer"><Icon name="monitor"/><span>La TV muestra el turno actual y hasta 5 llamados.</span></div>
@@ -102,6 +137,7 @@ export function OperadorPage(){
     <dt><kbd>Enter</kbd> Llamar</dt><dd>Teclea el número del ticket y presiona Enter. Solo cuentan los dos últimos dígitos: <strong>213298</strong> se anuncia como <strong>98</strong>. Antes de presionar Enter ves el número que va a salir.</dd>
     <dt><Icon name="volume"/> Repetir</dt><dd>Teclea el mismo número. Si ya es el turno actual, solo se repite el anuncio; si está en llamados, vuelve a ser el actual sin duplicarse.</dd>
     <dt><kbd>Ctrl+Z</kbd> Corregir</dt><dd>Quita de la TV el último llamado, sin anunciar. Solo se puede deshacer una vez; el siguiente llamado correcto trae su propio anuncio.</dd>
+    <dt><Icon name="more"/> Acciones de un turno</dt><dd>Cada turno de <strong>En pantalla</strong> tiene un menú: <strong>Anunciar de nuevo</strong> vuelve a sonarlo en la TV, y <strong>Quitar de la pantalla</strong> lo borra sin anunciar. Quitar también se deshace con <kbd>Ctrl+Z</kbd>.</dd>
     <dt><Icon name="monitor"/> La TV no muestra nada</dt><dd>Revisa que esté encendida y conectada. La pantalla pública aparece sola cuando se detecta.</dd>
     <dt><Icon name="calendar"/> Cada día</dt><dd>La lista arranca vacía al comenzar la jornada. Si se va la luz, al volver se recupera lo que estaba en pantalla.</dd>
    </dl>

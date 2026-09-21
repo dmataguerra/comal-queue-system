@@ -14,6 +14,7 @@ const paths:Record<string,string>={
  volume:'m11 4-6 5H2v6h3l6 5V4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14',mute:'m11 4-6 5H2v6h3l6 5V4Zm5 5 6 6m0-6-6 6',
  pause:'M8 5v14M16 5v14',stop:'M5 5h14v14H5V5Z',close:'m6 6 12 12M6 18 18 6',more:'M5 12h.01M12 12h.01M19 12h.01',
  monitor:'M2 3h20v14H2V3Zm6 18h8m-4-4v4',expand:'M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5',refresh:'M3 10a9 9 0 1 1 1.5 7M3 4v6h6',
- info:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 8v6m0-10h.01',folder:'M3 5h6l2 3h10v13H3V5Z',undo:'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',arrow:'M5 12h14m-6-6 6 6-6 6',warning:'m12 3 10 18H2L12 3Zm0 6v5m0 3h.01'
+ info:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 8v6m0-10h.01',folder:'M3 5h6l2 3h10v13H3V5Z',undo:'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',arrow:'M5 12h14m-6-6 6 6-6 6',warning:'m12 3 10 18H2L12 3Zm0 6v5m0 3h.01',
+ trash:'M4 7h16M10 4h4m-7 3 1 14h8l1-14M10 11v6m4-6v6'
 };
 export function Icon({name,className='',style}:{name:string;className?:string;style?:CSSProperties}){return <svg aria-hidden="true" className={`icon ${className}`} style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]||paths.info}/></svg>;}

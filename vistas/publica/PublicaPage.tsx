@@ -13,6 +13,11 @@ export function PublicaPage() {
   const {instantanea: {actual, llamados}, config, inventario, registrar} = useTurnero();
   const {anuncio, atenuado, errorAudio} = useAnuncios();
   useEffect(() => { document.title = 'Troyanos · Turnos'; }, []);
+  // Una sola lista, del más reciente al más viejo: los turnos salen conforme se llaman.
+  const filas = [
+    ...(actual === null ? [] : [{n: actual, ultimo: true}]),
+    ...llamados.map(n => ({n, ultimo: false})),
+  ];
 
   return <div className={`public-screen ${anuncio ? 'is-announcing' : ''}`}>
     <AnimatedBackground/>
@@ -20,15 +25,15 @@ export function PublicaPage() {
       <header className="public-queue-heading">
         <div className="public-title-row"><h1 id="public-title">Pedidos listos</h1></div>
       </header>
-      <div className={`public-current ${actual === null ? 'empty' : ''}`} aria-live="polite">
-        <span className="public-current-label">Turno actual</span>
-        <strong key={anuncio?.id ?? actual ?? 'vacio'}>{actual === null ? '––' : formatear(actual)}</strong>
-      </div>
-      <div className="public-called">
-        <span className="public-called-label">Llamados</span>
-        <div className="public-called-list">
-          {llamados.map(n => <strong key={n}>{formatear(n)}</strong>)}
-        </div>
+      <div className="public-turn-list" key={actual ?? 'vacio'} aria-live="polite">
+        {filas.map(({n, ultimo}) => <div className={`public-turn ${ultimo ? 'latest' : ''} ${anuncio?.n === n ? 'calling' : ''}`} key={n}>
+          <strong>{formatear(n)}</strong>
+          <div className="public-turn-detail">
+            {ultimo && <span className="public-turn-state">{anuncio ? 'Llamando ahora' : 'Último llamado'}</span>}
+            <span className="pickup-label">Recoge tu pedido</span>
+          </div>
+          <Icon name="arrow"/>
+        </div>)}
       </div>
       <div className="public-queue-bottom"><span><Icon name="receipt"/>Presenta tu ticket al recoger</span></div>
     </section>

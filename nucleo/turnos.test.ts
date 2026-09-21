@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { ESTADO_INICIAL, deshacer, formatear, llamar, type Estado } from './turnos.js';
+import { ESTADO_INICIAL, deshacer, formatear, llamar, quitar, type Estado } from './turnos.js';
 
 /** Aplica una secuencia de capturas desde el estado inicial. */
 function secuencia(...entradas: string[]): Estado {
@@ -64,6 +64,49 @@ describe('llamar()', () => {
     const { estado } = llamar(ESTADO_INICIAL, '8');
     assert.equal(estado.actual, 8);
     assert.equal(formatear(estado.actual!), '08');
+  });
+});
+
+describe('quitar()', () => {
+  test('un llamado: sale de la lista y el resto no se mueve', () => {
+    const previo = secuencia('10', '11', '12', '13');
+    assert.deepEqual([previo.actual, previo.llamados], [13, [12, 11, 10]]);
+    const { estado, efecto } = quitar(previo, 11);
+    assert.equal(estado.actual, 13);
+    assert.deepEqual(estado.llamados, [12, 10]);
+    assert.equal(efecto, null);
+  });
+
+  test('el actual: deja de aparecer y el siguiente queda arriba, sin anunciar', () => {
+    const { estado, efecto } = quitar(secuencia('10', '11', '12'), 12);
+    assert.equal(estado.actual, 11);
+    assert.deepEqual(estado.llamados, [10]);
+    assert.equal(efecto, null);
+  });
+
+  test('el único turno de la jornada: la pantalla queda vacía', () => {
+    const { estado } = quitar(secuencia('07'), 7);
+    assert.equal(estado.actual, null);
+    assert.deepEqual(estado.llamados, []);
+  });
+
+  test('un número que no está en pantalla: no cambia nada', () => {
+    const previo = secuencia('10', '11');
+    const { estado, efecto } = quitar(previo, 44);
+    assert.equal(estado, previo);
+    assert.equal(efecto, null);
+  });
+
+  test('se puede deshacer: Ctrl+Z devuelve el número a la TV (CU-03)', () => {
+    const previo = secuencia('10', '11', '12');
+    const { estado } = deshacer(quitar(previo, 12).estado);
+    assert.deepEqual([estado.actual, estado.llamados], [previo.actual, previo.llamados]);
+  });
+
+  test('quitar todos uno por uno vacía la pantalla sin dejar huecos', () => {
+    let estado = secuencia('10', '11', '12');
+    for (const n of [11, 12, 10]) estado = quitar(estado, n).estado;
+    assert.deepEqual([estado.actual, estado.llamados], [null, []]);
   });
 });
 

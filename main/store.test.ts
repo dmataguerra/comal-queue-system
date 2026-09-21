@@ -52,6 +52,20 @@ test('deshacer difunde sin anuncio y persiste; sin nada que deshacer no difunde'
   } finally { f.limpiar(); }
 });
 
+test('quitar difunde sin anuncio y persiste; un número fuera de pantalla no difunde', () => {
+  const f = fixture();
+  try {
+    for (const entrada of ['10', '11', '12']) f.store.despachar({ tipo: 'LLAMAR', entrada });
+    const quitado = f.store.despachar({ tipo: 'QUITAR', n: 11 });
+    assert.deepEqual(quitado, { instantanea: { actual: 12, llamados: [10], puedeDeshacer: true }, efecto: null, anuncio: null });
+    assert.deepEqual(f.eventos.at(-1), [{ actual: 12, llamados: [10], puedeDeshacer: true }, null]);
+    assert.deepEqual(JSON.parse(readFileSync(f.ruta, 'utf8')).llamados, [10]);
+    const cuenta = f.eventos.length;
+    f.store.despachar({ tipo: 'QUITAR', n: 44 });
+    assert.equal(f.eventos.length, cuenta);
+  } finally { f.limpiar(); }
+});
+
 test('el estado sobrevive a reabrir el store el mismo día, pero sin deshacer', () => {
   const f = fixture();
   try {

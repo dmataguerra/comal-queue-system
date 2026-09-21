@@ -28,6 +28,10 @@ function validarAccion(accion: unknown): Accion {
   if (valor?.tipo === 'LLAMAR' && typeof valor.entrada === 'string' && valor.entrada.length <= 32) {
     return { tipo: 'LLAMAR', entrada: valor.entrada };
   }
+  // QUITAR llega desde una fila ya en pantalla, así que el número siempre es de dos dígitos.
+  if (valor?.tipo === 'QUITAR' && Number.isInteger(valor.n) && (valor.n as number) >= 0 && (valor.n as number) <= 99) {
+    return { tipo: 'QUITAR', n: valor.n as number };
+  }
   throw new Error('Acción no válida.');
 }
 

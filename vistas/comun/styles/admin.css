@@ -324,12 +324,8 @@
  .admin-shell .new-turn-panel .form-feedback { min-height:28px; margin-top:6px; }
 }
 
-/* Operator: capture with a live preview of the two digits that will be announced (RF-17). */
-.admin-shell .call-entry { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:stretch; }
-.admin-shell .call-preview { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:150px; padding:8px 18px; border:2px solid #0758bd; border-radius:18px; color:#064b86; background:linear-gradient(135deg,#e3f1fb,#fff); }
-.admin-shell .call-preview span { font-size:10px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:#376b98; }
-.admin-shell .call-preview strong { font-size:72px; line-height:1; font-weight:800; letter-spacing:-3px; font-variant-numeric:tabular-nums; }
-.admin-shell .call-preview.empty { border-color:#c8dbea; color:#b6cde0; }
+/* Operator: the capture field takes the whole row; the number is echoed by "En pantalla". */
+.admin-shell .call-entry { display:grid; grid-template-columns:minmax(0,1fr); }
 .admin-shell .new-turn-panel .field-hint { margin-top:10px; font-size:13px; color:#3f6788; font-weight:500; }
 .admin-shell .register-button kbd,.admin-shell .undo-row kbd,.admin-shell .help-button kbd { margin-left:auto; }
 .admin-shell .undo-row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:16px; }
@@ -343,16 +339,18 @@
 .help-list dt:first-child { margin-top:0; }
 .help-list dt .icon { width:18px; height:18px; color:#0758bd; }
 .help-list dd { margin:0; font-size:12px; line-height:1.8; color:#4f6f8a; }
-@media(max-width:1180px) {
- .admin-shell .call-preview { min-width:120px; }
- .admin-shell .call-preview strong { font-size:58px; }
-}
-@media(max-width:480px) {
- .admin-shell .call-entry { grid-template-columns:1fr; }
-}
-@media(min-width:761px) and (max-height:850px) {
- .admin-shell .call-preview strong { font-size:50px; }
-}
 /* "En pantalla" mirrors the TV: current + five called numbers fit without scrolling. */
 .admin-shell .ready-panel .cashier-turn { min-height:56px; padding:6px 10px; }
 .admin-shell .ready-panel .cashier-ticket>strong { font-size:28px; }
+
+/* Per-row actions: re-announce or drop a number from the TV without retyping it. */
+.turn-menu { position:relative; justify-self:end; }
+.turn-menu-popup { position:absolute; top:calc(100% + 6px); right:0; z-index:20; min-width:212px; display:grid; padding:6px; border:1px solid #cadff0; border-radius:14px; background:#fff; box-shadow:0 18px 44px #0b3f6a2e; }
+.turn-menu-popup button { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:0; border-radius:10px; background:none; font:inherit; font-size:13px; font-weight:600; color:#0d4f86; text-align:left; cursor:pointer; }
+.turn-menu-popup button:hover:not(:disabled) { background:#e8f3fb; }
+.turn-menu-popup button:disabled { opacity:.45; cursor:default; }
+.turn-menu-popup button .icon { width:17px; height:17px; flex:none; }
+.turn-menu-popup button.danger { color:#b4232f; }
+.turn-menu-popup button.danger:hover:not(:disabled) { background:#fdecec; }
+/* The last rows open upward so the menu never falls outside the panel. */
+.cashier-turn:nth-last-child(-n+2) .turn-menu-popup { top:auto; bottom:calc(100% + 6px); }

@@ -1,4 +1,4 @@
-import { ESTADO_INICIAL, deshacer, llamar, type Estado } from '../nucleo/turnos.js';
+import { ESTADO_INICIAL, deshacer, llamar, quitar, type Estado } from '../nucleo/turnos.js';
 import type { Accion, Anuncio, Instantanea, ResultadoDespacho } from './contrato.js';
 import type { Registrar } from './log.js';
 import { fechaLocal, guardarEstado, leerEstado } from './persistencia.js';
@@ -56,7 +56,10 @@ export function crearStore({ ruta, hoy = () => fechaLocal(), registrar = () => {
 
   function despachar(accion: Accion): ResultadoDespacho {
     reiniciarSiCambioDia();
-    const { estado: siguiente, efecto } = accion.tipo === 'LLAMAR' ? llamar(estado, accion.entrada) : deshacer(estado);
+    const { estado: siguiente, efecto } =
+      accion.tipo === 'LLAMAR' ? llamar(estado, accion.entrada)
+      : accion.tipo === 'QUITAR' ? quitar(estado, accion.n)
+      : deshacer(estado);
     if (efecto?.tipo === 'CAPTURA_INVALIDA') {
       return { instantanea: obtener(), efecto: 'CAPTURA_INVALIDA', anuncio: null };
     }
