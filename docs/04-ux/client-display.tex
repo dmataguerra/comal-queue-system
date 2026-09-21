@@ -1,0 +1,33 @@
+\subsection{Client/public display}
+
+\subsubsection*{Purpose and main user}
+
+The display lets waiting customers match a printed ticket with a ready number and, where assigned, a pickup counter. It is read-only at the component level.
+
+\subsubsection*{Rendered regions}
+
+\begin{itemize}
+  \item a five-row ready-turn panel ordered newest/recalled first;
+  \item ``Último llamado'' emphasis for the first turn and ``Llamando ahora'' for the active announcement;
+  \item automatic eight-second pagination, or a manual next-page button when rotation is disabled;
+  \item a media frame containing campus fallback images, a local-audio status overlay, or YouTube;
+  \item a large assertive live-region announcement overlay for the configured duration;
+  \item a continuous footer ticker with logos, date, time, and configured messages;
+  \item connection, audio, and provider-failure notices when those states occur.
+\end{itemize}
+
+\subsubsection*{Behavior}
+
+A new or recalled turn resets pagination to page 1. Announcements are queued, deduplicated by announcement ID in memory, skipped if their turn has already closed, and cancelled on disconnect. Media is intended to mute during an announcement and resume afterward.
+
+\subsubsection*{Current gaps}
+
+\begin{itemize}
+  \item \textbf{Audio activation:} \Code{useAnnouncements} returns \Code{enableAudio} and \Code{testAudio}, but \Code{PublicPage} does not use either. Its \Code{audioEnabled} value remains false, so announcement playback is bypassed and local/YouTube media is kept muted.
+  \item \textbf{Empty state:} no explicit ``no ready orders'' message is rendered; the list is simply empty.
+  \item \textbf{Mascot:} \Code{TrojanMascot.tsx} and its CSS/assets exist, but the component is not mounted.
+  \item \textbf{Fallback naming:} the active implementation uses a campus image carousel, not the unused \Code{coffee-welcome.png} described by older redesign documentation.
+  \item \textbf{Verification:} no automated browser, visual-regression, accessibility, or real audio/playback test exists.
+\end{itemize}
+
+\Evidence{src/pages/PublicPage.tsx; src/hooks/useAnnouncements.ts; src/components/MediaPlayer.tsx; src/styles/public.css}

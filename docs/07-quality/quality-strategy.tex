@@ -1,0 +1,24 @@
+\section{Quality}
+\subsection{Quality strategy}
+
+\subsubsection*{Current controls}
+
+\begin{itemize}
+  \item strict TypeScript configurations for frontend and backend;
+  \item build command combining frontend type check, Vite production build, and backend compilation;
+  \item five Node test-runner tests covering domain, persistence, validation, local catalog, real HTTP, and Socket.IO;
+  \item database constraints plus service validation and transactions;
+  \item an audio verifier for count, RIFF/WAVE integrity, format, duration, and non-silence;
+  \item idempotency and duplicate-active-number controls;
+  \item explicit offline/provider fallback UI and reduced-motion CSS.
+\end{itemize}
+
+On 14 September 2026 at commit \Code{bf71e73}, all five backend tests passed, both TypeScript projects passed \Code{--noEmit} checks, the production build succeeded, and the audio verifier confirmed 102 announcement assets (99 numbers plus three suffixes) and six demo music tracks. The first sandboxed test launch failed before discovery due to a host user-profile memory error; rerunning outside that restricted environment passed. This was an execution-environment issue, not a failing test.
+
+\subsubsection*{Missing quality gates}
+
+There is no CI, lint script/configuration, formatter configuration, coverage tool/threshold, frontend unit/component test, automated end-to-end browser test, accessibility scan, visual regression, load test, security scan, dependency update policy, or release acceptance record.
+
+\subsubsection*{Recommended evidence order}
+
+P0: add a browser test for the complete ready/visual/audio/close flow and fix audio activation. P1: run current tests/type/build/audio verification in CI, then cover cashier/public components and recovery. P2: add accessibility, visual viewport, compatibility, and load tests after stakeholders define targets.

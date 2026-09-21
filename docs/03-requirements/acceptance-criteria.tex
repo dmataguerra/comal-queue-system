@@ -1,0 +1,30 @@
+\subsection{Acceptance criteria}
+
+\subsubsection*{AC-QUEUE --- ready lifecycle}
+\begin{enumerate}
+  \item A value from 1 to 99 entered in the cashier UI is sent as a two-digit string and stored with a UUID, selected counter, status \Code{ready}, equal creation/ready/last-announced timestamps, and a new rank.
+  \item The same request ID and payload returns the recorded response without another row or announcement; the same ID with different content returns conflict.
+  \item A distinct request for an already-active number returns conflict.
+  \item Recall raises the turn to the start of the ready list and produces one fresh announcement.
+  \item Delivery or cancellation removes the turn from snapshots; its number can then be used for a new UUID.
+\end{enumerate}
+
+\subsubsection*{AC-SYNC --- connected screens}
+\begin{enumerate}
+  \item Each Socket.IO connection receives one current \Code{state} snapshot.
+  \item Each successful mutation broadcasts the resulting snapshot.
+  \item Only non-replayed create/announce mutations broadcast \Code{announcement}.
+  \item Reconnection restores state without replaying an old announcement.
+\end{enumerate}
+
+\subsubsection*{AC-MEDIA --- local and optional connected media}
+\begin{enumerate}
+  \item Only supported files discovered below an allow-listed genre directory are served by \Code{/media}.
+  \item A local selection is rejected if the playlist does not exist or has no tracks.
+  \item A YouTube selection is accepted only for the server's HTTPS host/identifier allow-list.
+  \item YouTube failure leaves the queue visible and shows local fallback content/notice.
+\end{enumerate}
+
+\subsubsection*{AC-AUDIO --- unresolved}
+
+The expected audible sequence is turn number then counter/ready suffix, with serialized announcements and media muted during the call. The code supplies those mechanics, but no public-screen control invokes \Code{enableAudio()}; therefore the end-to-end acceptance criterion is currently not met.

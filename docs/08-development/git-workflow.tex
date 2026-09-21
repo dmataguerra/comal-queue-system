@@ -1,0 +1,17 @@
+\subsection{Git workflow}
+
+\subsubsection*{Observed repository history}
+
+The audit saw branches \Code{main}, \Code{copilot/comal-interactive-mockup}, and a local \Code{codex/comal-interactive-mockup}; this documentation work starts from Copilot commit \Code{bf71e73} on \Code{docs/technical-documentation-v1}. There are no tags and no release branches. The inspected history is short and contains no evidence sufficient to establish a merge/rebase or release policy.
+
+Most recent messages resemble Conventional Commits, especially \Code{feat:}, \Code{fix:}, and \Code{docs:}, sometimes with scopes. Formatting is inconsistent (for example, extra spaces in some \Code{feat :} entries). No commit-message hook or contributor guide enforces it.
+
+\subsubsection*{Current workflow status}
+
+Branch naming is inconsistent by tool/purpose, and no protected-branch, review, merge, versioning, or tagging convention is documented in repository files. Therefore no workflow should be described as mandatory.
+
+\subsubsection*{Recommended workflow}
+
+Use short-lived branches with a meaningful category/name, require review and passing build/test/audio checks before merging, prefer consistent Conventional Commit syntax, and tag releases only after a release/versioning policy is approved. Define whether generated \Code{dist}, \Code{build-tests}, and binary audio belong in commits; current tracking/ignore state is inconsistent.
+
+\Evidence{Git refs and log inspected 14 September 2026; .gitignore}

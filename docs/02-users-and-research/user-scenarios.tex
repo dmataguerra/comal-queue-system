@@ -1,0 +1,27 @@
+\subsection{User scenarios}
+
+\subsubsection*{SC-QUEUE-001 --- Add a ready turn}
+
+The operator enters one or two digits and selects no counter, counter 1, or counter 2. The frontend validates the range, pads a single digit, and submits an idempotency key. The server validates again, rejects an active duplicate, inserts a \Code{ready} turn and request record in one transaction, emits state, then emits an announcement. The cashier and public views update.
+
+\subsubsection*{SC-QUEUE-002 --- Repeat a call}
+
+The operator selects an active turn and requests reannouncement. The server verifies the turn is ready, raises its rank, updates \Code{last_announced_at}, records the request, and emits state plus a fresh announcement. No new turn is created.
+
+\subsubsection*{SC-QUEUE-003 --- Close a turn}
+
+For successful pickup, the operator marks the turn \Code{delivered}. For an erroneous capture, the operator confirms removal and the server marks it \Code{cancelled}. Either transition removes the turn from snapshots/public display but retains it in the \Code{turns} table and history endpoint.
+
+\subsubsection*{SC-DISPLAY-001 --- Observe a disconnection}
+
+When Socket.IO disconnects, the last in-memory state remains rendered. The cashier sees mutations disabled; the public screen warns that information may be stale. On reconnect, the server emits a fresh snapshot but does not replay historical announcement events.
+
+\subsubsection*{SC-MEDIA-001 --- Select media}
+
+The operator can select a discovered local playlist or supply a validated HTTPS YouTube video/playlist URL. Configuration is persisted and broadcast. Local queue operation remains available if YouTube is offline or fails. In the current frontend, public media audio stays muted because audio enablement is never invoked.
+
+\subsubsection*{SC-SET-001 --- Change display settings}
+
+The operator changes announcement duration or footer messages, or toggles automatic page rotation in the top bar. Server-side validation constrains duration and messages; the updated snapshot reaches all clients.
+
+\Evidence{src/pages/CashierPage.tsx; src/components/ReadyList.tsx; src/components/MultimediaPanel.tsx; src/hooks/useSystem.tsx; server/state.service.ts}

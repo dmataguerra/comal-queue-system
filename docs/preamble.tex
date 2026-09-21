@@ -1,0 +1,51 @@
+% Packages and geometry from Overleaf's Software Manual template.
+\PassOptionsToPackage{obeyspaces,spaces,hyphens}{url}
+\usepackage{graphicx}
+\graphicspath{{../public/assets/}{public/assets/}}
+\usepackage{microtype}
+\usepackage[verbatim]{minted}
+\usepackage{amsmath}
+\setminted{style=friendly,fontsize=\small}
+\renewcommand{\listoflistingscaption}{List of Code Listings}
+\usepackage{hyperref}
+\usepackage[a4paper,top=4.2cm,bottom=4.2cm,left=3.5cm,right=3.5cm]{geometry}
+
+% Packages used by the COMAL Queue documentation set.
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{etoolbox}
+\usepackage{longtable}
+\usepackage{ragged2e}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\hypersetup{pdfencoding=auto,psdextra}
+\setlist[itemize,enumerate]{nosep,leftmargin=*}
+\setlist[description]{nosep}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlength{\tabcolsep}{3pt}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.4em}
+\renewcommand{\arraystretch}{1.12}
+\setcounter{tocdepth}{2}
+\tolerance=2000
+\emergencystretch=3em
+\raggedbottom
+\AtBeginEnvironment{longtable}{\footnotesize}
+\DefineVerbatimEnvironment{CodeBlock}{Verbatim}{fontsize=\small,breaklines=true,breakanywhere=true,breaksymbolleft={}}
+
+% Custom macros from the template and project-specific evidence helpers.
+\newcommand{\doclink}[2]{\href{#1}{#2}\footnote{\url{#1}}}
+\newcommand{\cs}[1]{\texttt{\textbackslash #1}}
+\newcommand{\Status}[1]{\nolinkurl{#1}}
+\newcommand{\Code}[1]{\nolinkurl{#1}}
+\newcommand{\Evidence}[1]{\par\begingroup\small\textbf{Evidence:} \Code{#1}\par\endgroup}
+\newcommand{\Unknown}{\Status{Requires stakeholder validation}}
+\newcommand{\Confirmed}{\Status{CONFIRMED}}
+\newcommand{\Implemented}{\Status{IMPLEMENTED}}
+\newcommand{\Partial}{\Status{PARTIALLY_IMPLEMENTED}}
+\newcommand{\Missing}{\Status{NOT_IMPLEMENTED}}
+\newcommand{\Unclear}{\Status{UNCLEAR}}
+\newcolumntype{P}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
