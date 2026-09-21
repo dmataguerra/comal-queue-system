@@ -47,7 +47,8 @@ const announcements = [];
 const missing = [];
 for (let turn = 0; turn <= 99; turn++) {
   const relative = `contenido/voz/${String(turn).padStart(2, '0')}.wav`;
-  // 00 queda pendiente hasta regenerar con eSpeak: la app solo toca el aviso para ese número.
+  // El catálogo ya está completo; se tolera que falte 00 solo porque la app degrada sola
+  // (ese turno sonaría con el aviso nada más), pero queda avisado y listado en `missing`.
   if (turn === 0 && !existsSync(resolve(root, relative))) { missing.push(relative); continue; }
   announcements.push(inspect(relative));
 }

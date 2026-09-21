@@ -4,7 +4,7 @@ import type { Config } from './contrato.js';
 import type { Registrar } from './log.js';
 
 export const CONFIG_POR_DEFECTO: Config = {
-  repeticiones: 2,
+  repeticiones: 1,
   volumenVoz: 1,
   volumenMusica: 0.6,
   atenuacionMusica: 0.15,

@@ -76,7 +76,7 @@ de configuración vale desde el siguiente llamado.
 
 | Clave | Por defecto | Qué hace |
 |---|---|---|
-| `repeticiones` | `2` | Veces que se dice «Turno N» (1 o 2). |
+| `repeticiones` | `1` | Veces que se dice «Turno N» (1 o 2). |
 | `volumenVoz` | `1` | Volumen del aviso y la voz, de 0 a 1. |
 | `volumenMusica` | `0.6` | Volumen de los videos, de 0 a 1. |
 | `atenuacionMusica` | `0.15` | Factor al que baja la música durante un anuncio. |
