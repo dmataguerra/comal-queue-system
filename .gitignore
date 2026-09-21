@@ -1,12 +1,13 @@
 node_modules/
 dist/
 build/
-data/*.sqlite
-data/*.sqlite-*
-data/*.db
-data/*.db-*
+config.json
+estado.json
+estado.json.tmp
+turnero.log
 .env
 *.log
 test-results/
 release/
 release-test/
+.tmp-audio/
