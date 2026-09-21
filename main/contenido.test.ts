@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, w
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { URL_CONTENIDO, inventariar, sembrarContenido } from './contenido.js';
+import { URL_CONTENIDO, importarArchivos, inventariar, quitarArchivo, sembrarContenido } from './contenido.js';
 
 test('inventario: videos, banner, voz por número y aviso; lo no soportado se ignora y se registra una vez', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-contenido-'));
@@ -53,5 +53,24 @@ test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el admi
     const registro: string[] = [];
     sembrarContenido(join(raiz, 'no-existe'), join(raiz, 'otro'), (m) => registro.push(m));
     assert.deepEqual([existsSync(join(raiz, 'otro')), registro], [false, []]);
+  } finally { rmSync(raiz, { recursive: true, force: true }); }
+});
+
+test('administración: importa sin sobrescribir y solo elimina archivos multimedia inventariados', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-administrar-'));
+  const origen = join(raiz, 'origen');
+  const contenido = join(raiz, 'contenido');
+  try {
+    mkdirSync(origen);
+    writeFileSync(join(origen, 'promo.mp4'), 'primero');
+    writeFileSync(join(origen, 'notas.txt'), 'no permitido');
+    const primera = importarArchivos(contenido, 'videos', [join(origen, 'promo.mp4'), join(origen, 'notas.txt')]);
+    const segunda = importarArchivos(contenido, 'videos', [join(origen, 'promo.mp4')]);
+    assert.deepEqual(primera, { agregados: ['promo.mp4'], omitidos: ['notas.txt'], cancelado: false });
+    assert.deepEqual(segunda.agregados, ['promo (2).mp4']);
+    assert.equal(quitarArchivo(contenido, `${URL_CONTENIDO}/videos/promo.mp4`), true);
+    assert.equal(existsSync(join(contenido, 'videos', 'promo.mp4')), false);
+    assert.equal(quitarArchivo(contenido, `${URL_CONTENIDO}/voz/08.wav`), false);
+    assert.equal(quitarArchivo(contenido, 'turnero://app/contenido/videos/../banner/logo.png'), false);
   } finally { rmSync(raiz, { recursive: true, force: true }); }
 });

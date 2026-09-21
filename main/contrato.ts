@@ -46,6 +46,14 @@ export interface Inventario {
   aviso: string | null;
 }
 
+export type CategoriaContenido = 'videos' | 'banner';
+
+export interface ResultadoImportacion {
+  agregados: string[];
+  omitidos: string[];
+  cancelado: boolean;
+}
+
 /** tv: pantalla completa en el segundo display · ventana: modo desarrollo · ninguna: RF-13 */
 export interface Pantallas {
   publica: 'tv' | 'ventana' | 'ninguna';
@@ -61,6 +69,9 @@ export interface Inicial {
 export interface TurneroApi {
   obtener(): Promise<Inicial>;
   despachar(accion: Accion): Promise<ResultadoDespacho>;
+  importarContenido(categoria: CategoriaContenido): Promise<ResultadoImportacion>;
+  quitarContenido(url: string): Promise<boolean>;
+  abrirCarpetaContenido(categoria?: CategoriaContenido): Promise<void>;
   alCambiarEstado(fn: (instantanea: Instantanea, anuncio: Anuncio | null) => void): () => void;
   alCambiarConfig(fn: (config: Config) => void): () => void;
   alCambiarContenido(fn: (inventario: Inventario) => void): () => void;

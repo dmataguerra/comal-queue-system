@@ -1,12 +1,12 @@
-import { app, dialog, Menu, net, protocol } from 'electron';
+import { app, dialog, Menu, net, protocol, shell } from 'electron';
 import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import { conectarIpc } from './adaptador-ipc.js';
 import { leerConfig, msHastaHora, vigilarConfig } from './config.js';
-import { TIPOS_MIME, sembrarContenido, vigilarContenido } from './contenido.js';
-import type { Config, Inventario, Pantallas } from './contrato.js';
+import { importarArchivos, quitarArchivo, TIPOS_MIME, sembrarContenido, vigilarContenido } from './contenido.js';
+import type { CategoriaContenido, Config, Inventario, Pantallas, ResultadoImportacion } from './contrato.js';
 import { crearRegistro } from './log.js';
 import { crearStore } from './store.js';
 import { crearVentanas, type Vista } from './ventanas.js';
@@ -107,11 +107,38 @@ async function iniciar() {
     registrar,
   });
 
+  const importarContenido = async (categoria: CategoriaContenido): Promise<ResultadoImportacion> => {
+    const videos = categoria === 'videos';
+    const seleccion = await dialog.showOpenDialog({
+      title: videos ? 'Agregar videos a la pantalla 2' : 'Agregar imágenes a la pantalla 2',
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: videos ? 'Videos compatibles' : 'Imágenes compatibles', extensions: videos ? ['mp4', 'webm'] : ['jpg', 'jpeg', 'png', 'webp'] }],
+    });
+    if (seleccion.canceled) return { agregados: [], omitidos: [], cancelado: true };
+    const resultado = importarArchivos(carpetaContenido, categoria, seleccion.filePaths, registrar);
+    if (resultado.agregados.length) registrar(`contenido: se importaron ${resultado.agregados.join(', ')}`);
+    return resultado;
+  };
+  const quitarContenido = (url: string) => {
+    const eliminado = quitarArchivo(carpetaContenido, url);
+    if (eliminado) registrar(`contenido: se eliminó ${decodeURIComponent(url.split('/').pop() ?? url)}`);
+    return eliminado;
+  };
+  const abrirCarpetaContenido = async (categoria?: CategoriaContenido) => {
+    const carpeta = join(carpetaContenido, categoria ?? '');
+    mkdirSync(carpeta, { recursive: true });
+    const error = await shell.openPath(carpeta);
+    if (error) throw new Error(`No se pudo abrir la carpeta de multimedia: ${error}`);
+  };
+
   const ipc = conectarIpc({
     store,
     inicial: () => ({ instantanea: store.obtener(), config, inventario, pantallas }),
     esOperador: ventanas.esOperador,
     destinos: ventanas.destinos,
+    importarContenido,
+    quitarContenido,
+    abrirCarpetaContenido,
     registrar,
   });
 

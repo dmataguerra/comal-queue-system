@@ -1,5 +1,5 @@
 import { ipcMain, type WebContents } from 'electron';
-import type { Accion, Config, Inicial, Inventario, Pantallas } from './contrato.js';
+import type { Accion, CategoriaContenido, Config, Inicial, Inventario, Pantallas, ResultadoImportacion } from './contrato.js';
 import type { Registrar } from './log.js';
 import type { Store } from './store.js';
 
@@ -11,6 +11,9 @@ export const CANALES = {
   estado: 'turnero:estado',
   config: 'turnero:config',
   contenido: 'turnero:contenido',
+  importarContenido: 'turnero:contenido:importar',
+  quitarContenido: 'turnero:contenido:quitar',
+  abrirCarpetaContenido: 'turnero:contenido:abrir',
   pantallas: 'turnero:pantallas',
 } as const;
 
@@ -19,6 +22,9 @@ interface OpcionesIpc {
   inicial: () => Inicial;
   esOperador: (remitente: WebContents) => boolean;
   destinos: () => WebContents[];
+  importarContenido: (categoria: CategoriaContenido) => Promise<ResultadoImportacion>;
+  quitarContenido: (url: string) => boolean;
+  abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
   registrar: Registrar;
 }
 
@@ -36,7 +42,7 @@ function validarAccion(accion: unknown): Accion {
 }
 
 /** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
-export function conectarIpc({ store, inicial, esOperador, destinos, registrar }: OpcionesIpc) {
+export function conectarIpc({ store, inicial, esOperador, destinos, importarContenido, quitarContenido, abrirCarpetaContenido, registrar }: OpcionesIpc) {
   const difundir = (canal: string, ...datos: unknown[]) => {
     for (const destino of destinos()) if (!destino.isDestroyed()) destino.send(canal, ...datos);
   };
@@ -46,6 +52,25 @@ export function conectarIpc({ store, inicial, esOperador, destinos, registrar }:
     // RF-13 como garantía: la pantalla pública no puede cambiar el estado.
     if (!esOperador(evento.sender)) throw new Error('Solo la vista del operador puede llamar turnos.');
     return store.despachar(validarAccion(accion));
+  });
+  const categoriaValida = (categoria: unknown): categoria is CategoriaContenido => categoria === 'videos' || categoria === 'banner';
+  const exigirOperador = (remitente: WebContents) => {
+    if (!esOperador(remitente)) throw new Error('Solo la vista del operador puede administrar multimedia.');
+  };
+  ipcMain.handle(CANALES.importarContenido, (evento, categoria: unknown) => {
+    exigirOperador(evento.sender);
+    if (!categoriaValida(categoria)) throw new Error('Categoría multimedia no válida.');
+    return importarContenido(categoria);
+  });
+  ipcMain.handle(CANALES.quitarContenido, (evento, url: unknown) => {
+    exigirOperador(evento.sender);
+    if (typeof url !== 'string' || url.length > 1000) throw new Error('Archivo multimedia no válido.');
+    return quitarContenido(url);
+  });
+  ipcMain.handle(CANALES.abrirCarpetaContenido, (evento, categoria: unknown) => {
+    exigirOperador(evento.sender);
+    if (categoria !== undefined && !categoriaValida(categoria)) throw new Error('Categoría multimedia no válida.');
+    return abrirCarpetaContenido(categoria);
   });
   ipcMain.on(CANALES.registrar, (evento, mensaje: unknown) => {
     registrar(`[${esOperador(evento.sender) ? 'operador' : 'pública'}] ${String(mensaje).slice(0, 500)}`);

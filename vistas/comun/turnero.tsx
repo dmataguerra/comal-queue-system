@@ -1,10 +1,13 @@
 import {createContext,useContext,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import type {Accion,Anuncio,Inicial,ResultadoDespacho,TurneroApi} from '../../main/contrato';
+import type {Accion,Anuncio,CategoriaContenido,Inicial,ResultadoDespacho,ResultadoImportacion,TurneroApi} from '../../main/contrato';
 
 declare global { interface Window { turnero?: TurneroApi } }
 
 interface Contexto extends Inicial {
  despachar:(accion:Accion)=>Promise<ResultadoDespacho>;
+ importarContenido:(categoria:CategoriaContenido)=>Promise<ResultadoImportacion>;
+ quitarContenido:(url:string)=>Promise<boolean>;
+ abrirCarpetaContenido:(categoria?:CategoriaContenido)=>Promise<void>;
  suscribirAnuncio:(fn:(anuncio:Anuncio)=>void)=>()=>void;
  registrar:(mensaje:string)=>void;
 }
@@ -18,6 +21,9 @@ export function TurneroProvider({children}:{children:ReactNode}){
  // Funciones estables: los efectos que se suscriben no deben reiniciarse en cada render.
  const acciones=useMemo(()=>({
   despachar:(accion:Accion)=>api!.despachar(accion),
+  importarContenido:(categoria:CategoriaContenido)=>api!.importarContenido(categoria),
+  quitarContenido:(url:string)=>api!.quitarContenido(url),
+  abrirCarpetaContenido:(categoria?:CategoriaContenido)=>api!.abrirCarpetaContenido(categoria),
   suscribirAnuncio:(fn:(anuncio:Anuncio)=>void)=>{anuncios.current.add(fn);return()=>{anuncios.current.delete(fn);};},
   registrar:(mensaje:string)=>api?.registrar(mensaje),
  }),[api]);

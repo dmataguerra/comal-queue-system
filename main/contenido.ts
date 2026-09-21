@@ -1,6 +1,6 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, watch } from 'node:fs';
-import { extname, join } from 'node:path';
-import type { Inventario } from './contrato.js';
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, watch } from 'node:fs';
+import { basename, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
+import type { CategoriaContenido, Inventario, ResultadoImportacion } from './contrato.js';
 import type { Registrar } from './log.js';
 
 export const URL_CONTENIDO = 'turnero://app/contenido';
@@ -24,6 +24,56 @@ function archivos(carpeta: string): string[] {
 }
 
 const url = (base: string, carpeta: string, nombre: string) => `${base}/${carpeta}/${encodeURIComponent(nombre)}`;
+
+const extensiones = (categoria: CategoriaContenido) => categoria === 'videos' ? VIDEOS : IMAGENES;
+
+function nombreDisponible(carpeta: string, nombre: string): string {
+  if (!existsSync(join(carpeta, nombre))) return nombre;
+  const partes = parse(nombre);
+  let indice = 2;
+  while (existsSync(join(carpeta, `${partes.name} (${indice})${partes.ext}`))) indice++;
+  return `${partes.name} (${indice})${partes.ext}`;
+}
+
+/** Copia archivos elegidos por el operador sin sobrescribir contenido existente. */
+export function importarArchivos(raiz: string, categoria: CategoriaContenido, origenes: string[], registrar: Registrar = () => {}): ResultadoImportacion {
+  const carpeta = join(raiz, categoria);
+  mkdirSync(carpeta, { recursive: true });
+  const agregados: string[] = [], omitidos: string[] = [];
+  for (const origen of origenes) {
+    const nombre = basename(origen);
+    if (!extensiones(categoria).has(extname(nombre).toLowerCase())) { omitidos.push(nombre); continue; }
+    try {
+      if (!statSync(origen).isFile()) { omitidos.push(nombre); continue; }
+      const destino = nombreDisponible(carpeta, nombre);
+      copyFileSync(origen, join(carpeta, destino));
+      agregados.push(destino);
+    } catch (error) {
+      omitidos.push(nombre);
+      registrar(`contenido: no se pudo importar ${nombre} (${(error as Error).message})`);
+    }
+  }
+  return { agregados, omitidos, cancelado: false };
+}
+
+/** Elimina solamente un archivo que pertenezca al inventario público de video o banner. */
+export function quitarArchivo(raiz: string, direccion: string): boolean {
+  const inventario = inventariar(raiz);
+  if (![...inventario.videos, ...inventario.banner].includes(direccion)) return false;
+  let ruta: string;
+  try {
+    const destino = new URL(direccion);
+    if (`${destino.protocol}//${destino.host}` !== 'turnero://app') return false;
+    ruta = decodeURIComponent(destino.pathname).replace(/^\/contenido\//, '');
+  } catch { return false; }
+  const partes = ruta.split('/');
+  if (partes.length !== 2 || (partes[0] !== 'videos' && partes[0] !== 'banner')) return false;
+  const absoluta = resolve(raiz, partes[0], partes[1]);
+  const relativa = relative(raiz, absoluta);
+  if (!relativa || relativa.startsWith('..') || isAbsolute(relativa) || !existsSync(absoluta) || !statSync(absoluta).isFile()) return false;
+  rmSync(absoluta);
+  return true;
+}
 
 /**
  * Inventario de la carpeta de contenido. Lo que no se puede reproducir se ignora y se

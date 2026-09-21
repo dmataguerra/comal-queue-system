@@ -1,5 +1,9 @@
 # COMAL Queue
 
+> **Integración actual en copilot:** la aplicación usa la arquitectura local Electron de `arquitechture-v2`; las secciones históricas siguientes y los manuales de documentación describen la versión anterior. Consulta `docs/arquitectura.md` para la arquitectura nueva.
+>
+> **Multimedia → pantalla 2:** desde el panel del operador puedes agregar videos MP4/WebM e imágenes JPG/JPEG/PNG/WebP, consultar su biblioteca y quitar archivos con confirmación. Los videos se reproducen en rotación aleatoria; si no hay videos reproducibles, aparece el carrusel de imágenes. Los cambios se reflejan sin reiniciar. Los archivos se copian a `contenido/videos` y `contenido/banner` dentro de la carpeta de datos (en producción, `Documentos/Turnero Comal`, salvo `TURNERO_DATOS`). “Abrir carpeta” permite administrarlos directamente. Esta integración adapta Multimedia al contenido local; no incorpora el reproductor anterior de YouTube ni las listas de música.
+
 COMAL Queue is a local ready-order display for the Troyanos/Comal++ cafeteria context represented in this repository. A cashier manually records an existing ticket number when an order is ready; connected public displays receive the ready list and a visual announcement in real time.
 
 ## Overview

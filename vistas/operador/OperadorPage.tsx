@@ -7,6 +7,7 @@ import {Icon} from '../comun/components/Icon';
 import {Modal} from '../comun/components/Modal';
 import {StatusBadge} from '../comun/components/StatusBadge';
 import {AnimatedBackground} from '../comun/components/AnimatedBackground';
+import {MultimediaPanel} from './MultimediaPanel';
 
 const pantallaTexto={tv:'Pantalla pública en la TV',ventana:'Pantalla pública en ventana',ninguna:'Sin pantalla pública'};
 
@@ -14,7 +15,7 @@ const pantallaTexto={tv:'Pantalla pública en la TV',ventana:'Pantalla pública 
 export function OperadorPage(){
  const {instantanea,pantallas,despachar}=useTurnero(),clock=useClock();
  const {actual,llamados,puedeDeshacer}=instantanea;
- const [entrada,setEntrada]=useState(''),[ocupado,setOcupado]=useState(false),[mensaje,setMensaje]=useState(''),[esError,setEsError]=useState(false),[ayuda,setAyuda]=useState(false),[menu,setMenu]=useState<number|null>(null);
+ const [pagina,setPagina]=useState<'turnos'|'multimedia'>('turnos'),[entrada,setEntrada]=useState(''),[ocupado,setOcupado]=useState(false),[mensaje,setMensaje]=useState(''),[esError,setEsError]=useState(false),[ayuda,setAyuda]=useState(false),[menu,setMenu]=useState<number|null>(null);
  const input=useRef<HTMLInputElement>(null),timer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const previa=normalizar(entrada);
  function notificar(texto:string,error=false){setMensaje(texto);setEsError(error);if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>setMensaje(''),8000);}
@@ -46,7 +47,7 @@ export function OperadorPage(){
   await despachar({tipo:'QUITAR',n});
   notificar(`Turno ${formatear(n)} quitado de la TV. Ctrl+Z lo devuelve.`);
  });
- const atajos=useRef({deshacerUltimo});atajos.current={deshacerUltimo};
+ const atajos=useRef({deshacerUltimo,pagina});atajos.current={deshacerUltimo,pagina};
  // El menú abierto se cierra con Escape, al hacer clic fuera y cuando la TV cambia por otra vía.
  useEffect(()=>{
   if(menu===null)return;
@@ -58,7 +59,7 @@ export function OperadorPage(){
  useEffect(()=>{
   function tecla(e:KeyboardEvent){
    if(e.key==='F1'){e.preventDefault();setAyuda(true);}
-   else if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();void atajos.current.deshacerUltimo();}
+    else if(atajos.current.pagina==='turnos'&&(e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();void atajos.current.deshacerUltimo();}
    else if(e.key==='Escape')setMenu(null);
   }
   const enfocar=()=>input.current?.focus();
@@ -72,25 +73,28 @@ export function OperadorPage(){
   ...llamados.map((n,i)=>({n,destacada:false,nota:i===0?'Llamado anterior':`Hace ${i+1} llamados`})),
  ];
  const pista=!entrada.trim()?'Se usan los dos últimos dígitos del ticket.':previa===null?'Solo números, de 1 a 6 dígitos.':previa===actual?'Ya está en la TV: solo se repite el anuncio.':llamados.includes(previa)?'Está en llamados: vuelve a ser el turno actual.':'Turno nuevo.';
+ const titulo=pagina==='turnos'?{miga:'Turnos',etiqueta:'OPERACIÓN DIARIA',titulo:'Llamar turnos',descripcion:''}:{miga:'Multimedia',etiqueta:'PANTALLAS Y CONTENIDO',titulo:'Multimedia',descripcion:'Cambia los videos o imágenes que se muestran en la pantalla 2.'};
  return <div className="admin-shell">
   <AnimatedBackground/>
   <a href="#admin-main" className="skip-link">Ir al contenido</a>
   <aside className="sidebar">
    <Brand/>
-   <span className="nav-label">ESPACIO DE TRABAJO</span>
-   <nav aria-label="Navegación principal">
-    <button className="active" aria-current="page" onClick={()=>input.current?.focus()}><Icon name="receipt"/><span>Turnos</span><i className="nav-active-dot"/></button>
-    <button onClick={()=>setAyuda(true)}><Icon name="info"/><span>Ayuda</span></button>
+    <span className="nav-label">ESPACIO DE TRABAJO</span>
+    <nav aria-label="Navegación principal">
+     <button className={pagina==='turnos'?'active':''} aria-current={pagina==='turnos'?'page':undefined} onClick={()=>{setPagina('turnos');setTimeout(()=>input.current?.focus());}}><Icon name="receipt"/><span>Turnos</span>{pagina==='turnos'&&<i className="nav-active-dot"/>}</button>
+     <button className={pagina==='multimedia'?'active':''} aria-current={pagina==='multimedia'?'page':undefined} onClick={()=>{setPagina('multimedia');setMenu(null);window.scrollTo({top:0});}}><Icon name="media"/><span>Multimedia</span>{pagina==='multimedia'&&<i className="nav-active-dot"/>}</button>
+     <button onClick={()=>setAyuda(true)}><Icon name="info"/><span>Ayuda</span></button>
    </nav>
    <div className="sidebar-bottom">
     <div className="sidebar-session"><span className="session-avatar"><Icon name="counter"/></span><div><strong>Barra</strong><span>Operación local</span></div></div>
    </div>
   </aside>
   <div className="admin-workspace">
-   <header className="admin-topbar"><div className="breadcrumb">Troyanos<Icon name="chevron"/><span>Turnos</span></div><span className={`connection-status ${pantallas.publica==='ninguna'?'disconnected':'connected'}`}><i/>{pantallaTexto[pantallas.publica]}</span><span className="topbar-divider"/><button className="button secondary help-button" onClick={()=>setAyuda(true)}><Icon name="info"/>Ayuda<kbd>F1</kbd></button></header>
+   <header className="admin-topbar"><div className="breadcrumb">Troyanos<Icon name="chevron"/><span>{titulo.miga}</span></div><span className={`connection-status ${pantallas.publica==='ninguna'?'disconnected':'connected'}`}><i/>{pantallaTexto[pantallas.publica]}</span><span className="topbar-divider"/><button className="button secondary help-button" onClick={()=>setAyuda(true)}><Icon name="info"/>Ayuda<kbd>F1</kbd></button></header>
    <main id="admin-main" className="admin-main" tabIndex={-1}>
-    <div className="page-heading"><div><span className="eyebrow">OPERACIÓN DIARIA</span><h1>Llamar turnos</h1></div><div className="workspace-clock"><strong>{clock.time}</strong><span>{clock.date}</span></div></div>
+    <div className="page-heading"><div><span className="eyebrow">{titulo.etiqueta}</span><h1>{titulo.titulo}</h1>{titulo.descripcion&&<p>{titulo.descripcion}</p>}</div><div className="workspace-clock"><strong>{clock.time}</strong><span>{clock.date}</span></div></div>
     {pantallas.publica==='ninguna'&&<div className="connection-banner" role="alert"><Icon name="warning"/><span>No se detecta la TV. La pantalla pública no se muestra para que el campo de captura nunca aparezca en ella. Revisa que la TV esté encendida y conectada: en cuanto se detecte, la pantalla pública vuelve sola.</span></div>}
+    {pagina==='turnos'?<>
     <div className="turns-layout">
      <div className="entry-column">
       <section className="panel new-turn-panel">
@@ -129,9 +133,11 @@ export function OperadorPage(){
       <div className="ready-list-footer"><Icon name="monitor"/><span>La TV muestra el turno actual y hasta 5 llamados.</span></div>
      </section>
     </div>
+    </>:<MultimediaPanel notificar={notificar}/>}
     <footer className="workspace-footer"><span>Facultad de Informática <i/> UAQ</span><span>Crear · crecer · consolidar</span></footer>
    </main>
   </div>
+  {mensaje&&pagina==='multimedia'&&<div className={`toast ${esError?'error':''}`} role="status"><Icon name={esError?'warning':'checkCircle'}/>{mensaje}</div>}
   {ayuda&&<Modal title="Cómo usar el turnero" onClose={()=>{setAyuda(false);input.current?.focus();}}>
    <dl className="help-list">
     <dt><kbd>Enter</kbd> Llamar</dt><dd>Teclea el número del ticket y presiona Enter. Solo cuentan los dos últimos dígitos: <strong>213298</strong> se anuncia como <strong>98</strong>. Antes de presionar Enter ves el número que va a salir.</dd>
