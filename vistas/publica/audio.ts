@@ -33,6 +33,7 @@ export function pausa(ms:number,signal:AbortSignal){
 export async function reproducir(url:string,volumen:number,signal:AbortSignal){
  const buffer=await cargar(url);if(signal.aborted)return;
  const ctx=obtenerContexto();if(ctx.state!=='running')await ctx.resume();
+ if(signal.aborted)return;
  await new Promise<void>((resolve,reject)=>{
   const fuente=ctx.createBufferSource(),ganancia=ctx.createGain();
   fuente.buffer=buffer;ganancia.gain.value=volumen;fuente.connect(ganancia).connect(ctx.destination);
