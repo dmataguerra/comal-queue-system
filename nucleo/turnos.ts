@@ -78,10 +78,9 @@ export function quitar(estado: Estado, n: number): Transicion {
     ...estado.llamados,
   ].filter((x) => x !== n);
 
-  // Queda deshacible como cualquier otro cambio: si no, Ctrl+Z restauraría una foto vieja
-  // y el número quitado volvería a la TV (CU-03).
+  // Borrar es explícito: se descarta la foto previa para que ninguna corrección lo restaure.
   return {
-    estado: { actual, llamados, deshacer: { actual: estado.actual, llamados: estado.llamados } },
+    estado: { actual, llamados, deshacer: null },
     efecto: null,
   };
 }

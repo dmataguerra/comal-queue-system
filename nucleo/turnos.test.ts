@@ -97,10 +97,11 @@ describe('quitar()', () => {
     assert.equal(efecto, null);
   });
 
-  test('se puede deshacer: Ctrl+Z devuelve el número a la TV (CU-03)', () => {
+  test('corregir después de quitar no devuelve el número eliminado', () => {
     const previo = secuencia('10', '11', '12');
     const { estado } = deshacer(quitar(previo, 12).estado);
-    assert.deepEqual([estado.actual, estado.llamados], [previo.actual, previo.llamados]);
+    assert.deepEqual([estado.actual, estado.llamados], [11, [10]]);
+    assert.equal(estado.deshacer, null);
   });
 
   test('quitar todos uno por uno vacía la pantalla sin dejar huecos', () => {

@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {formatear,normalizar} from '../../nucleo/turnos';
 import {useTurnero} from '../comun/turnero';
 import {useClock} from '../comun/hooks/useClock';
@@ -8,16 +8,18 @@ import {Modal} from '../comun/components/Modal';
 import {StatusBadge} from '../comun/components/StatusBadge';
 import {AnimatedBackground} from '../comun/components/AnimatedBackground';
 import {MultimediaPanel} from './MultimediaPanel';
+import {MenuTurno} from './MenuTurno';
 
 const pantallaTexto={tv:'Pantalla pública en la TV',ventana:'Pantalla pública en ventana',ninguna:'Sin pantalla pública'};
 
-/** RF-01, RF-07, RF-16, RF-17 · solo teclado: número + Enter, Ctrl+Z para deshacer, F1 para ayuda. */
+/** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage(){
  const {instantanea,pantallas,despachar}=useTurnero(),clock=useClock();
  const {actual,llamados,puedeDeshacer}=instantanea;
  const [pagina,setPagina]=useState<'turnos'|'multimedia'>('turnos'),[entrada,setEntrada]=useState(''),[ocupado,setOcupado]=useState(false),[mensaje,setMensaje]=useState(''),[esError,setEsError]=useState(false),[ayuda,setAyuda]=useState(false),[menu,setMenu]=useState<number|null>(null);
  const input=useRef<HTMLInputElement>(null),timer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const previa=normalizar(entrada);
+ const cerrarMenu=useCallback(()=>setMenu(null),[]);
  function notificar(texto:string,error=false){setMensaje(texto);setEsError(error);if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>setMensaje(''),8000);}
  async function llamar(e:React.FormEvent){
   e.preventDefault();if(ocupado)return;setOcupado(true);
@@ -45,9 +47,8 @@ export function OperadorPage(){
  });
  const quitarTurno=(n:number)=>accionDeFila(async()=>{
   await despachar({tipo:'QUITAR',n});
-  notificar(`Turno ${formatear(n)} quitado de la TV. Ctrl+Z lo devuelve.`);
+   notificar(`Turno ${formatear(n)} quitado de la TV.`);
  });
- const atajos=useRef({deshacerUltimo,pagina});atajos.current={deshacerUltimo,pagina};
  // El menú abierto se cierra con Escape, al hacer clic fuera y cuando la TV cambia por otra vía.
  useEffect(()=>{
   if(menu===null)return;
@@ -59,7 +60,6 @@ export function OperadorPage(){
  useEffect(()=>{
   function tecla(e:KeyboardEvent){
    if(e.key==='F1'){e.preventDefault();setAyuda(true);}
-    else if(atajos.current.pagina==='turnos'&&(e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){e.preventDefault();void atajos.current.deshacerUltimo();}
    else if(e.key==='Escape')setMenu(null);
   }
   const enfocar=()=>input.current?.focus();
@@ -111,7 +111,7 @@ export function OperadorPage(){
       </section>
       <section className="panel repeat-panel">
        <div className="section-heading with-icon"><span className="section-icon quiet"><Icon name="undo"/></span><div><h2>Corregir captura</h2><p>Quita el último llamado de la TV, sin volver a anunciar.</p></div></div>
-       <div className="undo-row"><button className="button secondary" onClick={deshacerUltimo} disabled={ocupado||!puedeDeshacer}><Icon name="undo"/>Deshacer último<kbd>Ctrl+Z</kbd></button><span>{puedeDeshacer?'Solo se puede deshacer una vez.':'No hay un llamado que deshacer.'}</span></div>
+        <div className="undo-row"><button className="button secondary" onClick={deshacerUltimo} disabled={ocupado||!puedeDeshacer}><Icon name="undo"/>Corregir última captura</button><span>{puedeDeshacer?'Revierte únicamente la última captura.':'No hay una captura pendiente de corrección.'}</span></div>
       </section>
      </div>
      <section className="panel ready-panel" aria-labelledby="screen-heading">
@@ -120,13 +120,7 @@ export function OperadorPage(){
        {filas.map(({n,destacada,nota})=><div className={`cashier-turn ${destacada?'most-recent':''}`} key={n}>
         <div className="cashier-ticket"><strong>{formatear(n)}</strong>{destacada&&<span>Turno actual</span>}</div>
         <div className="cashier-counter">{destacada?<span className="row-ready"><i/>Destacado en la TV</span>:<span className="counter-dash">{nota}</span>}</div>
-        <div className="turn-menu">
-         <button className="icon-button" aria-haspopup="menu" aria-expanded={menu===n} aria-label={`Acciones del turno ${formatear(n)}`} title={`Acciones del turno ${formatear(n)}`} onClick={e=>{e.stopPropagation();setMenu(menu===n?null:n);}}><Icon name="more"/></button>
-         {menu===n&&<div className="turn-menu-popup" role="menu" onClick={e=>e.stopPropagation()}>
-          <button role="menuitem" disabled={ocupado} onClick={()=>void anunciarDeNuevo(n)}><Icon name="volume"/>Anunciar de nuevo</button>
-          <button role="menuitem" className="danger" disabled={ocupado} onClick={()=>void quitarTurno(n)}><Icon name="trash"/>Quitar de la pantalla</button>
-         </div>}
-        </div>
+        <MenuTurno numero={n} abierto={menu===n} ocupado={ocupado} alternar={()=>setMenu(menu===n?null:n)} cerrar={cerrarMenu} anunciar={()=>void anunciarDeNuevo(n)} quitar={()=>void quitarTurno(n)}/>
        </div>)}
        {actual===null&&<div className="empty-state"><span className="empty-icon"><Icon name="checkCircle"/></span><h3>Sin llamados en esta jornada</h3><p>El primer número que anuncies aparecerá aquí y en la TV.</p></div>}
       </div>
@@ -142,8 +136,8 @@ export function OperadorPage(){
    <dl className="help-list">
     <dt><kbd>Enter</kbd> Llamar</dt><dd>Teclea el número del ticket y presiona Enter. Solo cuentan los dos últimos dígitos: <strong>213298</strong> se anuncia como <strong>98</strong>. Antes de presionar Enter ves el número que va a salir.</dd>
     <dt><Icon name="volume"/> Repetir</dt><dd>Teclea el mismo número. Si ya es el turno actual, solo se repite el anuncio; si está en llamados, vuelve a ser el actual sin duplicarse.</dd>
-    <dt><kbd>Ctrl+Z</kbd> Corregir</dt><dd>Quita de la TV el último llamado, sin anunciar. Solo se puede deshacer una vez; el siguiente llamado correcto trae su propio anuncio.</dd>
-    <dt><Icon name="more"/> Acciones de un turno</dt><dd>Cada turno de <strong>En pantalla</strong> tiene un menú: <strong>Anunciar de nuevo</strong> vuelve a sonarlo en la TV, y <strong>Quitar de la pantalla</strong> lo borra sin anunciar. Quitar también se deshace con <kbd>Ctrl+Z</kbd>.</dd>
+     <dt><Icon name="undo"/> Corregir captura</dt><dd>El botón <strong>Corregir última captura</strong> revierte el último llamado una sola vez. Ctrl+Z solo edita el texto que estés escribiendo. Los audios ya encolados terminan en orden.</dd>
+     <dt><Icon name="more"/> Acciones de un turno</dt><dd>Cada turno de <strong>En pantalla</strong> tiene un menú: <strong>Anunciar de nuevo</strong> añade su voz a la cola, y <strong>Quitar de la pantalla</strong> lo borra y descarta la corrección pendiente.</dd>
     <dt><Icon name="monitor"/> La TV no muestra nada</dt><dd>Revisa que esté encendida y conectada. La pantalla pública aparece sola cuando se detecta.</dd>
     <dt><Icon name="calendar"/> Cada día</dt><dd>La lista arranca vacía al comenzar la jornada. Si se va la luz, al volver se recupera lo que estaba en pantalla.</dd>
    </dl>

@@ -57,8 +57,8 @@ test('quitar difunde sin anuncio y persiste; un número fuera de pantalla no dif
   try {
     for (const entrada of ['10', '11', '12']) f.store.despachar({ tipo: 'LLAMAR', entrada });
     const quitado = f.store.despachar({ tipo: 'QUITAR', n: 11 });
-    assert.deepEqual(quitado, { instantanea: { actual: 12, llamados: [10], puedeDeshacer: true }, efecto: null, anuncio: null });
-    assert.deepEqual(f.eventos.at(-1), [{ actual: 12, llamados: [10], puedeDeshacer: true }, null]);
+    assert.deepEqual(quitado, { instantanea: { actual: 12, llamados: [10], puedeDeshacer: false }, efecto: null, anuncio: null });
+    assert.deepEqual(f.eventos.at(-1), [{ actual: 12, llamados: [10], puedeDeshacer: false }, null]);
     assert.deepEqual(JSON.parse(readFileSync(f.ruta, 'utf8')).llamados, [10]);
     const cuenta = f.eventos.length;
     f.store.despachar({ tipo: 'QUITAR', n: 44 });

@@ -30,7 +30,6 @@
 @media(prefers-reduced-motion:reduce){.trojan-mascot{animation:none;left:12px;top:12px;opacity:1}.trojan-mascot-sprite{animation:none;background-position:100% 50%}.banner-stage img{transition:none}}
 
 /* Focused polish: integrated border and independent SVG motion. */
-.public-queue{border-top:5px solid #064b86}
 
 .paint-motion{transform-box:fill-box;transform-origin:center;will-change:transform;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate}
 .paint-large{animation-name:paint-large-drift;animation-duration:13.5s}

@@ -96,7 +96,7 @@
 }
 @media(max-width:1000px) {
  .sidebar .brand-logo-plate { width: 44px; height: 44px; max-height: none; border-radius: 12px; }
- .sidebar .brand-logo { width: auto; max-width: none; height: 44px; }
+ .sidebar .brand-logo { width:100%; height:44px; object-fit:contain; }
 }
 @media(max-width:480px) {
  .sidebar .brand-logo-plate { width: 174px; height: auto; }
@@ -131,7 +131,7 @@
  backdrop-filter:blur(22px) saturate(130%);
 }
 .admin-shell .sidebar>.brand { margin-bottom:38px; }
-.admin-shell .brand-logo-plate { border-color:#c8dbea; box-shadow:0 10px 26px rgba(18,58,94,.1); }
+.admin-shell .brand-logo-plate { border:0; border-radius:0; background:transparent; box-shadow:none; }
 .admin-shell .nav-label { color:#6c849a; }
 .admin-shell .sidebar nav button { color:#496b89; border-radius:13px; font-weight:600; }
 .admin-shell .sidebar nav button:hover:not(.active) { color:#073e70; background:rgba(220,234,247,.72); }
@@ -175,8 +175,6 @@
  backdrop-filter:blur(18px) saturate(125%);
 }
 .admin-shell .panel::before { background:linear-gradient(135deg,rgba(221,237,249,.28),transparent 38%); }
-.admin-shell .new-turn-panel { border-top:5px solid #0758bd; }
-.admin-shell .ready-panel { border-top:5px solid #064b86; }
 .admin-shell .section-heading h2,.admin-shell .ready-heading h2 { color:#123b5e; font-weight:700; }
 .admin-shell .section-heading p,.admin-shell .section-subtitle { color:#617d95; }
 .admin-shell .section-icon { color:#0758bd; border-color:#b7d1e5; background:#e5f1fa; }
@@ -345,12 +343,10 @@
 
 /* Per-row actions: re-announce or drop a number from the TV without retyping it. */
 .turn-menu { position:relative; justify-self:end; }
-.turn-menu-popup { position:absolute; top:calc(100% + 6px); right:0; z-index:20; min-width:212px; display:grid; padding:6px; border:1px solid #cadff0; border-radius:14px; background:#fff; box-shadow:0 18px 44px #0b3f6a2e; }
+.turn-menu-popup { position:fixed; z-index:100; width:224px; overflow-y:auto; display:grid; padding:6px; border:1px solid #cadff0; border-radius:14px; background:#fff; box-shadow:0 18px 44px #0b3f6a2e; }
 .turn-menu-popup button { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:0; border-radius:10px; background:none; font:inherit; font-size:13px; font-weight:600; color:#0d4f86; text-align:left; cursor:pointer; }
 .turn-menu-popup button:hover:not(:disabled) { background:#e8f3fb; }
 .turn-menu-popup button:disabled { opacity:.45; cursor:default; }
 .turn-menu-popup button .icon { width:17px; height:17px; flex:none; }
 .turn-menu-popup button.danger { color:#b4232f; }
 .turn-menu-popup button.danger:hover:not(:disabled) { background:#fdecec; }
-/* The last rows open upward so the menu never falls outside the panel. */
-.cashier-turn:nth-last-child(-n+2) .turn-menu-popup { top:auto; bottom:calc(100% + 6px); }

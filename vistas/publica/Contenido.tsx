@@ -1,6 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import type {Config} from '../../main/contrato';
-import {TrojanMascot} from '../comun/components/TrojanMascot';
 import {YouTubeVideo} from './YouTubeVideo';
 
 interface Props {videos:string[];banner:string[];config:Config;atenuado:boolean;registrar:(mensaje:string)=>void}
@@ -83,6 +82,5 @@ function Banner({imagenes,segundos}:{imagenes:string[];segundos:number}){
  return <div className="content-stage banner-stage" role="region" aria-label="Imágenes de la Facultad de Informática">
   {imagenes.map((src,i)=><img key={src} src={src} alt="" className={i===indice%imagenes.length?'visible':''}/>)}
   {!imagenes.length&&<div className="banner-logos"><img src="/assets/troyanos-logo.png" alt="Troyanos"/><img src="/assets/uaq-informatica-logo.png" alt="Facultad de Informática UAQ"/></div>}
-  <TrojanMascot/>
  </div>;
 }
