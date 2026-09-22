@@ -1,5 +1,8 @@
 /** Cola FIFO: una tarea termina antes de iniciar la siguiente. */
-export function crearCola<T>(procesar: (valor: T, signal: AbortSignal) => Promise<void>, alFallar: (error: unknown) => void) {
+export function crearCola<T>(
+  procesar: (valor: T, signal: AbortSignal) => Promise<void>,
+  alFallar: (error: unknown) => void,
+) {
   const pendientes: T[] = [];
   const control = new AbortController();
   let trabajando = false;
@@ -9,10 +12,15 @@ export function crearCola<T>(procesar: (valor: T, signal: AbortSignal) => Promis
     try {
       while (pendientes.length && !control.signal.aborted) {
         const siguiente = pendientes.shift()!;
-        try { await procesar(siguiente, control.signal); }
-        catch (error) { if (!control.signal.aborted) alFallar(error); }
+        try {
+          await procesar(siguiente, control.signal);
+        } catch (error) {
+          if (!control.signal.aborted) alFallar(error);
+        }
       }
-    } finally { trabajando = false; }
+    } finally {
+      trabajando = false;
+    }
   }
   return {
     agregar(valor: T) {
@@ -20,6 +28,9 @@ export function crearCola<T>(procesar: (valor: T, signal: AbortSignal) => Promis
       pendientes.push(valor);
       void consumir();
     },
-    detener() { pendientes.length = 0; control.abort(); },
+    detener() {
+      pendientes.length = 0;
+      control.abort();
+    },
   };
 }

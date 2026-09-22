@@ -5,7 +5,9 @@ import type { TurneroApi } from './contrato.js';
 function escuchar<T extends unknown[]>(canal: string, fn: (...datos: T) => void): () => void {
   const oyente = (_evento: IpcRendererEvent, ...datos: unknown[]) => fn(...(datos as T));
   ipcRenderer.on(canal, oyente);
-  return () => { ipcRenderer.removeListener(canal, oyente); };
+  return () => {
+    ipcRenderer.removeListener(canal, oyente);
+  };
 }
 
 const turnero: TurneroApi = {

@@ -9,11 +9,35 @@ if (spawnSync(process.execPath, tsc, { cwd: root, stdio: 'inherit' }).status !==
 const electronEnv = { ...process.env, TURNERO_DEV_URL: 'http://127.0.0.1:5173' };
 delete electronEnv.ELECTRON_RUN_AS_NODE;
 const children = [
-  spawn(process.execPath, [...tsc, '--watch', '--preserveWatchOutput'], { cwd: root, stdio: 'inherit' }),
-  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1'], { cwd: root, stdio: 'inherit' }),
-  spawn(process.execPath, ['node_modules/electron/cli.js', '.'], { cwd: root, stdio: 'inherit', env: electronEnv })
+  spawn(process.execPath, [...tsc, '--watch', '--preserveWatchOutput'], {
+    cwd: root,
+    stdio: 'inherit',
+  }),
+  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1'], {
+    cwd: root,
+    stdio: 'inherit',
+  }),
+  spawn(process.execPath, ['node_modules/electron/cli.js', '.'], {
+    cwd: root,
+    stdio: 'inherit',
+    env: electronEnv,
+  }),
 ];
 let stopping = false;
-function stop(code=0) { if(stopping)return;stopping=true;for(const child of children)child.kill();process.exitCode=code; }
-for(const child of children) { child.on('error',error=>{console.error(error.message);stop(1);}); child.on('exit',code=>{if(!stopping)stop(code??1);}); }
-process.on('SIGINT',()=>stop());process.on('SIGTERM',()=>stop());
+function stop(code = 0) {
+  if (stopping) return;
+  stopping = true;
+  for (const child of children) child.kill();
+  process.exitCode = code;
+}
+for (const child of children) {
+  child.on('error', (error) => {
+    console.error(error.message);
+    stop(1);
+  });
+  child.on('exit', (code) => {
+    if (!stopping) stop(code ?? 1);
+  });
+}
+process.on('SIGINT', () => stop());
+process.on('SIGTERM', () => stop());

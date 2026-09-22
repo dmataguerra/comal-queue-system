@@ -11,13 +11,20 @@ interface PlayerOptions {
   height: string;
   playerVars: Record<string, string | number>;
   events: {
-    onReady(event: {target: YouTubePlayer}): void;
-    onError(event: {data: number}): void;
+    onReady(event: { target: YouTubePlayer }): void;
+    onError(event: { data: number }): void;
     onAutoplayBlocked(): void;
   };
 }
-interface YouTubeApi { Player: new (host: HTMLElement, options: PlayerOptions) => YouTubePlayer }
-declare global { interface Window { YT?: YouTubeApi; onYouTubeIframeAPIReady?: () => void } }
+interface YouTubeApi {
+  Player: new (host: HTMLElement, options: PlayerOptions) => YouTubePlayer;
+}
+declare global {
+  interface Window {
+    YT?: YouTubeApi;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
 let carga: Promise<YouTubeApi> | undefined;
 
 export function cargarYouTube(): Promise<YouTubeApi> {
@@ -34,11 +41,15 @@ export function cargarYouTube(): Promise<YouTubeApi> {
     }
     window.onYouTubeIframeAPIReady = () => {
       clearTimeout(temporizador);
-      if (window.YT) resolve(window.YT); else fallar();
+      if (window.YT) resolve(window.YT);
+      else fallar();
     };
     script.src = 'https://www.youtube.com/iframe_api';
     script.onerror = fallar;
     document.head.append(script);
-  }).catch(error => { carga = undefined; throw error; });
+  }).catch((error) => {
+    carga = undefined;
+    throw error;
+  });
   return carga;
 }

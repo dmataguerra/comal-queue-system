@@ -14,6 +14,9 @@
     "build": "tsc --noEmit -p tsconfig.json && vite build && tsc -p tsconfig.main.json",
     "start": "electron .",
     "test": "tsx --test nucleo/*.test.ts main/*.test.ts",
+    "format": "prettier --write main nucleo vistas scripts",
+    "format:check": "prettier --check main nucleo vistas scripts",
+    "test:desktop": "npm run build && electron scripts/smoke-desktop.mjs",
     "desktop:build": "npm run build && electron-builder --win",
     "desktop:dir": "npm run build && electron-builder --dir"
   },
@@ -26,6 +29,7 @@
     "@vitejs/plugin-react": "^5.0.3",
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",
+    "prettier": "^3.9.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.13",

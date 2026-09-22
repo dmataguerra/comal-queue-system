@@ -12,12 +12,23 @@ test('config.json ausente: se crea con los valores por defecto', () => {
     assert.deepEqual(leerConfig(ruta), CONFIG_POR_DEFECTO);
     assert.equal(existsSync(ruta), true);
     assert.deepEqual(JSON.parse(readFileSync(ruta, 'utf8')), CONFIG_POR_DEFECTO);
-  } finally { rmSync(raiz, { recursive: true, force: true }); }
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
 });
 
 test('valores parciales se mezclan; inválidos y claves desconocidas usan el default y se registran', () => {
   const registro: string[] = [];
-  const config = validarConfig({ repeticiones: 1, volumenMusica: 1.5, recargaDiaria: '25:00', mensajes: ['Hola'], color: 'rojo' }, (m) => registro.push(m));
+  const config = validarConfig(
+    {
+      repeticiones: 1,
+      volumenMusica: 1.5,
+      recargaDiaria: '25:00',
+      mensajes: ['Hola'],
+      color: 'rojo',
+    },
+    (m) => registro.push(m),
+  );
   assert.equal(config.repeticiones, 1);
   assert.equal(config.volumenMusica, CONFIG_POR_DEFECTO.volumenMusica);
   assert.equal(config.recargaDiaria, '04:00');
@@ -30,9 +41,14 @@ test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo 
   try {
     const ruta = join(raiz, 'config.json');
     writeFileSync(ruta, '{ "repeticiones": 1, ');
-    assert.deepEqual(leerConfig(ruta, () => {}), CONFIG_POR_DEFECTO);
+    assert.deepEqual(
+      leerConfig(ruta, () => {}),
+      CONFIG_POR_DEFECTO,
+    );
     assert.equal(readFileSync(ruta, 'utf8'), '{ "repeticiones": 1, ');
-  } finally { rmSync(raiz, { recursive: true, force: true }); }
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
 });
 
 test('msHastaHora apunta a la próxima ocurrencia local', () => {

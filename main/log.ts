@@ -7,6 +7,10 @@ export function crearRegistro(ruta: string): Registrar {
   return (mensaje) => {
     const linea = `${new Date().toISOString()} ${mensaje}`;
     console.warn(linea);
-    try { appendFileSync(ruta, `${linea}\n`); } catch { /* el log nunca debe tumbar la app */ }
+    try {
+      appendFileSync(ruta, `${linea}\n`);
+    } catch {
+      /* el log nunca debe tumbar la app */
+    }
   };
 }

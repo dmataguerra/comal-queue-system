@@ -1,40 +1,77 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { URL_CONTENIDO, importarArchivos, inventariar, quitarArchivo, sembrarContenido } from './contenido.js';
+import {
+  URL_CONTENIDO,
+  importarArchivos,
+  inventariar,
+  quitarArchivo,
+  sembrarContenido,
+} from './contenido.js';
 
 test('inventario: videos, banner, voz por número y aviso; lo no soportado se ignora y se registra una vez', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-contenido-'));
   try {
     const vacio = inventariar(raiz);
-    assert.deepEqual([vacio.videos, vacio.banner, vacio.aviso, vacio.voz.filter(Boolean)], [[], [], null, []]);
+    assert.deepEqual(
+      [vacio.videos, vacio.banner, vacio.aviso, vacio.voz.filter(Boolean)],
+      [[], [], null, []],
+    );
 
-    for (const archivo of ['videos/b.mp4', 'videos/Café lento.webm', 'videos/raro.mkv', 'videos/.gitkeep',
-      'banner/evento.JPG', 'banner/notas.txt', 'voz/08.wav', 'voz/99.wav', 'voz/8.wav', 'aviso.wav']) {
+    for (const archivo of [
+      'videos/b.mp4',
+      'videos/Café lento.webm',
+      'videos/raro.mkv',
+      'videos/.gitkeep',
+      'banner/evento.JPG',
+      'banner/notas.txt',
+      'voz/08.wav',
+      'voz/99.wav',
+      'voz/8.wav',
+      'aviso.wav',
+    ]) {
       mkdirSync(join(raiz, archivo, '..'), { recursive: true });
       writeFileSync(join(raiz, archivo), 'x');
     }
     const registro: string[] = [];
     const reportados = new Set<string>();
     const inventario = inventariar(raiz, (m) => registro.push(m), reportados);
-    assert.deepEqual(inventario.videos, [`${URL_CONTENIDO}/videos/b.mp4`, `${URL_CONTENIDO}/videos/Caf%C3%A9%20lento.webm`]);
+    assert.deepEqual(inventario.videos, [
+      `${URL_CONTENIDO}/videos/b.mp4`,
+      `${URL_CONTENIDO}/videos/Caf%C3%A9%20lento.webm`,
+    ]);
     assert.deepEqual(inventario.banner, [`${URL_CONTENIDO}/banner/evento.JPG`]);
     assert.equal(inventario.voz[8], `${URL_CONTENIDO}/voz/08.wav`);
     assert.equal(inventario.voz[99], `${URL_CONTENIDO}/voz/99.wav`);
     assert.equal(inventario.voz[0], null);
     assert.equal(inventario.aviso, `${URL_CONTENIDO}/aviso.wav`);
-    assert.deepEqual(registro.map((m) => m.split(' ').at(-1)).sort(), ['banner/notas.txt', 'videos/raro.mkv', 'voz/8.wav']);
+    assert.deepEqual(registro.map((m) => m.split(' ').at(-1)).sort(), [
+      'banner/notas.txt',
+      'videos/raro.mkv',
+      'voz/8.wav',
+    ]);
 
     inventariar(raiz, (m) => registro.push(m), reportados);
     assert.equal(registro.length, 3);
-  } finally { rmSync(raiz, { recursive: true, force: true }); }
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
 });
 
 test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el administrador no vuelve', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-sembrar-'));
-  const fabrica = join(raiz, 'fabrica'), datos = join(raiz, 'datos', 'contenido');
+  const fabrica = join(raiz, 'fabrica'),
+    datos = join(raiz, 'datos', 'contenido');
   try {
     for (const archivo of ['voz/08.wav', 'banner/logo.png', 'aviso.wav']) {
       mkdirSync(join(fabrica, archivo, '..'), { recursive: true });
@@ -53,7 +90,9 @@ test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el admi
     const registro: string[] = [];
     sembrarContenido(join(raiz, 'no-existe'), join(raiz, 'otro'), (m) => registro.push(m));
     assert.deepEqual([existsSync(join(raiz, 'otro')), registro], [false, []]);
-  } finally { rmSync(raiz, { recursive: true, force: true }); }
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
 });
 
 test('administración: importa sin sobrescribir y solo elimina archivos multimedia inventariados', () => {
@@ -64,13 +103,25 @@ test('administración: importa sin sobrescribir y solo elimina archivos multimed
     mkdirSync(origen);
     writeFileSync(join(origen, 'promo.mp4'), 'primero');
     writeFileSync(join(origen, 'notas.txt'), 'no permitido');
-    const primera = importarArchivos(contenido, 'videos', [join(origen, 'promo.mp4'), join(origen, 'notas.txt')]);
+    const primera = importarArchivos(contenido, 'videos', [
+      join(origen, 'promo.mp4'),
+      join(origen, 'notas.txt'),
+    ]);
     const segunda = importarArchivos(contenido, 'videos', [join(origen, 'promo.mp4')]);
-    assert.deepEqual(primera, { agregados: ['promo.mp4'], omitidos: ['notas.txt'], cancelado: false });
+    assert.deepEqual(primera, {
+      agregados: ['promo.mp4'],
+      omitidos: ['notas.txt'],
+      cancelado: false,
+    });
     assert.deepEqual(segunda.agregados, ['promo (2).mp4']);
     assert.equal(quitarArchivo(contenido, `${URL_CONTENIDO}/videos/promo.mp4`), true);
     assert.equal(existsSync(join(contenido, 'videos', 'promo.mp4')), false);
     assert.equal(quitarArchivo(contenido, `${URL_CONTENIDO}/voz/08.wav`), false);
-    assert.equal(quitarArchivo(contenido, 'turnero://app/contenido/videos/../banner/logo.png'), false);
-  } finally { rmSync(raiz, { recursive: true, force: true }); }
+    assert.equal(
+      quitarArchivo(contenido, 'turnero://app/contenido/videos/../banner/logo.png'),
+      false,
+    );
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
 });

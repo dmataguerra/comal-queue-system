@@ -1,4 +1,14 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, watch } from 'node:fs';
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  watch,
+} from 'node:fs';
 import { basename, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
 import type { CategoriaContenido, Inventario, ResultadoImportacion } from './contrato.js';
 import type { Registrar } from './log.js';
@@ -11,8 +21,13 @@ const IMAGENES = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const VOZ = /^(\d{2})\.wav$/i;
 
 export const TIPOS_MIME: Record<string, string> = {
-  '.mp4': 'video/mp4', '.webm': 'video/webm', '.wav': 'audio/wav',
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.wav': 'audio/wav',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
 };
 
 function archivos(carpeta: string): string[] {
@@ -23,9 +38,10 @@ function archivos(carpeta: string): string[] {
     .sort((a, b) => a.localeCompare(b, 'es'));
 }
 
-const url = (base: string, carpeta: string, nombre: string) => `${base}/${carpeta}/${encodeURIComponent(nombre)}`;
+const url = (base: string, carpeta: string, nombre: string) =>
+  `${base}/${carpeta}/${encodeURIComponent(nombre)}`;
 
-const extensiones = (categoria: CategoriaContenido) => categoria === 'videos' ? VIDEOS : IMAGENES;
+const extensiones = (categoria: CategoriaContenido) => (categoria === 'videos' ? VIDEOS : IMAGENES);
 
 function nombreDisponible(carpeta: string, nombre: string): string {
   if (!existsSync(join(carpeta, nombre))) return nombre;
@@ -36,15 +52,27 @@ function nombreDisponible(carpeta: string, nombre: string): string {
 }
 
 /** Copia archivos elegidos por el operador sin sobrescribir contenido existente. */
-export function importarArchivos(raiz: string, categoria: CategoriaContenido, origenes: string[], registrar: Registrar = () => {}): ResultadoImportacion {
+export function importarArchivos(
+  raiz: string,
+  categoria: CategoriaContenido,
+  origenes: string[],
+  registrar: Registrar = () => {},
+): ResultadoImportacion {
   const carpeta = join(raiz, categoria);
   mkdirSync(carpeta, { recursive: true });
-  const agregados: string[] = [], omitidos: string[] = [];
+  const agregados: string[] = [],
+    omitidos: string[] = [];
   for (const origen of origenes) {
     const nombre = basename(origen);
-    if (!extensiones(categoria).has(extname(nombre).toLowerCase())) { omitidos.push(nombre); continue; }
+    if (!extensiones(categoria).has(extname(nombre).toLowerCase())) {
+      omitidos.push(nombre);
+      continue;
+    }
     try {
-      if (!statSync(origen).isFile()) { omitidos.push(nombre); continue; }
+      if (!statSync(origen).isFile()) {
+        omitidos.push(nombre);
+        continue;
+      }
       const destino = nombreDisponible(carpeta, nombre);
       copyFileSync(origen, join(carpeta, destino));
       agregados.push(destino);
@@ -65,12 +93,21 @@ export function quitarArchivo(raiz: string, direccion: string): boolean {
     const destino = new URL(direccion);
     if (`${destino.protocol}//${destino.host}` !== 'turnero://app') return false;
     ruta = decodeURIComponent(destino.pathname).replace(/^\/contenido\//, '');
-  } catch { return false; }
+  } catch {
+    return false;
+  }
   const partes = ruta.split('/');
   if (partes.length !== 2 || (partes[0] !== 'videos' && partes[0] !== 'banner')) return false;
   const absoluta = resolve(raiz, partes[0], partes[1]);
   const relativa = relative(raiz, absoluta);
-  if (!relativa || relativa.startsWith('..') || isAbsolute(relativa) || !existsSync(absoluta) || !statSync(absoluta).isFile()) return false;
+  if (
+    !relativa ||
+    relativa.startsWith('..') ||
+    isAbsolute(relativa) ||
+    !existsSync(absoluta) ||
+    !statSync(absoluta).isFile()
+  )
+    return false;
   rmSync(absoluta);
   return true;
 }
@@ -79,18 +116,27 @@ export function quitarArchivo(raiz: string, direccion: string): boolean {
  * Inventario de la carpeta de contenido. Lo que no se puede reproducir se ignora y se
  * registra una sola vez por archivo (CU-06 1a).
  */
-export function inventariar(raiz: string, registrar: Registrar = () => {}, reportados = new Set<string>(), base = URL_CONTENIDO): Inventario {
-  for (const carpeta of ['videos', 'banner', 'voz']) mkdirSync(join(raiz, carpeta), { recursive: true });
+export function inventariar(
+  raiz: string,
+  registrar: Registrar = () => {},
+  reportados = new Set<string>(),
+  base = URL_CONTENIDO,
+): Inventario {
+  for (const carpeta of ['videos', 'banner', 'voz'])
+    mkdirSync(join(raiz, carpeta), { recursive: true });
   const ignorar = (ruta: string) => {
     if (reportados.has(ruta)) return;
     reportados.add(ruta);
     registrar(`contenido: formato no soportado, se ignora ${ruta}`);
   };
-  const filtrar = (carpeta: string, permitidas: Set<string>) => archivos(join(raiz, carpeta)).filter((nombre) => {
-    if (permitidas.has(extname(nombre).toLowerCase())) return true;
-    ignorar(`${carpeta}/${nombre}`);
-    return false;
-  }).map((nombre) => url(base, carpeta, nombre));
+  const filtrar = (carpeta: string, permitidas: Set<string>) =>
+    archivos(join(raiz, carpeta))
+      .filter((nombre) => {
+        if (permitidas.has(extname(nombre).toLowerCase())) return true;
+        ignorar(`${carpeta}/${nombre}`);
+        return false;
+      })
+      .map((nombre) => url(base, carpeta, nombre));
 
   const voz: (string | null)[] = Array(100).fill(null);
   for (const nombre of archivos(join(raiz, 'voz'))) {
@@ -112,7 +158,11 @@ export function inventariar(raiz: string, registrar: Registrar = () => {}, repor
  * carpeta de datos. Si ya existe no se toca: desde ahí es del administrador, y lo que borre no
  * vuelve. Se copia a un temporal y se renombra, para que un corte a medias se reintente completo.
  */
-export function sembrarContenido(origen: string, destino: string, registrar: Registrar = () => {}): void {
+export function sembrarContenido(
+  origen: string,
+  destino: string,
+  registrar: Registrar = () => {},
+): void {
   if (existsSync(destino) || !existsSync(origen)) return;
   const temporal = `${destino}.tmp`;
   try {
@@ -126,7 +176,11 @@ export function sembrarContenido(origen: string, destino: string, registrar: Reg
 }
 
 /** Vigila la carpeta completa: copiar o borrar archivos se refleja sin reiniciar (RF-14). */
-export function vigilarContenido(raiz: string, alCambiar: (inventario: Inventario) => void, registrar: Registrar = () => {}): { inicial: Inventario; detener: () => void } {
+export function vigilarContenido(
+  raiz: string,
+  alCambiar: (inventario: Inventario) => void,
+  registrar: Registrar = () => {},
+): { inicial: Inventario; detener: () => void } {
   const reportados = new Set<string>();
   const inicial = inventariar(raiz, registrar, reportados);
   let ultimo = JSON.stringify(inicial);
@@ -141,5 +195,11 @@ export function vigilarContenido(raiz: string, alCambiar: (inventario: Inventari
       alCambiar(inventario);
     }, 500);
   });
-  return { inicial, detener: () => { clearTimeout(temporizador); vigilante.close(); } };
+  return {
+    inicial,
+    detener: () => {
+      clearTimeout(temporizador);
+      vigilante.close();
+    },
+  };
 }

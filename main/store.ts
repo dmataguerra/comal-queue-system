@@ -19,13 +19,21 @@ interface OpcionesStore {
 }
 
 /** Envuelve al núcleo: única dueña del estado, lo persiste y avisa a los adaptadores. */
-export function crearStore({ ruta, hoy = () => fechaLocal(), registrar = () => {} }: OpcionesStore): Store {
+export function crearStore({
+  ruta,
+  hoy = () => fechaLocal(),
+  registrar = () => {},
+}: OpcionesStore): Store {
   let fecha = hoy();
   let estado: Estado = leerEstado(ruta, fecha, registrar);
   let siguienteAnuncio = 1;
   const suscriptores = new Set<Suscriptor>();
 
-  const obtener = (): Instantanea => ({ actual: estado.actual, llamados: estado.llamados, puedeDeshacer: estado.deshacer !== null });
+  const obtener = (): Instantanea => ({
+    actual: estado.actual,
+    llamados: estado.llamados,
+    puedeDeshacer: estado.deshacer !== null,
+  });
 
   function persistir() {
     try {
@@ -39,7 +47,11 @@ export function crearStore({ ruta, hoy = () => fechaLocal(), registrar = () => {
   function notificar(anuncio: Anuncio | null) {
     const instantanea = obtener();
     for (const fn of suscriptores) {
-      try { fn(instantanea, anuncio); } catch (error) { registrar(`Error al notificar el estado: ${(error as Error).message}`); }
+      try {
+        fn(instantanea, anuncio);
+      } catch (error) {
+        registrar(`Error al notificar el estado: ${(error as Error).message}`);
+      }
     }
   }
 
@@ -57,9 +69,11 @@ export function crearStore({ ruta, hoy = () => fechaLocal(), registrar = () => {
   function despachar(accion: Accion): ResultadoDespacho {
     reiniciarSiCambioDia();
     const { estado: siguiente, efecto } =
-      accion.tipo === 'LLAMAR' ? llamar(estado, accion.entrada)
-      : accion.tipo === 'QUITAR' ? quitar(estado, accion.n)
-      : deshacer(estado);
+      accion.tipo === 'LLAMAR'
+        ? llamar(estado, accion.entrada)
+        : accion.tipo === 'QUITAR'
+          ? quitar(estado, accion.n)
+          : deshacer(estado);
     if (efecto?.tipo === 'CAPTURA_INVALIDA') {
       return { instantanea: obtener(), efecto: 'CAPTURA_INVALIDA', anuncio: null };
     }
@@ -76,7 +90,9 @@ export function crearStore({ ruta, hoy = () => fechaLocal(), registrar = () => {
     despachar,
     suscribir(fn) {
       suscriptores.add(fn);
-      return () => { suscriptores.delete(fn); };
+      return () => {
+        suscriptores.delete(fn);
+      };
     },
     reiniciarSiCambioDia,
   };

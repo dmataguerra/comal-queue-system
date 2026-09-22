@@ -1,5 +1,13 @@
 import { ipcMain, type WebContents } from 'electron';
-import type { Accion, CategoriaContenido, Config, Inicial, Inventario, Pantallas, ResultadoImportacion } from './contrato.js';
+import type {
+  Accion,
+  CategoriaContenido,
+  Config,
+  Inicial,
+  Inventario,
+  Pantallas,
+  ResultadoImportacion,
+} from './contrato.js';
 import type { Registrar } from './log.js';
 import type { Store } from './store.js';
 import { esYouTube } from '../nucleo/youtube.js';
@@ -37,14 +45,29 @@ function validarAccion(accion: unknown): Accion {
     return { tipo: 'LLAMAR', entrada: valor.entrada };
   }
   // QUITAR llega desde una fila ya en pantalla, así que el número siempre es de dos dígitos.
-  if (valor?.tipo === 'QUITAR' && Number.isInteger(valor.n) && (valor.n as number) >= 0 && (valor.n as number) <= 99) {
+  if (
+    valor?.tipo === 'QUITAR' &&
+    Number.isInteger(valor.n) &&
+    (valor.n as number) >= 0 &&
+    (valor.n as number) <= 99
+  ) {
     return { tipo: 'QUITAR', n: valor.n as number };
   }
   throw new Error('Acción no válida.');
 }
 
 /** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
-export function conectarIpc({ store, inicial, esOperador, destinos, importarContenido, quitarContenido, abrirCarpetaContenido, configurarYouTube, registrar }: OpcionesIpc) {
+export function conectarIpc({
+  store,
+  inicial,
+  esOperador,
+  destinos,
+  importarContenido,
+  quitarContenido,
+  abrirCarpetaContenido,
+  configurarYouTube,
+  registrar,
+}: OpcionesIpc) {
   const difundir = (canal: string, ...datos: unknown[]) => {
     for (const destino of destinos()) if (!destino.isDestroyed()) destino.send(canal, ...datos);
   };
@@ -52,12 +75,15 @@ export function conectarIpc({ store, inicial, esOperador, destinos, importarCont
   ipcMain.handle(CANALES.obtener, () => inicial());
   ipcMain.handle(CANALES.despachar, (evento, accion: unknown) => {
     // RF-13 como garantía: la pantalla pública no puede cambiar el estado.
-    if (!esOperador(evento.sender)) throw new Error('Solo la vista del operador puede llamar turnos.');
+    if (!esOperador(evento.sender))
+      throw new Error('Solo la vista del operador puede llamar turnos.');
     return store.despachar(validarAccion(accion));
   });
-  const categoriaValida = (categoria: unknown): categoria is CategoriaContenido => categoria === 'videos' || categoria === 'banner';
+  const categoriaValida = (categoria: unknown): categoria is CategoriaContenido =>
+    categoria === 'videos' || categoria === 'banner';
   const exigirOperador = (remitente: WebContents) => {
-    if (!esOperador(remitente)) throw new Error('Solo la vista del operador puede administrar multimedia.');
+    if (!esOperador(remitente))
+      throw new Error('Solo la vista del operador puede administrar multimedia.');
   };
   ipcMain.handle('turnero:youtube', (evento, url: unknown) => {
     exigirOperador(evento.sender);
@@ -72,16 +98,20 @@ export function conectarIpc({ store, inicial, esOperador, destinos, importarCont
   });
   ipcMain.handle(CANALES.quitarContenido, (evento, url: unknown) => {
     exigirOperador(evento.sender);
-    if (typeof url !== 'string' || url.length > 1000) throw new Error('Archivo multimedia no válido.');
+    if (typeof url !== 'string' || url.length > 1000)
+      throw new Error('Archivo multimedia no válido.');
     return quitarContenido(url);
   });
   ipcMain.handle(CANALES.abrirCarpetaContenido, (evento, categoria: unknown) => {
     exigirOperador(evento.sender);
-    if (categoria !== undefined && !categoriaValida(categoria)) throw new Error('Categoría multimedia no válida.');
+    if (categoria !== undefined && !categoriaValida(categoria))
+      throw new Error('Categoría multimedia no válida.');
     return abrirCarpetaContenido(categoria);
   });
   ipcMain.on(CANALES.registrar, (evento, mensaje: unknown) => {
-    registrar(`[${esOperador(evento.sender) ? 'operador' : 'pública'}] ${String(mensaje).slice(0, 500)}`);
+    registrar(
+      `[${esOperador(evento.sender) ? 'operador' : 'pública'}] ${String(mensaje).slice(0, 500)}`,
+    );
   });
   store.suscribir((instantanea, anuncio) => difundir(CANALES.estado, instantanea, anuncio));
 

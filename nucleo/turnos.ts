@@ -9,15 +9,18 @@ export interface Estado {
 }
 
 export type Efecto =
-  | { tipo: 'ANUNCIAR'; n: number }
-  | { tipo: 'CAPTURA_INVALIDA'; entrada: unknown };
+  { tipo: 'ANUNCIAR'; n: number } | { tipo: 'CAPTURA_INVALIDA'; entrada: unknown };
 
 export interface Transicion {
   estado: Estado;
   efecto: Efecto | null;
 }
 
-export const ESTADO_INICIAL: Estado = Object.freeze({ actual: null, llamados: [], deshacer: null }) as Estado;
+export const ESTADO_INICIAL: Estado = Object.freeze({
+  actual: null,
+  llamados: [],
+  deshacer: null,
+}) as Estado;
 
 /** "213298" -> 98 · "98" -> 98 · "8" -> 8 · inválido -> null */
 export function normalizar(entrada: unknown): number | null {
@@ -88,6 +91,8 @@ export function quitar(estado: Estado, n: number): Transicion {
 /** CU-03 — un solo nivel, y silencioso */
 export function deshacer(estado: Estado): Transicion {
   if (!estado.deshacer) return { estado, efecto: null }; // CU-03 1a
-  return { estado: { ...estado.deshacer, deshacer: null }, // CU-03 2a
-           efecto: null };                                 // CU-03 paso 3
+  return {
+    estado: { ...estado.deshacer, deshacer: null }, // CU-03 2a
+    efecto: null,
+  }; // CU-03 paso 3
 }

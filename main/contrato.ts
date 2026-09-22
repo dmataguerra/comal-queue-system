@@ -3,9 +3,7 @@
 // implementaría la misma interfaz sin tocar el núcleo ni las vistas.
 
 export type Accion =
-  | { tipo: 'LLAMAR'; entrada: string }
-  | { tipo: 'DESHACER' }
-  | { tipo: 'QUITAR'; n: number };
+  { tipo: 'LLAMAR'; entrada: string } | { tipo: 'DESHACER' } | { tipo: 'QUITAR'; n: number };
 
 /** Lo que las vistas necesitan del estado. `deshacer` no sale del proceso principal. */
 export interface Instantanea {

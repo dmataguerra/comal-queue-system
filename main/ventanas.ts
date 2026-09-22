@@ -17,7 +17,15 @@ interface OpcionesVentanas {
 const FONDO = '#021a28';
 
 /** Displays, pantalla completa y RF-13: el campo de captura nunca se muestra en la TV. */
-export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alCambiarPantallas, alCerrarOperador, registrar }: OpcionesVentanas) {
+export function crearVentanas({
+  preload,
+  url,
+  desarrollo,
+  pantallaPreferida,
+  alCambiarPantallas,
+  alCerrarOperador,
+  registrar,
+}: OpcionesVentanas) {
   let operador: BrowserWindow | null = null;
   let publica: BrowserWindow | null = null;
   let cerrando = false;
@@ -26,12 +34,16 @@ export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alC
   function proteger(ventana: BrowserWindow, vista: Vista) {
     const contenido = ventana.webContents;
     contenido.setWindowOpenHandler(() => ({ action: 'deny' }));
-    contenido.on('will-navigate', (evento, destino) => { if (destino !== contenido.getURL()) evento.preventDefault(); });
+    contenido.on('will-navigate', (evento, destino) => {
+      if (destino !== contenido.getURL()) evento.preventDefault();
+    });
     // En desarrollo Vite puede tardar en levantar; en producción cubre cualquier fallo transitorio.
     contenido.on('did-fail-load', (_evento, codigo, descripcion, _url, esPrincipal) => {
       if (!esPrincipal || codigo === -3) return; // -3: navegación abortada, no es un fallo
       registrar(`La vista ${vista} no cargó (${descripcion}); se reintenta.`);
-      setTimeout(() => { if (!ventana.isDestroyed()) void ventana.loadURL(url(vista)).catch(() => {}); }, 1500);
+      setTimeout(() => {
+        if (!ventana.isDestroyed()) void ventana.loadURL(url(vista)).catch(() => {});
+      }, 1500);
     });
     contenido.on('render-process-gone', (_evento, detalle) => {
       registrar(`La vista ${vista} terminó (${detalle.reason}); se recarga.`);
@@ -41,7 +53,11 @@ export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alC
   }
 
   const preferencias = (extra: Electron.WebPreferences = {}): Electron.WebPreferences => ({
-    preload, contextIsolation: true, sandbox: true, nodeIntegration: false, ...extra,
+    preload,
+    contextIsolation: true,
+    sandbox: true,
+    nodeIntegration: false,
+    ...extra,
   });
 
   /** La pública va al display preferido o al primero que no es el primario. Nunca al primario. */
@@ -55,21 +71,45 @@ export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alC
   function crearOperador() {
     const { workArea } = screen.getPrimaryDisplay();
     operador = new BrowserWindow({
-      ...workArea, minWidth: 900, minHeight: 600, show: false, backgroundColor: FONDO, autoHideMenuBar: true,
-      title: 'Turnero · Operador', webPreferences: preferencias(),
+      ...workArea,
+      minWidth: 900,
+      minHeight: 600,
+      show: false,
+      backgroundColor: FONDO,
+      autoHideMenuBar: true,
+      title: 'Turnero · Operador',
+      webPreferences: preferencias(),
     });
-    operador.once('ready-to-show', () => { operador?.maximize(); operador?.show(); });
-    operador.on('closed', () => { operador = null; alCerrarOperador(); });
+    operador.once('ready-to-show', () => {
+      operador?.maximize();
+      operador?.show();
+    });
+    operador.on('closed', () => {
+      operador = null;
+      alCerrarOperador();
+    });
     proteger(operador, 'operador');
   }
 
   function crearPublica(display: Display | null) {
-    const bounds = display?.bounds ?? { ...screen.getPrimaryDisplay().workArea, width: 1280, height: 720 };
+    const bounds = display?.bounds ?? {
+      ...screen.getPrimaryDisplay().workArea,
+      width: 1280,
+      height: 720,
+    };
     publica = new BrowserWindow({
-      ...bounds, show: false, backgroundColor: FONDO, autoHideMenuBar: true, title: 'Turnero · Pantalla pública',
-      frame: !display, fullscreen: Boolean(display),
+      ...bounds,
+      show: false,
+      backgroundColor: FONDO,
+      autoHideMenuBar: true,
+      title: 'Turnero · Pantalla pública',
+      frame: !display,
+      fullscreen: Boolean(display),
       // La pública nunca tiene el foco: sin estrangulamiento de temporizadores y con audio sin gesto.
-      webPreferences: preferencias({ autoplayPolicy: 'no-user-gesture-required', backgroundThrottling: false }),
+      webPreferences: preferencias({
+        autoplayPolicy: 'no-user-gesture-required',
+        backgroundThrottling: false,
+      }),
     });
     const ventana = publica;
     ventana.once('ready-to-show', () => {
@@ -89,16 +129,31 @@ export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alC
     const display = displayPublico();
     const modo: Pantallas['publica'] = display ? 'tv' : desarrollo ? 'ventana' : 'ninguna';
     // Al pasar de TV a ventana (o al revés) se recrea: marco y pantalla completa no se cambian en vivo.
-    if (publica && modo !== pantallas.publica) { publica.destroy(); publica = null; }
+    if (publica && modo !== pantallas.publica) {
+      publica.destroy();
+      publica = null;
+    }
     if (modo !== 'ninguna' && !publica) crearPublica(display);
-    else if (publica && display && screen.getDisplayMatching(publica.getBounds()).id !== display.id) {
+    else if (
+      publica &&
+      display &&
+      screen.getDisplayMatching(publica.getBounds()).id !== display.id
+    ) {
       publica.setFullScreen(false);
       publica.setBounds(display.bounds);
       publica.setFullScreen(true);
     }
     if (modo !== pantallas.publica) {
       pantallas = { publica: modo };
-      registrar(`Pantalla pública: ${modo} (${screen.getAllDisplays().map((d) => `${d.id}${d.id === screen.getPrimaryDisplay().id ? '*' : ''} ${d.bounds.width}x${d.bounds.height}`).join(', ')})`);
+      registrar(
+        `Pantalla pública: ${modo} (${screen
+          .getAllDisplays()
+          .map(
+            (d) =>
+              `${d.id}${d.id === screen.getPrimaryDisplay().id ? '*' : ''} ${d.bounds.width}x${d.bounds.height}`,
+          )
+          .join(', ')})`,
+      );
       alCambiarPantallas(pantallas);
     }
   }
@@ -113,8 +168,12 @@ export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alC
     },
     sincronizar,
     pantallas: () => pantallas,
-    destinos: (): WebContents[] => [operador, publica].flatMap((ventana) => ventana && !ventana.isDestroyed() ? [ventana.webContents] : []),
-    esOperador: (remitente: WebContents) => Boolean(operador && !operador.isDestroyed() && remitente === operador.webContents),
+    destinos: (): WebContents[] =>
+      [operador, publica].flatMap((ventana) =>
+        ventana && !ventana.isDestroyed() ? [ventana.webContents] : [],
+      ),
+    esOperador: (remitente: WebContents) =>
+      Boolean(operador && !operador.isDestroyed() && remitente === operador.webContents),
     enfocarOperador() {
       if (!operador) return;
       if (operador.isMinimized()) operador.restore();
@@ -123,6 +182,8 @@ export function crearVentanas({ preload, url, desarrollo, pantallaPreferida, alC
     recargarPublica() {
       if (publica && !publica.isDestroyed()) publica.webContents.reloadIgnoringCache();
     },
-    cerrar() { cerrando = true; },
+    cerrar() {
+      cerrando = true;
+    },
   };
 }

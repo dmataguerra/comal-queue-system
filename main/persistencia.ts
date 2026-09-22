@@ -16,18 +16,21 @@ export function fechaLocal(fecha = new Date()): string {
   return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
 }
 
-const esTurno = (x: unknown): x is number => Number.isInteger(x) && (x as number) >= 0 && (x as number) <= 99;
+const esTurno = (x: unknown): x is number =>
+  Number.isInteger(x) && (x as number) >= 0 && (x as number) <= 99;
 
 function valido(dato: unknown): dato is Persistido {
   if (!dato || typeof dato !== 'object') return false;
   const { fecha, actual, llamados } = dato as Record<string, unknown>;
-  return typeof fecha === 'string'
-    && (actual === null || esTurno(actual))
-    && Array.isArray(llamados)
-    && llamados.length <= MAX_LLAMADOS
-    && llamados.every(esTurno)
-    && new Set(llamados).size === llamados.length
-    && (actual === null || !llamados.includes(actual));
+  return (
+    typeof fecha === 'string' &&
+    (actual === null || esTurno(actual)) &&
+    Array.isArray(llamados) &&
+    llamados.length <= MAX_LLAMADOS &&
+    llamados.every(esTurno) &&
+    new Set(llamados).size === llamados.length &&
+    (actual === null || !llamados.includes(actual))
+  );
 }
 
 /** Al arrancar: si falta, está dañado o es de otro día, se arranca vacío (CU-05 paso 4). */
@@ -56,8 +59,18 @@ export function leerEstado(ruta: string, hoy: string, registrar: Registrar = () 
 const pausa = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
 /** Escritura atómica: .tmp con fsync y rename sobre el original (mismo volumen). */
-export function guardarEstado(ruta: string, estado: Estado, fecha: string, ahora = new Date()): void {
-  const dato: Persistido = { fecha, actual: estado.actual, llamados: estado.llamados, guardadoEn: ahora.toISOString() };
+export function guardarEstado(
+  ruta: string,
+  estado: Estado,
+  fecha: string,
+  ahora = new Date(),
+): void {
+  const dato: Persistido = {
+    fecha,
+    actual: estado.actual,
+    llamados: estado.llamados,
+    guardadoEn: ahora.toISOString(),
+  };
   const temporal = `${ruta}.tmp`;
   const fd = openSync(temporal, 'w');
   try {
@@ -73,7 +86,8 @@ export function guardarEstado(ruta: string, estado: Estado, fecha: string, ahora
       return;
     } catch (error) {
       const codigo = (error as NodeJS.ErrnoException).code;
-      if (intento >= 4 || (codigo !== 'EPERM' && codigo !== 'EBUSY' && codigo !== 'EACCES')) throw error;
+      if (intento >= 4 || (codigo !== 'EPERM' && codigo !== 'EBUSY' && codigo !== 'EACCES'))
+        throw error;
       pausa(25 * intento);
     }
   }

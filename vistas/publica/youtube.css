@@ -1,9 +1,40 @@
-.youtube-stage { height:100%; display:flex; flex-direction:column; background:#102a4b; }
-.youtube-host { flex:1; min-height:200px; width:100%; }
-.youtube-host iframe { display:block; width:100%; height:100%; border:0; }
-.youtube-error { padding:12px; color:white; display:flex; align-items:center; gap:12px; font-size:12px; }
-.has-youtube .public-media::after { display:none; }
-.has-youtube .public-media-frame { cursor:auto; }
-.has-youtube .public-queue .public-focus { padding:12px; }
-.has-youtube .public-queue .announcement-backdrop { padding:0; }
-.has-youtube .public-queue .announcement-number { font-size:clamp(80px,13vw,230px); }
+.youtube-stage {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #102a4b;
+}
+.youtube-host {
+  flex: 1;
+  min-height: 200px;
+  width: 100%;
+}
+.youtube-host iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.youtube-error {
+  padding: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+.has-youtube .public-media::after {
+  display: none;
+}
+.has-youtube .public-media-frame {
+  cursor: auto;
+}
+.has-youtube .public-queue .public-focus {
+  padding: 12px;
+}
+.has-youtube .public-queue .announcement-backdrop {
+  padding: 0;
+}
+.has-youtube .public-queue .announcement-number {
+  font-size: clamp(80px, 13vw, 230px);
+}

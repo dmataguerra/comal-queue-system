@@ -5,15 +5,36 @@ import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import { conectarIpc } from './adaptador-ipc.js';
 import { leerConfig, msHastaHora, vigilarConfig } from './config.js';
-import { importarArchivos, quitarArchivo, TIPOS_MIME, sembrarContenido, vigilarContenido } from './contenido.js';
-import type { CategoriaContenido, Config, Inventario, Pantallas, ResultadoImportacion } from './contrato.js';
+import {
+  importarArchivos,
+  quitarArchivo,
+  TIPOS_MIME,
+  sembrarContenido,
+  vigilarContenido,
+} from './contenido.js';
+import type {
+  CategoriaContenido,
+  Config,
+  Inventario,
+  Pantallas,
+  ResultadoImportacion,
+} from './contrato.js';
 import { crearRegistro } from './log.js';
 import { crearStore } from './store.js';
 import { crearVentanas, type Vista } from './ventanas.js';
 
 // Debe registrarse antes de `ready`. `stream` permite servir video por rangos.
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'turnero', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } },
+  {
+    scheme: 'turnero',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      corsEnabled: true,
+    },
+  },
 ]);
 
 const desarrollo = !app.isPackaged;
@@ -22,8 +43,11 @@ const raizApp = app.getAppPath();
 // config.json, contenido/ y estado.json van en Documentos para que el administrador los edite (§5).
 // Junto al .exe no: el desinstalador de NSIS borra esa carpeta en cada actualización, y en
 // Program Files no se puede escribir. En desarrollo, la raíz del proyecto.
-const carpetaDatos = process.env.TURNERO_DATOS ? resolve(process.env.TURNERO_DATOS)
-  : app.isPackaged ? join(app.getPath('documents'), 'Turnero Comal') : raizApp;
+const carpetaDatos = process.env.TURNERO_DATOS
+  ? resolve(process.env.TURNERO_DATOS)
+  : app.isPackaged
+    ? join(app.getPath('documents'), 'Turnero Comal')
+    : raizApp;
 const carpetaContenido = join(carpetaDatos, 'contenido');
 // El instalador deja el contenido de fábrica junto al .exe (extraFiles); se copia en el primer arranque.
 const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : raizApp, 'contenido');
@@ -32,9 +56,10 @@ const carpetaVistas = join(raizApp, 'dist');
 mkdirSync(carpetaDatos, { recursive: true });
 const registrar = crearRegistro(join(carpetaDatos, 'turnero.log'));
 
-const urlVista = (vista: Vista) => urlDesarrollo
-  ? `${urlDesarrollo}/vistas/${vista}/index.html`
-  : `turnero://app/vistas/${vista}/index.html`;
+const urlVista = (vista: Vista) =>
+  urlDesarrollo
+    ? `${urlDesarrollo}/vistas/${vista}/index.html`
+    : `turnero://app/vistas/${vista}/index.html`;
 
 function dentroDe(raiz: string, ruta: string): string | null {
   const absoluta = resolve(raiz, ruta);
@@ -44,7 +69,8 @@ function dentroDe(raiz: string, ruta: string): string | null {
 }
 
 const cabecerasBase = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' };
-const CSP = "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'";
+const CSP =
+  "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'";
 
 /** Archivos de contenido con soporte de rangos: el <video> los pide por partes. */
 function servirContenido(archivo: string, rango: string | null): Response {
@@ -55,16 +81,34 @@ function servirContenido(archivo: string, rango: string | null): Response {
     const inicio = partes[1] ? Number(partes[1]) : Math.max(0, tamano - Number(partes[2]));
     const fin = partes[1] && partes[2] ? Math.min(Number(partes[2]), tamano - 1) : tamano - 1;
     if (inicio >= tamano || inicio > fin) {
-      return new Response(null, { status: 416, headers: { ...cabecerasBase, 'Content-Range': `bytes */${tamano}` } });
+      return new Response(null, {
+        status: 416,
+        headers: { ...cabecerasBase, 'Content-Range': `bytes */${tamano}` },
+      });
     }
-    const cuerpo = Readable.toWeb(createReadStream(archivo, { start: inicio, end: fin })) as ReadableStream;
-    return new Response(cuerpo, { status: 206, headers: {
-      ...cabecerasBase, 'Content-Type': tipo, 'Accept-Ranges': 'bytes',
-      'Content-Length': String(fin - inicio + 1), 'Content-Range': `bytes ${inicio}-${fin}/${tamano}`,
-    } });
+    const cuerpo = Readable.toWeb(
+      createReadStream(archivo, { start: inicio, end: fin }),
+    ) as ReadableStream;
+    return new Response(cuerpo, {
+      status: 206,
+      headers: {
+        ...cabecerasBase,
+        'Content-Type': tipo,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': String(fin - inicio + 1),
+        'Content-Range': `bytes ${inicio}-${fin}/${tamano}`,
+      },
+    });
   }
   const cuerpo = Readable.toWeb(createReadStream(archivo)) as ReadableStream;
-  return new Response(cuerpo, { headers: { ...cabecerasBase, 'Content-Type': tipo, 'Accept-Ranges': 'bytes', 'Content-Length': String(tamano) } });
+  return new Response(cuerpo, {
+    headers: {
+      ...cabecerasBase,
+      'Content-Type': tipo,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': String(tamano),
+    },
+  });
 }
 
 function registrarProtocolo() {
@@ -73,7 +117,9 @@ function registrarProtocolo() {
     const ruta = decodeURIComponent(url.pathname);
     if (url.host === 'app' && ruta.startsWith('/contenido/')) {
       const archivo = dentroDe(carpetaContenido, ruta.slice('/contenido/'.length));
-      return archivo ? servirContenido(archivo, solicitud.headers.get('range')) : new Response('No encontrado', { status: 404, headers: cabecerasBase });
+      return archivo
+        ? servirContenido(archivo, solicitud.headers.get('range'))
+        : new Response('No encontrado', { status: 404, headers: cabecerasBase });
     }
     const archivo = url.host === 'app' ? dentroDe(carpetaVistas, ruta.slice(1)) : null;
     if (!archivo) return new Response('No encontrado', { status: 404 });
@@ -90,9 +136,14 @@ function registrarProtocolo() {
 async function iniciar() {
   Menu.setApplicationMenu(null);
   // Identidad de la aplicación de escritorio exigida por YouTube para páginas locales.
-  session.defaultSession.webRequest.onBeforeSendHeaders({urls:['https://www.youtube.com/embed/*']}, (details, callback) => {
-    callback({requestHeaders:{...details.requestHeaders, Referer:'https://mx.uaq.comal.local/'}});
-  });
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['https://www.youtube.com/embed/*'] },
+    (details, callback) => {
+      callback({
+        requestHeaders: { ...details.requestHeaders, Referer: 'https://mx.uaq.comal.local/' },
+      });
+    },
+  );
   registrarProtocolo();
 
   const rutaConfig = join(carpetaDatos, 'config.json');
@@ -106,26 +157,38 @@ async function iniciar() {
     url: urlVista,
     desarrollo,
     pantallaPreferida: () => config.pantallaPublica,
-    alCambiarPantallas: (nuevas) => { pantallas = nuevas; ipc.difundirPantallas(nuevas); },
+    alCambiarPantallas: (nuevas) => {
+      pantallas = nuevas;
+      ipc.difundirPantallas(nuevas);
+    },
     alCerrarOperador: () => app.quit(),
     registrar,
   });
 
-  const importarContenido = async (categoria: CategoriaContenido): Promise<ResultadoImportacion> => {
+  const importarContenido = async (
+    categoria: CategoriaContenido,
+  ): Promise<ResultadoImportacion> => {
     const videos = categoria === 'videos';
     const seleccion = await dialog.showOpenDialog({
       title: videos ? 'Agregar videos a la pantalla 2' : 'Agregar imágenes a la pantalla 2',
       properties: ['openFile', 'multiSelections'],
-      filters: [{ name: videos ? 'Videos compatibles' : 'Imágenes compatibles', extensions: videos ? ['mp4', 'webm'] : ['jpg', 'jpeg', 'png', 'webp'] }],
+      filters: [
+        {
+          name: videos ? 'Videos compatibles' : 'Imágenes compatibles',
+          extensions: videos ? ['mp4', 'webm'] : ['jpg', 'jpeg', 'png', 'webp'],
+        },
+      ],
     });
     if (seleccion.canceled) return { agregados: [], omitidos: [], cancelado: true };
     const resultado = importarArchivos(carpetaContenido, categoria, seleccion.filePaths, registrar);
-    if (resultado.agregados.length) registrar(`contenido: se importaron ${resultado.agregados.join(', ')}`);
+    if (resultado.agregados.length)
+      registrar(`contenido: se importaron ${resultado.agregados.join(', ')}`);
     return resultado;
   };
   const quitarContenido = (url: string) => {
     const eliminado = quitarArchivo(carpetaContenido, url);
-    if (eliminado) registrar(`contenido: se eliminó ${decodeURIComponent(url.split('/').pop() ?? url)}`);
+    if (eliminado)
+      registrar(`contenido: se eliminó ${decodeURIComponent(url.split('/').pop() ?? url)}`);
     return eliminado;
   };
   const abrirCarpetaContenido = async (categoria?: CategoriaContenido) => {
@@ -137,9 +200,9 @@ async function iniciar() {
 
   const ipc = conectarIpc({
     configurarYouTube: (url) => {
-      const nueva = {...leerConfig(rutaConfig, registrar), youtubeUrl: url};
+      const nueva = { ...leerConfig(rutaConfig, registrar), youtubeUrl: url };
       writeFileSync(rutaConfig, `${JSON.stringify(nueva, null, 2)}\n`);
-      config = {...config, youtubeUrl: url};
+      config = { ...config, youtubeUrl: url };
       ipc.difundirConfig(config);
     },
     store,
@@ -153,7 +216,14 @@ async function iniciar() {
   });
 
   sembrarContenido(contenidoDeFabrica, carpetaContenido, registrar);
-  const contenido = vigilarContenido(carpetaContenido, (nuevo) => { inventario = nuevo; ipc.difundirContenido(nuevo); }, registrar);
+  const contenido = vigilarContenido(
+    carpetaContenido,
+    (nuevo) => {
+      inventario = nuevo;
+      ipc.difundirContenido(nuevo);
+    },
+    registrar,
+  );
   inventario = contenido.inicial;
 
   // §8 · recarga diaria de la pública fuera del horario de servicio; de paso, reinicio por fecha.
@@ -167,14 +237,18 @@ async function iniciar() {
     }, msHastaHora(config.recargaDiaria));
   };
 
-  vigilarConfig(rutaConfig, (nueva) => {
-    const cambioPantalla = nueva.pantallaPublica !== config.pantallaPublica;
-    const cambioRecarga = nueva.recargaDiaria !== config.recargaDiaria;
-    config = nueva;
-    ipc.difundirConfig(nueva);
-    if (cambioPantalla) ventanas.sincronizar();
-    if (cambioRecarga) programarRecarga();
-  }, registrar);
+  vigilarConfig(
+    rutaConfig,
+    (nueva) => {
+      const cambioPantalla = nueva.pantallaPublica !== config.pantallaPublica;
+      const cambioRecarga = nueva.recargaDiaria !== config.recargaDiaria;
+      config = nueva;
+      ipc.difundirConfig(nueva);
+      if (cambioPantalla) ventanas.sincronizar();
+      if (cambioRecarga) programarRecarga();
+    },
+    registrar,
+  );
 
   app.on('second-instance', () => ventanas.enfocarOperador());
   app.on('before-quit', () => ventanas.cerrar());
@@ -188,14 +262,17 @@ async function iniciar() {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.whenReady().then(iniciar).catch(async (error: unknown) => {
-    registrar(`No se pudo iniciar: ${error instanceof Error ? error.stack : String(error)}`);
-    await dialog.showMessageBox({
-      type: 'error',
-      title: 'Turnero',
-      message: 'No se pudo iniciar el turnero.',
-      detail: error instanceof Error ? error.message : String(error),
+  app
+    .whenReady()
+    .then(iniciar)
+    .catch(async (error: unknown) => {
+      registrar(`No se pudo iniciar: ${error instanceof Error ? error.stack : String(error)}`);
+      await dialog.showMessageBox({
+        type: 'error',
+        title: 'Turnero',
+        message: 'No se pudo iniciar el turnero.',
+        detail: error instanceof Error ? error.message : String(error),
+      });
+      app.quit();
     });
-    app.quit();
-  });
 }
