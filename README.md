@@ -2,7 +2,18 @@
 
 > **Integración actual en copilot:** la aplicación usa la arquitectura local Electron de `arquitechture-v2`; las secciones históricas siguientes y los manuales de documentación describen la versión anterior. Consulta `docs/arquitectura.md` para la arquitectura nueva.
 >
-> **Multimedia → pantalla 2:** desde el panel del operador puedes agregar videos MP4/WebM e imágenes JPG/JPEG/PNG/WebP, consultar su biblioteca y quitar archivos con confirmación. Los videos se reproducen en rotación aleatoria; si no hay videos reproducibles, aparece el carrusel de imágenes. Los cambios se reflejan sin reiniciar. Los archivos se copian a `contenido/videos` y `contenido/banner` dentro de la carpeta de datos (en producción, `Documentos/Turnero Comal`, salvo `TURNERO_DATOS`). “Abrir carpeta” permite administrarlos directamente. Esta integración adapta Multimedia al contenido local; no incorpora el reproductor anterior de YouTube ni las listas de música.
+> **Multimedia → pantalla 2:** permite seleccionar un enlace HTTPS de video o playlist de YouTube para reproducción continua, o volver a videos MP4/WebM e imágenes JPG/JPEG/PNG/WebP locales. YouTube requiere internet y permiso de reproducción externa del autor. El volumen baja durante los anuncios y estos aparecen junto al video. En modo local, los videos se reproducen en rotación aleatoria; si no hay videos reproducibles, aparece el carrusel de imágenes. Los cambios se reflejan sin reiniciar. Los archivos se copian a `contenido/videos` y `contenido/banner` dentro de la carpeta de datos (en producción, `Documentos/Turnero Comal`, salvo `TURNERO_DATOS`). “Abrir carpeta” permite administrarlos directamente.
+>
+> **Anuncios y corrección:** los llamados se escuchan completos, en orden de llegada. Los anuncios ya encolados terminan aunque se quite un número de la lista. El botón “Corregir última captura” revierte una captura una sola vez; quitar un turno descarta esa corrección. Ctrl+Z conserva su función de edición de texto. La mascota está desactivada.
+
+## Validación del código actual
+
+- `npm test`: pruebas del dominio, cola FIFO, enlaces de YouTube y persistencia.
+- `npm run build`: comprobación estricta de TypeScript y compilación.
+- `npm run format:check`: formato uniforme con Prettier; `npm run format` lo aplica.
+- `npm run test:desktop`: ejecuta Electron con ventanas ocultas y datos aislados en `test-results/`, comprueba los anuncios 55 → 66, menús hacia abajo a dos tamaños, eliminación sin restauración y carga del reproductor YouTube. Requiere internet para esa última comprobación y guarda capturas. No usa datos de la jornada real.
+
+Los cambios de comportamiento se guardan separados del formateo, con mensajes Conventional Commits. La cola (`nucleo/cola.ts`) y el análisis de enlaces (`nucleo/youtube.ts`) no dependen de Electron; los permisos y persistencia se resuelven en el proceso principal. Las vistas usan componentes separados para el menú, el formulario YouTube y su reproductor.
 
 COMAL Queue is a local ready-order display for the Troyanos/Comal++ cafeteria context represented in this repository. A cashier manually records an existing ticket number when an order is ready; connected public displays receive the ready list and a visual announcement in real time.
 
