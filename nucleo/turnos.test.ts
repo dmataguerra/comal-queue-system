@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { ESTADO_INICIAL, deshacer, formatear, llamar, quitar, type Estado } from './turnos.js';
+import {
+  ESTADO_INICIAL,
+  deshacer,
+  formatear,
+  llamar,
+  quitar,
+  vencer,
+  type Estado,
+} from './turnos.js';
 
 /** Aplica una secuencia de capturas desde el estado inicial. */
 function secuencia(...entradas: string[]): Estado {
@@ -108,6 +116,31 @@ describe('quitar()', () => {
     let estado = secuencia('10', '11', '12');
     for (const n of [11, 12, 10]) estado = quitar(estado, n).estado;
     assert.deepEqual([estado.actual, estado.llamados], [null, []]);
+  });
+});
+
+describe('vencer()', () => {
+  test('saca los vencidos sin mover al resto y sin anunciar', () => {
+    const { estado, efecto } = vencer(secuencia('10', '11', '12', '13'), [10, 11]);
+    assert.deepEqual([estado.actual, estado.llamados], [13, [12]]);
+    assert.equal(efecto, null);
+  });
+
+  test('conserva deshacer si el actual sigue en pantalla', () => {
+    const previo = secuencia('10', '11', '12');
+    const { estado } = vencer(previo, [10]);
+    assert.equal(estado.deshacer, previo.deshacer);
+  });
+
+  test('si vence el actual, el siguiente queda arriba y ya no hay qué deshacer', () => {
+    const { estado } = vencer(secuencia('10', '11'), [11]);
+    assert.deepEqual([estado.actual, estado.llamados, estado.deshacer], [10, [], null]);
+  });
+
+  test('ningún vencido en pantalla: no cambia nada', () => {
+    const previo = secuencia('10', '11');
+    const { estado } = vencer(previo, [44]);
+    assert.equal(estado, previo);
   });
 });
 

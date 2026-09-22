@@ -107,6 +107,37 @@ Dos detalles que conviene no revertir:
   marcador, que no corresponden al cuerpo real; guardar el WAV tal cual haría fallar
   `verify-audio.mjs`.
 
+## Regenerar con ElevenLabs
+
+Mismo esquema que Azure: se genera una vez, se versiona y la app sigue sin internet. El catálogo
+completo son 1 897 caracteres: ~0,19 USD con `eleven_multilingual_v2` y la mitad con
+`eleven_flash_v2_5`. La recarga mínima de saldo (*Pay As You Go*) es de 5 USD y dura 12 meses.
+
+1. Crea la cuenta en [elevenlabs.io](https://elevenlabs.io) → *Developers* → *API Keys* → crea una
+   clave con permiso de **Text to Speech** y **Voices** (lectura).
+2. *Developers* → *Top Up* → recarga 5 USD.
+3. Si quieres una voz de la *Voice Library* (p. ej. acento mexicano), agrégala a *My Voices*.
+
+```powershell
+$env:ELEVENLABS_API_KEY = 'la-clave-que-copiaste'
+
+node tooling/audio/generate-elevenlabs.mjs --voces                    # id de cada voz
+node tooling/audio/generate-elevenlabs.mjs --voice <id> --muestra     # 6 clips de prueba
+node tooling/audio/generate-elevenlabs.mjs --voice <id>               # los 100 en contenido/voz
+node tooling/audio/verify-audio.mjs
+```
+
+| Parámetro | Por defecto | Para qué |
+| --- | --- | --- |
+| `--voice` | — (obligatorio) | Id de la voz, sacado de `--voces`. |
+| `--model` | `eleven_multilingual_v2` | `eleven_flash_v2_5` cuesta la mitad; `eleven_v3` es más expresiva y menos predecible. |
+| `--speed` | `0.95` | Velocidad (0,7–1,2). |
+| `--stability` | `0.6` | Más alta, más pareja entre clips y menos expresiva. |
+| `--target-rms`, `--sin-normalizar`, `--output-dir` | como en Azure | |
+
+Si una voz de la *Voice Library* responde 402, tu plan no la permite por API: usa una de las
+`premade` que lista `--voces`.
+
 ## Aviso y verificación
 
 ```powershell

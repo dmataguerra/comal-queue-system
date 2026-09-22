@@ -1,6 +1,7 @@
 // nucleo/turnos.ts — sin dependencias, sin efectos secundarios (arquitectura §4)
 
 export const MAX_LLAMADOS = 5; // RF-05
+export const VIGENCIA_MS = 5 * 60_000; // tiempo en pantalla desde el último anuncio de cada número
 
 export interface Estado {
   actual: number | null;
@@ -27,6 +28,11 @@ export function normalizar(entrada: unknown): number | null {
   const d = String(entrada ?? '').trim();
   if (!/^\d{1,6}$/.test(d)) return null;
   return Number(d.slice(-2)); // solo los dos últimos dígitos
+}
+
+/** Lo que se ve en la TV: `[actual, ...llamados]`, del más reciente al más viejo. */
+export function enPantalla(estado: Estado): number[] {
+  return estado.actual === null ? [...estado.llamados] : [estado.actual, ...estado.llamados];
 }
 
 /** 8 -> "08" */
@@ -76,14 +82,26 @@ export function llamar(estado: Estado, entrada: unknown, maxLlamados = MAX_LLAMA
  */
 export function quitar(estado: Estado, n: number): Transicion {
   if (estado.actual !== n && !estado.llamados.includes(n)) return { estado, efecto: null };
-  const [actual = null, ...llamados] = [
-    ...(estado.actual === null ? [] : [estado.actual]),
-    ...estado.llamados,
-  ].filter((x) => x !== n);
+  const [actual = null, ...llamados] = enPantalla(estado).filter((x) => x !== n);
 
   // Borrar es explícito: se descarta la foto previa para que ninguna corrección lo restaure.
   return {
     estado: { actual, llamados, deshacer: null },
+    efecto: null,
+  };
+}
+
+/**
+ * Saca de la pantalla los números que cumplieron su vigencia, sin anunciar. A diferencia de
+ * `quitar`, conserva deshacer mientras el actual siga en pantalla: que venza un turno viejo no
+ * debe impedir corregir el último llamado.
+ */
+export function vencer(estado: Estado, vencidos: readonly number[]): Transicion {
+  const quedan = enPantalla(estado).filter((x) => !vencidos.includes(x));
+  if (quedan.length === enPantalla(estado).length) return { estado, efecto: null };
+  const [actual = null, ...llamados] = quedan;
+  return {
+    estado: { actual, llamados, deshacer: actual === estado.actual ? estado.deshacer : null },
     efecto: null,
   };
 }
