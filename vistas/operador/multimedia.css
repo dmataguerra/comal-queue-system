@@ -1,4 +1,5 @@
 .multimedia-workspace { display:grid; gap:22px; }
+.youtube-form { margin-top:20px; }
 .media-overview,.media-library-panel { padding:24px; }
 .media-overview { display:flex; justify-content:space-between; align-items:center; gap:24px; }
 .media-overview h2 { color:#073e70; font-size:20px; margin:6px 0; }

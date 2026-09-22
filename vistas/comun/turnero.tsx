@@ -4,6 +4,7 @@ import type {Accion,Anuncio,CategoriaContenido,Inicial,ResultadoDespacho,Resulta
 declare global { interface Window { turnero?: TurneroApi } }
 
 interface Contexto extends Inicial {
+ configurarYouTube:TurneroApi['configurarYouTube'];
  despachar:(accion:Accion)=>Promise<ResultadoDespacho>;
  importarContenido:(categoria:CategoriaContenido)=>Promise<ResultadoImportacion>;
  quitarContenido:(url:string)=>Promise<boolean>;
@@ -20,6 +21,7 @@ export function TurneroProvider({children}:{children:ReactNode}){
  const anuncios=useRef(new Set<(anuncio:Anuncio)=>void>());
  // Funciones estables: los efectos que se suscriben no deben reiniciarse en cada render.
  const acciones=useMemo(()=>({
+  configurarYouTube:(url:string|null)=>api!.configurarYouTube(url),
   despachar:(accion:Accion)=>api!.despachar(accion),
   importarContenido:(categoria:CategoriaContenido)=>api!.importarContenido(categoria),
   quitarContenido:(url:string)=>api!.quitarContenido(url),

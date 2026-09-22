@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import './multimedia.css';
+import {YouTubePanel} from './YouTubePanel';
 import type {CategoriaContenido} from '../../main/contrato';
 import {Icon} from '../comun/components/Icon';
 import {useTurnero} from '../comun/turnero';
@@ -73,6 +74,7 @@ export function MultimediaPanel({notificar}:{notificar:(mensaje:string,error?:bo
  }
 
  return <div className="multimedia-workspace">
+  <YouTubePanel notificar={notificar}/>
   <section className="panel media-overview">
    <div><span className="eyebrow">PANTALLA 2</span><h2>Contenido que acompaña la espera</h2><p>Los cambios se reflejan automáticamente, sin cerrar ni reiniciar la aplicación.</p></div>
    <div className="media-flow"><span className={inventario.videos.length?'active':''}><Icon name="media"/>{inventario.videos.length} videos</span><Icon name="arrow"/><span className={!inventario.videos.length&&inventario.banner.length?'active':''}><Icon name="image"/>{inventario.banner.length} imágenes</span></div>

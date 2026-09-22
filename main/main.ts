@@ -1,5 +1,5 @@
-import { app, dialog, Menu, net, protocol, shell } from 'electron';
-import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
+import { app, dialog, Menu, net, protocol, shell, session } from 'electron';
+import { createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
@@ -44,7 +44,7 @@ function dentroDe(raiz: string, ruta: string): string | null {
 }
 
 const cabecerasBase = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' };
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'";
+const CSP = "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'";
 
 /** Archivos de contenido con soporte de rangos: el <video> los pide por partes. */
 function servirContenido(archivo: string, rango: string | null): Response {
@@ -89,6 +89,10 @@ function registrarProtocolo() {
 
 async function iniciar() {
   Menu.setApplicationMenu(null);
+  // Identidad de la aplicación de escritorio exigida por YouTube para páginas locales.
+  session.defaultSession.webRequest.onBeforeSendHeaders({urls:['https://www.youtube.com/embed/*']}, (details, callback) => {
+    callback({requestHeaders:{...details.requestHeaders, Referer:'https://mx.uaq.comal.local/'}});
+  });
   registrarProtocolo();
 
   const rutaConfig = join(carpetaDatos, 'config.json');
@@ -132,6 +136,12 @@ async function iniciar() {
   };
 
   const ipc = conectarIpc({
+    configurarYouTube: (url) => {
+      const nueva = {...leerConfig(rutaConfig, registrar), youtubeUrl: url};
+      writeFileSync(rutaConfig, `${JSON.stringify(nueva, null, 2)}\n`);
+      config = {...config, youtubeUrl: url};
+      ipc.difundirConfig(config);
+    },
     store,
     inicial: () => ({ instantanea: store.obtener(), config, inventario, pantallas }),
     esOperador: ventanas.esOperador,

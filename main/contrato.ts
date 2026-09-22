@@ -28,6 +28,7 @@ export interface ResultadoDespacho {
 
 /** config.json — RF-15 */
 export interface Config {
+  youtubeUrl: string | null;
   repeticiones: 1 | 2;
   volumenVoz: number;
   volumenMusica: number;
@@ -67,6 +68,7 @@ export interface Inicial {
 }
 
 export interface TurneroApi {
+  configurarYouTube(url: string | null): Promise<void>;
   obtener(): Promise<Inicial>;
   despachar(accion: Accion): Promise<ResultadoDespacho>;
   importarContenido(categoria: CategoriaContenido): Promise<ResultadoImportacion>;

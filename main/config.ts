@@ -2,8 +2,10 @@ import { existsSync, readFileSync, watch, writeFileSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import type { Config } from './contrato.js';
 import type { Registrar } from './log.js';
+import { esYouTube } from '../nucleo/youtube.js';
 
 export const CONFIG_POR_DEFECTO: Config = {
+  youtubeUrl: null,
   repeticiones: 1,
   volumenVoz: 1,
   volumenMusica: 0.6,
@@ -17,6 +19,7 @@ export const CONFIG_POR_DEFECTO: Config = {
 type Validador = (valor: unknown) => boolean;
 const fraccion: Validador = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
 const validadores: { [K in keyof Config]: Validador } = {
+  youtubeUrl: (v) => v === null || esYouTube(v),
   repeticiones: (v) => v === 1 || v === 2,
   volumenVoz: fraccion,
   volumenMusica: fraccion,

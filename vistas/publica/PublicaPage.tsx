@@ -3,7 +3,8 @@ import {formatear} from '../../nucleo/turnos';
 import {useTurnero} from '../comun/turnero';
 import {PublicFooter} from '../comun/components/PublicFooter';
 import {Icon} from '../comun/components/Icon';
-import {StatusBadge} from '../comun/components/StatusBadge';
+import {TarjetaAnuncio} from './TarjetaAnuncio';
+import './youtube.css';
 import {AnimatedBackground} from '../comun/components/AnimatedBackground';
 import {Contenido} from './Contenido';
 import {useAnuncios} from './useAnuncios';
@@ -19,7 +20,7 @@ export function PublicaPage() {
     ...llamados.map(n => ({n, ultimo: false})),
   ];
 
-  return <div className={`public-screen ${anuncio ? 'is-announcing' : ''}`}>
+  return <div className={`public-screen ${anuncio ? 'is-announcing' : ''} ${config.youtubeUrl ? 'has-youtube' : ''}`}>
     <AnimatedBackground/>
     <section className="public-queue glass-panel" aria-labelledby="public-title">
       <header className="public-queue-heading">
@@ -29,30 +30,20 @@ export function PublicaPage() {
         {filas.map(({n, ultimo}) => <div className={`public-turn ${ultimo ? 'latest' : ''} ${anuncio?.n === n ? 'calling' : ''}`} key={n}>
           <strong>{formatear(n)}</strong>
           <div className="public-turn-detail">
-            {ultimo && <span className="public-turn-state">{anuncio ? 'Llamando ahora' : 'Último llamado'}</span>}
+            {(ultimo || anuncio?.n === n) && <span className="public-turn-state">{anuncio?.n === n ? 'Llamando ahora' : 'Último llamado'}</span>}
             <span className="pickup-label">Recoge tu pedido</span>
           </div>
           <Icon name="arrow"/>
         </div>)}
       </div>
       <div className="public-queue-bottom"><span><Icon name="receipt"/>Presenta tu ticket al recoger</span></div>
+      {anuncio && config.youtubeUrl && <TarjetaAnuncio anuncio={anuncio}/>}
     </section>
     <section className="public-media-frame" aria-label="Contenido">
       <div className="public-media">
         <Contenido videos={inventario.videos} banner={inventario.banner} config={config} atenuado={atenuado} registrar={registrar}/>
       </div>
-      {anuncio && <section className="public-focus" aria-label="Anuncio de turno">
-        <div className="announcement-backdrop" role="status" aria-live="assertive" aria-atomic="true">
-          <div className="announcement-card glass-panel" key={anuncio.id}>
-            <StatusBadge tone="ready">Tu pedido está listo</StatusBadge>
-            <span className="announcement-caption">TURNO</span>
-            <strong className="announcement-number">{formatear(anuncio.n)}</strong>
-            <span className="announcement-pickup">Acércate a recoger tu pedido</span>
-            <div className="announcement-rule"/>
-            <p><Icon name="receipt"/>Presenta tu ticket en la barra</p>
-          </div>
-        </div>
-      </section>}
+      {anuncio && !config.youtubeUrl && <TarjetaAnuncio anuncio={anuncio}/>}
     </section>
     {errorAudio && <div className="display-notices"><div className="audio-warning" role="alert">{errorAudio}</div></div>}
     <PublicFooter messages={config.mensajes}/>

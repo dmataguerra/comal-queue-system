@@ -2,6 +2,7 @@ import { ipcMain, type WebContents } from 'electron';
 import type { Accion, CategoriaContenido, Config, Inicial, Inventario, Pantallas, ResultadoImportacion } from './contrato.js';
 import type { Registrar } from './log.js';
 import type { Store } from './store.js';
+import { esYouTube } from '../nucleo/youtube.js';
 
 // Los mismos nombres están escritos en preload.cts: el preload aislado no puede importar módulos.
 export const CANALES = {
@@ -18,6 +19,7 @@ export const CANALES = {
 } as const;
 
 interface OpcionesIpc {
+  configurarYouTube: (url: string | null) => void;
   store: Store;
   inicial: () => Inicial;
   esOperador: (remitente: WebContents) => boolean;
@@ -42,7 +44,7 @@ function validarAccion(accion: unknown): Accion {
 }
 
 /** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
-export function conectarIpc({ store, inicial, esOperador, destinos, importarContenido, quitarContenido, abrirCarpetaContenido, registrar }: OpcionesIpc) {
+export function conectarIpc({ store, inicial, esOperador, destinos, importarContenido, quitarContenido, abrirCarpetaContenido, configurarYouTube, registrar }: OpcionesIpc) {
   const difundir = (canal: string, ...datos: unknown[]) => {
     for (const destino of destinos()) if (!destino.isDestroyed()) destino.send(canal, ...datos);
   };
@@ -57,6 +59,12 @@ export function conectarIpc({ store, inicial, esOperador, destinos, importarCont
   const exigirOperador = (remitente: WebContents) => {
     if (!esOperador(remitente)) throw new Error('Solo la vista del operador puede administrar multimedia.');
   };
+  ipcMain.handle('turnero:youtube', (evento, url: unknown) => {
+    exigirOperador(evento.sender);
+    if (evento.senderFrame !== evento.sender.mainFrame) throw new Error('Vista no autorizada.');
+    if (url !== null && !esYouTube(url)) throw new Error('Enlace de YouTube no válido.');
+    configurarYouTube(url);
+  });
   ipcMain.handle(CANALES.importarContenido, (evento, categoria: unknown) => {
     exigirOperador(evento.sender);
     if (!categoriaValida(categoria)) throw new Error('Categoría multimedia no válida.');

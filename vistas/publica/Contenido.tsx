@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import type {Config} from '../../main/contrato';
 import {TrojanMascot} from '../comun/components/TrojanMascot';
+import {YouTubeVideo} from './YouTubeVideo';
 
 interface Props {videos:string[];banner:string[];config:Config;atenuado:boolean;registrar:(mensaje:string)=>void}
 
@@ -20,6 +21,7 @@ export function Contenido({videos,banner,config,atenuado,registrar}:Props){
  useEffect(()=>setFallidos(new Set()),[videos]);
  const reproducibles=useMemo(()=>videos.filter(url=>!fallidos.has(url)),[videos,fallidos]);
  const volumen=atenuado?config.volumenMusica*config.atenuacionMusica:config.volumenMusica;
+ if(config.youtubeUrl)return <YouTubeVideo url={config.youtubeUrl} volumen={volumen}/>;
  if(reproducibles.length)return <Videos videos={reproducibles} volumen={volumen} atenuado={atenuado} alFallar={url=>{registrar(`Video no reproducible, se salta: ${nombre(url)}`);setFallidos(previos=>new Set(previos).add(url));}}/>;
  return <Banner imagenes={banner} segundos={config.segundosBanner}/>;
 }
