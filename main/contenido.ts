@@ -18,12 +18,14 @@ export const URL_CONTENIDO = 'turnero://app/contenido';
 // Contrato de formatos (arquitectura §11, riesgo 5): MP4 con H.264 y AAC.
 const VIDEOS = new Set(['.mp4', '.webm']);
 const IMAGENES = new Set(['.jpg', '.jpeg', '.png', '.webp']);
-const VOZ = /^(\d{2})\.wav$/i;
+const VOZ = /^(\d{2})\.(wav|mp3)$/i;
+const EXTENSIONES_AUDIO = ['.mp3', '.wav'] as const;
 
 export const TIPOS_MIME: Record<string, string> = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
@@ -124,11 +126,12 @@ export function inventariar(
 ): Inventario {
   for (const carpeta of ['videos', 'banner', 'voz'])
     mkdirSync(join(raiz, carpeta), { recursive: true });
-  const ignorar = (ruta: string) => {
+  const ignorar = (ruta: string, motivo = 'formato no soportado') => {
     if (reportados.has(ruta)) return;
     reportados.add(ruta);
-    registrar(`contenido: formato no soportado, se ignora ${ruta}`);
+    registrar(`contenido: ${motivo}, se ignora ${ruta}`);
   };
+  const tieneContenido = (ruta: string) => existsSync(ruta) && statSync(ruta).size > 0;
   const filtrar = (carpeta: string, permitidas: Set<string>) =>
     archivos(join(raiz, carpeta))
       .filter((nombre) => {
@@ -141,15 +144,27 @@ export function inventariar(
   const voz: (string | null)[] = Array(100).fill(null);
   for (const nombre of archivos(join(raiz, 'voz'))) {
     const coincide = VOZ.exec(nombre);
-    if (coincide) voz[Number(coincide[1])] = url(base, 'voz', nombre);
-    else ignorar(`voz/${nombre}`);
+    if (coincide) {
+      if (!tieneContenido(join(raiz, 'voz', nombre))) {
+        ignorar(`voz/${nombre}`, 'archivo vacío');
+        continue;
+      }
+      const numero = Number(coincide[1]);
+      // MP3 permite reemplazar una voz WAV de fábrica sin tener que borrar el original.
+      if (!voz[numero] || coincide[2].toLowerCase() === 'mp3')
+        voz[numero] = url(base, 'voz', nombre);
+    } else ignorar(`voz/${nombre}`);
   }
+
+  const aviso = EXTENSIONES_AUDIO.map((extension) => `aviso${extension}`).find((nombre) =>
+    tieneContenido(join(raiz, nombre)),
+  );
 
   return {
     videos: filtrar('videos', VIDEOS),
     banner: filtrar('banner', IMAGENES),
     voz,
-    aviso: existsSync(join(raiz, 'aviso.wav')) ? `${base}/aviso.wav` : null,
+    aviso: aviso ? `${base}/${aviso}` : null,
   };
 }
 

@@ -12,12 +12,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import {
+  TIPOS_MIME,
   URL_CONTENIDO,
   importarArchivos,
   inventariar,
   quitarArchivo,
   sembrarContenido,
 } from './contenido.js';
+
+test('el protocolo sirve MP3 con el tipo MIME de audio correcto', () => {
+  assert.equal(TIPOS_MIME['.mp3'], 'audio/mpeg');
+});
 
 test('inventario: videos, banner, voz por número y aviso; lo no soportado se ignora y se registra una vez', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-contenido-'));
@@ -36,13 +41,17 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       'banner/evento.JPG',
       'banner/notas.txt',
       'voz/08.wav',
-      'voz/99.wav',
+      'voz/08.mp3',
+      'voz/40.mp3',
+      'voz/99.mp3',
       'voz/8.wav',
       'aviso.wav',
+      'aviso.mp3',
     ]) {
       mkdirSync(join(raiz, archivo, '..'), { recursive: true });
       writeFileSync(join(raiz, archivo), 'x');
     }
+    writeFileSync(join(raiz, 'voz/40.mp3'), '');
     const registro: string[] = [];
     const reportados = new Set<string>();
     const inventario = inventariar(raiz, (m) => registro.push(m), reportados);
@@ -51,18 +60,20 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       `${URL_CONTENIDO}/videos/Caf%C3%A9%20lento.webm`,
     ]);
     assert.deepEqual(inventario.banner, [`${URL_CONTENIDO}/banner/evento.JPG`]);
-    assert.equal(inventario.voz[8], `${URL_CONTENIDO}/voz/08.wav`);
-    assert.equal(inventario.voz[99], `${URL_CONTENIDO}/voz/99.wav`);
+    assert.equal(inventario.voz[8], `${URL_CONTENIDO}/voz/08.mp3`);
+    assert.equal(inventario.voz[40], null);
+    assert.equal(inventario.voz[99], `${URL_CONTENIDO}/voz/99.mp3`);
     assert.equal(inventario.voz[0], null);
-    assert.equal(inventario.aviso, `${URL_CONTENIDO}/aviso.wav`);
+    assert.equal(inventario.aviso, `${URL_CONTENIDO}/aviso.mp3`);
     assert.deepEqual(registro.map((m) => m.split(' ').at(-1)).sort(), [
       'banner/notas.txt',
       'videos/raro.mkv',
+      'voz/40.mp3',
       'voz/8.wav',
     ]);
 
     inventariar(raiz, (m) => registro.push(m), reportados);
-    assert.equal(registro.length, 3);
+    assert.equal(registro.length, 4);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
   }

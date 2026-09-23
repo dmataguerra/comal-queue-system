@@ -921,65 +921,66 @@
   scrollbar-width: thin;
 }
 .admin-shell .sidebar {
-  border-right: 1px solid rgba(167, 195, 218, 0.8);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 247, 253, 0.89));
+  border-right: 1px solid rgba(117, 167, 216, 0.5);
+  background: linear-gradient(180deg, #0758a0, #064274 58%, #04345e);
   box-shadow:
-    14px 0 42px rgba(18, 58, 94, 0.08),
-    inset -1px 0 rgba(255, 255, 255, 0.8);
+    14px 0 42px rgba(4, 48, 84, 0.2),
+    inset -1px 0 rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(22px) saturate(130%);
 }
 .admin-shell .sidebar > .brand {
   margin-bottom: 38px;
 }
 .admin-shell .brand-logo-plate {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 30px rgba(1, 30, 55, 0.22);
 }
 .admin-shell .nav-label {
-  color: #6c849a;
+  color: rgba(229, 243, 255, 0.72);
 }
 .admin-shell .sidebar nav button {
-  color: #496b89;
+  color: rgba(239, 248, 255, 0.82);
   border-radius: 13px;
   font-weight: 600;
 }
 .admin-shell .sidebar nav button:hover:not(.active) {
-  color: #073e70;
-  background: rgba(220, 234, 247, 0.72);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 .admin-shell .sidebar nav button.active {
-  color: #064b86;
-  border-color: #a9c9e3;
-  background: linear-gradient(110deg, #dcecf8, #f7fbff);
-  box-shadow: 0 8px 22px rgba(18, 58, 94, 0.09);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.2), rgba(117, 167, 216, 0.16));
+  box-shadow: 0 8px 22px rgba(1, 30, 55, 0.2);
 }
 .admin-shell .sidebar nav button.active .icon {
-  color: #0758bd;
+  color: #fff;
 }
 .admin-shell .nav-active-dot {
   width: 7px;
   height: 7px;
-  background: #0758bd;
-  box-shadow: 0 0 0 4px rgba(7, 88, 189, 0.1);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
 }
 .admin-shell .sidebar-session {
-  border-top-color: #d2e2ef;
+  border-top-color: rgba(223, 240, 253, 0.24);
 }
 .admin-shell .session-avatar {
-  color: #0758bd;
-  background: #e5f0f9;
-  border-color: #bad1e5;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 .admin-shell .session-avatar .icon {
-  color: #0758bd;
+  color: #fff;
 }
 .admin-shell .sidebar-session strong {
-  color: #173e60;
+  color: #fff;
 }
 .admin-shell .sidebar-session div > span {
-  color: #70899f;
+  color: rgba(229, 243, 255, 0.72);
 }
 .admin-shell .admin-workspace {
   min-height: 100dvh;
@@ -1281,7 +1282,7 @@
 }
 @media (max-width: 1000px) {
   .admin-shell .sidebar {
-    background: rgba(250, 253, 255, 0.94);
+    background: linear-gradient(180deg, #0758a0, #04345e);
   }
 }
 @media (max-width: 760px) {
@@ -1297,9 +1298,9 @@
     position: relative;
     height: auto;
     overflow: visible;
-    background: rgba(255, 255, 255, 0.92);
-    border-bottom-color: #bdd4e6;
-    box-shadow: 0 8px 24px rgba(18, 58, 94, 0.08);
+    background: linear-gradient(110deg, #0758a0, #04345e);
+    border-bottom-color: rgba(117, 167, 216, 0.5);
+    box-shadow: 0 8px 24px rgba(4, 48, 84, 0.18);
   }
   .admin-shell .admin-topbar {
     padding: 0 16px;
@@ -1432,10 +1433,23 @@
 .admin-shell .ready-list-footer {
   min-height: 44px;
 }
-/* Side by side, the list takes the entry column's height instead of setting it. */
+/* Side by side, "Llamar turno" and "En pantalla" share the same grid row and height. */
 @media (min-width: 761px) {
+  .admin-shell .entry-column {
+    display: contents;
+  }
+  .admin-shell .new-turn-panel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .admin-shell .repeat-panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
   .admin-shell .turns-layout > .ready-panel {
-    contain: size;
+    grid-column: 2;
+    grid-row: 1;
+    contain: none;
     min-height: 420px;
     max-height: none;
   }

@@ -91,6 +91,22 @@ async function verificar() {
       ['55', '66'],
     );
     assert.ok(anuncios[1].t - anuncios[0].t >= 3900, 'El segundo anuncio interrumpió el primero');
+    const anuncioEnMultimedia = await ejecutar(
+      publica,
+      `(()=>{const a=document.querySelector('.public-focus'),m=document.querySelector('.public-media-frame');if(!a||!m)return null;const x=a.getBoundingClientRect(),y=m.getBoundingClientRect();return {dentro:a.parentElement===m,centroX:Math.abs((x.left+x.right-y.left-y.right)/2),centroY:Math.abs((x.top+x.bottom-y.top-y.bottom)/2)};})()`,
+    );
+    assert.ok(anuncioEnMultimedia?.dentro, 'El anuncio no está dentro del reproductor multimedia');
+    assert.ok(
+      anuncioEnMultimedia.centroX <= 1 && anuncioEnMultimedia.centroY <= 1,
+      'El anuncio no está centrado en el reproductor multimedia',
+    );
+    assert.equal(
+      await ejecutar(publica, "document.querySelector('.audio-warning')?.textContent ?? ''"),
+      '',
+      'La pantalla reportó un error de audio al precargar los MP3 válidos',
+    );
+    await pausa(800);
+    await capturar(publica, 'anuncio-multimedia.png');
     assert.equal(await ejecutar(publica, "document.querySelectorAll('.trojan-mascot').length"), 0);
 
     for (const [ancho, alto] of [
@@ -136,8 +152,19 @@ async function verificar() {
     );
     await pausa(5000);
     await capturar(publica, 'youtube.png');
+    await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'77'})`);
+    await esperar(
+      () =>
+        ejecutar(
+          publica,
+          "document.querySelector('.public-media-frame .announcement-number')?.textContent==='77'",
+        ),
+      'El anuncio no apareció sobre YouTube',
+    );
+    await pausa(800);
+    await capturar(publica, 'youtube-anuncio.png');
     console.log(
-      'PASS: anuncios 55→66, menú en dos tamaños, eliminación sin restauración, multimedia y carga del iframe YouTube.',
+      'PASS: anuncios 55→66, menú en dos tamaños, eliminación sin restauración y anuncio centrado sobre multimedia/YouTube.',
     );
     console.log(
       'YouTube:',

@@ -63,7 +63,6 @@ export function PublicaPage() {
             Presenta tu ticket al recoger
           </span>
         </div>
-        {anuncio && config.youtubeUrl && <TarjetaAnuncio anuncio={anuncio} />}
       </section>
       <section className="public-media-frame" aria-label="Contenido">
         <div className="public-media">
@@ -75,7 +74,7 @@ export function PublicaPage() {
             registrar={registrar}
           />
         </div>
-        {anuncio && !config.youtubeUrl && <TarjetaAnuncio anuncio={anuncio} />}
+        {anuncio && <TarjetaAnuncio anuncio={anuncio} />}
       </section>
       {errorAudio && (
         <div className="display-notices">

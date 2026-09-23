@@ -29,12 +29,3 @@
 .has-youtube .public-media-frame {
   cursor: auto;
 }
-.has-youtube .public-queue .public-focus {
-  padding: 12px;
-}
-.has-youtube .public-queue .announcement-backdrop {
-  padding: 0;
-}
-.has-youtube .public-queue .announcement-number {
-  font-size: clamp(80px, 13vw, 230px);
-}
