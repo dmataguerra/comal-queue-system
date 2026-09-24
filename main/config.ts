@@ -25,7 +25,8 @@ const fraccion: Validador = (v) => typeof v === 'number' && Number.isFinite(v) &
 const validadores: { [K in keyof Config]: Validador } = {
   youtubeUrl: (v) => v === null || esYouTube(v),
   repeticiones: (v) => v === 1 || v === 2,
-  volumenVoz: fraccion,
+  // Más de 1 amplifica la voz (ganancia de Web Audio); por encima de ~2 puede distorsionar.
+  volumenVoz: (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 3,
   volumenMusica: fraccion,
   atenuacionMusica: fraccion,
   segundosBanner: (v) => Number.isInteger(v) && (v as number) >= 3 && (v as number) <= 120,

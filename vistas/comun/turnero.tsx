@@ -25,6 +25,7 @@ declare global {
 
 interface Contexto extends Inicial {
   configurarYouTube: TurneroApi['configurarYouTube'];
+  ajustarVolumenYouTube: TurneroApi['ajustarVolumenYouTube'];
   despachar: (accion: Accion) => Promise<ResultadoDespacho>;
   importarContenido: (categoria: CategoriaContenido) => Promise<ResultadoImportacion>;
   quitarContenido: (url: string) => Promise<boolean>;
@@ -44,6 +45,8 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
   const acciones = useMemo(
     () => ({
       configurarYouTube: (url: string | null) => api!.configurarYouTube(url),
+      ajustarVolumenYouTube: (volumen: number, rampa: number) =>
+        api!.ajustarVolumenYouTube(volumen, rampa),
       despachar: (accion: Accion) => api!.despachar(accion),
       importarContenido: (categoria: CategoriaContenido) => api!.importarContenido(categoria),
       quitarContenido: (url: string) => api!.quitarContenido(url),

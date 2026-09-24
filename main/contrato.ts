@@ -67,6 +67,8 @@ export interface Inicial {
 
 export interface TurneroApi {
   configurarYouTube(url: string | null): Promise<void>;
+  /** Devuelve cuántos <video> de YouTube se ajustaron (0: el iframe aún no carga). */
+  ajustarVolumenYouTube(volumen: number, rampa: number): Promise<number>;
   obtener(): Promise<Inicial>;
   despachar(accion: Accion): Promise<ResultadoDespacho>;
   importarContenido(categoria: CategoriaContenido): Promise<ResultadoImportacion>;

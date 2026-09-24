@@ -32,7 +32,8 @@ export function Contenido({ videos, banner, config, atenuado, registrar }: Props
     [videos, fallidos],
   );
   const volumen = atenuado ? config.volumenMusica * config.atenuacionMusica : config.volumenMusica;
-  if (config.youtubeUrl) return <YouTubeVideo url={config.youtubeUrl} volumen={volumen} />;
+  if (config.youtubeUrl)
+    return <YouTubeVideo url={config.youtubeUrl} volumen={volumen} rampa={atenuado ? 150 : 400} />;
   if (reproducibles.length)
     return (
       <Videos

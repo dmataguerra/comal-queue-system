@@ -24,7 +24,35 @@ export const CANALES = {
   quitarContenido: 'turnero:contenido:quitar',
   abrirCarpetaContenido: 'turnero:contenido:abrir',
   pantallas: 'turnero:pantallas',
+  volumenYouTube: 'turnero:youtube:volumen',
 } as const;
+
+const ORIGENES_YOUTUBE = ['https://www.youtube.com', 'https://www.youtube-nocookie.com'];
+
+/**
+ * RF-11 · el IFrame API habla por postMessage y YouTube no acepta el origen turnero://, así que
+ * setVolume se pierde. Desde main se entra al iframe y se mueve el volumen del <video> con la misma
+ * rampa que los videos locales. No toca muted ni paused: la pausa o el mute del usuario se respetan.
+ */
+const scriptVolumen = (volumen: number, rampa: number) => `(() => {
+  const destino = ${volumen}, ms = ${rampa};
+  const id = (window.__turneroRampa = (window.__turneroRampa || 0) + 1);
+  const videos = [...document.querySelectorAll('video')];
+  for (const video of videos) {
+    const desde = video.volume, inicio = performance.now();
+    const paso = (ahora) => {
+      if (window.__turneroRampa !== id) return;
+      const t = ms ? Math.min(1, (ahora - inicio) / ms) : 1;
+      video.volume = desde + (destino - desde) * t;
+      if (t < 1) requestAnimationFrame(paso);
+    };
+    paso(inicio);
+  }
+  return {
+    videos: videos.length,
+    sonando: videos.filter((v) => !v.paused && !v.muted && v.volume > 0).length,
+  };
+})()`;
 
 interface OpcionesIpc {
   configurarYouTube: (url: string | null) => void;
@@ -112,6 +140,35 @@ export function conectarIpc({
     registrar(
       `[${esOperador(evento.sender) ? 'operador' : 'pública'}] ${String(mensaje).slice(0, 500)}`,
     );
+  });
+  let avisoYouTube = '';
+  ipcMain.handle(CANALES.volumenYouTube, async (evento, volumen: unknown, rampa: unknown) => {
+    if (esOperador(evento.sender)) throw new Error('Solo la vista pública ajusta YouTube.');
+    if (typeof volumen !== 'number' || !(volumen >= 0 && volumen <= 1))
+      throw new Error('Volumen no válido.');
+    if (typeof rampa !== 'number' || !(rampa >= 0 && rampa <= 2000))
+      throw new Error('Rampa no válida.');
+    const frames = evento.sender.mainFrame.framesInSubtree.filter((frame) =>
+      ORIGENES_YOUTUBE.includes(frame.origin),
+    );
+    const resultados = await Promise.all(
+      frames.map((frame) =>
+        frame
+          .executeJavaScript(scriptVolumen(volumen, rampa))
+          .then((r) => r as { videos: number; sonando: number })
+          .catch(() => ({ videos: 0, sonando: 0 })),
+      ),
+    );
+    const videos = resultados.reduce((total, r) => total + r.videos, 0);
+    const sonando = resultados.reduce((total, r) => total + r.sonando, 0);
+    // Más de un reproductor explica audio que sigue sonando tras pausar el visible.
+    const aviso =
+      frames.length > 1 || sonando > 1
+        ? `YouTube duplicado: ${frames.length} iframes, ${videos} videos, ${sonando} sonando.`
+        : '';
+    if (aviso && aviso !== avisoYouTube) registrar(aviso);
+    avisoYouTube = aviso;
+    return videos;
   });
   store.suscribir((instantanea, anuncio) => difundir(CANALES.estado, instantanea, anuncio));
 

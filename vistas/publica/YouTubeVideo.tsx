@@ -1,10 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseYouTube } from '../../nucleo/youtube';
+import { useTurnero } from '../comun/turnero';
 import { cargarYouTube, type YouTubePlayer } from './youtubeApi';
 
-export function YouTubeVideo({ url, volumen }: { url: string; volumen: number }) {
+// Se reaplica el volumen: el iframe tarda en aparecer y cada video nuevo de la playlist lo reinicia.
+const REAPLICAR_MS = 2000;
+
+export function YouTubeVideo({
+  url,
+  volumen,
+  rampa,
+}: {
+  url: string;
+  volumen: number;
+  rampa: number;
+}) {
+  const { ajustarVolumenYouTube, registrar } = useTurnero();
   const host = useRef<HTMLDivElement>(null);
-  const player = useRef<YouTubePlayer | null>(null);
   const volumenActual = useRef(volumen);
   volumenActual.current = volumen;
   const [error, setError] = useState('');
@@ -21,6 +33,7 @@ export function YouTubeVideo({ url, volumen }: { url: string; volumen: number })
         if (cerrado || !host.current) return;
         const nodo = document.createElement('div');
         host.current.replaceChildren(nodo);
+        // Sin `origin`: YouTube no acepta turnero://. El volumen se ajusta desde main (RF-11).
         instancia = new api.Player(nodo, {
           width: '100%',
           height: '100%',
@@ -31,7 +44,6 @@ export function YouTubeVideo({ url, volumen }: { url: string; volumen: number })
             playsinline: 1,
             loop: 1,
             rel: 0,
-            origin: window.location.origin,
             ...(fuente.playlistId
               ? { listType: 'playlist', list: fuente.playlistId }
               : { playlist: fuente.videoId! }),
@@ -39,8 +51,6 @@ export function YouTubeVideo({ url, volumen }: { url: string; volumen: number })
           events: {
             onReady: ({ target }) => {
               if (cerrado) return;
-              player.current = target;
-              target.setVolume(volumenActual.current * 100);
               target.unMute();
               target.setLoop(true);
               target.playVideo();
@@ -61,16 +71,24 @@ export function YouTubeVideo({ url, volumen }: { url: string; volumen: number })
       }
     }
     void iniciar();
+    const nodoHost = host.current;
     return () => {
       cerrado = true;
       instancia?.destroy();
-      player.current = null;
+      // Si la API nunca enlazó, destroy() no quita el iframe y seguiría sonando.
+      nodoHost?.replaceChildren();
     };
   }, [url, intento]);
 
   useEffect(() => {
-    player.current?.setVolume(volumen * 100);
-  }, [volumen]);
+    const aplicar = (ms: number) =>
+      ajustarVolumenYouTube(volumenActual.current, ms).catch((e: Error) =>
+        registrar(`No se pudo ajustar el volumen de YouTube: ${e.message}`),
+      );
+    void aplicar(rampa);
+    const id = setInterval(() => void aplicar(0), REAPLICAR_MS);
+    return () => clearInterval(id);
+  }, [volumen, rampa, url, intento, ajustarVolumenYouTube, registrar]);
 
   return (
     <div className="youtube-stage">
