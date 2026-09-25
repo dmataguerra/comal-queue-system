@@ -80,7 +80,12 @@ function dentroDe(raiz: string, ruta: string): string | null {
   return existsSync(absoluta) && statSync(absoluta).isFile() ? absoluta : null;
 }
 
-const cabecerasBase = { 'Cache-Control': 'no-cache' };
+// Vite serves the views from HTTP in development while media uses turnero://app.
+// Permit that one origin to read local media; packaged views are same-origin.
+const cabecerasBase = {
+  'Cache-Control': 'no-cache',
+  ...(urlDesarrollo ? { 'Access-Control-Allow-Origin': new URL(urlDesarrollo).origin } : {}),
+};
 const CSP = crearCsp(false);
 
 /** Archivos de contenido con soporte de rangos: el <video> los pide por partes. */
@@ -144,9 +149,12 @@ function registrarProtocolo() {
   });
 }
 
-function iniciar() {
+async function iniciar() {
   limpiarTemporalesJson(carpetaDatos, registrar);
   Menu.setApplicationMenu(null);
+  // Una página de Vite con el mismo ETag puede conservar una CSP antigua en el perfil.
+  // Limpiar solo la caché HTTP permite aplicar la política vigente al reiniciar desarrollo.
+  if (urlDesarrollo) await session.defaultSession.clearCache();
   // Identidad de la aplicación de escritorio exigida por YouTube para páginas locales.
   session.defaultSession.webRequest.onBeforeSendHeaders(
     { urls: ['https://www.youtube.com/embed/*'] },

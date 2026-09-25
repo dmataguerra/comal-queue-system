@@ -19,6 +19,7 @@
     "format:check": "prettier --check main nucleo vistas scripts",
     "lint": "eslint main nucleo vistas scripts vite.config.ts",
     "test:desktop": "npm run build && electron scripts/smoke-desktop.mjs",
+    "test:media": "npm run build && node scripts/smoke-media.mjs",
     "desktop:build": "npm run build && node scripts/package-desktop.mjs --win",
     "desktop:build:signed": "npm run build && node scripts/package-desktop.mjs --win -c.win.forceCodeSigning=true",
     "desktop:dir": "npm run build && node scripts/package-desktop.mjs --dir"

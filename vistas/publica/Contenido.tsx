@@ -153,12 +153,14 @@ function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFalla
   volumenActual.current = volumen;
   useEffect(() => {
     const video = ref.current!;
+    // StrictMode repite montaje/limpieza en desarrollo: cada montaje debe restaurar la fuente.
+    video.src = url;
     return () => {
       video.pause();
       video.removeAttribute('src');
       video.load();
     };
-  }, []);
+  }, [url]);
   useEffect(() => {
     const video = ref.current!;
     if (!activo) {
@@ -189,7 +191,6 @@ function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFalla
     <video
       ref={ref}
       className={`content-video ${activo ? 'visible' : ''}`}
-      src={url}
       preload="auto"
       playsInline
       muted={!activo}
