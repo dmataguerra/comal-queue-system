@@ -26,19 +26,27 @@ export interface Clima {
 export function useClima() {
   const [clima, setClima] = useState<Clima | null>(null);
   useEffect(() => {
-    const cargar = () =>
-      fetch(URL_CLIMA)
-        .then((r) => r.json())
-        .then(({ current }) =>
-          setClima({
-            temperatura: Math.round(current.temperature_2m),
-            descripcion: describir(current.weather_code),
-            soleado: current.weather_code <= 1,
-          }),
-        )
-        .catch(() => {});
+    const cargar = async () => {
+      try {
+        const respuesta = await fetch(URL_CLIMA);
+        if (!respuesta.ok) return;
+        const datos: unknown = await respuesta.json();
+        if (!datos || typeof datos !== 'object' || !('current' in datos)) return;
+        const actual = datos.current;
+        if (!actual || typeof actual !== 'object') return;
+        if (!('temperature_2m' in actual) || typeof actual.temperature_2m !== 'number') return;
+        if (!('weather_code' in actual) || typeof actual.weather_code !== 'number') return;
+        setClima({
+          temperatura: Math.round(actual.temperature_2m),
+          descripcion: describir(actual.weather_code),
+          soleado: actual.weather_code <= 1,
+        });
+      } catch {
+        // El clima es opcional cuando no hay conexión.
+      }
+    };
     void cargar();
-    const id = setInterval(cargar, 15 * 60_000);
+    const id = setInterval(() => void cargar(), 15 * 60_000);
     return () => clearInterval(id);
   }, []);
   return clima;

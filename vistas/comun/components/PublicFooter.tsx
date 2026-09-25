@@ -5,7 +5,11 @@ import { Icon } from './Icon';
 export function PublicFooter({ messages }: { messages: string[] }) {
   const clock = useClock();
   const clima = useClima();
-  const tickerMessages = messages.length ? messages : ['Presenta tu ticket al recoger tu pedido'];
+  // También omite el texto si aún está guardado en un config.json anterior.
+  const visibles = messages.filter(
+    (message) => !/^el caf[eé] tambi[eé]n nos une\.?$/i.test(message.trim()),
+  );
+  const tickerMessages = visibles.length ? visibles : ['Presenta tu ticket al recoger tu pedido'];
   const duration = Math.max(28, Math.min(72, tickerMessages.join(' ').length * 0.32 + 24));
   const sequence = (hidden = false) => (
     <div className="footer-ticker-sequence" aria-hidden={hidden || undefined}>

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Config } from '../../main/contrato';
+import { useTurnero } from '../comun/turnero';
 import { YouTubeVideo } from './YouTubeVideo';
 
 interface Props {
@@ -25,15 +26,39 @@ function barajar(lista: string[], evitar?: string) {
 
 /** CU-04 · videos locales en bolsa aleatoria; sin videos (o si todos fallan), modo banner (RF-12). */
 export function Contenido({ videos, banner, config, atenuado, registrar }: Props) {
+  const { informarSalud } = useTurnero();
   const [fallidos, setFallidos] = useState(new Set<string>());
+  const [youtubeDisponible, setYoutubeDisponible] = useState(true);
+  const youtubeFallo = useCallback(() => setYoutubeDisponible(false), []);
+  useEffect(() => {
+    setYoutubeDisponible(true);
+    const desconectar = () => {
+      setYoutubeDisponible(false);
+      if (config.youtubeUrl) informarSalud('youtube', 'degradado');
+    };
+    const reconectar = () => setYoutubeDisponible(true);
+    window.addEventListener('offline', desconectar);
+    window.addEventListener('online', reconectar);
+    return () => {
+      window.removeEventListener('offline', desconectar);
+      window.removeEventListener('online', reconectar);
+    };
+  }, [config.youtubeUrl, informarSalud]);
   useEffect(() => setFallidos(new Set()), [videos]);
   const reproducibles = useMemo(
     () => videos.filter((url) => !fallidos.has(url)),
     [videos, fallidos],
   );
   const volumen = atenuado ? config.volumenMusica * config.atenuacionMusica : config.volumenMusica;
-  if (config.youtubeUrl)
-    return <YouTubeVideo url={config.youtubeUrl} volumen={volumen} rampa={atenuado ? 150 : 400} />;
+  if (config.youtubeUrl && youtubeDisponible)
+    return (
+      <YouTubeVideo
+        url={config.youtubeUrl}
+        volumen={volumen}
+        rampa={atenuado ? 150 : 400}
+        alFallar={youtubeFallo}
+      />
+    );
   if (reproducibles.length)
     return (
       <Videos
@@ -67,11 +92,14 @@ function Videos({
 }) {
   const bolsa = useRef<string[]>([]),
     contador = useRef(0);
-  const tomar = (anterior?: string) => {
-    bolsa.current = bolsa.current.filter((url) => videos.includes(url));
-    if (!bolsa.current.length) bolsa.current = barajar(videos, anterior);
-    return { id: ++contador.current, url: bolsa.current.shift()! };
-  };
+  const tomar = useCallback(
+    (anterior?: string) => {
+      bolsa.current = bolsa.current.filter((url) => videos.includes(url));
+      if (!bolsa.current.length) bolsa.current = barajar(videos, anterior);
+      return { id: ++contador.current, url: bolsa.current.shift()! };
+    },
+    [videos],
+  );
   // [0] es el clip en pantalla; [1], si existe, el siguiente precargado en oculto (§8 medida 2).
   const [piezas, setPiezas] = useState<Pieza[]>(() => [tomar()]);
   // Si el administrador borra el video en curso, o un clip falla, se pasa al siguiente sin reiniciar la app.
@@ -81,7 +109,7 @@ function Videos({
       if (!vigentes.length) return [tomar()];
       return vigentes.length === actuales.length ? actuales : vigentes;
     });
-  }, [videos, piezas.length]);
+  }, [videos, piezas.length, tomar]);
   const avanzar = () => setPiezas(([actual, siguiente]) => [siguiente ?? tomar(actual?.url)]);
   const precargarSiguiente = () =>
     setPiezas((actuales) =>
@@ -121,6 +149,8 @@ interface ClipProps {
 /** Un <video> nuevo por clip; al salir se libera su decodificador (§8 medida 1). */
 function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFallar }: ClipProps) {
   const ref = useRef<HTMLVideoElement>(null);
+  const volumenActual = useRef(volumen);
+  volumenActual.current = volumen;
   useEffect(() => {
     const video = ref.current!;
     return () => {
@@ -135,7 +165,7 @@ function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFalla
       video.pause();
       return;
     }
-    video.volume = volumen;
+    video.volume = volumenActual.current;
     void video.play().catch(() => {});
   }, [activo]); // el volumen al activarse; los cambios posteriores los lleva la rampa
   // RF-11 · el volumen se interpola: 150 ms al atenuar, 400 ms al restaurar.
@@ -154,6 +184,8 @@ function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFalla
     return () => cancelAnimationFrame(cuadro);
   }, [volumen, rampa, activo]);
   return (
+    // El video lo aporta el operador; no existe un archivo de subtítulos asociado.
+    // eslint-disable-next-line jsx-a11y/media-has-caption
     <video
       ref={ref}
       className={`content-video ${activo ? 'visible' : ''}`}

@@ -20,7 +20,7 @@ export function Modal({
       className="modal"
       aria-labelledby={titleId}
       onCancel={onClose}
-      onClick={(e) => {
+      onPointerDown={(e) => {
         if (e.target === ref.current) onClose();
       }}
     >

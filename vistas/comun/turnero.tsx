@@ -24,6 +24,8 @@ declare global {
 }
 
 interface Contexto extends Inicial {
+  diagnostico: TurneroApi['diagnostico'];
+  informarSalud: TurneroApi['informarSalud'];
   configurarYouTube: TurneroApi['configurarYouTube'];
   ajustarVolumenYouTube: TurneroApi['ajustarVolumenYouTube'];
   despachar: (accion: Accion) => Promise<ResultadoDespacho>;
@@ -44,6 +46,9 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
   // Funciones estables: los efectos que se suscriben no deben reiniciarse en cada render.
   const acciones = useMemo(
     () => ({
+      diagnostico: () => api!.diagnostico(),
+      informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') =>
+        api!.informarSalud(tipo, estado),
       configurarYouTube: (url: string | null) => api!.configurarYouTube(url),
       ajustarVolumenYouTube: (volumen: number, rampa: number) =>
         api!.ajustarVolumenYouTube(volumen, rampa),

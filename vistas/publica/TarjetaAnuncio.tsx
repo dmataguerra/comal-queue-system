@@ -26,13 +26,11 @@ export function TarjetaAnuncio({ anuncio }: { anuncio: Anuncio | null }) {
           aria-atomic="true"
         >
           <div className="announcement-card glass-panel" key={visible.id}>
-            <span className="announcement-status">Tu pedido está listo</span>
+            <span className="announcement-status">Recoge tu pedido</span>
             <strong className="announcement-number">{formatear(visible.n)}</strong>
-            <span className="announcement-pickup">Acércate a recoger tu pedido</span>
-            <div className="announcement-rule" />
             <p>
               <Icon name="receipt" />
-              Presenta tu ticket en la barra
+              Presenta tu ticket al recoger
             </p>
           </div>
         </div>

@@ -55,6 +55,28 @@ async function verificar() {
       w.webContents.getURL().includes('/publica/'),
     );
     assert.ok(operador && publica);
+    const urlPublica = publica.webContents.getURL();
+    await publica.webContents.executeJavaScript("location.href = 'https://example.org/'");
+    await pausa(300);
+    assert.equal(
+      publica.webContents.getURL(),
+      urlPublica,
+      'La vista pública no debe navegar fuera de la app',
+    );
+    assert.equal(
+      await publica.webContents.executeJavaScript(
+        "window.turnero.despachar({tipo:'LLAMAR',entrada:'42'}).then(() => false, () => true)",
+      ),
+      true,
+      'La vista pública no debe llamar turnos',
+    );
+    assert.equal(
+      await publica.webContents.executeJavaScript(
+        'window.turnero.diagnostico().then(() => false, () => true)',
+      ),
+      true,
+      'La vista pública no debe leer el diagnóstico del operador',
+    );
     operador.webContents.setBackgroundThrottling(false);
     const ejecutar = (ventana, expresion) => ventana.webContents.executeJavaScript(expresion, true);
     await esperar(
@@ -65,12 +87,37 @@ async function verificar() {
       () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
       'No cargó la pantalla pública',
     );
+    await ejecutar(
+      operador,
+      `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Ayuda').click()`,
+    );
+    await ejecutar(operador, `document.querySelector('.help-diagnostics-link').click()`);
+    await esperar(
+      () => ejecutar(operador, "Boolean(document.querySelector('.diagnostics-grid'))"),
+      'No cargó el diagnóstico del operador',
+    );
+    assert.equal(
+      await ejecutar(publica, "Boolean(document.querySelector('.diagnostics-grid'))"),
+      false,
+      'La TV no debe mostrar diagnósticos',
+    );
+    assert.equal(
+      await ejecutar(
+        publica,
+        "Boolean(document.querySelector('.audio-warning, .display-notices'))",
+      ),
+      false,
+      'La TV no debe mostrar errores técnicos',
+    );
+    await ejecutar(
+      operador,
+      `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Turnos').click()`,
+    );
     // Comprobar movimiento real y la preferencia de accesibilidad en el renderizador.
     const movimiento = () =>
       ejecutar(publica, "getComputedStyle(document.querySelector('.paint-motion')).transform");
     const posicion = await movimiento();
-    await pausa(600);
-    assert.notEqual(await movimiento(), posicion, 'El fondo no se mueve');
+    await esperar(async () => (await movimiento()) !== posicion, 'El fondo no se mueve', 3000);
     publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
@@ -87,6 +134,72 @@ async function verificar() {
     operador.setSize(1280, 900);
     publica.setSize(1280, 900);
     const inventario = await ejecutar(operador, 'window.turnero.obtener()');
+    assert.equal(
+      inventario.inventario.voz.filter(Boolean).length,
+      100,
+      'Faltan voces en el inventario',
+    );
+    assert.match(inventario.inventario.voz[40], /\/voz\/40\.wav$/, 'El turno 40 debe usar WAV');
+    assert.ok(inventario.inventario.aviso, 'Falta el aviso');
+    assert.equal(inventario.inventario.banner.length, 2, 'Faltan las imágenes locales');
+    await esperar(
+      () =>
+        ejecutar(
+          publica,
+          "(()=>{const images=[...document.querySelectorAll('.banner-stage img')].filter(i=>i.src.includes('/contenido/banner/'));return images.length===2&&images.every(i=>i.complete&&i.naturalWidth>0)})()",
+        ),
+      'Las imágenes locales no se mostraron',
+    );
+    assert.equal(
+      await ejecutar(
+        publica,
+        `fetch(${JSON.stringify(inventario.inventario.aviso)}).then((r) => r.headers.get('access-control-allow-origin'))`,
+      ),
+      null,
+      'El contenido local no debe permitir CORS comodín',
+    );
+    const audioDecodificado = await ejecutar(
+      publica,
+      `(async () => {
+      const { inventario } = await window.turnero.obtener();
+      const contexto = new AudioContext();
+      const errores = [];
+      for (const url of [inventario.aviso, ...inventario.voz]) {
+        try {
+          if (!url) throw new Error('Sin archivo');
+          const respuesta = await fetch(url);
+          if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
+          const audio = await contexto.decodeAudioData(await respuesta.arrayBuffer());
+          if (audio.duration < 0.3) throw new Error('Duración inválida');
+          let pico = 0;
+          for (let canal = 0; canal < audio.numberOfChannels; canal++) {
+            const muestras = audio.getChannelData(canal);
+            for (let i = 0; i < muestras.length; i++) pico = Math.max(pico, Math.abs(muestras[i]));
+          }
+          if (pico < 0.01) throw new Error('Audio silencioso');
+        } catch (error) { errores.push(url + ': ' + error.message); }
+      }
+      await contexto.close();
+      return { archivos: 101, errores };
+    })()`,
+    );
+    assert.deepEqual(
+      audioDecodificado.errores,
+      [],
+      'Hay archivos de audio que Chromium no reproduce',
+    );
+    await esperar(
+      () => ejecutar(operador, "window.turnero.diagnostico().then(d=>d.audio==='correcto')"),
+      'Diagnósticos sigue marcando el audio como degradado',
+    );
+    if (process.env.TURNERO_SMOKE_QUICK === '1') {
+      console.log('PASS: imágenes locales, audio y diagnóstico en modo desarrollo.');
+      app.exit(0);
+      return;
+    }
+    console.log(
+      `PASS: ${audioDecodificado.archivos} audios seleccionados se decodifican en Chromium.`,
+    );
     assert.ok(
       inventario.inventario.voz[55] && inventario.inventario.voz[66],
       'Faltan voces de prueba',
@@ -187,6 +300,35 @@ async function verificar() {
     await capturar(publica, 'youtube-anuncio.png');
 
     await ejecutar(operador, 'window.turnero.configurarYouTube(null)');
+    publica.webContents.debugger.attach('1.3');
+    await publica.webContents.debugger.sendCommand('Network.enable');
+    await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
+      offline: true,
+      latency: 0,
+      downloadThroughput: 0,
+      uploadThroughput: 0,
+    });
+    await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'88'})`);
+    await esperar(
+      () => ejecutar(publica, "document.querySelector('.announcement-number')?.textContent==='88'"),
+      'El llamado local no funcionó sin internet',
+    );
+    assert.equal(
+      await ejecutar(
+        publica,
+        `fetch(${JSON.stringify(inventario.inventario.aviso)}).then(r=>r.ok)`,
+      ),
+      true,
+      'El aviso local no se pudo leer sin internet',
+    );
+    await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 0,
+      downloadThroughput: 0,
+      uploadThroughput: 0,
+    });
+    publica.webContents.debugger.detach();
+    console.log('PASS: llamada y aviso local con la red emulada sin conexión.');
     for (const n of [11, 22, 33, 44]) {
       await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
     }

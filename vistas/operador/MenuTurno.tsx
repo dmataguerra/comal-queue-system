@@ -55,6 +55,7 @@ export function MenuTurno({ numero, abierto, ocupado, alternar, cerrar, anunciar
             id={`menu-turno-${numero}`}
             className="turn-menu-popup"
             role="menu"
+            tabIndex={-1}
             style={posicion}
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => {

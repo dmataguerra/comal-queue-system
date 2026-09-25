@@ -17,7 +17,7 @@ export function PublicaPage() {
     inventario,
     registrar,
   } = useTurnero();
-  const { anuncio, atenuado, errorAudio } = useAnuncios();
+  const { anuncio, atenuado } = useAnuncios();
   useEffect(() => {
     document.title = 'Troyanos · Turnos';
   }, []);
@@ -50,9 +50,6 @@ export function PublicaPage() {
                 </span>
               )}
               <strong>{formatear(n)}</strong>
-              {(anuncio ? anuncio.n === n : ultimo) && (
-                <span className="pickup-label">Recoge tu pedido</span>
-              )}
             </div>
           ))}
         </div>
@@ -75,13 +72,6 @@ export function PublicaPage() {
         </div>
         <TarjetaAnuncio anuncio={anuncio} />
       </section>
-      {errorAudio && (
-        <div className="display-notices">
-          <div className="audio-warning" role="alert">
-            {errorAudio}
-          </div>
-        </div>
-      )}
       <PublicFooter messages={config.mensajes} />
     </div>
   );

@@ -10,12 +10,14 @@ export function YouTubeVideo({
   url,
   volumen,
   rampa,
+  alFallar,
 }: {
   url: string;
   volumen: number;
   rampa: number;
+  alFallar: () => void;
 }) {
-  const { ajustarVolumenYouTube, registrar } = useTurnero();
+  const { ajustarVolumenYouTube, registrar, informarSalud } = useTurnero();
   const host = useRef<HTMLDivElement>(null);
   const volumenActual = useRef(volumen);
   volumenActual.current = volumen;
@@ -25,6 +27,12 @@ export function YouTubeVideo({
   useEffect(() => {
     let cerrado = false;
     let instancia: YouTubePlayer | null = null;
+    const timeout = setTimeout(() => {
+      if (!cerrado) {
+        informarSalud('youtube', 'degradado');
+        alFallar();
+      }
+    }, 20_000);
     setError('');
     async function iniciar() {
       try {
@@ -51,34 +59,48 @@ export function YouTubeVideo({
           events: {
             onReady: ({ target }) => {
               if (cerrado) return;
+              clearTimeout(timeout);
+              informarSalud('youtube', 'correcto');
               target.unMute();
               target.setLoop(true);
               target.playVideo();
             },
             onError: ({ data }) => {
-              if (!cerrado)
+              if (!cerrado) {
+                clearTimeout(timeout);
+                informarSalud('youtube', 'degradado');
+                alFallar();
                 setError(
                   `YouTube no puede reproducir este contenido (${data}). Prueba otro enlace desde Multimedia.`,
                 );
+              }
             },
             onAutoplayBlocked: () => {
-              if (!cerrado) setError('Pulsa reproducir en el video para iniciar YouTube.');
+              if (!cerrado) {
+                informarSalud('youtube', 'degradado');
+                alFallar();
+              }
             },
           },
         });
       } catch (e) {
-        if (!cerrado) setError((e as Error).message);
+        if (!cerrado) {
+          informarSalud('youtube', 'degradado');
+          alFallar();
+          setError((e as Error).message);
+        }
       }
     }
     void iniciar();
     const nodoHost = host.current;
     return () => {
       cerrado = true;
+      clearTimeout(timeout);
       instancia?.destroy();
       // Si la API nunca enlazó, destroy() no quita el iframe y seguiría sonando.
       nodoHost?.replaceChildren();
     };
-  }, [url, intento]);
+  }, [url, intento, alFallar, informarSalud]);
 
   useEffect(() => {
     const aplicar = (ms: number) =>

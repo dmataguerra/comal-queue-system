@@ -3,7 +3,7 @@ import { formatear } from '../../nucleo/turnos';
 import { crearCola } from '../../nucleo/cola';
 import type { Anuncio } from '../../main/contrato';
 import { useTurnero } from '../comun/turnero';
-import { pausa, precargar, reproducir } from './audio';
+import { cerrarAudio, pausa, precargar, reproducir } from './audio';
 
 const PAUSA_REPETICION = 300;
 const TARJETA_MINIMA = 6000; // Mantener visible seis segundos, o hasta terminar la voz.
@@ -14,22 +14,26 @@ const TARJETA_MINIMA = 6000; // Mantener visible seis segundos, o hasta terminar
  * Al montar o recargar no se repite ningún anuncio viejo: solo reacciona a eventos nuevos.
  */
 export function useAnuncios() {
-  const { config, inventario, suscribirAnuncio, registrar } = useTurnero();
+  const { config, inventario, suscribirAnuncio, registrar, informarSalud } = useTurnero();
   const [anuncio, setAnuncio] = useState<Anuncio | null>(null),
-    [atenuado, setAtenuado] = useState(false),
-    [errorAudio, setErrorAudio] = useState('');
+    [atenuado, setAtenuado] = useState(false);
   const ultimos = useRef({ config, inventario });
   ultimos.current = { config, inventario };
   const vozFaltante = useRef(new Set<number>());
 
   useEffect(() => {
     precargar(inventario)
-      .then(() => setErrorAudio(''))
+      .then(() => {
+        informarSalud(
+          'audio',
+          inventario.voz.every(Boolean) && Boolean(inventario.aviso) ? 'correcto' : 'degradado',
+        );
+      })
       .catch((error: Error) => {
-        setErrorAudio(error.message);
+        informarSalud('audio', 'degradado');
         registrar(`Audio: ${error.message}`);
       });
-  }, [inventario, registrar]);
+  }, [inventario, registrar, informarSalud]);
 
   useEffect(() => {
     const cola = crearCola<Anuncio>(
@@ -46,6 +50,7 @@ export function useAnuncios() {
           if (aviso) await reproducir(aviso, volumenVoz, signal);
           const url = voz[nuevo.n];
           if (!url) {
+            informarSalud('audio', 'degradado');
             if (!vozFaltante.current.has(nuevo.n)) {
               vozFaltante.current.add(nuevo.n);
               registrar(`Falta la voz del turno ${formatear(nuevo.n)}; solo suena el aviso.`);
@@ -57,7 +62,7 @@ export function useAnuncios() {
             }
         } catch (error) {
           if (!signal.aborted) {
-            setErrorAudio((error as Error).message);
+            informarSalud('audio', 'degradado');
             registrar(`Audio: ${(error as Error).message}`);
           }
         }
@@ -67,15 +72,15 @@ export function useAnuncios() {
         if (!signal.aborted) setAnuncio(null);
       },
       (error) => {
-        setErrorAudio(String(error));
         registrar(`Audio: ${String(error)}`);
       },
     );
-    const quitar = suscribirAnuncio(cola.agregar);
+    const quitar = suscribirAnuncio((nuevo) => cola.agregar(nuevo));
     return () => {
       quitar();
       cola.detener();
+      cerrarAudio();
     };
-  }, [suscribirAnuncio, registrar]);
-  return { anuncio, atenuado, errorAudio };
+  }, [suscribirAnuncio, registrar, informarSalud]);
+  return { anuncio, atenuado };
 }

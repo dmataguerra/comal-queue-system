@@ -1614,3 +1614,33 @@
 .turn-menu-popup button.danger:hover:not(:disabled) {
   background: #fdecec;
 }
+.help-diagnostics-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #0758a0;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.diagnostics-panel {
+  padding: 1.5rem;
+}
+.diagnostics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.8rem 1.5rem;
+}
+.diagnostics-grid div {
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 0;
+}
+.diagnostics-grid dt {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+.diagnostics-grid dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}

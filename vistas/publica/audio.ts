@@ -5,18 +5,36 @@ let contexto: AudioContext | null = null;
 const buffers = new Map<string, Promise<AudioBuffer>>();
 const obtenerContexto = () => (contexto ??= new AudioContext());
 
+/** Al cerrar o recargar la vista se liberan el dispositivo y los buffers decodificados. */
+export function cerrarAudio() {
+  const anterior = contexto;
+  contexto = null;
+  buffers.clear();
+  if (anterior) void anterior.close();
+}
+
 function cargar(url: string) {
   let buffer = buffers.get(url);
   if (!buffer) {
+    const archivo = decodeURIComponent(url.split('/').pop() ?? url);
     buffer = fetch(url)
+      .catch(() => {
+        throw new Error(
+          `No se pudo acceder al audio local ${archivo}. Revisa la ruta y los permisos del contenido.`,
+        );
+      })
       .then((r) => {
         if (!r.ok)
-          throw new Error(
-            `Falta un archivo de audio: ${decodeURIComponent(url.split('/').pop() ?? url)}`,
-          );
+          throw new Error(`No se pudo abrir el audio local ${archivo} (HTTP ${r.status}).`);
         return r.arrayBuffer();
       })
-      .then((datos) => obtenerContexto().decodeAudioData(datos));
+      .then((datos) =>
+        obtenerContexto()
+          .decodeAudioData(datos)
+          .catch(() => {
+            throw new Error(`El audio local ${archivo} no se pudo decodificar.`);
+          }),
+      );
     buffer.catch(() => buffers.delete(url));
     buffers.set(url, buffer);
   }
@@ -58,7 +76,9 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
     const detener = () => {
       try {
         fuente.stop();
-      } catch {}
+      } catch {
+        // El nodo puede haber terminado antes de recibir la cancelación.
+      }
     };
     signal.addEventListener('abort', detener, { once: true });
     fuente.onended = () => {
@@ -71,7 +91,7 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
       fuente.start();
     } catch (error) {
       signal.removeEventListener('abort', detener);
-      reject(error);
+      reject(error instanceof Error ? error : new Error(String(error)));
     }
   });
 }

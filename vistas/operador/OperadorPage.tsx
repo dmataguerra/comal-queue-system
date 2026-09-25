@@ -8,13 +8,14 @@ import { Modal } from '../comun/components/Modal';
 import { AnimatedBackground } from '../comun/components/AnimatedBackground';
 import { MultimediaPanel } from './MultimediaPanel';
 import { MenuTurno } from './MenuTurno';
+import { DiagnosticoPanel } from './DiagnosticoPanel';
 
 /** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
   const { instantanea, pantallas, despachar } = useTurnero(),
     clock = useClock();
   const { actual, llamados, puedeDeshacer } = instantanea;
-  const [pagina, setPagina] = useState<'turnos' | 'multimedia'>('turnos'),
+  const [pagina, setPagina] = useState<'turnos' | 'multimedia' | 'diagnostico'>('turnos'),
     [entrada, setEntrada] = useState(''),
     [ocupado, setOcupado] = useState(false),
     [mensaje, setMensaje] = useState(''),
@@ -117,6 +118,7 @@ export function OperadorPage() {
       } else if (e.key === 'Escape') setMenu(null);
     }
     const enfocar = () => input.current?.focus();
+    enfocar();
     window.addEventListener('keydown', tecla);
     window.addEventListener('focus', enfocar);
     return () => {
@@ -148,12 +150,19 @@ export function OperadorPage() {
   const titulo =
     pagina === 'turnos'
       ? { miga: 'Turnos', etiqueta: 'OPERACIÓN DIARIA', titulo: 'Llamar turnos', descripcion: '' }
-      : {
-          miga: 'Multimedia',
-          etiqueta: 'PANTALLAS Y CONTENIDO',
-          titulo: 'Multimedia',
-          descripcion: 'Cambia los videos o imágenes que se muestran en la pantalla 2.',
-        };
+      : pagina === 'diagnostico'
+        ? {
+            miga: 'Diagnósticos',
+            etiqueta: 'ESTADO OPERATIVO',
+            titulo: 'Diagnósticos',
+            descripcion: 'Información para revisar y recuperar la operación.',
+          }
+        : {
+            miga: 'Multimedia',
+            etiqueta: 'PANTALLAS Y CONTENIDO',
+            titulo: 'Multimedia',
+            descripcion: 'Cambia los videos o imágenes que se muestran en la pantalla 2.',
+          };
   return (
     <div className="admin-shell">
       <AnimatedBackground />
@@ -240,6 +249,22 @@ export function OperadorPage() {
               </span>
             </div>
           )}
+          {instantanea.persistencia?.estado === 'error' && (
+            <div className="connection-banner" role="alert">
+              <Icon name="warning" />
+              <span>
+                No se pueden guardar los turnos. Los cambios recientes pueden perderse al reiniciar.
+                Revisa el espacio y los permisos de la carpeta de datos; el guardado se reintentará
+                con el próximo cambio.
+              </span>
+            </div>
+          )}
+          {instantanea.advertenciaRecuperacion && (
+            <div className="connection-banner" role="alert">
+              <Icon name="warning" />
+              <span>{instantanea.advertenciaRecuperacion}</span>
+            </div>
+          )}
           {pagina === 'turnos' ? (
             <>
               <div className="turns-layout">
@@ -256,7 +281,7 @@ export function OperadorPage() {
                         </p>
                       </div>
                     </div>
-                    <form onSubmit={llamar}>
+                    <form onSubmit={(evento) => void llamar(evento)}>
                       <label htmlFor="turn-number">
                         Número del ticket <span className="input-format">1 a 6 dígitos</span>
                       </label>
@@ -270,7 +295,6 @@ export function OperadorPage() {
                           maxLength={6}
                           placeholder="213298"
                           autoComplete="off"
-                          autoFocus
                           value={entrada}
                           onChange={(e) => setEntrada(e.target.value)}
                           aria-invalid={Boolean(entrada.trim()) && previa === null}
@@ -308,7 +332,7 @@ export function OperadorPage() {
                     <div className="undo-row">
                       <button
                         className="button secondary"
-                        onClick={deshacerUltimo}
+                        onClick={() => void deshacerUltimo()}
                         disabled={ocupado || !puedeDeshacer}
                       >
                         <Icon name="undo" />
@@ -379,8 +403,10 @@ export function OperadorPage() {
                 </section>
               </div>
             </>
-          ) : (
+          ) : pagina === 'multimedia' ? (
             <MultimediaPanel notificar={notificar} />
+          ) : (
+            <DiagnosticoPanel />
           )}
           <footer className="workspace-footer">
             <span>
@@ -453,6 +479,20 @@ export function OperadorPage() {
             <dd>
               La lista arranca vacía al comenzar la jornada. Si se va la luz, al volver se recupera
               lo que estaba en pantalla.
+            </dd>
+            <dt>Diagnósticos</dt>
+            <dd>
+              Si hay un problema con el audio, la TV o los archivos,{' '}
+              <button
+                className="help-diagnostics-link"
+                onClick={() => {
+                  setAyuda(false);
+                  setPagina('diagnostico');
+                }}
+              >
+                Ver estado y detalles técnicos
+              </button>
+              .
             </dd>
           </dl>
         </Modal>
