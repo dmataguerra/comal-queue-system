@@ -1,8 +1,8 @@
 import { ipcMain, type WebContents } from 'electron';
 import type {
-  Accion,
   CategoriaContenido,
   Config,
+  Diagnostico,
   Inicial,
   Inventario,
   Pantallas,
@@ -10,7 +10,19 @@ import type {
 } from './contrato.js';
 import type { Registrar } from './log.js';
 import type { Store } from './store.js';
-import { esYouTube } from '../nucleo/youtube.js';
+import {
+  autorizarIpc,
+  validarAccion,
+  validarCantidad,
+  validarCategoria,
+  validarCategoriaOpcional,
+  validarMensaje,
+  validarSalud,
+  validarSinArgumentos,
+  validarUrlContenido,
+  validarVolumen,
+  validarYouTube,
+} from './seguridad-ipc.js';
 
 // Los mismos nombres están escritos en preload.cts: el preload aislado no puede importar módulos.
 export const CANALES = {
@@ -25,6 +37,8 @@ export const CANALES = {
   abrirCarpetaContenido: 'turnero:contenido:abrir',
   pantallas: 'turnero:pantallas',
   volumenYouTube: 'turnero:youtube:volumen',
+  diagnostico: 'turnero:diagnostico',
+  salud: 'turnero:salud',
 } as const;
 
 const ORIGENES_YOUTUBE = ['https://www.youtube.com', 'https://www.youtube-nocookie.com'];
@@ -35,7 +49,7 @@ const ORIGENES_YOUTUBE = ['https://www.youtube.com', 'https://www.youtube-nocook
  * rampa que los videos locales. No toca muted ni paused: la pausa o el mute del usuario se respetan.
  */
 const scriptVolumen = (volumen: number, rampa: number) => `(() => {
-  const destino = ${volumen}, ms = ${rampa};
+  const destino = ${JSON.stringify(volumen)}, ms = ${JSON.stringify(rampa)};
   const id = (window.__turneroRampa = (window.__turneroRampa || 0) + 1);
   const videos = [...document.querySelectorAll('video')];
   for (const video of videos) {
@@ -59,29 +73,15 @@ interface OpcionesIpc {
   store: Store;
   inicial: () => Inicial;
   esOperador: (remitente: WebContents) => boolean;
+  esPublica: (remitente: WebContents) => boolean;
+  urlVista: (vista: 'operador' | 'publica') => string;
   destinos: () => WebContents[];
   importarContenido: (categoria: CategoriaContenido) => Promise<ResultadoImportacion>;
   quitarContenido: (url: string) => boolean;
   abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
   registrar: Registrar;
-}
-
-function validarAccion(accion: unknown): Accion {
-  const valor = accion as Partial<Record<string, unknown>> | null;
-  if (valor?.tipo === 'DESHACER') return { tipo: 'DESHACER' };
-  if (valor?.tipo === 'LLAMAR' && typeof valor.entrada === 'string' && valor.entrada.length <= 32) {
-    return { tipo: 'LLAMAR', entrada: valor.entrada };
-  }
-  // QUITAR llega desde una fila ya en pantalla, así que el número siempre es de dos dígitos.
-  if (
-    valor?.tipo === 'QUITAR' &&
-    Number.isInteger(valor.n) &&
-    (valor.n as number) >= 0 &&
-    (valor.n as number) <= 99
-  ) {
-    return { tipo: 'QUITAR', n: valor.n as number };
-  }
-  throw new Error('Acción no válida.');
+  diagnostico: () => Diagnostico;
+  informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
 }
 
 /** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
@@ -89,65 +89,87 @@ export function conectarIpc({
   store,
   inicial,
   esOperador,
+  esPublica,
+  urlVista,
   destinos,
   importarContenido,
   quitarContenido,
   abrirCarpetaContenido,
   configurarYouTube,
   registrar,
+  diagnostico,
+  informarSalud,
 }: OpcionesIpc) {
   const difundir = (canal: string, ...datos: unknown[]) => {
     for (const destino of destinos()) if (!destino.isDestroyed()) destino.send(canal, ...datos);
   };
 
-  ipcMain.handle(CANALES.obtener, () => inicial());
-  ipcMain.handle(CANALES.despachar, (evento, accion: unknown) => {
-    // RF-13 como garantía: la pantalla pública no puede cambiar el estado.
-    if (!esOperador(evento.sender))
-      throw new Error('Solo la vista del operador puede llamar turnos.');
-    return store.despachar(validarAccion(accion));
+  const autorizar = (
+    evento: Parameters<typeof autorizarIpc<WebContents>>[0],
+    vista: 'operador' | 'publica' | 'cualquiera',
+  ) => autorizarIpc(evento, vista, esOperador, esPublica, urlVista);
+
+  ipcMain.handle(CANALES.obtener, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'cualquiera');
+    validarSinArgumentos(argumentos);
+    return inicial();
   });
-  const categoriaValida = (categoria: unknown): categoria is CategoriaContenido =>
-    categoria === 'videos' || categoria === 'banner';
-  const exigirOperador = (remitente: WebContents) => {
-    if (!esOperador(remitente))
-      throw new Error('Solo la vista del operador puede administrar multimedia.');
-  };
-  ipcMain.handle('turnero:youtube', (evento, url: unknown) => {
-    exigirOperador(evento.sender);
-    if (evento.senderFrame !== evento.sender.mainFrame) throw new Error('Vista no autorizada.');
-    if (url !== null && !esYouTube(url)) throw new Error('Enlace de YouTube no válido.');
-    configurarYouTube(url);
+  ipcMain.handle(CANALES.diagnostico, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarSinArgumentos(argumentos);
+    return diagnostico();
   });
-  ipcMain.handle(CANALES.importarContenido, (evento, categoria: unknown) => {
-    exigirOperador(evento.sender);
-    if (!categoriaValida(categoria)) throw new Error('Categoría multimedia no válida.');
-    return importarContenido(categoria);
+  ipcMain.on(CANALES.salud, (evento, ...argumentos: unknown[]) => {
+    try {
+      autorizar(evento, 'publica');
+      validarCantidad(argumentos, 2);
+      const [tipo, estado] = validarSalud(argumentos[0], argumentos[1]);
+      informarSalud(tipo, estado);
+    } catch {
+      // Solo la vista pública principal puede comunicar salud multimedia.
+    }
   });
-  ipcMain.handle(CANALES.quitarContenido, (evento, url: unknown) => {
-    exigirOperador(evento.sender);
-    if (typeof url !== 'string' || url.length > 1000)
-      throw new Error('Archivo multimedia no válido.');
-    return quitarContenido(url);
+  ipcMain.handle(CANALES.despachar, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarCantidad(argumentos, 1);
+    return store.despachar(validarAccion(argumentos[0]));
   });
-  ipcMain.handle(CANALES.abrirCarpetaContenido, (evento, categoria: unknown) => {
-    exigirOperador(evento.sender);
-    if (categoria !== undefined && !categoriaValida(categoria))
-      throw new Error('Categoría multimedia no válida.');
-    return abrirCarpetaContenido(categoria);
+  ipcMain.handle('turnero:youtube', (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarCantidad(argumentos, 1);
+    configurarYouTube(validarYouTube(argumentos[0]));
   });
-  ipcMain.on(CANALES.registrar, (evento, mensaje: unknown) => {
-    registrar(
-      `[${esOperador(evento.sender) ? 'operador' : 'pública'}] ${String(mensaje).slice(0, 500)}`,
-    );
+  ipcMain.handle(CANALES.importarContenido, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarCantidad(argumentos, 1);
+    return importarContenido(validarCategoria(argumentos[0]));
+  });
+  ipcMain.handle(CANALES.quitarContenido, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarCantidad(argumentos, 1);
+    return quitarContenido(validarUrlContenido(argumentos[0]));
+  });
+  ipcMain.handle(CANALES.abrirCarpetaContenido, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarCantidad(argumentos, 1);
+    return abrirCarpetaContenido(validarCategoriaOpcional(argumentos[0]));
+  });
+  ipcMain.on(CANALES.registrar, (evento, ...argumentos: unknown[]) => {
+    try {
+      const vista = autorizar(evento, 'cualquiera');
+      validarCantidad(argumentos, 1);
+      registrar(
+        `[${vista === 'operador' ? 'operador' : 'pública'}] ${validarMensaje(argumentos[0])}`,
+      );
+    } catch {
+      // `send` no tiene respuesta; no se debe lanzar desde este oyente del proceso principal.
+    }
   });
   let avisoYouTube = '';
-  ipcMain.handle(CANALES.volumenYouTube, async (evento, volumen: unknown, rampa: unknown) => {
-    if (esOperador(evento.sender)) throw new Error('Solo la vista pública ajusta YouTube.');
-    if (typeof volumen !== 'number' || !(volumen >= 0 && volumen <= 1))
-      throw new Error('Volumen no válido.');
-    if (typeof rampa !== 'number' || !(rampa >= 0 && rampa <= 2000))
-      throw new Error('Rampa no válida.');
+  ipcMain.handle(CANALES.volumenYouTube, async (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'publica');
+    validarCantidad(argumentos, 2);
+    const [volumen, rampa] = validarVolumen(argumentos[0], argumentos[1]);
     const frames = evento.sender.mainFrame.framesInSubtree.filter((frame) =>
       ORIGENES_YOUTUBE.includes(frame.origin),
     );

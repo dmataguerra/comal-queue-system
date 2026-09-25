@@ -2,6 +2,8 @@
 
 Los audios ya se incluyen en `contenido/`. No hace falta descargar ni instalar un sintetizador para
 usar el turnero: se generan una sola vez y la aplicación reproduce los archivos tal cual (RNF-01).
+El inventario actual prefiere MP3 no vacío y usa WAV como respaldo. El turno 40 usa `40.wav`,
+recuperado del catálogo Piper del repositorio; no existe un MP3 válido para ese turno.
 
 ## Anuncios
 
@@ -145,9 +147,11 @@ node tooling/audio/generate-aviso.mjs
 node tooling/audio/verify-audio.mjs
 ```
 
-El aviso es una síntesis determinista de dos campanas, sin muestras externas. El verificador revisa
-las 100 voces y el aviso: cabecera RIFF/WAVE íntegra, PCM de 16 bits, duración, muestras no nulas y
-volumen RMS.
+El aviso es una síntesis determinista de dos campanas, sin muestras externas. El verificador exige
+las 100 voces y el aviso, rechaza cualquier audio vacío y comprueba la selección MP3/WAV que usará
+la aplicación. Revisa el formato de los MP3 y, para WAV, la cabecera RIFF/WAVE, PCM de 16 bits,
+duración, muestras no nulas y volumen RMS. `npm run test:desktop` decodifica en Chromium los 101
+archivos seleccionados.
 
 ## Licencias
 

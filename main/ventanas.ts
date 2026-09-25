@@ -29,6 +29,14 @@ export function crearVentanas({
   let operador: BrowserWindow | null = null;
   let publica: BrowserWindow | null = null;
   let cerrando = false;
+  const temporizadores = new Set<ReturnType<typeof setTimeout>>();
+  const despues = (fn: () => void, ms: number) => {
+    const timer = setTimeout(() => {
+      temporizadores.delete(timer);
+      fn();
+    }, ms);
+    temporizadores.add(timer);
+  };
   let pantallas: Pantallas = { publica: 'ninguna' };
 
   function proteger(ventana: BrowserWindow, vista: Vista) {
@@ -41,7 +49,7 @@ export function crearVentanas({
     contenido.on('did-fail-load', (_evento, codigo, descripcion, _url, esPrincipal) => {
       if (!esPrincipal || codigo === -3) return; // -3: navegación abortada, no es un fallo
       registrar(`La vista ${vista} no cargó (${descripcion}); se reintenta.`);
-      setTimeout(() => {
+      despues(() => {
         if (!ventana.isDestroyed()) void ventana.loadURL(url(vista)).catch(() => {});
       }, 1500);
     });
@@ -86,7 +94,7 @@ export function crearVentanas({
     });
     operador.on('closed', () => {
       operador = null;
-      alCerrarOperador();
+      if (!cerrando) alCerrarOperador();
     });
     proteger(operador, 'operador');
   }
@@ -119,7 +127,7 @@ export function crearVentanas({
     ventana.on('closed', () => {
       if (publica === ventana) publica = null;
       // Si alguien la cierra por accidente, vuelve mientras exista su pantalla.
-      if (!cerrando) setTimeout(sincronizar, 1000);
+      if (!cerrando) despues(sincronizar, 1000);
     });
     proteger(ventana, 'publica');
   }
@@ -158,22 +166,31 @@ export function crearVentanas({
     }
   }
 
+  const alCambiarDisplay = () => despues(sincronizar, 500);
+
   return {
     iniciar() {
       crearOperador();
       sincronizar();
       // La TV suele encenderse después que la PC: se reacomoda cuando aparece o desaparece.
-      screen.on('display-added', () => setTimeout(sincronizar, 500));
-      screen.on('display-removed', () => setTimeout(sincronizar, 500));
+      screen.on('display-added', alCambiarDisplay);
+      screen.on('display-removed', alCambiarDisplay);
+      screen.on('display-metrics-changed', alCambiarDisplay);
     },
     sincronizar,
     pantallas: () => pantallas,
+    estadoVentanas: () => ({
+      operador: Boolean(operador && !operador.isDestroyed()),
+      publica: Boolean(publica && !publica.isDestroyed() && !publica.webContents.isCrashed()),
+    }),
     destinos: (): WebContents[] =>
       [operador, publica].flatMap((ventana) =>
         ventana && !ventana.isDestroyed() ? [ventana.webContents] : [],
       ),
     esOperador: (remitente: WebContents) =>
       Boolean(operador && !operador.isDestroyed() && remitente === operador.webContents),
+    esPublica: (remitente: WebContents) =>
+      Boolean(publica && !publica.isDestroyed() && remitente === publica.webContents),
     enfocarOperador() {
       if (!operador) return;
       if (operador.isMinimized()) operador.restore();
@@ -184,6 +201,13 @@ export function crearVentanas({
     },
     cerrar() {
       cerrando = true;
+      screen.off('display-added', alCambiarDisplay);
+      screen.off('display-removed', alCambiarDisplay);
+      screen.off('display-metrics-changed', alCambiarDisplay);
+      for (const timer of temporizadores) clearTimeout(timer);
+      temporizadores.clear();
+      if (publica && !publica.isDestroyed()) publica.destroy();
+      if (operador && !operador.isDestroyed()) operador.destroy();
     },
   };
 }

@@ -10,6 +10,9 @@ export interface Instantanea {
   actual: number | null;
   llamados: number[];
   puedeDeshacer: boolean;
+  /** Presente cuando los cambios recientes pueden perderse al reiniciar. */
+  persistencia?: { estado: 'error'; desde: string };
+  advertenciaRecuperacion?: string;
 }
 
 /** Un anuncio concreto. El id distingue dos anuncios seguidos del mismo número (RN-05). */
@@ -51,6 +54,7 @@ export interface ResultadoImportacion {
   agregados: string[];
   omitidos: string[];
   cancelado: boolean;
+  motivos?: Record<string, string>;
 }
 
 /** tv: pantalla completa en el segundo display · ventana: modo desarrollo · ninguna: RF-13 */
@@ -65,7 +69,38 @@ export interface Inicial {
   pantallas: Pantallas;
 }
 
+export interface Diagnostico {
+  version: string;
+  electron: string;
+  node: string;
+  plataforma: string;
+  arquitectura: string;
+  carpetaDatos: string;
+  rutaConfig: string;
+  rutaEstado: string;
+  rutaLog: string;
+  pantalla: Pantallas['publica'];
+  operadorActivo: boolean;
+  publicaActiva: boolean;
+  persistencia: 'correcta' | 'error';
+  ultimoGuardado: string | null;
+  ultimoErrorPersistencia: string | null;
+  ultimoErrorAplicacion: string | null;
+  audio: 'correcto' | 'degradado' | 'desconocido';
+  youtube: 'activo' | 'no disponible' | 'inactivo';
+  videosValidos: number;
+  bannersValidos: number;
+  vocesValidas: number;
+  ultimoAnuncio: { n: number; fecha: string } | null;
+  longitudCola: number;
+  espacioLibre: number | null;
+  espacioBajo: boolean;
+  accionPendiente: boolean;
+}
+
 export interface TurneroApi {
+  diagnostico(): Promise<Diagnostico>;
+  informarSalud(tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado'): void;
   configurarYouTube(url: string | null): Promise<void>;
   /** Devuelve cuántos <video> de YouTube se ajustaron (0: el iframe aún no carga). */
   ajustarVolumenYouTube(volumen: number, rampa: number): Promise<number>;

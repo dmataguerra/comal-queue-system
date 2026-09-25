@@ -1,5 +1,5 @@
 import { app, dialog, Menu, net, protocol, shell, session } from 'electron';
-import { createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
@@ -20,6 +20,10 @@ import type {
   ResultadoImportacion,
 } from './contrato.js';
 import { crearRegistro } from './log.js';
+import { crearProveedorDiagnostico } from './diagnostico.js';
+import { limpiarTemporalesJson } from './temporales.js';
+import { crearCsp } from './politica-csp.js';
+import { escribirJsonAtomico } from './escritura-atomica.js';
 import { crearStore } from './store.js';
 import { crearVentanas, type Vista } from './ventanas.js';
 
@@ -54,7 +58,15 @@ const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : rai
 const carpetaVistas = join(raizApp, 'dist');
 
 mkdirSync(carpetaDatos, { recursive: true });
-const registrar = crearRegistro(join(carpetaDatos, 'turnero.log'));
+let ultimoErrorAplicacion: string | null = null;
+const registroBase = crearRegistro(join(carpetaDatos, 'turnero.log'), {
+  version: app.getVersion(),
+});
+const registrar = (mensaje: string) => {
+  if (/error|fall|no se pudo|falta|rechazad|terminó/i.test(mensaje))
+    ultimoErrorAplicacion = mensaje.slice(0, 200);
+  registroBase(mensaje);
+};
 
 const urlVista = (vista: Vista) =>
   urlDesarrollo
@@ -68,9 +80,8 @@ function dentroDe(raiz: string, ruta: string): string | null {
   return existsSync(absoluta) && statSync(absoluta).isFile() ? absoluta : null;
 }
 
-const cabecerasBase = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' };
-const CSP =
-  "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self' https://api.open-meteo.com; object-src 'none'; base-uri 'none'";
+const cabecerasBase = { 'Cache-Control': 'no-cache' };
+const CSP = crearCsp(false);
 
 /** Archivos de contenido con soporte de rangos: el <video> los pide por partes. */
 function servirContenido(archivo: string, rango: string | null): Response {
@@ -133,7 +144,8 @@ function registrarProtocolo() {
   });
 }
 
-async function iniciar() {
+function iniciar() {
+  limpiarTemporalesJson(carpetaDatos, registrar);
   Menu.setApplicationMenu(null);
   // Identidad de la aplicación de escritorio exigida por YouTube para páginas locales.
   session.defaultSession.webRequest.onBeforeSendHeaders(
@@ -151,6 +163,8 @@ async function iniciar() {
   let inventario: Inventario;
   let pantallas: Pantallas = { publica: 'ninguna' };
   const store = crearStore({ ruta: join(carpetaDatos, 'estado.json'), registrar });
+  let saludAudio: 'correcto' | 'degradado' | 'desconocido' = 'desconocido';
+  let saludYouTube: 'activo' | 'no disponible' | 'inactivo' = 'inactivo';
 
   const ventanas = crearVentanas({
     preload: join(import.meta.dirname, 'preload.cjs'),
@@ -200,15 +214,47 @@ async function iniciar() {
   };
 
   const ipc = conectarIpc({
+    diagnostico: crearProveedorDiagnostico({
+      carpetaDatos,
+      version: app.getVersion(),
+      store,
+      config: () => config,
+      inventario: () => inventario,
+      pantallas: () => pantallas,
+      ventanas: ventanas.estadoVentanas,
+      salud: () => ({ audio: saludAudio, youtube: saludYouTube, ultimoErrorAplicacion }),
+    }),
+    informarSalud: (tipo, estado) => {
+      if (tipo === 'audio') {
+        const siguiente = estado === 'correcto' ? 'correcto' : 'degradado';
+        if (saludAudio !== siguiente) {
+          registrar(siguiente === 'correcto' ? 'Audio recuperado.' : 'Audio degradado.');
+          saludAudio = siguiente;
+        }
+      } else {
+        const siguiente = estado === 'correcto' ? 'activo' : 'no disponible';
+        if (saludYouTube !== siguiente) {
+          registrar(siguiente === 'activo' ? 'YouTube recuperado.' : 'YouTube no disponible.');
+          saludYouTube = siguiente;
+        }
+      }
+    },
     configurarYouTube: (url) => {
       const nueva = { ...leerConfig(rutaConfig, registrar), youtubeUrl: url };
-      writeFileSync(rutaConfig, `${JSON.stringify(nueva, null, 2)}\n`);
+      try {
+        escribirJsonAtomico(rutaConfig, nueva, 2);
+      } catch (error) {
+        registrar(`No se pudo guardar config.json: ${(error as Error).message}`);
+        throw error;
+      }
       config = { ...config, youtubeUrl: url };
       ipc.difundirConfig(config);
     },
     store,
     inicial: () => ({ instantanea: store.obtener(), config, inventario, pantallas }),
     esOperador: ventanas.esOperador,
+    esPublica: ventanas.esPublica,
+    urlVista,
     destinos: ventanas.destinos,
     importarContenido,
     quitarContenido,
@@ -238,7 +284,7 @@ async function iniciar() {
     }, msHastaHora(config.recargaDiaria));
   };
 
-  vigilarConfig(
+  const detenerConfig = vigilarConfig(
     rutaConfig,
     (nueva) => {
       const cambioPantalla = nueva.pantallaPublica !== config.pantallaPublica;
@@ -252,7 +298,13 @@ async function iniciar() {
   );
 
   app.on('second-instance', () => ventanas.enfocarOperador());
-  app.on('before-quit', () => ventanas.cerrar());
+  app.on('before-quit', () => {
+    detenerConfig();
+    contenido.detener();
+    clearTimeout(recarga);
+    store.cerrar();
+    ventanas.cerrar();
+  });
   app.on('window-all-closed', () => app.quit());
 
   ventanas.iniciar();

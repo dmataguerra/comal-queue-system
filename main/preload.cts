@@ -11,6 +11,8 @@ function escuchar<T extends unknown[]>(canal: string, fn: (...datos: T) => void)
 }
 
 const turnero: TurneroApi = {
+  diagnostico: () => ipcRenderer.invoke('turnero:diagnostico'),
+  informarSalud: (tipo, estado) => ipcRenderer.send('turnero:salud', tipo, estado),
   configurarYouTube: (url) => ipcRenderer.invoke('turnero:youtube', url),
   ajustarVolumenYouTube: (volumen, rampa) =>
     ipcRenderer.invoke('turnero:youtube:volumen', volumen, rampa),

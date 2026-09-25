@@ -7,17 +7,47 @@ import {
   quitar,
   vencer,
 } from '../nucleo/turnos.js';
+import { statfsSync } from 'node:fs';
+import { dirname } from 'node:path';
 import type { Accion, Anuncio, Instantanea, ResultadoDespacho } from './contrato.js';
 import type { Registrar } from './log.js';
 import { fechaLocal, guardarEstado, leerEstado } from './persistencia.js';
 
 export type Suscriptor = (instantanea: Instantanea, anuncio: Anuncio | null) => void;
+export const RESERVA_ESTADO = 16 * 1024 * 1024;
+
+export function comprobarEspacioEstado(
+  ruta: string,
+  espacio = (carpeta: string) => {
+    const info = statfsSync(carpeta);
+    return info.bavail * info.bsize;
+  },
+): void {
+  try {
+    if (espacio(dirname(ruta)) < RESERVA_ESTADO)
+      throw new Error('Espacio insuficiente para guardar estado.json.');
+  } catch (error) {
+    if ((error as Error).message.startsWith('Espacio insuficiente')) throw error;
+    const codigo = (error as NodeJS.ErrnoException).code;
+    if (codigo === 'ENOSYS' || codigo === 'ENOTSUP') return;
+    throw error;
+  }
+}
 
 export interface Store {
   obtener(): Instantanea;
   despachar(accion: Accion): ResultadoDespacho;
   suscribir(fn: Suscriptor): () => void;
   reiniciarSiCambioDia(): boolean;
+  saludPersistencia(): {
+    estado: 'correcta' | 'error';
+    primerFallo: string | null;
+    restauradaEn: string | null;
+    ultimoGuardado: string | null;
+    ultimoError: string | null;
+    ultimoAnuncio: { n: number; fecha: string } | null;
+  };
+  cerrar(): void;
 }
 
 interface OpcionesStore {
@@ -26,6 +56,7 @@ interface OpcionesStore {
   ahora?: () => number;
   vigenciaMs?: number;
   registrar?: Registrar;
+  guardar?: typeof guardarEstado;
 }
 
 /** Envuelve al núcleo: única dueña del estado, lo persiste y avisa a los adaptadores. */
@@ -35,28 +66,49 @@ export function crearStore({
   ahora = () => Date.now(),
   vigenciaMs = VIGENCIA_MS,
   registrar = () => {},
+  guardar = guardarEstado,
 }: OpcionesStore): Store {
   let fecha = hoy();
   // `desde`: hora del último anuncio de cada número en pantalla. `desdePrevio` es la de antes del
   // último llamado y acompaña a `estado.deshacer`: se toma, se conserva y se descarta con él.
-  let { estado, desde } = leerEstado(ruta, fecha, registrar);
+  let { estado, desde, advertencia: advertenciaRecuperacion } = leerEstado(ruta, fecha, registrar);
   let desdePrevio: Map<number, number> | null = null;
   let temporizador: ReturnType<typeof setTimeout> | undefined;
   let siguienteAnuncio = 1;
+  let primerFallo: string | null = null;
+  let restauradaEn: string | null = null;
+  let ultimoGuardado: string | null = null;
+  let ultimoError: string | null = null;
+  let ultimoAnuncio: { n: number; fecha: string } | null = null;
   const suscriptores = new Set<Suscriptor>();
 
   const obtener = (): Instantanea => ({
     actual: estado.actual,
     llamados: estado.llamados,
     puedeDeshacer: estado.deshacer !== null,
+    ...(primerFallo ? { persistencia: { estado: 'error' as const, desde: primerFallo } } : {}),
+    ...(advertenciaRecuperacion ? { advertenciaRecuperacion } : {}),
   });
 
   function persistir() {
     try {
-      guardarEstado(ruta, estado, fecha, desde);
+      comprobarEspacioEstado(ruta);
+      guardar(ruta, estado, fecha, desde);
+      ultimoGuardado = new Date(ahora()).toISOString();
+      if (primerFallo) {
+        restauradaEn = new Date(ahora()).toISOString();
+        registrar(`Persistencia de estado.json restaurada en ${restauradaEn}.`);
+        primerFallo = null;
+      }
     } catch (error) {
+      ultimoError = String((error as Error).message).slice(0, 200);
       // Un fallo de disco no debe impedir que el número salga en la TV.
-      registrar(`No se pudo guardar estado.json: ${(error as Error).message}`);
+      if (!primerFallo) {
+        primerFallo = new Date(ahora()).toISOString();
+        registrar(
+          `No se pudo guardar estado.json; cambios de turnos podrían perderse al reiniciar: ${(error as Error).message}`,
+        );
+      }
     }
   }
 
@@ -104,6 +156,7 @@ export function crearStore({
     const nueva = hoy();
     if (nueva === fecha) return false;
     fecha = nueva;
+    advertenciaRecuperacion = undefined;
     if (estado.actual === null && !estado.deshacer) return false;
     estado = ESTADO_INICIAL;
     desde = new Map();
@@ -126,6 +179,7 @@ export function crearStore({
       return { instantanea: obtener(), efecto: 'CAPTURA_INVALIDA', anuncio: null };
     }
     const anuncio = efecto?.tipo === 'ANUNCIAR' ? { id: siguienteAnuncio++, n: efecto.n } : null;
+    if (anuncio) ultimoAnuncio = { n: anuncio.n, fecha: new Date(ahora()).toISOString() };
     const cambio = siguiente !== estado;
     const anterior = desde;
     if (accion.tipo === 'DESHACER' && cambio && desdePrevio) desde = desdePrevio;
@@ -158,5 +212,17 @@ export function crearStore({
       };
     },
     reiniciarSiCambioDia,
+    saludPersistencia: () => ({
+      estado: primerFallo ? 'error' : 'correcta',
+      primerFallo,
+      restauradaEn,
+      ultimoGuardado,
+      ultimoError,
+      ultimoAnuncio,
+    }),
+    cerrar() {
+      clearTimeout(temporizador);
+      suscriptores.clear();
+    },
   };
 }

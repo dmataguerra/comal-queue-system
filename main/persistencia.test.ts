@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+  mkdirSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -125,4 +133,35 @@ test('la fecha de la jornada es la local, no la UTC', () => {
   // 23:30 local sigue siendo el mismo día aunque en UTC ya sea el siguiente.
   assert.equal(fechaLocal(new Date(2026, 8, 11, 23, 30)), '2026-09-11');
   assert.equal(fechaLocal(new Date(2026, 0, 5, 0, 5)), '2026-01-05');
+});
+
+test('JSON corrupto y timestamps inválidos conservan copias diagnósticas distintas', () => {
+  const { ruta, limpiar } = carpeta();
+  const mensajes: string[] = [];
+  try {
+    writeFileSync(ruta, '{');
+    leerEstado(ruta, '2026-09-11', (m) => mensajes.push(m));
+    writeFileSync(ruta, '{"fecha":"2026-09-11","actual":1,"llamados":[],"guardadoEn":"ayer"}');
+    leerEstado(ruta, '2026-09-11', (m) => mensajes.push(m));
+    const copias = readdirSync(join(ruta, '..')).filter((n) =>
+      n.startsWith('estado.json.corrupto-'),
+    );
+    assert.equal(copias.length, 2);
+    assert.match(mensajes[0], /JSON válido/);
+    assert.match(mensajes[1], /timestamps inválidos/);
+  } finally {
+    limpiar();
+  }
+});
+
+test('un error de E/S al leer el estado no se confunde con un archivo ausente', () => {
+  const { ruta, limpiar } = carpeta();
+  const mensajes: string[] = [];
+  try {
+    mkdirSync(ruta);
+    assert.throws(() => leerEstado(ruta, '2026-09-11', (m) => mensajes.push(m)));
+    assert.match(mensajes[0], /No se pudo leer estado.json/);
+  } finally {
+    limpiar();
+  }
 });

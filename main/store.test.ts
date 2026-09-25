@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import type { Anuncio, Instantanea } from './contrato.js';
+import { guardarEstado } from './persistencia.js';
 import { crearStore } from './store.js';
 
 function fixture(fecha = { valor: '2026-09-11' }) {
@@ -123,5 +124,49 @@ test('cambio de día sin reiniciar la app: el siguiente despacho arranca de cero
     ]);
   } finally {
     f.limpiar();
+  }
+});
+
+test('un fallo persistente avisa al operador una vez y se recupera con el siguiente guardado correcto', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-salud-'));
+  const mensajes: string[] = [];
+  let falla = true;
+  const base = crearStore({
+    ruta: join(raiz, 'estado.json'),
+    hoy: () => '2026-09-11',
+    ahora: () => Date.parse('2026-09-11T15:00:00.000Z'),
+    registrar: (mensaje) => mensajes.push(mensaje),
+    guardar: (...args) => {
+      if (falla) throw new Error('disco ocupado');
+      guardarEstado(...args);
+    },
+  });
+  try {
+    base.despachar({ tipo: 'LLAMAR', entrada: '12' });
+    base.despachar({ tipo: 'LLAMAR', entrada: '13' });
+    assert.equal(base.obtener().persistencia?.estado, 'error');
+    assert.equal(base.saludPersistencia().primerFallo, '2026-09-11T15:00:00.000Z');
+    assert.equal(mensajes.filter((m) => m.includes('No se pudo guardar')).length, 1);
+    falla = false;
+    base.despachar({ tipo: 'LLAMAR', entrada: '14' });
+    assert.equal(base.obtener().persistencia, undefined);
+    assert.equal(base.saludPersistencia().restauradaEn, '2026-09-11T15:00:00.000Z');
+    assert.equal(mensajes.filter((m) => m.includes('restaurada')).length, 1);
+  } finally {
+    base.cerrar();
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('el operador recibe aviso si el estado inicial estaba corrupto', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-recuperacion-'));
+  try {
+    const ruta = join(raiz, 'estado.json');
+    writeFileSync(ruta, '{');
+    const store = crearStore({ ruta, hoy: () => '2026-09-11' });
+    assert.match(store.obtener().advertenciaRecuperacion ?? '', /jornada empezó vacía/);
+    store.cerrar();
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
   }
 });

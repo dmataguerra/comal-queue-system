@@ -11,3 +11,8 @@ test-results/
 release/
 release-test/
 .tmp-audio/
+.tmp-npm-cache/
+*.pfx
+*.p12
+*.pem
+*.key

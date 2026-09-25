@@ -21,11 +21,12 @@ export const ESTADO_INICIAL: Estado = Object.freeze({
   actual: null,
   llamados: [],
   deshacer: null,
-}) as Estado;
+});
 
 /** "213298" -> 98 · "98" -> 98 · "8" -> 8 · inválido -> null */
 export function normalizar(entrada: unknown): number | null {
-  const d = String(entrada ?? '').trim();
+  if (typeof entrada !== 'string' && typeof entrada !== 'number') return null;
+  const d = String(entrada).trim();
   if (!/^\d{1,6}$/.test(d)) return null;
   return Number(d.slice(-2)); // solo los dos últimos dígitos
 }

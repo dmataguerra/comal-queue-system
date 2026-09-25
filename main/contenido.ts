@@ -7,6 +7,7 @@ import {
   renameSync,
   rmSync,
   statSync,
+  statfsSync,
   watch,
 } from 'node:fs';
 import { basename, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
@@ -20,6 +21,24 @@ const VIDEOS = new Set(['.mp4', '.webm']);
 const IMAGENES = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const VOZ = /^(\d{2})\.(wav|mp3)$/i;
 const EXTENSIONES_AUDIO = ['.mp3', '.wav'] as const;
+export const LIMITE_VIDEO = 2 * 1024 ** 3;
+export const LIMITE_IMAGEN = 25 * 1024 ** 2;
+export const RESERVA_DISCO = 512 * 1024 ** 2;
+
+interface OpcionesImportacion {
+  espacioLibre?: (carpeta: string) => number | null;
+  copiar?: typeof copyFileSync;
+}
+
+const espacioLibre = (carpeta: string): number | null => {
+  try {
+    const info = statfsSync(carpeta);
+    return info.bavail * info.bsize;
+  } catch (error) {
+    if (['ENOSYS', 'ENOTSUP'].includes((error as NodeJS.ErrnoException).code ?? '')) return null;
+    throw error;
+  }
+};
 
 export const TIPOS_MIME: Record<string, string> = {
   '.mp4': 'video/mp4',
@@ -59,38 +78,66 @@ export function importarArchivos(
   categoria: CategoriaContenido,
   origenes: string[],
   registrar: Registrar = () => {},
+  opciones: OpcionesImportacion = {},
 ): ResultadoImportacion {
   const carpeta = join(raiz, categoria);
   mkdirSync(carpeta, { recursive: true });
   const agregados: string[] = [],
     omitidos: string[] = [];
+  const motivos: Record<string, string> = {};
+  const omitir = (nombre: string, motivo: string) => {
+    omitidos.push(nombre);
+    motivos[nombre] = motivo;
+    registrar(`contenido: importación rechazada (${motivo})`);
+  };
   for (const origen of origenes) {
     const nombre = basename(origen);
     if (!extensiones(categoria).has(extname(nombre).toLowerCase())) {
-      omitidos.push(nombre);
+      omitir(nombre, `${nombre}: formato no compatible.`);
       continue;
     }
     try {
       const info = statSync(origen);
       if (!info.isFile()) {
-        omitidos.push(nombre);
+        omitir(nombre, `${nombre}: no es un archivo.`);
         continue;
       }
       // Un archivo que aún se descarga puede existir con 0 bytes.
       if (info.size === 0) {
-        omitidos.push(nombre);
-        registrar(`contenido: archivo vacío, no se importa ${nombre}`);
+        omitir(nombre, `${nombre}: está vacío.`);
+        continue;
+      }
+      const limite = categoria === 'videos' ? LIMITE_VIDEO : LIMITE_IMAGEN;
+      if (info.size > limite) {
+        omitir(
+          nombre,
+          `${nombre}: supera el límite de ${categoria === 'videos' ? '2 GB' : '25 MB'}.`,
+        );
+        continue;
+      }
+      const libre = (opciones.espacioLibre ?? espacioLibre)(carpeta);
+      if (libre !== null && libre - info.size < RESERVA_DISCO) {
+        omitir(nombre, `${nombre}: no hay espacio suficiente en la unidad de datos.`);
         continue;
       }
       const destino = nombreDisponible(carpeta, nombre);
-      copyFileSync(origen, join(carpeta, destino));
+      const temporal = join(carpeta, `.${crypto.randomUUID()}.tmp`);
+      try {
+        (opciones.copiar ?? copyFileSync)(origen, temporal);
+        renameSync(temporal, join(carpeta, destino));
+      } finally {
+        rmSync(temporal, { force: true });
+      }
       agregados.push(destino);
     } catch (error) {
-      omitidos.push(nombre);
-      registrar(`contenido: no se pudo importar ${nombre} (${(error as Error).message})`);
+      omitir(
+        nombre,
+        `${nombre}: no se pudo copiar el archivo. Revise permisos y espacio disponible.`,
+      );
+      registrar(`contenido: error al copiar ${nombre} (${(error as Error).message})`);
     }
   }
-  return { agregados, omitidos, cancelado: false };
+  return { agregados, omitidos, cancelado: false, ...(omitidos.length ? { motivos } : {}) };
 }
 
 /** Elimina solamente un archivo que pertenezca al inventario público de video o banner. */
@@ -148,7 +195,7 @@ export function inventariar(
       })
       .map((nombre) => url(base, carpeta, nombre));
 
-  const voz: (string | null)[] = Array(100).fill(null);
+  const voz = Array.from({ length: 100 }, (): string | null => null);
   for (const nombre of archivos(join(raiz, 'voz'))) {
     const coincide = VOZ.exec(nombre);
     if (coincide) {

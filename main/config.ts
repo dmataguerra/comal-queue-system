@@ -1,8 +1,9 @@
-import { existsSync, readFileSync, watch, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, watch } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import type { Config } from './contrato.js';
 import type { Registrar } from './log.js';
 import { esYouTube } from '../nucleo/youtube.js';
+import { escribirJsonAtomico } from './escritura-atomica.js';
 
 export const CONFIG_POR_DEFECTO: Config = {
   youtubeUrl: null,
@@ -13,11 +14,7 @@ export const CONFIG_POR_DEFECTO: Config = {
   segundosBanner: 8,
   pantallaPublica: null,
   recargaDiaria: '04:00',
-  mensajes: [
-    'Presenta tu ticket al recoger tu pedido.',
-    'El café también nos une.',
-    'Gracias por tu preferencia.',
-  ],
+  mensajes: ['Presenta tu ticket al recoger tu pedido.', 'Gracias por tu preferencia.'],
 };
 
 type Validador = (valor: unknown) => boolean;
@@ -46,7 +43,7 @@ export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): 
       : {};
   const config = structuredClone(CONFIG_POR_DEFECTO) as unknown as Record<string, unknown>;
   for (const clave of Object.keys(entrada)) {
-    if (!(clave in validadores)) {
+    if (!Object.hasOwn(validadores, clave)) {
       registrar(`config.json: se ignora la clave desconocida "${clave}".`);
       continue;
     }
@@ -63,9 +60,10 @@ export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): 
 export function leerConfig(ruta: string, registrar: Registrar = () => {}): Config {
   if (!existsSync(ruta)) {
     try {
-      writeFileSync(ruta, `${JSON.stringify(CONFIG_POR_DEFECTO, null, 2)}\n`);
+      escribirJsonAtomico(ruta, CONFIG_POR_DEFECTO, 2);
     } catch (error) {
       registrar(`No se pudo crear config.json: ${(error as Error).message}`);
+      throw new Error('No se pudo crear config.json en la carpeta de datos.', { cause: error });
     }
     return structuredClone(CONFIG_POR_DEFECTO);
   }

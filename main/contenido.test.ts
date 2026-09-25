@@ -3,8 +3,10 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  truncateSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -123,6 +125,7 @@ test('administración: importa sin sobrescribir y solo elimina archivos multimed
       agregados: ['promo.mp4'],
       omitidos: ['notas.txt'],
       cancelado: false,
+      motivos: { 'notas.txt': 'notas.txt: formato no compatible.' },
     });
     assert.deepEqual(segunda.agregados, ['promo (2).mp4']);
     assert.equal(quitarArchivo(contenido, `${URL_CONTENIDO}/videos/promo.mp4`), true);
@@ -145,8 +148,41 @@ test('importación: un archivo vacío (descarga incompleta) se omite y no se cop
     mkdirSync(origen);
     writeFileSync(join(origen, 'foto.jpeg'), '');
     const resultado = importarArchivos(contenido, 'banner', [join(origen, 'foto.jpeg')]);
-    assert.deepEqual(resultado, { agregados: [], omitidos: ['foto.jpeg'], cancelado: false });
+    assert.deepEqual(resultado, {
+      agregados: [],
+      omitidos: ['foto.jpeg'],
+      cancelado: false,
+      motivos: { 'foto.jpeg': 'foto.jpeg: está vacío.' },
+    });
     assert.equal(existsSync(join(contenido, 'banner', 'foto.jpeg')), false);
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('importación rechaza archivos grandes o disco sin reserva y limpia una copia fallida', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-limites-'));
+  const origen = join(raiz, 'foto.jpeg');
+  const contenido = join(raiz, 'contenido');
+  try {
+    writeFileSync(origen, 'imagen');
+    truncateSync(origen, 25 * 1024 ** 2 + 1);
+    const demasiadoGrande = importarArchivos(contenido, 'banner', [origen]);
+    assert.match(demasiadoGrande.motivos?.['foto.jpeg'] ?? '', /25 MB/);
+    writeFileSync(origen, 'imagen');
+    const sinEspacio = importarArchivos(contenido, 'banner', [origen], () => {}, {
+      espacioLibre: () => 0,
+    });
+    assert.match(sinEspacio.motivos?.['foto.jpeg'] ?? '', /espacio suficiente/);
+    const copiaFallida = importarArchivos(contenido, 'banner', [origen], () => {}, {
+      espacioLibre: () => Number.MAX_SAFE_INTEGER,
+      copiar: (_origen, destino) => {
+        writeFileSync(destino, 'parcial');
+        throw new Error('copia fallida');
+      },
+    });
+    assert.match(copiaFallida.motivos?.['foto.jpeg'] ?? '', /no se pudo copiar/);
+    assert.deepEqual(readdirSync(join(contenido, 'banner')), []);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
   }
