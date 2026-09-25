@@ -1,5 +1,21 @@
 # Turnero El Comal — Arquitectura
 
+## Implementación vigente (0.3.0)
+
+La aplicación de producción es **solo Electron local**: un proceso principal posee el estado y abre ventanas React separadas de operador y pantalla pública. El contrato tipado de `main/contrato.ts` pasa por IPC; las acciones de escritura y los diagnósticos exigen la ventana principal del operador. No hay servidor, navegador remoto, SQLite, NestJS ni Socket.IO. Las descripciones de topología B, WebSocket y servidor en las secciones históricas de abajo son propuestas no implementadas y no deben usarse para instalar ni respaldar el producto.
+
+En producción, `config.json`, `estado.json`, `turnero.log` y `contenido/` viven en `Documentos/Turnero Comal` (o en `TURNERO_DATOS` para pruebas). `estado.json` y las modificaciones de configuración se publican por escritura temporal, sincronización y renombrado. La carpeta `contenido/` almacena videos, banners, 100 voces y el aviso. La pantalla pública solo recibe estado, inventario y configuración necesarios para mostrar turnos y multimedia; los diagnósticos completos se consultan únicamente en operador.
+
+El operador accede a **Diagnósticos** desde el final de la lista de Ayuda; allí consulta persistencia, TV, audio, YouTube, disco y recuperación. El registro usa JSON por línea con hora ISO/local, nivel, componente, versión y sesión. Rota a 5 MB y retiene cinco archivos. Los mensajes idénticos se agrupan durante 30 segundos. El proveedor de diagnósticos tolera fallos individuales de disco, inventario y ventanas.
+
+Al desconectar la TV, Windows dispara una nueva sincronización y la ventana pública se recrea al reconectar; nunca se mueve el formulario del operador a la TV. Un renderizador terminado se recarga. El audio local degradado se comunica al operador. Un fallo o falta de internet en YouTube activa el contenido local y la reconexión vuelve a intentar la fuente configurada. El estado persistido se restaura solo si pertenece a la jornada actual; se descartan anuncios anteriores para evitar repetirlos. Consulte [operación y recuperación](operacion-recuperacion.md) y [publicación](lista-publicacion.md).
+
+**Límite actual:** los estados multimedia dependen de señales de los renderizadores; no hay acuse físico de que el sonido salió por las bocinas o de que el cliente vio la TV. La instalación, upgrade, rollback, HDMI y audio requieren prueba en el hardware real.
+
+---
+
+## Diseño histórico y propuestas (no implementadas salvo que el código vigente lo confirme)
+
 > v0.2 · 14 sep 2026 — implementada la topología A sin base de datos; ver ADR-02 (§3.1) y §5.
 
 ---

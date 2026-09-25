@@ -1,114 +1,84 @@
-# COMAL Queue
+# Turnero Comal++
 
-> **Integración actual en copilot:** la aplicación usa la arquitectura local Electron de `arquitechture-v2`; las secciones históricas siguientes y los manuales de documentación describen la versión anterior. Consulta `docs/arquitectura.md` para la arquitectura nueva.
->
-> **Multimedia → pantalla 2:** permite seleccionar un enlace HTTPS de video o playlist de YouTube para reproducción continua, o volver a videos MP4/WebM e imágenes JPG/JPEG/PNG/WebP locales. YouTube requiere internet y permiso de reproducción externa del autor. El volumen baja durante los anuncios y estos aparecen junto al video. En modo local, los videos se reproducen en rotación aleatoria; si no hay videos reproducibles, aparece el carrusel de imágenes. Los cambios se reflejan sin reiniciar. Los archivos se copian a `contenido/videos` y `contenido/banner` dentro de la carpeta de datos (en producción, `Documentos/Turnero Comal`, salvo `TURNERO_DATOS`). “Abrir carpeta” permite administrarlos directamente.
->
-> **Anuncios y corrección:** los llamados se escuchan completos, en orden de llegada. Los anuncios ya encolados terminan aunque se quite un número de la lista. El botón “Corregir última captura” revierte una captura una sola vez; quitar un turno descarta esa corrección. Ctrl+Z conserva su función de edición de texto. La mascota está desactivada.
+Aplicación local de Windows para llamar pedidos listos. La persona operadora captura los dos últimos dígitos del ticket (00–99), y la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. El sistema no registra ventas ni imprime tickets.
 
-## Validación del código actual
+## Arquitectura actual
 
-- `npm test`: pruebas del dominio, cola FIFO, enlaces de YouTube y persistencia.
-- `npm run build`: comprobación estricta de TypeScript y compilación.
-- `npm run format:check`: formato uniforme con Prettier; `npm run format` lo aplica.
-- `npm run test:desktop`: ejecuta Electron con ventanas ocultas y datos aislados en `test-results/`, comprueba los anuncios 55 → 66, menús hacia abajo a dos tamaños, eliminación sin restauración y carga del reproductor YouTube. Requiere internet para esa última comprobación y guarda capturas. No usa datos de la jornada real.
+Electron ejecuta un proceso principal y dos ventanas construidas con React y Vite: **operador** y **pública**. Las ventanas se comunican con el proceso principal mediante IPC; no hay servidor local ni acceso desde un navegador. La lógica de turnos y cola está en `nucleo/`. El estado de la jornada se guarda en `estado.json`, y las opciones se leen de `config.json`.
 
-Los cambios de comportamiento se guardan separados del formateo, con mensajes Conventional Commits. La cola (`nucleo/cola.ts`) y el análisis de enlaces (`nucleo/youtube.ts`) no dependen de Electron; los permisos y persistencia se resuelven en el proceso principal. Las vistas usan componentes separados para el menú, el formulario YouTube y su reproductor.
+En Windows, la pantalla pública se coloca en la pantalla secundaria configurada como **pantalla extendida**. Sin una pantalla secundaria, la aplicación empaquetada abre solo la ventana del operador. En desarrollo, la ventana pública también puede abrirse en el monitor principal para pruebas.
 
-COMAL Queue is a local ready-order display for the Troyanos/Comal++ cafeteria context represented in this repository. A cashier manually records an existing ticket number when an order is ready; connected public displays receive the ready list and a visual announcement in real time.
+La carpeta de datos de producción es `Documentos/Turnero Comal`. Puede cambiarse con la variable `TURNERO_DATOS` para pruebas aisladas. Contiene `config.json`, `estado.json`, `turnero.log` y `contenido/`. El instalador incluye contenido de fábrica que se copia a esa carpeta en el primer arranque. Los archivos locales de `contenido/videos`, `contenido/banner`, `contenido/voz` y `contenido/aviso.wav` se usan sin red. Para cada voz y para el aviso, la aplicación prefiere MP3 no vacío cuando existe; de lo contrario usa WAV.
 
-## Overview
+Los turnos, el estado y el contenido local funcionan sin internet. YouTube y el clima requieren internet. Si YouTube falla o el sistema detecta la pérdida de conexión, la pantalla pública usa el contenido local; al reconectarse intenta de nuevo la fuente configurada.
 
-The implemented workflow covers ready orders only. It does not create sales, print tickets, track preparation, manage inventory, or integrate with a point-of-sale system. Ticket numbers are two digits from `01` through `99`; an active number cannot be duplicated, but it can be reused after delivery or cancellation.
+Desde **Ayuda**, el operador puede abrir **Diagnósticos** para revisar versiones, rutas de datos, estado de ventanas, último guardado, errores recientes, audio, YouTube, inventario y espacio libre cuando Windows permite consultarlo. Los detalles técnicos no aparecen en la pantalla pública. El registro `turnero.log` usa líneas JSON y rota al llegar a 5 MB; conserva hasta cinco archivos anteriores (`turnero.log.1` a `.5`).
 
-## Main capabilities
+## Requisitos y uso
 
-- Manual creation, recall, counter assignment, delivery, and cancellation of ready turns.
-- SQLite persistence and idempotency for create/recall requests.
-- Socket.IO state synchronization and live announcement events.
-- A cashier workspace and a read-only public display at `/pantalla`.
-- Local music catalogs, a fallback image carousel, and optional YouTube playback.
-- Bundled Spanish announcement assets for turns `01`–`99` and counters 1–2.
-- Configurable announcement duration, automatic page rotation, and footer messages.
-
-Important current limitation: the public display does not expose or invoke the audio activation callback, so visual announcements are implemented but public-display audio is not operational without a code change. Authentication and authorization are also not implemented.
-
-## Architecture at a glance
-
-React 19 and Vite render both interfaces. A NestJS 11 process exposes HTTP endpoints and a Socket.IO gateway. Node's built-in SQLite driver stores turns, request-id records, and JSON configuration. Electron can package the application for Windows.
-
-## Technology stack
-
-- Node.js `>=22.13.0` and npm
-- TypeScript 5, React 19, Vite 7
-- NestJS 11, Socket.IO 4
-- Node `node:sqlite`
-- Electron 44 and electron-builder 26
-
-Exact resolved versions are recorded in `package-lock.json`.
-
-## Repository structure
-
-- `src/` — frontend pages, components, hooks, services, and styles
-- `server/` — API, realtime gateway, validation, domain service, media catalog, and SQLite access
-- `tests/` — backend service and HTTP/WebSocket regression tests
-- `public/` and `data/music/` — bundled visual and audio assets
-- `electron/` — Windows desktop launcher
-- `tooling/audio/` — reproducible audio generation and verification utilities
-- `docs/` — product and process documentation in LaTeX
-
-## Quick start
-
-Prerequisite: Node.js 22.13 or newer.
+- Windows con Node.js 22.13 o posterior y npm para desarrollar o generar el instalador.
+- Dos pantallas en modo extendido y salida de audio adecuada para la operación en el local.
 
 ```powershell
 npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/` for the cashier workspace and `http://127.0.0.1:5173/pantalla` for the public display.
-
-Run the checks:
-
-```powershell
-npm test
-npx tsc --noEmit -p tsconfig.json
-npx tsc --noEmit -p tsconfig.server.json
-node tooling/audio/verify-audio.mjs
-```
-
-Build and run the single-server distribution:
+`npm run dev` inicia Vite y Electron para desarrollo. Para ejecutar el código compilado desde el repositorio:
 
 ```powershell
 npm run build
 npm start
 ```
 
-The production server defaults to `http://127.0.0.1:3001`.
-
-## Documentation
-
-Start with [`docs/README.tex`](docs/README.tex). The complete documentation set is assembled by [`docs/technical-documentation.tex`](docs/technical-documentation.tex); all detailed documents use `.tex` as requested.
-
-The LaTeX sources use Overleaf's `ol-softwaremanual` technical-document template. Its class is vendored in `docs/` so local and Overleaf builds use the same layout. To build locally, run this from `docs/`:
+Para crear el instalador Windows NSIS de la versión indicada en `package.json`:
 
 ```powershell
-latexmk -pdf -shell-escape -interaction=nonstopmode -halt-on-error technical-documentation.tex
+npm run desktop:build
 ```
 
-Key entry points:
+El instalador se escribe en `release/`. `npm run desktop:dir` genera una carpeta de aplicación sin instalador. Para una publicación firmada, usar `npm run desktop:build:signed` con el certificado del responsable de publicación.
 
-- [Current status](docs/10-planning/current-status.tex)
-- [Queue domain](docs/05-architecture/queue-domain.tex)
-- [API endpoints](docs/06-api/endpoints.tex)
-- [Development setup](docs/08-development/development-setup.tex)
-- [Known limitations](docs/07-quality/known-limitations.tex)
-- [Documentation confidence](docs/11-reference/documentation-status.tex)
+## Validación
 
-## Development status
+```powershell
+npm run format
+npm run format:check
+npm run verify:audio
+npm test
+npm run build
+npm run test:desktop
+npm run lint
+```
 
-The backend lifecycle, persistence, validation, local media catalog, and Socket.IO synchronization are implemented and covered by five passing backend tests. The frontend has no automated component or end-to-end tests. Production deployment, backup/restore, monitoring, authentication, and public-display audio activation require further work or stakeholder definition.
+`npm test` incluye la validación del catálogo de audio y las pruebas del dominio y del proceso principal. El validador exige una voz para cada número 00–99, rechaza archivos de audio vacíos y revisa el aviso. `npm run test:desktop` usa datos aislados bajo `test-results/`, comprueba ambas vistas, llamadas y multimedia, y decodifica en Chromium las 100 voces seleccionadas y el aviso. Comprueba que se crea el iframe de YouTube; la reproducción real requiere una aceptación aparte con internet. La herramienta de generación y sus instrucciones están en `tooling/audio/`.
 
-## License
+## Estructura
 
-No repository license is currently documented. Distribution rights require stakeholder validation.
+- `main/`: proceso principal de Electron, ventanas, IPC, configuración, contenido y persistencia.
+- `nucleo/`: reglas de turnos y cola sin dependencia de Electron.
+- `vistas/`: interfaces React del operador y la pantalla pública.
+- `contenido/`: contenido de fábrica para instalaciones nuevas.
+- `tooling/audio/`: generación y validación del catálogo de voz.
+- `scripts/`: desarrollo y prueba de escritorio.
+- `docs/`: arquitectura vigente y documentación histórica. Algunos documentos `.tex` describen la implementación anterior; no son instrucciones de despliegue actuales.
+
+## Limitaciones conocidas
+
+- La aplicación empaquetada necesita una pantalla secundaria para mostrar la vista pública.
+- No hay acceso operativo desde Chrome, Edge o un teléfono.
+- La entrega efectiva del anuncio y del audio a la TV no tiene acuse de recibo visible para el operador.
+- Si falla el guardado de turnos, el operador ve una advertencia persistente. Los cambios en memoria pueden perderse tras reiniciar hasta que un guardado posterior tenga éxito.
+- Si la primera copia del contenido de fábrica falla o una instalación anterior ya tiene una carpeta `contenido/` incompleta, el arranque no repara automáticamente los archivos faltantes.
+- YouTube y el clima dependen de servicios externos. El contenido local se usa como respaldo cuando YouTube falla; la detección de una conexión intermitente puede tardar hasta 20 segundos y requiere validación en la red real.
+- La aceptación final requiere pruebas en la PC, TV, bocinas y escala de pantalla reales del local.
+
+## Documentación
+
+La [arquitectura local](docs/arquitectura.md) describe el diseño Electron. También incluye topologías futuras que aún no están implementadas. La documentación LaTeX en `docs/` conserva material histórico del sistema anterior y debe leerse como referencia, no como descripción del producto actual.
+
+La [guía de operación y recuperación](docs/operacion-recuperacion.md) explica el guardado atómico, la salud de persistencia, los límites de importación, los respaldos y la restauración con la aplicación cerrada. La [lista de publicación](docs/lista-publicacion.md) recoge las comprobaciones de cada instalador.
+La [guía de seguridad y publicación](docs/seguridad-y-publicacion.md) describe ESLint, CI, auditoría de dependencias, CSP, IPC y firma de Windows.
+La [lista de publicación de 0.3.0](docs/publicacion-0.3.0.md) registra el commit base, los comandos, la salida del instalador, el hash y la prueba manual pendiente para la versión final.
+
+No se ha documentado una licencia de distribución para este repositorio.

@@ -1,5 +1,7 @@
 # Plan de SQA — prueba en las instalaciones de COMAL
 
+> Actualización Phase 5: abrir **Diagnósticos** desde el final de Ayuda y comprobar versiones, rutas, último guardado, inventario, espacio y transiciones de recuperación. La arquitectura vigente es Electron local sin servidor ni base de datos. Registrar la evidencia de publicación en la [lista de publicación](lista-publicacion.md).
+
 **Fecha de prueba:** 25 de septiembre de 2026  
 **Sistema:** Comal++ / turnero local, versión declarada `0.3.0`  
 **Responsables:** desarrollador: ______ · operador de barra: ______ · responsable de COMAL: ______  
@@ -15,12 +17,13 @@ Comprobar en la computadora, monitor de barra y TV reales que el operador puede 
 
 | ID | Verificación / acción | Aceptación | Resultado / evidencia |
 | --- | --- | --- | --- |
-| PRE-01 · P0 | Resolver los conflictos de Git existentes en `vistas/comun/styles/public.css` y `vistas/publica/TarjetaAnuncio.tsx`; revisar los otros cambios locales. | Sin archivos `UU` ni marcadores de conflicto; se sabe qué revisión se instalará. | ____ |
+| PRE-01 · P0 | Confirmar estado limpio de la revisión que se publicará. Los conflictos observados inicialmente ya no aparecen en la auditoría de `529b5d4`. | Sin archivos `UU` ni marcadores de conflicto; se sabe qué revisión se instalará. | ____ |
 | PRE-02 · P0 | Ejecutar `npm ci`, `npm test`, `npm run build` y `npm run format:check` desde la raíz. | Salida 0 de cada comando; registrar commit, versión y hora. No aplicar formato automáticamente durante la prueba. | ____ |
 | PRE-03 · P0 | Ejecutar `npm run test:desktop` con internet disponible. | Pasa el smoke test; revisar capturas de `test-results/` para operador, multimedia y TV 1080p/1440p/4K. Si falla por YouTube, separar fallo de red/proveedor del resto y repetir la parte local. | ____ |
 | PRE-04 · P0 | Generar `npm run desktop:build` y probar el instalador generado, no uno anterior. | Nombre y versión del instalador coinciden con `package.json`; se instala y abre. El `release/Comal++ Setup 0.2.0.exe` presente en el árbol no prueba la versión actual `0.3.0`. | ____ |
 | PRE-05 · P0 | Preparar carpeta de respaldo del contenido, `config.json` y `estado.json` **con la app cerrada**; preparar también archivos de video e imagen válidos para prueba. | Copia identificada por fecha y ubicación; existe medio de restauración; suficiente espacio libre para instalación y multimedia. | ____ |
 | PRE-06 · P1 | Llevar copia local del instalador, cable/adaptadores HDMI, bocinas o cable de audio, mouse/teclado, videos MP4 H.264 y al menos dos imágenes JPG/PNG. | Material disponible aunque falle el internet del local. | ____ |
+| PRE-07 · P0 | Reparar la voz 40 y verificar las 100 voces elegidas por la app (MP3 prioritario, WAV de respaldo), además del aviso. | Todas decodifican y corresponden al número correcto. La auditoría detectó `40.mp3` vacío y ausencia de `40.wav`. | ____ |
 
 > **Aislamiento:** hacer las pruebas destructivas (quitar archivos, editar configuración, simular día nuevo) en una carpeta de datos de prueba con `TURNERO_DATOS` o en una copia de los datos, nunca sobre la jornada activa. La instalación empaquetada usa por defecto `Documentos\Turnero Comal`. Guardar antes y restaurar después. No cambiar la fecha del equipo de COMAL durante la operación real.
 
@@ -52,9 +55,9 @@ Marcar **Pasa / Falla / No aplica** y anotar evidencia (foto, video corto, captu
 | QUE-02 | P0 | Capturar `0`, luego `99`, luego `00`. | Se muestran **00**, **99**, **00** según cada llamada; cero es válido y 99→00 no exige secuencia. | ____ |
 | QUE-03 | P0 | Capturar seis números distintos seguidos. | El actual y hasta cinco anteriores aparecen en orden reciente; sin duplicados, filas cortadas ni scroll en TV. | ____ |
 | QUE-04 | P0 | Volver a capturar el número actual; después anunciar de nuevo uno de la lista desde el menú. | El actual solo repite audio sin cambiar la lista; el número anterior vuelve arriba, sin duplicarse, y se anuncia. | ____ |
-| QUE-05 | P0 | Capturar vacío, letras, caracteres mixtos y más de seis dígitos. | Mensaje claro de error; TV, cola y audio permanecen intactos. | ____ |
+| QUE-05 | P0 | Capturar vacío, letras y caracteres mixtos. Intentar escribir/pegar más de seis dígitos y comprobar el valor real antes de enviarlo. | Entradas inválidas no cambian TV ni audio. La interfaz limita a seis caracteres; no asumir que un pegado largo fue rechazado completo. El dominio debe rechazar siete dígitos si los recibe directamente (cubierto en pruebas). | ____ |
 | QUE-06 | P0 | Llamar un número nuevo y pulsar **Corregir última captura** una vez y luego otra vez. | Restaura la lista previa una sola vez y no genera otro anuncio. Ctrl+Z en el campo solo edita texto. | ____ |
-| QUE-07 | P0 | Abrir menú de un turno, **Quitar de la pantalla**, cancelar primero y confirmar después. | Cancelar no cambia nada; confirmar elimina solo ese número; deshacer ya no lo restaura. | ____ |
+| QUE-07 | P0 | Abrir menú de un turno y elegir **Quitar de la pantalla**. | Se elimina inmediatamente solo ese número, sin diálogo de confirmación; deshacer ya no lo restaura. La confirmación corresponde a eliminar archivos multimedia. | ____ |
 | QUE-08 | P1 | Llamar un turno, esperar cinco minutos; repetirlo antes de que venza. | Desaparece cinco minutos después de su **último** anuncio; repetirlo reinicia el plazo. Probar con reloj real, sin cambiar hora del sistema. | ____ |
 | AUD-01 | P0 | Hacer una llamada desde la posición de barra y escuchar desde la posición de cliente. | Aviso y voz completos, audibles, número correcto, sin distorsión ni eco excesivo; la tarjeta visual acompaña el llamado. | ____ |
 | AUD-02 | P0 | Lanzar dos llamados rápidamente y luego quitar el primero de la lista. | Voces en orden de llegada, sin superposición; un anuncio ya encolado termina aunque se quite su turno. | ____ |
@@ -107,5 +110,18 @@ La aplicación de operador tiene tamaño mínimo **900 × 600**. Verificar al me
 **Firma desarrollador / hora:** ____ · **Firma operador:** ____ · **Firma responsable COMAL:** ____
 
 ## 8. Fuentes actuales para mantener este plan
+
+### Verificaciones operativas añadidas a Phase 5
+
+| ID | Prueba en datos aislados | Aceptación y evidencia |
+| --- | --- | --- |
+| OPS-01 | Abrir Diagnósticos, desconectar/reconectar TV, refrescar. | Rutas y versiones visibles solo al operador; TV cambia de no disponible a disponible sin mostrar rutas en pantalla pública. ____ |
+| OPS-02 | Bloquear escritura de `estado.json`, llamar y restaurar permisos. | Guardado degradado visible, llamada sigue en memoria, siguiente cambio recupera y se registra la transición. ____ |
+| OPS-03 | Quitar una voz en copia y llamar ese número. | Audio degradado visible; tarjeta de turno sigue; el registro identifica la voz faltante. ____ |
+| OPS-04 | Cortar internet durante YouTube y luego restaurarlo. | Contenido local sustituye YouTube; turnos siguen; al reconectar se reintenta la fuente. ____ |
+| OPS-05 | Importar archivo mayor que el límite o con disco simulado bajo. | Rechazo claro, sin archivo parcial publicado; barra indica espacio bajo cuando la consulta está disponible. ____ |
+| OPS-06 | Crear respaldo y restaurarlo en carpeta temporal con app cerrada. | Estado, configuración, contenido y logs rotados se recuperan; temporales no aparecen. ____ |
+| OPS-07 | Reiniciar tras `estado.json` corrupto y tras temporal residual. | Inicio vacío con aviso/copia diagnóstica; temporal no suplanta el archivo principal. ____ |
+
 
 `package.json`, `main/main.ts`, `main/ventanas.ts`, `main/store.ts`, `main/config.ts`, `main/persistencia.ts`, `main/contenido.ts`, `nucleo/turnos.ts`, `vistas/operador/OperadorPage.tsx`, `vistas/operador/MultimediaPanel.tsx`, `vistas/publica/PublicaPage.tsx`, `vistas/publica/useAnuncios.ts`, `vistas/publica/Contenido.tsx` y `scripts/smoke-desktop.mjs`. El `README.md` y varios `.tex` aún mezclan información de la arquitectura anterior; ante diferencias, confirmar el comportamiento con el código y el instalador que se llevará.
