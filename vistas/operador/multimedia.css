@@ -139,6 +139,38 @@
   gap: 12px;
   align-items: flex-start;
 }
+.media-requirements {
+  color: #5d7891;
+  font-size: 11px;
+}
+.media-library-notice {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: -6px 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #e9ce8b;
+  border-radius: 10px;
+  background: #fff9e9;
+  color: #8a5b16;
+  font-size: 11px;
+}
+.media-library-notice .icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.media-file.broken {
+  border-color: #e9ce8b;
+  background: #fff9e9;
+}
+.media-file.broken .media-preview > span {
+  background: #c88419;
+}
+.media-file.broken .media-file-info small {
+  color: #8a5b16;
+}
 .admin-shell .toast {
   position: fixed;
   z-index: 100;

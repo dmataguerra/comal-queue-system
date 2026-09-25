@@ -71,8 +71,15 @@ export function importarArchivos(
       continue;
     }
     try {
-      if (!statSync(origen).isFile()) {
+      const info = statSync(origen);
+      if (!info.isFile()) {
         omitidos.push(nombre);
+        continue;
+      }
+      // Un archivo que aún se descarga puede existir con 0 bytes.
+      if (info.size === 0) {
+        omitidos.push(nombre);
+        registrar(`contenido: archivo vacío, no se importa ${nombre}`);
         continue;
       }
       const destino = nombreDisponible(carpeta, nombre);

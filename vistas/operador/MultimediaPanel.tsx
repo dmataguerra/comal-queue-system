@@ -7,14 +7,76 @@ import { useTurnero } from '../comun/turnero';
 
 const nombreArchivo = (url: string) => decodeURIComponent(url.split('/').pop() ?? url);
 
+const FORMATOS: Record<CategoriaContenido, { extensiones: string[]; nombres: string }> = {
+  videos: { extensiones: ['mp4', 'webm'], nombres: 'MP4 o WebM' },
+  banner: { extensiones: ['jpg', 'jpeg', 'png', 'webp'], nombres: 'JPG, PNG o WebP' },
+};
+
+function motivoOmitido(categoria: CategoriaContenido, nombre: string) {
+  const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
+  const { extensiones, nombres } = FORMATOS[categoria];
+  return extensiones.includes(extension)
+    ? `“${nombre}” no se agregó: el archivo está vacío o incompleto. Espera a que termine de descargarse y vuelve a intentarlo.`
+    : `“${nombre}” no se agregó: formato no admitido (usa ${nombres}).`;
+}
+
+function Archivo({
+  url,
+  esVideo,
+  ocupado,
+  quitar,
+}: {
+  url: string;
+  esVideo: boolean;
+  ocupado: boolean;
+  quitar: (url: string) => void;
+}) {
+  const [falla, setFalla] = useState(false);
+  const nombre = nombreArchivo(url);
+  return (
+    <article className={`media-file ${falla ? 'broken' : ''}`}>
+      <div className="media-preview">
+        {esVideo ? (
+          <video src={url} muted preload="metadata" onError={() => setFalla(true)} />
+        ) : (
+          <img src={url} alt="" onError={() => setFalla(true)} />
+        )}
+        <span>
+          <Icon name={falla ? 'warning' : esVideo ? 'play' : 'image'} />
+        </span>
+      </div>
+      <div className="media-file-info">
+        <strong title={nombre}>{nombre}</strong>
+        <small>
+          {falla
+            ? 'No se puede mostrar: quítalo y vuelve a subirlo'
+            : esVideo
+              ? 'Video de la rotación'
+              : 'Imagen del carrusel'}
+        </small>
+      </div>
+      <button
+        className="icon-button media-remove"
+        disabled={ocupado}
+        onClick={() => quitar(url)}
+        aria-label={`Quitar ${nombre}`}
+        title={`Quitar ${nombre}`}
+      >
+        <Icon name="trash" />
+      </button>
+    </article>
+  );
+}
+
 interface BibliotecaProps {
   categoria: CategoriaContenido;
   titulo: string;
   descripcion: string;
+  requisitos: string;
+  aviso?: string;
   archivos: string[];
   ocupado: boolean;
   agregar: (categoria: CategoriaContenido) => void;
-  abrir: (categoria: CategoriaContenido) => void;
   quitar: (url: string) => void;
 }
 
@@ -22,10 +84,11 @@ function Biblioteca({
   categoria,
   titulo,
   descripcion,
+  requisitos,
+  aviso,
   archivos,
   ocupado,
   agregar,
-  abrir,
   quitar,
 }: BibliotecaProps) {
   const esVideo = categoria === 'videos';
@@ -48,35 +111,18 @@ function Biblioteca({
           <Icon name="plus" />
           Agregar {esVideo ? 'videos' : 'imágenes'}
         </button>
-        <button className="button secondary" disabled={ocupado} onClick={() => abrir(categoria)}>
-          <Icon name="folder" />
-          Abrir carpeta
-        </button>
+        <span className="media-requirements">{requisitos}</span>
       </div>
+      {aviso && (
+        <p className="media-library-notice">
+          <Icon name="info" />
+          {aviso}
+        </p>
+      )}
       {archivos.length ? (
         <div className="media-file-grid">
           {archivos.map((url) => (
-            <article className="media-file" key={url}>
-              <div className="media-preview">
-                {esVideo ? <video src={url} muted preload="metadata" /> : <img src={url} alt="" />}
-                <span>
-                  <Icon name={esVideo ? 'play' : 'image'} />
-                </span>
-              </div>
-              <div className="media-file-info">
-                <strong title={nombreArchivo(url)}>{nombreArchivo(url)}</strong>
-                <small>{esVideo ? 'Video de la rotación' : 'Imagen del carrusel'}</small>
-              </div>
-              <button
-                className="icon-button media-remove"
-                disabled={ocupado}
-                onClick={() => quitar(url)}
-                aria-label={`Quitar ${nombreArchivo(url)}`}
-                title={`Quitar ${nombreArchivo(url)}`}
-              >
-                <Icon name="trash" />
-              </button>
-            </article>
+            <Archivo key={url} url={url} esVideo={esVideo} ocupado={ocupado} quitar={quitar} />
           ))}
         </div>
       ) : (
@@ -101,32 +147,26 @@ export function MultimediaPanel({
 }: {
   notificar: (mensaje: string, error?: boolean) => void;
 }) {
-  const { inventario, importarContenido, quitarContenido, abrirCarpetaContenido } = useTurnero();
+  const { inventario, config, importarContenido, quitarContenido } = useTurnero();
   const [ocupado, setOcupado] = useState(false);
 
   async function agregar(categoria: CategoriaContenido) {
     setOcupado(true);
     try {
-      const resultado = await importarContenido(categoria);
-      if (resultado.cancelado) return;
-      if (resultado.agregados.length) {
-        const cantidad = resultado.agregados.length;
+      const { agregados, omitidos, cancelado } = await importarContenido(categoria);
+      if (cancelado) return;
+      const motivos = omitidos.map((nombre) => motivoOmitido(categoria, nombre)).join(' ');
+      if (agregados.length) {
+        const cantidad = agregados.length;
         notificar(
-          `${cantidad} ${cantidad === 1 ? 'archivo agregado' : 'archivos agregados'} a la pantalla 2.${resultado.omitidos.length ? ` ${resultado.omitidos.length} no compatible(s) se omitieron.` : ''}`,
+          `${cantidad} ${cantidad === 1 ? 'archivo agregado' : 'archivos agregados'} a la pantalla 2.${motivos ? ` ${motivos}` : ''}`,
+          omitidos.length > 0,
         );
-      } else notificar('No se agregó ningún archivo compatible.', true);
+      } else notificar(motivos || 'No se agregó ningún archivo.', true);
     } catch (error) {
       notificar((error as Error).message, true);
     } finally {
       setOcupado(false);
-    }
-  }
-
-  async function abrir(categoria: CategoriaContenido) {
-    try {
-      await abrirCarpetaContenido(categoria);
-    } catch (error) {
-      notificar((error as Error).message, true);
     }
   }
 
@@ -178,28 +218,33 @@ export function MultimediaPanel({
           categoria="videos"
           titulo="Videos"
           descripcion="Se reproducen en orden aleatorio y de forma continua."
+          requisitos="MP4 (H.264) o WebM · hasta 1080p"
           archivos={inventario.videos}
           ocupado={ocupado}
           agregar={agregar}
-          abrir={abrir}
           quitar={quitar}
         />
         <Biblioteca
           categoria="banner"
           titulo="Imágenes"
           descripcion="Aparecen como carrusel cuando no hay videos disponibles."
+          requisitos="JPG, PNG o WebP · 1920 × 1080 recomendado"
+          aviso={
+            config.youtubeUrl || inventario.videos.length
+              ? `Ahora se muestra${config.youtubeUrl ? ' YouTube' : 'n los videos'}. Las imágenes aparecen en la TV solo cuando no hay videos ni YouTube.`
+              : undefined
+          }
           archivos={inventario.banner}
           ocupado={ocupado}
           agregar={agregar}
-          abrir={abrir}
           quitar={quitar}
         />
       </div>
       <div className="media-note">
         <Icon name="info" />
         <p>
-          Formatos admitidos: MP4 y WebM para video; JPG, PNG y WebP para imágenes. Al agregar un
-          archivo con el mismo nombre, se conserva el anterior y se crea una copia numerada.
+          Espera a que el archivo termine de descargarse antes de agregarlo. Si agregas uno con el
+          mismo nombre, se conserva el anterior y se crea una copia numerada.
         </p>
       </div>
     </div>

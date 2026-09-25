@@ -342,10 +342,6 @@
   animation: announce-in 0.7s var(--ease);
   box-shadow: 0 22px 54px rgba(0, 31, 57, 0.28);
 }
-.announcement-card .status-badge {
-  font-size: 1vw;
-  padding: 0.65vh 1vw;
-}
 .announcement-caption {
   color: #376b98;
   font-size: 0.8vw;
@@ -479,10 +475,10 @@
   height: 100%;
   object-fit: contain;
 }
-.footer-logo-plate.troyanos {
-  width: clamp(70px, 6vw, 110px);
+.footer-logo-plate.comal {
+  width: clamp(125px, 10.5vw, 185px);
 }
-.footer-logo-plate.troyanos img {
+.footer-logo-plate.comal img {
   width: 100%;
   height: auto;
 }
@@ -625,9 +621,6 @@
   .announcement-number {
     font-size: 22vw;
   }
-  .announcement-card .status-badge {
-    font-size: 1.3vw;
-  }
   .announcement-pickup {
     font-size: 2vw;
   }
@@ -719,10 +712,6 @@
     max-width: 100%;
     padding: 26px 22px;
     border-radius: 20px;
-  }
-  .announcement-card .status-badge {
-    font-size: 12px;
-    padding: 7px 13px;
   }
   .announcement-caption {
     font-size: 10px;

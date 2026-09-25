@@ -5,16 +5,9 @@ import { useClock } from '../comun/hooks/useClock';
 import { Brand } from '../comun/components/Brand';
 import { Icon } from '../comun/components/Icon';
 import { Modal } from '../comun/components/Modal';
-import { StatusBadge } from '../comun/components/StatusBadge';
 import { AnimatedBackground } from '../comun/components/AnimatedBackground';
 import { MultimediaPanel } from './MultimediaPanel';
 import { MenuTurno } from './MenuTurno';
-
-const pantallaTexto = {
-  tv: 'Pantalla pública en la TV',
-  ventana: 'Pantalla pública en ventana',
-  ninguna: 'Sin pantalla pública',
-};
 
 /** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
@@ -216,17 +209,10 @@ export function OperadorPage() {
       <div className="admin-workspace">
         <header className="admin-topbar">
           <div className="breadcrumb">
-            Troyanos
+            Turnero
             <Icon name="chevron" />
             <span>{titulo.miga}</span>
           </div>
-          <span
-            className={`connection-status ${pantallas.publica === 'ninguna' ? 'disconnected' : 'connected'}`}
-          >
-            <i />
-            {pantallaTexto[pantallas.publica]}
-          </span>
-          <span className="topbar-divider" />
           <button className="button secondary help-button" onClick={() => setAyuda(true)}>
             <Icon name="info" />
             Ayuda<kbd>F1</kbd>
@@ -347,9 +333,6 @@ export function OperadorPage() {
                         </span>
                       </h2>
                     </div>
-                    <StatusBadge tone={pantallas.publica === 'ninguna' ? 'neutral' : 'ready'}>
-                      {pantallas.publica === 'ninguna' ? 'Sin TV' : 'En vivo'}
-                    </StatusBadge>
                   </div>
                   <div className="cashier-ready-list">
                     {filas.map(({ n, destacada, nota }) => (
@@ -460,6 +443,10 @@ export function OperadorPage() {
               Revisa que esté encendida y conectada. La pantalla pública aparece sola cuando se
               detecta.
             </dd>
+            <dt>
+              <Icon name="clock" /> Vaciado automático
+            </dt>
+            <dd>Cada turno desaparece de la pantalla 5 minutos después de su último anuncio.</dd>
             <dt>
               <Icon name="calendar" /> Cada día
             </dt>

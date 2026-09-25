@@ -70,7 +70,7 @@ function dentroDe(raiz: string, ruta: string): string | null {
 
 const cabecerasBase = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' };
 const CSP =
-  "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'";
+  "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; media-src 'self'; connect-src 'self' https://api.open-meteo.com; object-src 'none'; base-uri 'none'";
 
 /** Archivos de contenido con soporte de rangos: el <video> los pide por partes. */
 function servirContenido(archivo: string, rango: string | null): Response {
@@ -177,6 +177,7 @@ async function iniciar() {
           name: videos ? 'Videos compatibles' : 'Imágenes compatibles',
           extensions: videos ? ['mp4', 'webm'] : ['jpg', 'jpeg', 'png', 'webp'],
         },
+        { name: 'Todos los archivos', extensions: ['*'] },
       ],
     });
     if (seleccion.canceled) return { agregados: [], omitidos: [], cancelado: true };

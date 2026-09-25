@@ -148,31 +148,6 @@
 .breadcrumb > span {
   color: #c5d0e3;
 }
-.connection-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11px;
-  color: #adbfd2;
-  white-space: nowrap;
-}
-.connection-status i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #85d5ae;
-}
-.connection-status.disconnected {
-  color: #f0c88e;
-}
-.connection-status.disconnected i {
-  background: #e2b269;
-}
-.topbar-divider {
-  height: 18px;
-  width: 1px;
-  background: var(--line);
-}
 .admin-main {
   padding: 30px 32px 0;
   max-width: 1660px;
@@ -719,9 +694,6 @@
   .admin-topbar {
     justify-content: space-between;
   }
-  .topbar-divider {
-    display: none;
-  }
   .admin-main {
     padding: 24px 18px 0;
   }
@@ -931,13 +903,6 @@
 .admin-shell .sidebar > .brand {
   margin-bottom: 38px;
 }
-.admin-shell .brand-logo-plate {
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 12px 30px rgba(1, 30, 55, 0.22);
-}
 .admin-shell .nav-label {
   color: rgba(229, 243, 255, 0.72);
 }
@@ -1001,30 +966,6 @@
 .admin-shell .breadcrumb > span {
   color: #173e60;
   font-weight: 600;
-}
-.admin-shell .connection-status {
-  color: #416b8e;
-  padding: 7px 11px;
-  border: 1px solid #bdd5e8;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.72);
-}
-.admin-shell .connection-status i {
-  width: 7px;
-  height: 7px;
-  background: #16855b;
-  box-shadow: 0 0 0 3px rgba(22, 133, 91, 0.1);
-}
-.admin-shell .connection-status.disconnected {
-  color: #8a5b16;
-  background: #fff9e9;
-  border-color: #e9ce8b;
-}
-.admin-shell .connection-status.disconnected i {
-  background: #c88419;
-}
-.admin-shell .topbar-divider {
-  background: #caddeb;
 }
 .admin-shell .admin-main {
   max-width: 1600px;
@@ -1188,21 +1129,6 @@
   border-color: #bdd5e8;
   background: #e8f2fa;
 }
-.admin-shell .status-badge {
-  color: #4f6f8a;
-  border-color: #c6dae9;
-  background: rgba(244, 249, 253, 0.92);
-}
-.admin-shell .status-badge.ready {
-  color: #16704d;
-  border-color: #b9dccd;
-  background: #edf8f3;
-}
-.admin-shell .status-badge.blue {
-  color: #0758bd;
-  border-color: #b6d2e8;
-  background: #eaf4fb;
-}
 .admin-shell .cashier-ready-list {
   scrollbar-color: #abc6db transparent;
 }
@@ -1304,10 +1230,6 @@
   }
   .admin-shell .admin-topbar {
     padding: 0 16px;
-  }
-  .admin-shell .connection-status {
-    padding: 6px 8px;
-    font-size: 10px;
   }
   .admin-shell .admin-main {
     padding: 24px 16px 0;

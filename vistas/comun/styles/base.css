@@ -337,12 +337,6 @@ label,
 .brand-logo-plate {
   width: 100%;
   overflow: hidden;
-  border: 1px solid #9fe7f65c;
-  border-radius: 14px;
-  background: #f7fcfd;
-  box-shadow:
-    inset 0 1px 0 #fff,
-    0 12px 28px #00131d42;
 }
 .brand-logo {
   display: block;

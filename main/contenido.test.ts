@@ -136,3 +136,18 @@ test('administración: importa sin sobrescribir y solo elimina archivos multimed
     rmSync(raiz, { recursive: true, force: true });
   }
 });
+
+test('importación: un archivo vacío (descarga incompleta) se omite y no se copia', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-vacio-'));
+  const origen = join(raiz, 'origen');
+  const contenido = join(raiz, 'contenido');
+  try {
+    mkdirSync(origen);
+    writeFileSync(join(origen, 'foto.jpeg'), '');
+    const resultado = importarArchivos(contenido, 'banner', [join(origen, 'foto.jpeg')]);
+    assert.deepEqual(resultado, { agregados: [], omitidos: ['foto.jpeg'], cancelado: false });
+    assert.equal(existsSync(join(contenido, 'banner', 'foto.jpeg')), false);
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});

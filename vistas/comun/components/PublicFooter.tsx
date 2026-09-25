@@ -1,15 +1,17 @@
 import type { CSSProperties } from 'react';
 import { useClock } from '../hooks/useClock';
+import { useClima } from '../hooks/useClima';
 import { Icon } from './Icon';
 export function PublicFooter({ messages }: { messages: string[] }) {
   const clock = useClock();
+  const clima = useClima();
   const tickerMessages = messages.length ? messages : ['Presenta tu ticket al recoger tu pedido'];
   const duration = Math.max(28, Math.min(72, tickerMessages.join(' ').length * 0.32 + 24));
   const sequence = (hidden = false) => (
     <div className="footer-ticker-sequence" aria-hidden={hidden || undefined}>
       <span className="footer-brand">
-        <span className="footer-logo-plate troyanos">
-          <img src="/assets/troyanos-logo.png" alt="Troyanos · Facultad de Informática UAQ" />
+        <span className="footer-logo-plate comal">
+          <img src="/assets/LOGO comal azul.png" alt="Comal · Facultad de Informática UAQ" />
         </span>
       </span>
       <span className="footer-brand">
@@ -28,6 +30,13 @@ export function PublicFooter({ messages }: { messages: string[] }) {
         <Icon name="clock" />
         <strong>{clock.time}</strong>
       </span>
+      {clima && (
+        <span className="footer-ticker-item">
+          <Icon name={clima.soleado ? 'sun' : 'cloud'} />
+          <strong>{clima.temperatura}°C</strong>
+          {clima.descripcion} en Querétaro
+        </span>
+      )}
       {tickerMessages.map((message, index) => (
         <span className="footer-ticker-item" key={`${index}-${message}`}>
           <Icon name={index % 2 === 0 ? 'receipt' : 'coffee'} />

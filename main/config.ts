@@ -16,7 +16,7 @@ export const CONFIG_POR_DEFECTO: Config = {
   mensajes: [
     'Presenta tu ticket al recoger tu pedido.',
     'El café también nos une.',
-    'Gracias por ser parte de Troyanos.',
+    'Gracias por tu preferencia.',
   ],
 };
 
