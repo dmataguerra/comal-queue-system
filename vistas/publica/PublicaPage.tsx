@@ -41,19 +41,18 @@ export function PublicaPage() {
         <div className="public-turn-list" key={actual ?? 'vacio'} aria-live="polite">
           {filas.map(({ n, ultimo }) => (
             <div
-              className={`public-turn ${ultimo ? 'latest' : ''} ${anuncio?.n === n ? 'calling' : ''}`}
+              className={`public-turn ${(anuncio ? anuncio.n === n : ultimo) ? 'latest' : ''} ${anuncio?.n === n ? 'calling' : ''}`}
               key={n}
             >
+              {(anuncio ? anuncio.n === n : ultimo) && (
+                <span className="public-turn-state">
+                  {anuncio?.n === n ? 'Llamando ahora' : 'Pedido listo'}
+                </span>
+              )}
               <strong>{formatear(n)}</strong>
-              <div className="public-turn-detail">
-                {(ultimo || anuncio?.n === n) && (
-                  <span className="public-turn-state">
-                    {anuncio?.n === n ? 'Llamando ahora' : 'Último llamado'}
-                  </span>
-                )}
+              {(anuncio ? anuncio.n === n : ultimo) && (
                 <span className="pickup-label">Recoge tu pedido</span>
-              </div>
-              <Icon name="arrow" />
+              )}
             </div>
           ))}
         </div>
@@ -74,7 +73,7 @@ export function PublicaPage() {
             registrar={registrar}
           />
         </div>
-        {anuncio && <TarjetaAnuncio anuncio={anuncio} />}
+        <TarjetaAnuncio anuncio={anuncio} />
       </section>
       {errorAudio && (
         <div className="display-notices">

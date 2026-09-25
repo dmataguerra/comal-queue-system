@@ -6,7 +6,7 @@ import { useTurnero } from '../comun/turnero';
 import { pausa, precargar, reproducir } from './audio';
 
 const PAUSA_REPETICION = 300;
-const TARJETA_MINIMA = 4000;
+const TARJETA_MINIMA = 6000; // Mantener visible seis segundos, o hasta terminar la voz.
 
 /**
  * RF-03 y RF-11 · atenuar música → aviso → voz → [pausa → voz] → restaurar.

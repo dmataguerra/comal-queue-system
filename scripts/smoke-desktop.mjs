@@ -65,6 +65,25 @@ async function verificar() {
       () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
       'No cargó la pantalla pública',
     );
+    // Comprobar movimiento real y la preferencia de accesibilidad en el renderizador.
+    const movimiento = () =>
+      ejecutar(publica, "getComputedStyle(document.querySelector('.paint-motion')).transform");
+    const posicion = await movimiento();
+    await pausa(600);
+    assert.notEqual(await movimiento(), posicion, 'El fondo no se mueve');
+    publica.webContents.debugger.attach('1.3');
+    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+    });
+    assert.equal(
+      await ejecutar(
+        publica,
+        "getComputedStyle(document.querySelector('.paint-motion')).animationName",
+      ),
+      'none',
+    );
+    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [] });
+    publica.webContents.debugger.detach();
     operador.setSize(1280, 900);
     publica.setSize(1280, 900);
     const inventario = await ejecutar(operador, 'window.turnero.obtener()');
@@ -90,7 +109,10 @@ async function verificar() {
       anuncios.map((a) => a.n),
       ['55', '66'],
     );
-    assert.ok(anuncios[1].t - anuncios[0].t >= 3900, 'El segundo anuncio interrumpió el primero');
+    assert.ok(
+      anuncios[1].t - anuncios[0].t >= 5900,
+      'El anuncio debe permanecer visible al menos seis segundos',
+    );
     const anuncioEnMultimedia = await ejecutar(
       publica,
       `(()=>{const a=document.querySelector('.public-focus'),m=document.querySelector('.public-media-frame');if(!a||!m)return null;const x=a.getBoundingClientRect(),y=m.getBoundingClientRect();return {dentro:a.parentElement===m,centroX:Math.abs((x.left+x.right-y.left-y.right)/2),centroY:Math.abs((x.top+x.bottom-y.top-y.bottom)/2)};})()`,
@@ -163,6 +185,76 @@ async function verificar() {
     );
     await pausa(800);
     await capturar(publica, 'youtube-anuncio.png');
+
+    await ejecutar(operador, 'window.turnero.configurarYouTube(null)');
+    for (const n of [11, 22, 33, 44]) {
+      await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
+    }
+    await esperar(
+      () => ejecutar(publica, "!document.querySelector('.announcement-number')"),
+      'No terminó la cola',
+      90000,
+    );
+    const medir = () =>
+      ejecutar(
+        publica,
+        `(() => {
+      const rect = (s) => { const r=document.querySelector(s).getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; };
+      const frame=rect('.public-media-frame'), queue=rect('.public-queue');
+      const clipped=[...document.querySelectorAll('.public-turn > *, .announcement-card > *')].some(e=>{const r=e.getBoundingClientRect(),p=e.parentElement.getBoundingClientRect(); return r.top<p.top-1||r.bottom>p.bottom+1||r.left<p.left-1||r.right>p.right+1;});
+      return {frame, aligned: Math.abs(frame.y-queue.y)<1 && Math.abs(frame.height-queue.height)<1, clipped, rows:document.querySelectorAll('.public-turn').length, overflow:document.documentElement.scrollWidth>innerWidth||document.documentElement.scrollHeight>innerHeight};
+    })()`,
+      );
+    for (const [width, height] of [
+      [1920, 1080],
+      [2560, 1440],
+      [3840, 2160],
+    ]) {
+      publica.webContents.enableDeviceEmulation({
+        screenPosition: 'desktop',
+        screenSize: { width, height },
+        viewPosition: { x: 0, y: 0 },
+        viewSize: { width, height },
+        deviceScaleFactor: 1,
+        scale: Math.min(1, 1920 / width, 1080 / height),
+      });
+      await pausa(500);
+      assert.deepEqual(await ejecutar(publica, '[innerWidth, innerHeight]'), [width, height]);
+      const normal = await medir();
+      assert.equal(normal.rows, 6);
+      assert.ok(normal.aligned && !normal.clipped && !normal.overflow, JSON.stringify(normal));
+      await capturar(publica, `publica-normal-${width}.png`);
+      const ticker = () =>
+        ejecutar(
+          publica,
+          "getComputedStyle(document.querySelector('.footer-ticker-track')).transform",
+        );
+      const antes = await ticker();
+      await pausa(150);
+      assert.notEqual(await ticker(), antes);
+      await ejecutar(operador, "window.turnero.despachar({tipo:'LLAMAR',entrada:'44'})");
+      await esperar(
+        () => ejecutar(publica, "Boolean(document.querySelector('.announcement-number'))"),
+        'No apareció el anuncio',
+      );
+      await pausa(600);
+      const activo = await medir();
+      assert.deepEqual(activo.frame, normal.frame, 'El marco multimedia cambió de tamaño');
+      assert.ok(!activo.clipped && !activo.overflow, JSON.stringify(activo));
+      await capturar(publica, `publica-anuncio-${width}.png`);
+      await esperar(
+        () => ejecutar(publica, "!document.querySelector('.public-focus.is-visible')"),
+        'No empezó la salida',
+      );
+      await esperar(
+        () => ejecutar(publica, "!document.querySelector('.announcement-number')"),
+        'No terminó la salida',
+      );
+      assert.deepEqual((await medir()).frame, normal.frame);
+    }
+    console.log(
+      'PASS: seis pedidos, ticker en movimiento, anuncio y salida sin cambios de geometría ni recortes en 1080p, 1440p y 4K.',
+    );
     console.log(
       'PASS: anuncios 55→66, menú en dos tamaños, eliminación sin restauración y anuncio centrado sobre multimedia/YouTube.',
     );

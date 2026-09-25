@@ -1,22 +1,42 @@
+import { useEffect, useState } from 'react';
 import type { Anuncio } from '../../main/contrato';
 import { formatear } from '../../nucleo/turnos';
 import { Icon } from '../comun/components/Icon';
 
-export function TarjetaAnuncio({ anuncio }: { anuncio: Anuncio }) {
+export function TarjetaAnuncio({ anuncio }: { anuncio: Anuncio | null }) {
+  // Retener la presentación durante la salida sin cambiar la cola ni el audio.
+  const [visible, setVisible] = useState(anuncio);
+  useEffect(() => {
+    if (anuncio) setVisible(anuncio);
+  }, [anuncio]);
   return (
-    <section className="public-focus" aria-label="Anuncio de turno">
-      <div className="announcement-backdrop" role="status" aria-live="assertive" aria-atomic="true">
-        <div className="announcement-card glass-panel" key={anuncio.id}>
-          <span className="announcement-caption">TURNO</span>
-          <strong className="announcement-number">{formatear(anuncio.n)}</strong>
-          <span className="announcement-pickup">Acércate a recoger tu pedido</span>
-          <div className="announcement-rule" />
-          <p>
-            <Icon name="receipt" />
-            Presenta tu ticket en la barra
-          </p>
+    <section
+      className={`public-focus ${anuncio ? 'is-visible' : ''}`}
+      aria-label="Anuncio de turno"
+      aria-hidden={!anuncio}
+      onTransitionEnd={(event) => {
+        if (event.target === event.currentTarget && !anuncio) setVisible(null);
+      }}
+    >
+      {visible && (
+        <div
+          className="announcement-backdrop"
+          role="status"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div className="announcement-card glass-panel" key={visible.id}>
+            <span className="announcement-status">Tu pedido está listo</span>
+            <strong className="announcement-number">{formatear(visible.n)}</strong>
+            <span className="announcement-pickup">Acércate a recoger tu pedido</span>
+            <div className="announcement-rule" />
+            <p>
+              <Icon name="receipt" />
+              Presenta tu ticket en la barra
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

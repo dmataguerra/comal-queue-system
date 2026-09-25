@@ -18,9 +18,10 @@
 }
 .public-animated-background {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  /* Sangrado para que el movimiento no descubra los bordes rectos del SVG. */
+  inset: -2vmax;
+  width: calc(100% + 4vmax);
+  height: calc(100% + 4vmax);
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
@@ -46,38 +47,6 @@
 .paint-dot.blue {
   fill: #75a7d8;
 }
-.paint-upper-left {
-  animation: paint-one 14s;
-}
-.paint-upper-right {
-  animation: paint-two 16s;
-}
-.paint-lower-left {
-  animation: paint-three 12s;
-}
-.paint-lower-right {
-  animation: paint-four 15s;
-}
-@keyframes paint-one {
-  to {
-    transform: translate3d(7px, 5px, 0) scale(1.015) rotate(0.7deg);
-  }
-}
-@keyframes paint-two {
-  to {
-    transform: translate3d(-6px, 5px, 0) scale(1.02) rotate(-0.5deg);
-  }
-}
-@keyframes paint-three {
-  to {
-    transform: translate3d(5px, -7px, 0) scale(0.985) rotate(0.8deg);
-  }
-}
-@keyframes paint-four {
-  to {
-    transform: translate3d(-8px, -5px, 0) scale(1.018) rotate(-0.6deg);
-  }
-}
 .public-queue,
 .public-media-frame,
 .display-notices,
@@ -92,7 +61,7 @@
   position: relative;
   border: 1px solid #c6d9ec;
   border-radius: 26px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.91), rgba(244, 249, 253, 0.82));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 253, 0.96));
   backdrop-filter: blur(12px);
   box-shadow:
     0 18px 45px rgba(18, 58, 94, 0.12),
@@ -144,92 +113,72 @@
   flex-direction: column;
   animation: queue-in 0.4s var(--ease);
 }
-/* Seis filas como máximo: el actual más los cinco llamados (MAX_LLAMADOS). */
+/* Se conservan los seis pedidos vigentes, con más espacio para el destacado. */
 .public-turn {
   min-height: 0;
-  flex: 0 1 16.6%;
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 1.5vw;
-  padding: 0.75vh 0.7vw;
+  justify-content: center;
+  padding: 0.5vh 0.7vw;
   border-top: 1px solid #d8e5f0;
-  position: relative;
 }
 .public-turn.latest {
-  border: 1px solid #8db6da;
+  flex: 2.2;
+  flex-direction: column;
+  gap: 0.6vh;
+  border: 0;
   background: linear-gradient(110deg, #e3f1fb, #f7fbff);
-  box-shadow: 0 8px 22px rgba(21, 81, 125, 0.1);
   border-radius: 16px;
-  margin-bottom: 0.9vh;
+  margin-bottom: 1vh;
 }
+.public-turn:first-child,
 .public-turn.latest + .public-turn {
-  border-top-color: transparent;
-}
-.public-turn.calling {
-  border-color: #0a5ea2;
-  animation: queue-highlight 0.8s var(--ease);
+  border-top: 0;
 }
 .public-turn > strong {
   color: #073e70;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  font-size: min(6.2vw, 10.1vh);
+  font-size: min(6.2vw, 8.2vh);
   line-height: 1;
-  letter-spacing: -0.3vw;
-  min-width: 9.4vw;
+  letter-spacing: -0.03em;
 }
-.public-turn-detail {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1vh;
+.public-turn.latest > strong {
+  font-size: min(8vw, 12vh);
 }
 .public-turn-state {
-  color: #376b98;
-  font-size: 0.72vw;
+  color: #0758a0;
+  font-size: clamp(11px, 0.95vw, 36px);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-.public-turn.latest .public-turn-state {
-  color: #0758a0;
-}
 .pickup-label {
-  font-size: 1vw;
+  font-size: clamp(12px, 1vw, 38px);
   color: #173e60;
-  gap: 0.6vw;
   font-weight: 600;
-}
-.public-turn > .icon {
-  margin-left: auto;
-  width: 1.2vw;
-  height: 1.2vw;
-  color: #79a5c8;
-}
-@keyframes queue-highlight {
-  from {
-    background-color: #d9edfc;
-  }
-  to {
-    background-color: transparent;
-  }
 }
 .public-media-frame {
   position: relative;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: 7px solid rgba(255, 255, 255, 0.88);
+  border: 1px solid #b8d0e6;
   border-radius: 26px;
   background: #0a2743;
-  box-shadow:
-    0 18px 45px rgba(18, 58, 94, 0.2),
-    0 0 0 1px #b8d0e6;
+  box-shadow: 0 18px 45px rgba(18, 58, 94, 0.2);
 }
 .public-media {
   position: absolute;
   inset: 0;
   overflow: hidden;
+}
+.public-media {
+  transition: filter 300ms ease;
+}
+.is-announcing .public-media {
+  filter: brightness(0.45);
 }
 .public-media:after {
   content: '';
@@ -311,6 +260,8 @@
   animation: trojan-frames 25s steps(1, end) infinite;
 }
 .public-focus {
+  opacity: 0;
+  transition: opacity 300ms ease;
   position: absolute;
   inset: 0;
   z-index: 4;
@@ -320,6 +271,16 @@
   flex-direction: column;
   padding: clamp(20px, 2vw, 38px);
   pointer-events: none;
+}
+.public-focus.is-visible {
+  opacity: 1;
+}
+.public-focus .announcement-card {
+  transform: scale(0.96);
+  transition: transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.public-focus.is-visible .announcement-card {
+  transform: scale(1);
 }
 .announcement-backdrop {
   flex: 1;
@@ -336,30 +297,31 @@
   align-items: center;
   flex-direction: column;
   color: #123b5e;
-  border: 1px solid #b9d4e9;
-  background: rgba(255, 255, 255, 0.94);
+  border: 0;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(12px);
-  animation: announce-in 0.7s var(--ease);
+  animation: announce-in 450ms cubic-bezier(0.2, 0.7, 0.2, 1);
   box-shadow: 0 22px 54px rgba(0, 31, 57, 0.28);
 }
-.announcement-caption {
-  color: #376b98;
-  font-size: 0.8vw;
+.announcement-status {
+  font-size: clamp(14px, 1.2vw, 46px);
   font-weight: 700;
-  letter-spacing: 0.35vw;
-  margin-top: 2.6vh;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 .announcement-number {
   color: #064b86;
-  font-size: min(19vw, 34vh);
+  font-size: min(23vw, 40vh);
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   line-height: 1.03;
   letter-spacing: -0.9vw;
-  margin: 0.5vh 0 1.4vh;
+  margin: 2vh 0;
+  animation: number-emphasis 450ms ease-out;
 }
 .announcement-pickup {
-  font-size: 1.65vw;
+  font-size: 1.4vw;
+  text-transform: uppercase;
   font-weight: 700;
 }
 .announcement-rule {
@@ -621,6 +583,9 @@
   .announcement-number {
     font-size: 22vw;
   }
+  .announcement-status {
+    font-size: 1.3vw;
+  }
   .announcement-pickup {
     font-size: 2vw;
   }
@@ -713,10 +678,9 @@
     padding: 26px 22px;
     border-radius: 20px;
   }
-  .announcement-caption {
-    font-size: 10px;
-    letter-spacing: 4px;
-    margin-top: 16px;
+  .announcement-status {
+    font-size: 12px;
+    padding: 7px 13px;
   }
   .announcement-number {
     font-size: 150px;
@@ -770,7 +734,7 @@
   }
 }
 
-/* Focused polish: integrated border and independent SVG motion. */
+/* Una sola capa de movimiento por pieza: recorridos suaves y desfasados. */
 
 .paint-motion {
   transform-box: fill-box;
@@ -782,19 +746,19 @@
 }
 .paint-large {
   animation-name: paint-large-drift;
-  animation-duration: 13.5s;
+  animation-duration: 11s;
 }
 .paint-small {
   animation-name: paint-small-drift;
-  animation-duration: 10.5s;
+  animation-duration: 9s;
 }
 .paint-dot-motion {
   animation-name: paint-dot-drift;
-  animation-duration: 8.5s;
+  animation-duration: 7s;
 }
 .paint-line-motion {
   animation-name: paint-line-drift;
-  animation-duration: 15s;
+  animation-duration: 12s;
 }
 .motion-a {
   animation-delay: -2.7s;
@@ -821,26 +785,48 @@
 }
 @keyframes paint-large-drift {
   to {
-    transform: translate3d(13px, 9px, 0) scale(1.032) rotate(1.25deg);
+    transform: translate3d(28px, 18px, 0) scale(1.045) rotate(1.5deg);
   }
 }
 @keyframes paint-small-drift {
   to {
-    transform: translate3d(-10px, 8px, 0) scale(0.982) rotate(-0.9deg);
+    transform: translate3d(-24px, 20px, 0) scale(1.02) rotate(-1.5deg);
   }
 }
 @keyframes paint-dot-drift {
   to {
-    transform: translate3d(9px, -8px, 0) scale(1.035);
+    transform: translate3d(20px, -22px, 0);
   }
 }
 @keyframes paint-line-drift {
   to {
-    transform: translate3d(-8px, 6px, 0) scale(1.018) rotate(0.7deg);
+    transform: translate3d(-18px, 14px, 0) rotate(1.2deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .paint-motion {
+    animation: none;
+  }
+}
+
+@keyframes number-emphasis {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-media,
+  .public-focus,
+  .public-focus .announcement-card {
+    transition-duration: 0.01ms;
+  }
+  .announcement-card,
+  .announcement-number,
+  .public-turn-list {
     animation: none;
   }
 }
