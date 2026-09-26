@@ -15,13 +15,8 @@ import type {
   ResultadoDespacho,
   ResultadoImportacion,
   TurneroApi,
-} from '../../main/contrato';
-
-declare global {
-  interface Window {
-    turnero?: TurneroApi;
-  }
-}
+} from '../../shared/contract';
+import { getQueueTransport } from './transport';
 
 interface Contexto extends Inicial {
   diagnostico: TurneroApi['diagnostico'];
@@ -39,7 +34,7 @@ const TurneroContext = createContext<Contexto | null>(null);
 
 /** Las vistas nunca tocan el núcleo: reciben estado y despachan acciones por el adaptador (§2). */
 export function TurneroProvider({ children }: { children: ReactNode }) {
-  const api = window.turnero;
+  const api = getQueueTransport();
   const [inicial, setInicial] = useState<Inicial | null>(null),
     [error, setError] = useState('');
   const anuncios = useRef(new Set<(anuncio: Anuncio) => void>());

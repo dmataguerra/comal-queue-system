@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './multimedia.css';
 import { YouTubePanel } from './YouTubePanel';
-import type { CategoriaContenido } from '../../main/contrato';
+import type { CategoriaContenido } from '../../shared/contract';
 import { Icon } from '../comun/components/Icon';
 import { useTurnero } from '../comun/turnero';
 

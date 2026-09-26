@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Diagnostico } from '../../main/contrato';
+import type { Diagnostico } from '../../shared/contract';
 import { useTurnero } from '../comun/turnero';
 
 const fecha = (valor: string | null) =>

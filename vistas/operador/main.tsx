@@ -8,6 +8,9 @@ import '@fontsource/montserrat/800.css';
 import '../comun/styles/base.css';
 import '../comun/styles/public.css';
 import '../comun/styles/admin.css';
+import '../comun/styles/tema.css';
+import '../comun/tamanio';
+import '../comun/styles/interfaz.css';
 import { TurneroProvider } from '../comun/turnero';
 import { OperadorPage } from './OperadorPage';
 createRoot(document.getElementById('root')!).render(

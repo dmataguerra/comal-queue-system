@@ -1,4 +1,4 @@
-import type { Inventario } from '../../main/contrato';
+import type { Inventario } from '../../shared/contract';
 
 // §6 · Todo el audio se decodifica al arrancar: en el camino crítico nunca se lee disco.
 let contexto: AudioContext | null = null;

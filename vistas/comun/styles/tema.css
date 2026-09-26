@@ -1,0 +1,79 @@
+/* La paleta azul permanece en los fallbacks de cada componente. */
+:root[data-tema='morado'] {
+  --background-indigo: #8069e9;
+  --background-pink: #f8c7ee;
+  --background-blue: #68a4fa;
+  --background-blue-soft: #dcecff;
+  --background-fog: #eee8ff;
+  --background-line: #af9dfa;
+  --theme-primary: #6c5ce7;
+  --theme-strong: #5142b8;
+  --theme-hover: #5b4acb;
+  --theme-ink: #171a2c;
+  --theme-muted: #62647b;
+  --theme-border: #e8eaf2;
+  --theme-control-border: #b8b0df;
+  --theme-pale: #eeebfc;
+  --theme-soft: #f7f8fc;
+  --theme-pink: #f472b6;
+  --theme-light-blue: #cfe5fc;
+  --theme-blue: #3b82f6;
+  --theme-sidebar: #493a9a;
+  --theme-sidebar-end: #34276e;
+  --theme-media: #211b3e;
+  --theme-shadow-rgb: 45, 32, 85;
+  --theme-primary-rgb: 108, 92, 231;
+  --theme-pale-rgb: 238, 235, 252;
+  --theme-border-rgb: 216, 210, 238;
+  --theme-soft-rgb: 247, 248, 252;
+}
+.theme-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--theme-strong, #075091);
+  font-size: 12px;
+  font-weight: 600;
+}
+.theme-switch-track {
+  display: flex;
+  align-items: center;
+  width: 42px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 99px;
+  background: var(--theme-primary, #0758bd);
+}
+.theme-switch-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #171a2c40;
+  transition: transform 180ms ease;
+}
+.theme-switch[aria-checked='true'] .theme-switch-thumb {
+  transform: translateX(18px);
+}
+.theme-switch:focus-visible {
+  outline: 2px solid var(--theme-primary, #0758bd);
+}
+:root[data-tema='morado'] button:focus-visible,
+:root[data-tema='morado'] a:focus-visible {
+  outline-color: var(--theme-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch-thumb {
+    transition: none;
+  }
+}

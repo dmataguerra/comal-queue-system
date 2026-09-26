@@ -1,4 +1,8 @@
-/** Decorative-only layer. Motion is handled by CSS, with no animation loop. */
+/**
+ * Capa decorativa inspirada directamente en la composición de referencia:
+ * un centro despejado y ondas superpuestas que entran por las esquinas.
+ * La geometría es fija; las variaciones suaves viven solamente en CSS.
+ */
 export function AnimatedBackground() {
   return (
     <svg
@@ -8,95 +12,58 @@ export function AnimatedBackground() {
       aria-hidden="true"
       focusable="false"
     >
-      <g className="paint-corner paint-upper-left">
-        <g className="paint-motion paint-large motion-a">
+      {/* Esquina superior izquierda: dos manchas amplias y una cinta clara. */}
+      <g className="background-motion background-top-left">
+        <g transform="scale(.78)">
           <path
-            className="paint-navy"
-            d="M0 0h161c-12 42 19 57 4 93-16 38-83 42-115 33-27-8-37-1-50 8V0Z"
+            className="background-blob background-indigo"
+            d="M0 0h336c94 39 135 111 128 187-7 75-79 119-144 92C-45 253-91 192-136 139V0Z"
           />
-        </g>
-        <g className="paint-motion paint-small motion-b">
           <path
-            className="paint-light"
-            d="M0 98c28-12 46 5 48 36 2 27 19 42 49 41 21-1 39-18 36-46 40 15 60 53 37 79-22 26-69 19-88 1-24-23-58-12-82 1V98Z"
+            className="background-blob background-pink background-pink-top"
+            d="M211 0c97 41 196 100 219 175 24 75-30 143-106 153-80 11-140-42-209-80C64 217 21 195 0 182V0h211Z"
           />
-        </g>
-        <g className="paint-motion paint-line-motion motion-c">
-          <path className="paint-line" d="M143 75c45-26 65 32 112 34 51 3 83-22 81-80" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-d">
-          <circle className="paint-dot pale" cx="227" cy="37" r="14" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-e">
-          <circle className="paint-dot navy" cx="238" cy="138" r="12" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-f">
-          <circle className="paint-dot pale" cx="121" cy="319" r="19" />
+          <path
+            className="background-blob background-fog"
+            d="M0 239c69-48 141-42 205-9 66 34 96 90 136 119-79 12-163 65-211 138-36 54-76 59-130 51V239Z"
+          />
         </g>
       </g>
-      <g className="paint-corner paint-upper-right">
-        <g className="paint-motion paint-large motion-b">
+
+      <g className="background-motion background-top-right" />
+
+      {/* Esquina inferior izquierda: azul sólido, velo translúcido y línea de contorno. */}
+      <g className="background-motion background-bottom-left">
+        <g transform="translate(0 238) scale(.78)">
           <path
-            className="paint-light"
-            d="M1615 0h305v144c-29-9-44-26-69-42-35-24-76-14-105-33-27-18-39-43-41-69Z"
+            className="background-blob background-blue"
+            d="M0 647c74-15 160 8 223 73 73 76 70 156 144 186 51 21 95-5 159 7 103 19 155 78 172 167H0V647Z"
           />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-d">
-          <circle className="paint-dot pale" cx="1815" cy="131" r="15" />
+          <path
+            className="background-blob background-blue-soft"
+            d="M0 521c89 1 157 42 218 108 62 67 101 153 192 181 45 14 91 5 143 27 64 27 104 78 121 143H0V521Z"
+          />
+          <path
+            className="background-line"
+            d="M0 518c103-3 174 42 235 110 66 74 114 150 205 175 76 21 169 7 252 53 88 49 129 127 155 224"
+          />
         </g>
       </g>
-      <g className="paint-corner paint-lower-left">
-        <g className="paint-motion paint-small motion-c">
+
+      {/* Esquina inferior derecha: capas rosa, lila y violeta como la referencia. */}
+      <g className="background-motion background-bottom-right">
+        <g transform="translate(422 238) scale(.78)">
           <path
-            className="paint-light"
-            d="M0 780c35 0 49-34 80-29 33 5 61 40 46 71-12 25-40 28-58 44-17 15-26 33-68 31V780Z"
+            className="background-blob background-lilac"
+            d="M889 1080c13-107 63-181 157-230 74-39 135-57 184-124 58-80 128-128 223-136 94-8 163 25 220 72 74 61 152 41 247 56v362H889Z"
           />
-        </g>
-        <g className="paint-motion paint-line-motion motion-a">
           <path
-            className="paint-line"
-            d="M0 644c38 6 25 55 63 66 28 8 55-2 64 31 9 34 37 56 64 51"
+            className="background-blob background-pink"
+            d="M1101 1080c7-86 49-139 128-170 74-29 127-20 171-73 42-49 48-126 109-186 68-68 154-90 245-66 64 17 111 54 166 76v338h-819Z"
           />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-e">
-          <circle className="paint-dot navy" cx="170" cy="745" r="17" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-f">
-          <circle className="paint-dot pale" cx="232" cy="782" r="17" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-d">
-          <circle className="paint-dot blue" cx="102" cy="890" r="23" />
-        </g>
-      </g>
-      <g className="paint-corner paint-lower-right">
-        <g className="paint-motion paint-small motion-a">
           <path
-            className="paint-light"
-            d="M1920 462c-48-6-70 31-58 70 8 26 33 37 38 70 4 27-13 51-37 59 22 18 37 22 57 19V462Z"
-          />
-        </g>
-        <g className="paint-motion paint-large motion-c">
-          <path className="paint-navy" d="M1920 681c-29-9-48 6-52 33-5 31 13 59 52 61v-94Z" />
-        </g>
-        <g className="paint-motion paint-line-motion motion-b">
-          <path
-            className="paint-line"
-            d="M1745 753c40-20 53 10 48 38-4 28 26 25 45 41 19 16 25 44 16 67"
-          />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-f">
-          <circle className="paint-dot navy" cx="1813" cy="626" r="15" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-e">
-          <circle className="paint-dot pale" cx="1707" cy="755" r="12" />
-        </g>
-        <g className="paint-motion paint-dot-motion motion-d">
-          <circle className="paint-dot navy" cx="1814" cy="894" r="17" />
-        </g>
-        <g className="paint-motion paint-small motion-c">
-          <path
-            className="paint-light"
-            d="M1788 960c28-4 42 20 62 30 23 11 46 0 70 21v81h-157c7-42 5-77 25-132Z"
+            className="background-blob background-indigo"
+            d="M1197 1080c9-104 49-166 124-198 79-34 141-9 203-49 75-48 98-116 188-149 72-27 144-16 208 18v358h-723Z"
           />
         </g>
       </g>

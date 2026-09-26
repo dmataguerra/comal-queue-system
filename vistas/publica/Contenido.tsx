@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Config } from '../../main/contrato';
+import type { Config } from '../../shared/contract';
 import { useTurnero } from '../comun/turnero';
 import { YouTubeVideo } from './YouTubeVideo';
 

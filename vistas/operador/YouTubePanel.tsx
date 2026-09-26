@@ -44,7 +44,7 @@ export function YouTubePanel({
         </span>
         <div>
           <h2>YouTube</h2>
-          <p>Video o playlist en reproducción continua. Requiere internet.</p>
+          <p>Requiere internet.</p>
         </div>
       </div>
       <form onSubmit={reproducir} className="youtube-form">
@@ -72,11 +72,6 @@ export function YouTubePanel({
             Usar contenido local
           </button>
         </div>
-        <p className="section-subtitle">
-          {config.youtubeUrl
-            ? 'Fuente seleccionada: YouTube. El video se repite o la playlist continúa automáticamente.'
-            : 'Fuente seleccionada: videos e imágenes locales.'}
-        </p>
       </form>
     </section>
   );

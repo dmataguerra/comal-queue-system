@@ -7,6 +7,9 @@ import '@fontsource/montserrat/700.css';
 import '@fontsource/montserrat/800.css';
 import '../comun/styles/base.css';
 import '../comun/styles/public.css';
+import '../comun/styles/tema.css';
+import '../comun/tamanio';
+import '../comun/tema';
 import { TurneroProvider } from '../comun/turnero';
 import { PublicaPage } from './PublicaPage';
 createRoot(document.getElementById('root')!).render(

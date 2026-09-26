@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatear } from '../../nucleo/turnos';
 import { crearCola } from '../../nucleo/cola';
-import type { Anuncio } from '../../main/contrato';
+import type { Anuncio } from '../../shared/contract';
 import { useTurnero } from '../comun/turnero';
 import { cerrarAudio, pausa, precargar, reproducir } from './audio';
 

@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatear, normalizar } from '../../nucleo/turnos';
 import { useTurnero } from '../comun/turnero';
+import { useTema } from '../comun/tema';
 import { useClock } from '../comun/hooks/useClock';
 import { Brand } from '../comun/components/Brand';
 import { Icon } from '../comun/components/Icon';
 import { Modal } from '../comun/components/Modal';
-import { AnimatedBackground } from '../comun/components/AnimatedBackground';
 import { MultimediaPanel } from './MultimediaPanel';
-import { MenuTurno } from './MenuTurno';
+import { SizeControl } from '../comun/components/SizeControl';
 import { DiagnosticoPanel } from './DiagnosticoPanel';
 
 /** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
+  const { tema, cambiarTema } = useTema();
   const { instantanea, pantallas, despachar } = useTurnero(),
     clock = useClock();
   const { actual, llamados, puedeDeshacer } = instantanea;
@@ -21,11 +22,14 @@ export function OperadorPage() {
     [mensaje, setMensaje] = useState(''),
     [esError, setEsError] = useState(false),
     [ayuda, setAyuda] = useState(false),
-    [menu, setMenu] = useState<number | null>(null);
+    [pendiente, setPendiente] = useState<{ numero: number; tipo: 'anunciar' | 'quitar' } | null>(
+      null,
+    ),
+    [noPreguntar, setNoPreguntar] = useState(false);
+  const omitirConfirmacion = useRef(false);
   const input = useRef<HTMLInputElement>(null),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previa = normalizar(entrada);
-  const cerrarMenu = useCallback(() => setMenu(null), []);
   function notificar(texto: string, error = false) {
     setMensaje(texto);
     setEsError(error);
@@ -79,7 +83,6 @@ export function OperadorPage() {
   }
   async function accionDeFila(hacer: () => Promise<void>) {
     if (ocupado) return;
-    setMenu(null);
     setOcupado(true);
     try {
       await hacer();
@@ -100,24 +103,36 @@ export function OperadorPage() {
       await despachar({ tipo: 'QUITAR', n });
       notificar(`Turno ${formatear(n)} quitado de la TV.`);
     });
-  // El menú abierto se cierra con Escape, al hacer clic fuera y cuando la TV cambia por otra vía.
-  useEffect(() => {
-    if (menu === null) return;
-    const cerrar = () => setMenu(null);
-    window.addEventListener('click', cerrar);
-    return () => window.removeEventListener('click', cerrar);
-  }, [menu]);
-  useEffect(() => {
-    setMenu(null);
-  }, [actual, llamados]);
+  function solicitarAccion(numero: number, tipo: 'anunciar' | 'quitar') {
+    if (ocupado || pendiente) return;
+    if (omitirConfirmacion.current) {
+      void (tipo === 'anunciar' ? anunciarDeNuevo(numero) : quitarTurno(numero));
+    } else {
+      setNoPreguntar(false);
+      setPendiente({ numero, tipo });
+    }
+  }
+  function confirmarAccion() {
+    if (!pendiente || ocupado) return;
+    const { numero, tipo } = pendiente;
+    setPendiente(null);
+    if (numero !== actual && !llamados.includes(numero)) {
+      notificar('Ese turno ya no está en pantalla. No se realizó la acción.', true);
+      return;
+    }
+    if (noPreguntar) omitirConfirmacion.current = true;
+    void (tipo === 'anunciar' ? anunciarDeNuevo(numero) : quitarTurno(numero));
+  }
   useEffect(() => {
     function tecla(e: KeyboardEvent) {
       if (e.key === 'F1') {
         e.preventDefault();
         setAyuda(true);
-      } else if (e.key === 'Escape') setMenu(null);
+      }
     }
-    const enfocar = () => input.current?.focus();
+    const enfocar = () => {
+      if (!document.querySelector('dialog[open]')) input.current?.focus();
+    };
     enfocar();
     window.addEventListener('keydown', tecla);
     window.addEventListener('focus', enfocar);
@@ -149,7 +164,7 @@ export function OperadorPage() {
           : 'Turno nuevo.';
   const titulo =
     pagina === 'turnos'
-      ? { miga: 'Turnos', etiqueta: 'OPERACIÓN DIARIA', titulo: 'Llamar turnos', descripcion: '' }
+      ? { miga: 'Turnos', etiqueta: '', titulo: 'Llamar turnos', descripcion: '' }
       : pagina === 'diagnostico'
         ? {
             miga: 'Diagnósticos',
@@ -159,13 +174,12 @@ export function OperadorPage() {
           }
         : {
             miga: 'Multimedia',
-            etiqueta: 'PANTALLAS Y CONTENIDO',
+            etiqueta: '',
             titulo: 'Multimedia',
-            descripcion: 'Cambia los videos o imágenes que se muestran en la pantalla 2.',
+            descripcion: '',
           };
   return (
     <div className="admin-shell">
-      <AnimatedBackground />
       <a href="#admin-main" className="skip-link">
         Ir al contenido
       </a>
@@ -174,6 +188,8 @@ export function OperadorPage() {
         <span className="nav-label">ESPACIO DE TRABAJO</span>
         <nav aria-label="Navegación principal">
           <button
+            aria-label="Turnos"
+            title="Turnos"
             className={pagina === 'turnos' ? 'active' : ''}
             aria-current={pagina === 'turnos' ? 'page' : undefined}
             onClick={() => {
@@ -186,11 +202,12 @@ export function OperadorPage() {
             {pagina === 'turnos' && <i className="nav-active-dot" />}
           </button>
           <button
+            aria-label="Multimedia"
+            title="Multimedia"
             className={pagina === 'multimedia' ? 'active' : ''}
             aria-current={pagina === 'multimedia' ? 'page' : undefined}
             onClick={() => {
               setPagina('multimedia');
-              setMenu(null);
               window.scrollTo({ top: 0 });
             }}
           >
@@ -198,20 +215,14 @@ export function OperadorPage() {
             <span>Multimedia</span>
             {pagina === 'multimedia' && <i className="nav-active-dot" />}
           </button>
-          <button onClick={() => setAyuda(true)}>
+          <button aria-label="Ayuda" title="Ayuda" onClick={() => setAyuda(true)}>
             <Icon name="info" />
             <span>Ayuda</span>
           </button>
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-session">
-            <span className="session-avatar">
-              <Icon name="counter" />
-            </span>
-            <div>
-              <strong>Barra</strong>
-              <span>Operación local</span>
-            </div>
+          <div className="sidebar-faculty">
+            <img src="/assets/uaq-informatica-logo.png" alt="Facultad de Informática · UAQ" />
           </div>
         </div>
       </aside>
@@ -222,15 +233,38 @@ export function OperadorPage() {
             <Icon name="chevron" />
             <span>{titulo.miga}</span>
           </div>
-          <button className="button secondary help-button" onClick={() => setAyuda(true)}>
-            <Icon name="info" />
-            Ayuda<kbd>F1</kbd>
-          </button>
+          <div className="theme-controls">
+            <SizeControl notificar={notificar} />
+            <button
+              type="button"
+              className="theme-switch"
+              role="switch"
+              aria-checked={tema === 'morado'}
+              aria-label="Tema morado en operador y cliente"
+              title="Cambiar el tema de ambas pantallas"
+              onClick={() => {
+                try {
+                  cambiarTema();
+                } catch {
+                  notificar('No se pudo guardar el tema. Intenta de nuevo.', true);
+                }
+              }}
+            >
+              <span className="theme-switch-track" aria-hidden="true">
+                <span className="theme-switch-thumb" />
+              </span>
+              <span>{tema === 'morado' ? 'Morado' : 'Azul'}</span>
+            </button>
+            <button className="button secondary help-button" onClick={() => setAyuda(true)}>
+              <Icon name="info" />
+              Ayuda<kbd>F1</kbd>
+            </button>
+          </div>
         </header>
         <main id="admin-main" className="admin-main" tabIndex={-1}>
           <div className="page-heading">
             <div>
-              <span className="eyebrow">{titulo.etiqueta}</span>
+              {titulo.etiqueta && <span className="eyebrow">{titulo.etiqueta}</span>}
               <h1>{titulo.titulo}</h1>
               {titulo.descripcion && <p>{titulo.descripcion}</p>}
             </div>
@@ -349,7 +383,6 @@ export function OperadorPage() {
                 <section className="panel ready-panel" aria-labelledby="screen-heading">
                   <div className="ready-heading">
                     <div>
-                      <span className="eyebrow">LO QUE VE EL CLIENTE</span>
                       <h2 id="screen-heading">
                         En pantalla{' '}
                         <span className="count-badge">
@@ -375,30 +408,41 @@ export function OperadorPage() {
                             <span className="counter-dash">{nota}</span>
                           )}
                         </div>
-                        <MenuTurno
-                          numero={n}
-                          abierto={menu === n}
-                          ocupado={ocupado}
-                          alternar={() => setMenu(menu === n ? null : n)}
-                          cerrar={cerrarMenu}
-                          anunciar={() => void anunciarDeNuevo(n)}
-                          quitar={() => void quitarTurno(n)}
-                        />
+                        <div
+                          className="turn-actions"
+                          role="group"
+                          aria-label={`Acciones del turno ${formatear(n)}`}
+                        >
+                          <button
+                            type="button"
+                            className="turn-action"
+                            disabled={ocupado}
+                            aria-label={`Anunciar de nuevo el turno ${formatear(n)}`}
+                            title="Anunciar de nuevo"
+                            onClick={() => solicitarAccion(n, 'anunciar')}
+                          >
+                            <Icon name="volume" />
+                            <span>Anunciar</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="turn-action danger"
+                            disabled={ocupado}
+                            aria-label={`Quitar de la pantalla el turno ${formatear(n)}`}
+                            title="Quitar de la pantalla"
+                            onClick={() => solicitarAccion(n, 'quitar')}
+                          >
+                            <Icon name="trash" />
+                            <span>Quitar</span>
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {actual === null && (
                       <div className="empty-state">
-                        <span className="empty-icon">
-                          <Icon name="checkCircle" />
-                        </span>
                         <h3>Sin llamados en esta jornada</h3>
-                        <p>El primer número que anuncies aparecerá aquí y en la TV.</p>
                       </div>
                     )}
-                  </div>
-                  <div className="ready-list-footer">
-                    <Icon name="monitor" />
-                    <span>La TV muestra el turno actual y hasta 5 llamados.</span>
                   </div>
                 </section>
               </div>
@@ -421,6 +465,40 @@ export function OperadorPage() {
           <Icon name={esError ? 'warning' : 'checkCircle'} />
           {mensaje}
         </div>
+      )}
+      {pendiente && (
+        <Modal title="¿Deseas confirmar la acción?" onClose={() => setPendiente(null)}>
+          <p className="modal-copy">
+            {pendiente.tipo === 'anunciar'
+              ? `Se anunciará de nuevo el turno ${formatear(pendiente.numero)} en la TV, con aviso y voz.`
+              : `Se quitará el turno ${formatear(pendiente.numero)} de la pantalla.`}
+          </p>
+          <label className="session-confirmation">
+            <input
+              type="checkbox"
+              checked={noPreguntar}
+              onChange={(e) => setNoPreguntar(e.target.checked)}
+            />
+            <span>No volver a mostrar durante esta sesión</span>
+          </label>
+          <p className="field-hint">
+            Aplica a Anunciar y Quitar. Al volver a abrir la aplicación se pedirá confirmación otra
+            vez.
+          </p>
+          <div className="modal-actions">
+            <button type="button" className="button secondary" onClick={() => setPendiente(null)}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={`button ${pendiente.tipo === 'quitar' ? 'danger' : 'primary'}`}
+              onClick={confirmarAccion}
+              disabled={ocupado}
+            >
+              {pendiente.tipo === 'anunciar' ? 'Confirmar anuncio' : 'Confirmar quitar'}
+            </button>
+          </div>
+        </Modal>
       )}
       {ayuda && (
         <Modal
@@ -455,12 +533,12 @@ export function OperadorPage() {
               terminan en orden.
             </dd>
             <dt>
-              <Icon name="more" /> Acciones de un turno
+              <Icon name="volume" /> Acciones de un turno
             </dt>
             <dd>
-              Cada turno de <strong>En pantalla</strong> tiene un menú:{' '}
-              <strong>Anunciar de nuevo</strong> añade su voz a la cola, y{' '}
-              <strong>Quitar de la pantalla</strong> lo borra y descarta la corrección pendiente.
+              Cada turno de <strong>En pantalla</strong> tiene dos botones:{' '}
+              <strong>Anunciar</strong> añade su voz a la cola, y <strong>Quitar</strong> lo borra y
+              descarta la corrección pendiente.
             </dd>
             <dt>
               <Icon name="monitor" /> La TV no muestra nada

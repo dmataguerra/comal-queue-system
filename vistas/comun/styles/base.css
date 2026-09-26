@@ -39,7 +39,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-scale, 1));
   line-height: 1.5;
 }
 button,
@@ -145,7 +145,7 @@ p {
   justify-content: center;
   gap: 9px;
   padding: 11px 18px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale, 1));
   font-weight: 600;
   white-space: nowrap;
   transition:
@@ -266,7 +266,7 @@ textarea {
 label,
 .form-label {
   display: block;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale, 1));
   color: #c2cee0;
   font-weight: 500;
   margin-bottom: 8px;
@@ -347,7 +347,7 @@ label,
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 9px;
+  font-size: calc(9px * var(--ui-scale, 1));
   font-weight: 600;
   line-height: 1.5;
   letter-spacing: 1.6px;
@@ -372,7 +372,7 @@ label,
   border: 1px solid #a6bbde1a;
   background: #a6bbde0a;
   color: #a7b5ca;
-  font-size: 10px;
+  font-size: calc(10px * var(--ui-scale, 1));
   font-weight: 500;
   white-space: nowrap;
 }
@@ -393,7 +393,7 @@ label,
 }
 .field-hint {
   color: var(--muted);
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-scale, 1));
   line-height: 1.7;
   margin-top: 9px;
 }
@@ -425,12 +425,12 @@ label,
   margin-bottom: 16px;
 }
 .modal-heading h2 {
-  font-size: 21px;
+  font-size: calc(21px * var(--ui-scale, 1));
   font-weight: 600;
   letter-spacing: -0.5px;
 }
 .modal-copy {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale, 1));
   line-height: 1.9;
   color: #a7b6cc;
   margin-bottom: 23px;
@@ -452,36 +452,10 @@ label,
   color: var(--muted);
   padding: 28px;
 }
-.empty-icon {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: #20314e55;
-  border: 1px solid #8cb2ed14;
-  margin-bottom: 22px;
-}
-.empty-icon > .icon {
-  width: 28px;
-  height: 28px;
-  color: #849cbe;
-}
 .empty-state h3 {
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-scale, 1));
   color: #d3ddec;
-  margin-bottom: 10px;
   font-weight: 500;
-}
-.empty-state p {
-  max-width: 250px;
-  font-size: 12px;
-  line-height: 1.9;
-}
-.empty-caption {
-  margin-top: 24px;
-  color: #7889a4;
-  font-size: 10px;
 }
 .connection-banner {
   display: flex;
@@ -494,7 +468,7 @@ label,
   border-radius: 12px;
   margin-bottom: 20px;
   line-height: 1.7;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale, 1));
 }
 kbd {
   display: inline-grid;
@@ -514,7 +488,7 @@ kbd {
   min-height: 100dvh;
   padding: 32px;
   text-align: center;
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-scale, 1));
   color: #073e70;
   background: #f8fbfe;
 }
@@ -544,4 +518,13 @@ kbd {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Local SVG artwork inherits each control color. */
+.icon {
+  background-color: currentColor;
+  mask-size: contain;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  zoom: var(--ui-scale, 1);
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Anuncio } from '../../main/contrato';
+import type { Anuncio } from '../../shared/contract';
 import { formatear } from '../../nucleo/turnos';
 import { Icon } from '../comun/components/Icon';
 
