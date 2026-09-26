@@ -1,14 +1,11 @@
-import { app, dialog, Menu, net, protocol, shell, session } from 'electron';
-import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
-import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
-import { Readable } from 'node:stream';
-import { pathToFileURL } from 'node:url';
+import { app, dialog, Menu, protocol, shell, session } from 'electron';
+import { mkdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { conectarIpc } from './adaptador-ipc.js';
 import { leerConfig, msHastaHora, vigilarConfig } from './config.js';
 import {
   importarArchivos,
   quitarArchivo,
-  TIPOS_MIME,
   sembrarContenido,
   vigilarContenido,
 } from './contenido.js';
@@ -18,11 +15,12 @@ import type {
   Inventario,
   Pantallas,
   ResultadoImportacion,
-} from './contrato.js';
+} from '../shared/contract.js';
 import { crearRegistro } from './log.js';
 import { crearProveedorDiagnostico } from './diagnostico.js';
 import { limpiarTemporalesJson } from './temporales.js';
 import { crearCsp } from './politica-csp.js';
+import { registerContentProtocol } from './content-protocol.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
 import { crearStore } from './store.js';
 import { crearVentanas, type Vista } from './ventanas.js';
@@ -73,82 +71,6 @@ const urlVista = (vista: Vista) =>
     ? `${urlDesarrollo}/vistas/${vista}/index.html`
     : `turnero://app/vistas/${vista}/index.html`;
 
-function dentroDe(raiz: string, ruta: string): string | null {
-  const absoluta = resolve(raiz, ruta);
-  const relativa = relative(raiz, absoluta);
-  if (!relativa || relativa.startsWith('..') || isAbsolute(relativa)) return null;
-  return existsSync(absoluta) && statSync(absoluta).isFile() ? absoluta : null;
-}
-
-// Vite serves the views from HTTP in development while media uses turnero://app.
-// Permit that one origin to read local media; packaged views are same-origin.
-const cabecerasBase = {
-  'Cache-Control': 'no-cache',
-  ...(urlDesarrollo ? { 'Access-Control-Allow-Origin': new URL(urlDesarrollo).origin } : {}),
-};
-const CSP = crearCsp(false);
-
-/** Archivos de contenido con soporte de rangos: el <video> los pide por partes. */
-function servirContenido(archivo: string, rango: string | null): Response {
-  const tamano = statSync(archivo).size;
-  const tipo = TIPOS_MIME[extname(archivo).toLowerCase()] ?? 'application/octet-stream';
-  const partes = rango && /^bytes=(\d*)-(\d*)$/.exec(rango);
-  if (partes && (partes[1] || partes[2])) {
-    const inicio = partes[1] ? Number(partes[1]) : Math.max(0, tamano - Number(partes[2]));
-    const fin = partes[1] && partes[2] ? Math.min(Number(partes[2]), tamano - 1) : tamano - 1;
-    if (inicio >= tamano || inicio > fin) {
-      return new Response(null, {
-        status: 416,
-        headers: { ...cabecerasBase, 'Content-Range': `bytes */${tamano}` },
-      });
-    }
-    const cuerpo = Readable.toWeb(
-      createReadStream(archivo, { start: inicio, end: fin }),
-    ) as ReadableStream;
-    return new Response(cuerpo, {
-      status: 206,
-      headers: {
-        ...cabecerasBase,
-        'Content-Type': tipo,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': String(fin - inicio + 1),
-        'Content-Range': `bytes ${inicio}-${fin}/${tamano}`,
-      },
-    });
-  }
-  const cuerpo = Readable.toWeb(createReadStream(archivo)) as ReadableStream;
-  return new Response(cuerpo, {
-    headers: {
-      ...cabecerasBase,
-      'Content-Type': tipo,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': String(tamano),
-    },
-  });
-}
-
-function registrarProtocolo() {
-  protocol.handle('turnero', async (solicitud) => {
-    const url = new URL(solicitud.url);
-    const ruta = decodeURIComponent(url.pathname);
-    if (url.host === 'app' && ruta.startsWith('/contenido/')) {
-      const archivo = dentroDe(carpetaContenido, ruta.slice('/contenido/'.length));
-      return archivo
-        ? servirContenido(archivo, solicitud.headers.get('range'))
-        : new Response('No encontrado', { status: 404, headers: cabecerasBase });
-    }
-    const archivo = url.host === 'app' ? dentroDe(carpetaVistas, ruta.slice(1)) : null;
-    if (!archivo) return new Response('No encontrado', { status: 404 });
-    const respuesta = await net.fetch(pathToFileURL(archivo).toString());
-    if (extname(archivo) !== '.html') return respuesta;
-    // Todo es local: nada se carga de fuera del propio esquema (RNF-01).
-    const cabeceras = new Headers(respuesta.headers);
-    cabeceras.set('Content-Type', 'text/html; charset=utf-8');
-    cabeceras.set('Content-Security-Policy', CSP);
-    return new Response(respuesta.body, { status: respuesta.status, headers: cabeceras });
-  });
-}
-
 async function iniciar() {
   limpiarTemporalesJson(carpetaDatos, registrar);
   Menu.setApplicationMenu(null);
@@ -164,7 +86,12 @@ async function iniciar() {
       });
     },
   );
-  registrarProtocolo();
+  registerContentProtocol({
+    contentRoot: carpetaContenido,
+    viewsRoot: carpetaVistas,
+    developmentUrl: urlDesarrollo,
+    contentSecurityPolicy: crearCsp(false),
+  });
 
   const rutaConfig = join(carpetaDatos, 'config.json');
   let config: Config = leerConfig(rutaConfig, registrar);

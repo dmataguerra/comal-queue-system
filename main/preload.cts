@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import type { TurneroApi } from './contrato.js';
+import type { TurneroApi } from '../shared/contract.js';
 
-// Mismos nombres que CANALES en adaptador-ipc.ts.
+// The Electron sandbox cannot load local modules; ipc-channels.test.ts checks these literals.
 function escuchar<T extends unknown[]>(canal: string, fn: (...datos: T) => void): () => void {
   const oyente = (_evento: IpcRendererEvent, ...datos: unknown[]) => fn(...(datos as T));
   ipcRenderer.on(canal, oyente);

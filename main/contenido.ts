@@ -11,7 +11,7 @@ import {
   watch,
 } from 'node:fs';
 import { basename, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
-import type { CategoriaContenido, Inventario, ResultadoImportacion } from './contrato.js';
+import type { CategoriaContenido, Inventario, ResultadoImportacion } from '../shared/contract.js';
 import type { Registrar } from './log.js';
 
 export const URL_CONTENIDO = 'turnero://app/contenido';

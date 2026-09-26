@@ -2,7 +2,7 @@
 
 ## Implementación vigente (0.3.0)
 
-La aplicación de producción es **solo Electron local**: un proceso principal posee el estado y abre ventanas React separadas de operador y pantalla pública. El contrato tipado de `main/contrato.ts` pasa por IPC; las acciones de escritura y los diagnósticos exigen la ventana principal del operador. No hay servidor, navegador remoto, SQLite, NestJS ni Socket.IO. Las descripciones de topología B, WebSocket y servidor en las secciones históricas de abajo son propuestas no implementadas y no deben usarse para instalar ni respaldar el producto.
+The current implementation is documented in [Current desktop architecture](current-architecture.md). The topology B, WebSocket, and server sections below are historical proposals and do not describe the installed product.
 
 En producción, `config.json`, `estado.json`, `turnero.log` y `contenido/` viven en `Documentos/Turnero Comal` (o en `TURNERO_DATOS` para pruebas). `estado.json` y las modificaciones de configuración se publican por escritura temporal, sincronización y renombrado. La carpeta `contenido/` almacena videos, banners, 100 voces y el aviso. La pantalla pública solo recibe estado, inventario y configuración necesarios para mostrar turnos y multimedia; los diagnósticos completos se consultan únicamente en operador.
 

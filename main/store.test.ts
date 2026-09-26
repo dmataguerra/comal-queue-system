@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import type { Anuncio, Instantanea } from './contrato.js';
+import type { Anuncio, Instantanea } from '../shared/contract.js';
 import { guardarEstado } from './persistencia.js';
 import { crearStore } from './store.js';
 

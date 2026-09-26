@@ -7,9 +7,10 @@ import type {
   Inventario,
   Pantallas,
   ResultadoImportacion,
-} from './contrato.js';
+} from '../shared/contract.js';
 import type { Registrar } from './log.js';
 import type { Store } from './store.js';
+import { IPC_CHANNELS } from '../shared/ipc-channels.js';
 import {
   autorizarIpc,
   validarAccion,
@@ -23,23 +24,6 @@ import {
   validarVolumen,
   validarYouTube,
 } from './seguridad-ipc.js';
-
-// Los mismos nombres están escritos en preload.cts: el preload aislado no puede importar módulos.
-export const CANALES = {
-  obtener: 'turnero:obtener',
-  despachar: 'turnero:despachar',
-  registrar: 'turnero:registrar',
-  estado: 'turnero:estado',
-  config: 'turnero:config',
-  contenido: 'turnero:contenido',
-  importarContenido: 'turnero:contenido:importar',
-  quitarContenido: 'turnero:contenido:quitar',
-  abrirCarpetaContenido: 'turnero:contenido:abrir',
-  pantallas: 'turnero:pantallas',
-  volumenYouTube: 'turnero:youtube:volumen',
-  diagnostico: 'turnero:diagnostico',
-  salud: 'turnero:salud',
-} as const;
 
 const ORIGENES_YOUTUBE = ['https://www.youtube.com', 'https://www.youtube-nocookie.com'];
 
@@ -109,17 +93,17 @@ export function conectarIpc({
     vista: 'operador' | 'publica' | 'cualquiera',
   ) => autorizarIpc(evento, vista, esOperador, esPublica, urlVista);
 
-  ipcMain.handle(CANALES.obtener, (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.getInitial, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'cualquiera');
     validarSinArgumentos(argumentos);
     return inicial();
   });
-  ipcMain.handle(CANALES.diagnostico, (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.diagnostics, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');
     validarSinArgumentos(argumentos);
     return diagnostico();
   });
-  ipcMain.on(CANALES.salud, (evento, ...argumentos: unknown[]) => {
+  ipcMain.on(IPC_CHANNELS.health, (evento, ...argumentos: unknown[]) => {
     try {
       autorizar(evento, 'publica');
       validarCantidad(argumentos, 2);
@@ -129,32 +113,32 @@ export function conectarIpc({
       // Solo la vista pública principal puede comunicar salud multimedia.
     }
   });
-  ipcMain.handle(CANALES.despachar, (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.dispatch, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');
     validarCantidad(argumentos, 1);
     return store.despachar(validarAccion(argumentos[0]));
   });
-  ipcMain.handle('turnero:youtube', (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.setYouTube, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');
     validarCantidad(argumentos, 1);
     configurarYouTube(validarYouTube(argumentos[0]));
   });
-  ipcMain.handle(CANALES.importarContenido, (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.importContent, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');
     validarCantidad(argumentos, 1);
     return importarContenido(validarCategoria(argumentos[0]));
   });
-  ipcMain.handle(CANALES.quitarContenido, (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.removeContent, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');
     validarCantidad(argumentos, 1);
     return quitarContenido(validarUrlContenido(argumentos[0]));
   });
-  ipcMain.handle(CANALES.abrirCarpetaContenido, (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.openContentFolder, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');
     validarCantidad(argumentos, 1);
     return abrirCarpetaContenido(validarCategoriaOpcional(argumentos[0]));
   });
-  ipcMain.on(CANALES.registrar, (evento, ...argumentos: unknown[]) => {
+  ipcMain.on(IPC_CHANNELS.log, (evento, ...argumentos: unknown[]) => {
     try {
       const vista = autorizar(evento, 'cualquiera');
       validarCantidad(argumentos, 1);
@@ -166,7 +150,7 @@ export function conectarIpc({
     }
   });
   let avisoYouTube = '';
-  ipcMain.handle(CANALES.volumenYouTube, async (evento, ...argumentos: unknown[]) => {
+  ipcMain.handle(IPC_CHANNELS.setYouTubeVolume, async (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'publica');
     validarCantidad(argumentos, 2);
     const [volumen, rampa] = validarVolumen(argumentos[0], argumentos[1]);
@@ -192,11 +176,14 @@ export function conectarIpc({
     avisoYouTube = aviso;
     return videos;
   });
-  store.suscribir((instantanea, anuncio) => difundir(CANALES.estado, instantanea, anuncio));
+  store.suscribir((instantanea, anuncio) =>
+    difundir(IPC_CHANNELS.stateChanged, instantanea, anuncio),
+  );
 
   return {
-    difundirConfig: (config: Config) => difundir(CANALES.config, config),
-    difundirContenido: (inventario: Inventario) => difundir(CANALES.contenido, inventario),
-    difundirPantallas: (pantallas: Pantallas) => difundir(CANALES.pantallas, pantallas),
+    difundirConfig: (config: Config) => difundir(IPC_CHANNELS.configChanged, config),
+    difundirContenido: (inventario: Inventario) =>
+      difundir(IPC_CHANNELS.contentChanged, inventario),
+    difundirPantallas: (pantallas: Pantallas) => difundir(IPC_CHANNELS.screensChanged, pantallas),
   };
 }

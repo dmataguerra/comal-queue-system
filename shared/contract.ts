@@ -1,21 +1,18 @@
-// Contrato entre el store y las vistas (arquitectura §2). Solo tipos: no genera código.
-// El adaptador IPC (topología A) lo implementa hoy; un adaptador WebSocket (topología B)
-// implementaría la misma interfaz sin tocar el núcleo ni las vistas.
+// Types shared by the queue application, renderer transport, and Electron adapter.
+// Persisted JSON names and IPC payload shapes are compatibility contracts.
 
 export type Accion =
   { tipo: 'LLAMAR'; entrada: string } | { tipo: 'DESHACER' } | { tipo: 'QUITAR'; n: number };
 
-/** Lo que las vistas necesitan del estado. `deshacer` no sale del proceso principal. */
+/** The renderer never receives the undo history itself. */
 export interface Instantanea {
   actual: number | null;
   llamados: number[];
   puedeDeshacer: boolean;
-  /** Presente cuando los cambios recientes pueden perderse al reiniciar. */
   persistencia?: { estado: 'error'; desde: string };
   advertenciaRecuperacion?: string;
 }
 
-/** Un anuncio concreto. El id distingue dos anuncios seguidos del mismo número (RN-05). */
 export interface Anuncio {
   id: number;
   n: number;
@@ -27,7 +24,7 @@ export interface ResultadoDespacho {
   anuncio: Anuncio | null;
 }
 
-/** config.json — RF-15 */
+/** config.json format; field names are retained for installed releases. */
 export interface Config {
   youtubeUrl: string | null;
   repeticiones: 1 | 2;
@@ -40,7 +37,6 @@ export interface Config {
   mensajes: string[];
 }
 
-/** Inventario de la carpeta contenido/ — RF-14. `voz[n]` es la URL de «Turno n» o null. */
 export interface Inventario {
   videos: string[];
   banner: string[];
@@ -57,7 +53,6 @@ export interface ResultadoImportacion {
   motivos?: Record<string, string>;
 }
 
-/** tv: pantalla completa en el segundo display · ventana: modo desarrollo · ninguna: RF-13 */
 export interface Pantallas {
   publica: 'tv' | 'ventana' | 'ninguna';
 }
@@ -102,7 +97,6 @@ export interface TurneroApi {
   diagnostico(): Promise<Diagnostico>;
   informarSalud(tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado'): void;
   configurarYouTube(url: string | null): Promise<void>;
-  /** Devuelve cuántos <video> de YouTube se ajustaron (0: el iframe aún no carga). */
   ajustarVolumenYouTube(volumen: number, rampa: number): Promise<number>;
   obtener(): Promise<Inicial>;
   despachar(accion: Accion): Promise<ResultadoDespacho>;

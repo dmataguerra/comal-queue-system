@@ -1,6 +1,6 @@
 import { readFileSync, statfsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Config, Diagnostico, Inventario, Pantallas } from './contrato.js';
+import type { Config, Diagnostico, Inventario, Pantallas } from '../shared/contract.js';
 import type { Store } from './store.js';
 import { RESERVA_DISCO } from './contenido.js';
 

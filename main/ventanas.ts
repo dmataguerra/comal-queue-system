@@ -1,5 +1,5 @@
 import { BrowserWindow, screen, type Display, type WebContents } from 'electron';
-import type { Pantallas } from './contrato.js';
+import type { Pantallas } from '../shared/contract.js';
 import type { Registrar } from './log.js';
 
 export type Vista = 'operador' | 'publica';

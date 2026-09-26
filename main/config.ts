@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, watch } from 'node:fs';
 import { basename, dirname } from 'node:path';
-import type { Config } from './contrato.js';
+import type { Config } from '../shared/contract.js';
 import type { Registrar } from './log.js';
 import { esYouTube } from '../nucleo/youtube.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import type { Config } from './contrato.js';
+import type { Config } from '../shared/contract.js';
 import { crearProveedorDiagnostico, espacioDisponible } from './diagnostico.js';
 import type { Store } from './store.js';
 

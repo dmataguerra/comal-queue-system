@@ -1,4 +1,4 @@
-import type { Accion, CategoriaContenido } from './contrato.js';
+import type { Accion, CategoriaContenido } from '../shared/contract.js';
 import { esYouTube } from '../nucleo/youtube.js';
 
 type Vista = 'operador' | 'publica';
