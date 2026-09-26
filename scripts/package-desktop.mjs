@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
@@ -20,11 +20,27 @@ const paquete = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8'));
 const electron = JSON.parse(
   readFileSync(join(raiz, 'node_modules', 'electron', 'package.json'), 'utf8'),
 );
+const electronDist = join(raiz, 'node_modules', 'electron', 'dist');
+// Electron 44 downloads its binary on first launch. Packaging needs the directory first.
+if (!existsSync(electronDist)) {
+  const install = spawnSync(
+    process.execPath,
+    [join(raiz, 'node_modules', 'electron', 'install.js')],
+    {
+      cwd: raiz,
+      stdio: 'inherit',
+      env: process.env,
+    },
+  );
+  if (install.error) throw install.error;
+  if (install.status !== 0 || !existsSync(electronDist))
+    throw new Error('Electron binary installation did not complete.');
+}
 delete paquete.devDependencies;
 paquete.build = {
   ...paquete.build,
   electronVersion: electron.version,
-  electronDist: join(raiz, 'node_modules', 'electron', 'dist'),
+  electronDist,
   directories: { ...paquete.build.directories, output: join(raiz, 'release') },
 };
 

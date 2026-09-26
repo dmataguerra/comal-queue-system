@@ -11,18 +11,20 @@
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "tsc --noEmit -p tsconfig.json && vite build && tsc -p tsconfig.main.json",
+    "build": "node scripts/prepare-build.mjs && tsc --noEmit -p tsconfig.json && vite build && tsc -p tsconfig.main.json",
     "start": "electron .",
     "test": "node tooling/audio/verify-audio.mjs && tsx --test nucleo/*.test.ts main/*.test.ts",
     "verify:audio": "node tooling/audio/verify-audio.mjs",
-    "format": "prettier --write main nucleo vistas scripts",
-    "format:check": "prettier --check main nucleo vistas scripts",
-    "lint": "eslint main nucleo vistas scripts vite.config.ts",
+    "format": "prettier --write backend main nucleo shared vistas scripts",
+    "format:check": "prettier --check backend main nucleo shared vistas scripts",
+    "lint": "eslint backend main nucleo shared vistas scripts vite.config.ts",
     "test:desktop": "npm run build && electron scripts/smoke-desktop.mjs",
     "test:media": "npm run build && node scripts/smoke-media.mjs",
     "desktop:build": "npm run build && node scripts/package-desktop.mjs --win",
     "desktop:build:signed": "npm run build && node scripts/package-desktop.mjs --win -c.win.forceCodeSigning=true",
-    "desktop:dir": "npm run build && node scripts/package-desktop.mjs --dir"
+    "desktop:dir": "npm run build && node scripts/package-desktop.mjs --dir",
+    "test:theme": "npm run build && electron scripts/smoke-theme.mjs",
+    "test:interface": "npm run build && electron scripts/smoke-interface.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

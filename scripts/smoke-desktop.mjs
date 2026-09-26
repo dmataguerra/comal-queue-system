@@ -115,7 +115,7 @@ async function verificar() {
     );
     // Comprobar movimiento real y la preferencia de accesibilidad en el renderizador.
     const movimiento = () =>
-      ejecutar(publica, "getComputedStyle(document.querySelector('.paint-motion')).transform");
+      ejecutar(publica, "getComputedStyle(document.querySelector('.background-motion')).transform");
     const posicion = await movimiento();
     await esperar(async () => (await movimiento()) !== posicion, 'El fondo no se mueve', 3000);
     publica.webContents.debugger.attach('1.3');
@@ -125,7 +125,7 @@ async function verificar() {
     assert.equal(
       await ejecutar(
         publica,
-        "getComputedStyle(document.querySelector('.paint-motion')).animationName",
+        "getComputedStyle(document.querySelector('.background-motion')).animationName",
       ),
       'none',
     );
@@ -250,18 +250,12 @@ async function verificar() {
     ]) {
       operador.setSize(ancho, alto);
       await pausa(200);
-      await ejecutar(
-        operador,
-        `document.querySelector('[aria-label="Acciones del turno 66"]').click()`,
-      );
-      await pausa(1200);
       const geometria = await ejecutar(
         operador,
-        `(()=>{const b=document.querySelector('[aria-label="Acciones del turno 66"]').getBoundingClientRect(),m=document.querySelector('.turn-menu-popup').getBoundingClientRect();return {abajo:m.top>=b.bottom,visible:m.bottom<=innerHeight};})()`,
+        `(()=>{const row=document.querySelector('[aria-label="Acciones del turno 66"]');return {buttons:row.querySelectorAll('button').length,visible:[...row.querySelectorAll('button')].every(b=>b.getBoundingClientRect().right<=innerWidth)};})()`,
       );
-      assert.deepEqual(geometria, { abajo: true, visible: true });
+      assert.deepEqual(geometria, { buttons: 2, visible: true });
       await capturar(operador, `operador-${ancho}.png`);
-      await ejecutar(operador, 'document.body.click()');
     }
     await ejecutar(
       operador,
@@ -398,7 +392,7 @@ async function verificar() {
       'PASS: seis pedidos, ticker en movimiento, anuncio y salida sin cambios de geometría ni recortes en 1080p, 1440p y 4K.',
     );
     console.log(
-      'PASS: anuncios 55→66, menú en dos tamaños, eliminación sin restauración y anuncio centrado sobre multimedia/YouTube.',
+      'PASS: anuncios 55→66, acciones directas en dos tamaños, eliminación sin restauración y anuncio centrado sobre multimedia/YouTube.',
     );
     console.log(
       'YouTube:',

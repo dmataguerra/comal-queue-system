@@ -11,7 +11,9 @@ export default tseslint.config(
   {
     files: [
       'main/**/*.{ts,cts}',
+      'backend/**/*.ts',
       'nucleo/**/*.ts',
+      'shared/**/*.ts',
       'vistas/**/*.{ts,tsx}',
       'scripts/**/*.mjs',
       'vite.config.ts',
@@ -19,7 +21,7 @@ export default tseslint.config(
     ...js.configs.recommended,
   },
   {
-    files: ['main/**/*.{ts,cts}', 'nucleo/**/*.ts', 'vistas/**/*.{ts,tsx}', 'vite.config.ts'],
+    files: ['backend/**/*.ts', 'main/**/*.{ts,cts}', 'nucleo/**/*.ts', 'shared/**/*.ts', 'vistas/**/*.{ts,tsx}', 'vite.config.ts'],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
@@ -51,7 +53,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['main/**/*.{ts,cts}', 'nucleo/**/*.ts', 'scripts/**/*.mjs', 'vite.config.ts'],
+    files: ['backend/**/*.ts', 'main/**/*.{ts,cts}', 'nucleo/**/*.ts', 'scripts/**/*.mjs', 'vite.config.ts'],
     languageOptions: { globals: globals.node },
   },
   {

@@ -6,5 +6,5 @@
     "resolveJsonModule": true, "isolatedModules": true, "noEmit": true,
     "types": ["vite/client"]
   },
-  "include": ["vistas", "nucleo/turnos.ts", "main/contrato.ts", "vite.config.ts"]
+  "include": ["vistas", "nucleo/turnos.ts", "shared/**/*.ts", "vite.config.ts"]
 }

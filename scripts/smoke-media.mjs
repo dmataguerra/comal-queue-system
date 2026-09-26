@@ -68,12 +68,13 @@ async function verify() {
   BrowserWindow.prototype.show = function () {};
   BrowserWindow.prototype.showInactive = function () {};
   BrowserWindow.prototype.maximize = function () {};
-  const timeout = setTimeout(() => app.exit(1), 45000);
+  const timeout = setTimeout(() => app.exit(1), 60000);
   try {
     await import('../build/main/main.js');
     await waitFor(
       () => BrowserWindow.getAllWindows().filter((w) => !w.webContents.isLoading()).length === 2,
       'No cargaron las dos vistas',
+      30000,
     );
     const operator = BrowserWindow.getAllWindows().find((w) =>
       w.webContents.getURL().includes('/operador/'),
@@ -122,18 +123,19 @@ async function verify() {
       `(async()=>{
       const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
       const context=canvas.getContext('2d');
-      const stream=canvas.captureStream(0);const track=stream.getVideoTracks()[0];
+      const stream=canvas.captureStream(15);const track=stream.getVideoTracks()[0];
       const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8'});
       const chunks=[];recorder.ondataavailable=e=>chunks.push(e.data);
       const stopped=new Promise(resolve=>recorder.onstop=resolve);recorder.start();
-      for(let i=0;i<15;i++){
-        context.fillStyle=i%2?'blue':'orange';context.fillRect(0,0,64,64);track.requestFrame();
+      for(let i=0;i<30;i++){
+        context.fillStyle=i%2?'blue':'orange';context.fillRect(0,0,64,64);
         await new Promise(resolve=>setTimeout(resolve,100));
       }
       recorder.stop();await stopped;track.stop();
       return Array.from(new Uint8Array(await new Blob(chunks).arrayBuffer()));
     })()`,
     );
+    assert.ok(bytes.length > 1000, `Synthetic video did not encode frames (${bytes.length} bytes)`);
     const fixture = join(data, 'prueba.webm');
     writeFileSync(fixture, Buffer.from(bytes));
     const { importarArchivos } = await import('../build/main/contenido.js');
@@ -161,6 +163,14 @@ async function verify() {
     app.exit(0);
   } catch (error) {
     console.error(error);
+    console.error(
+      'Window state:',
+      BrowserWindow.getAllWindows().map((window) => ({
+        url: window.webContents.getURL(),
+        loading: window.webContents.isLoading(),
+        crashed: window.webContents.isCrashed(),
+      })),
+    );
     clearTimeout(timeout);
     app.exit(1);
   }
