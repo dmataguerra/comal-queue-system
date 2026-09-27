@@ -7,13 +7,47 @@ import { randomUUID } from 'node:crypto';
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pruebas = join(raiz, 'test-results');
 const temporal = join(pruebas, `package-stage-${randomUUID()}`);
+const cacheBuilder = join(pruebas, 'electron-builder-cache');
 if (!temporal.startsWith(`${resolve(pruebas)}${sep}`))
   throw new Error('La carpeta temporal de empaquetado está fuera de test-results.');
 const argumentos = process.argv.slice(2);
-const permitidos = new Set(['--win', '--dir', '-c.win.forceCodeSigning=true']);
+const permitidos = new Set(['--win', '--dir', '--firma-local', '-c.win.forceCodeSigning=true']);
 if (!argumentos.length || argumentos.some((argumento) => !permitidos.has(argumento))) {
-  console.error('Uso: node scripts/package-desktop.mjs --win|--dir [-c.win.forceCodeSigning=true]');
+  console.error(
+    'Uso: node scripts/package-desktop.mjs --win|--dir [--firma-local|-c.win.forceCodeSigning=true]',
+  );
   process.exit(2);
+}
+const firmaLocal = argumentos.includes('--firma-local');
+const argumentosBuilder = argumentos.filter((argumento) => argumento !== '--firma-local');
+let huellaFirmaLocal;
+if (firmaLocal) {
+  if (process.platform !== 'win32') throw new Error('La firma local requiere Windows.');
+  if (
+    ['WIN_CSC_LINK', 'CSC_LINK', 'WIN_CSC_KEY_PASSWORD', 'CSC_KEY_PASSWORD'].some(
+      (clave) => process.env[clave],
+    )
+  )
+    throw new Error(
+      'La firma local usa el almacén de Windows; quite las variables CSC de archivo PFX.',
+    );
+  huellaFirmaLocal = process.env.COMAL_SIGNING_CERT_SHA1?.replace(/\s/g, '').toUpperCase();
+  if (!huellaFirmaLocal || !/^[0-9A-F]{40}$/.test(huellaFirmaLocal))
+    throw new Error('Indique la huella SHA-1 del certificado en COMAL_SIGNING_CERT_SHA1.');
+  const comprobacion = spawnSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `$c = Get-Item 'Cert:\\CurrentUser\\My\\${huellaFirmaLocal}' -ErrorAction SilentlyContinue; if (!$c -or !$c.HasPrivateKey) { exit 2 }; $rsa = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($c); if (!$rsa -or $rsa.Key.Provider.Provider -ne 'Microsoft Platform Crypto Provider') { exit 3 }; $rsa.Dispose()`,
+    ],
+    { encoding: 'utf8', windowsHide: true },
+  );
+  if (comprobacion.error || comprobacion.status !== 0)
+    throw new Error(
+      'No se encontró una clave privada RSA de Comal protegida por el TPM en el almacén del usuario actual.',
+    );
 }
 
 const paquete = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8'));
@@ -43,16 +77,34 @@ paquete.build = {
   electronDist,
   directories: { ...paquete.build.directories, output: join(raiz, 'release') },
 };
+if (firmaLocal) {
+  paquete.build.win = {
+    ...paquete.build.win,
+    forceCodeSigning: true,
+    signtoolOptions: {
+      certificateSha1: huellaFirmaLocal,
+      signingHashAlgorithms: ['sha256'],
+    },
+  };
+}
 
 try {
   mkdirSync(temporal, { recursive: true });
+  mkdirSync(cacheBuilder, { recursive: true });
   for (const nombre of ['build', 'dist', 'contenido'])
     cpSync(join(raiz, nombre), join(temporal, nombre), { recursive: true });
   writeFileSync(join(temporal, 'package.json'), `${JSON.stringify(paquete, null, 2)}\n`);
   const resultado = spawnSync(
     process.execPath,
-    [join(raiz, 'node_modules', 'electron-builder', 'cli.js'), ...argumentos],
-    { cwd: temporal, stdio: 'inherit', env: process.env },
+    [join(raiz, 'node_modules', 'electron-builder', 'cli.js'), ...argumentosBuilder],
+    {
+      cwd: temporal,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        ELECTRON_BUILDER_CACHE: process.env.ELECTRON_BUILDER_CACHE ?? cacheBuilder,
+      },
+    },
   );
   if (resultado.error) throw resultado.error;
   process.exitCode = resultado.status ?? 1;
