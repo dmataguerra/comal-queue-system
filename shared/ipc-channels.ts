@@ -14,4 +14,6 @@ export const IPC_CHANNELS = {
   setYouTubeVolume: 'turnero:youtube:volumen',
   diagnostics: 'turnero:diagnostico',
   health: 'turnero:salud',
+  audioReceipt: 'turnero:anuncio:acuse',
+  audioReceiptChanged: 'turnero:anuncio:estado',
 } as const;

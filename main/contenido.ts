@@ -10,7 +10,7 @@ import {
   statfsSync,
   watch,
 } from 'node:fs';
-import { basename, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
+import { basename, dirname, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
 import type { CategoriaContenido, Inventario, ResultadoImportacion } from '../shared/contract.js';
 import type { Registrar } from './log.js';
 
@@ -232,7 +232,11 @@ export function sembrarContenido(
   destino: string,
   registrar: Registrar = () => {},
 ): void {
-  if (existsSync(destino) || !existsSync(origen)) return;
+  if (!existsSync(origen)) return;
+  if (existsSync(destino)) {
+    repararAudioDeFabrica(origen, destino, registrar);
+    return;
+  }
   const temporal = `${destino}.tmp`;
   try {
     rmSync(temporal, { recursive: true, force: true });
@@ -241,6 +245,55 @@ export function sembrarContenido(
     registrar(`contenido: se copió el contenido de fábrica a ${destino}`);
   } catch (error) {
     registrar(`contenido: no se pudo copiar el contenido de fábrica (${(error as Error).message})`);
+  }
+}
+
+/** Repone solo audio obligatorio faltante o vacío; respeta MP3 personalizados válidos y multimedia. */
+function repararAudioDeFabrica(origen: string, destino: string, registrar: Registrar) {
+  const util = (ruta: string) => {
+    if (!existsSync(ruta)) return false;
+    const info = statSync(ruta);
+    return info.isFile() && info.size > 0;
+  };
+  const reparar = (archivo: string) => {
+    const fuente = join(origen, archivo);
+    const objetivo = join(destino, archivo);
+    if (!util(fuente)) return;
+    const temporal = `${objetivo}.${crypto.randomUUID()}.tmp`;
+    const copia = `${objetivo}.incompleto-${crypto.randomUUID()}`;
+    try {
+      mkdirSync(dirname(objetivo), { recursive: true });
+      copyFileSync(fuente, temporal);
+      if (existsSync(objetivo)) renameSync(objetivo, copia);
+      try {
+        renameSync(temporal, objetivo);
+      } catch (error) {
+        if (existsSync(copia)) renameSync(copia, objetivo);
+        throw error;
+      }
+      registrar(
+        `contenido: se reparó ${archivo}${existsSync(copia) ? `; archivo vacío conservado en ${copia}` : ''}`,
+      );
+    } catch (error) {
+      registrar(`contenido: no se pudo reparar ${archivo} (${(error as Error).message})`);
+    } finally {
+      rmSync(temporal, { force: true });
+    }
+  };
+  for (let n = 0; n < 100; n++) {
+    const numero = String(n).padStart(2, '0');
+    if (EXTENSIONES_AUDIO.some((extension) => util(join(destino, 'voz', `${numero}${extension}`))))
+      continue;
+    const disponible = EXTENSIONES_AUDIO.map((extension) => `voz/${numero}${extension}`).find(
+      (archivo) => util(join(origen, archivo)),
+    );
+    if (disponible) reparar(disponible);
+  }
+  if (!EXTENSIONES_AUDIO.some((extension) => util(join(destino, `aviso${extension}`)))) {
+    const disponible = EXTENSIONES_AUDIO.map((extension) => `aviso${extension}`).find((archivo) =>
+      util(join(origen, archivo)),
+    );
+    if (disponible) reparar(disponible);
   }
 }
 

@@ -12,6 +12,7 @@ import {
 import type {
   CategoriaContenido,
   Config,
+  EntregaAudio,
   Inventario,
   Pantallas,
   ResultadoImportacion,
@@ -24,6 +25,8 @@ import { registerContentProtocol } from './content-protocol.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
 import { crearStore } from './store.js';
 import { crearVentanas, type Vista } from './ventanas.js';
+import { crearServidorWeb } from './servidor-web.js';
+import { migrarDesde02 } from './migracion-02.js';
 
 // Debe registrarse antes de `ready`. `stream` permite servir video por rangos.
 protocol.registerSchemesAsPrivileged([
@@ -55,11 +58,8 @@ const carpetaContenido = join(carpetaDatos, 'contenido');
 const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : raizApp, 'contenido');
 const carpetaVistas = join(raizApp, 'dist');
 
-mkdirSync(carpetaDatos, { recursive: true });
 let ultimoErrorAplicacion: string | null = null;
-const registroBase = crearRegistro(join(carpetaDatos, 'turnero.log'), {
-  version: app.getVersion(),
-});
+let registroBase: (mensaje: string) => void = (mensaje) => console.error(mensaje);
 const registrar = (mensaje: string) => {
   if (/error|fall|no se pudo|falta|rechazad|terminó/i.test(mensaje))
     ultimoErrorAplicacion = mensaje.slice(0, 200);
@@ -72,6 +72,11 @@ const urlVista = (vista: Vista) =>
     : `turnero://app/vistas/${vista}/index.html`;
 
 async function iniciar() {
+  // Preparar la carpeta dentro del mismo manejador que muestra errores de arranque.
+  mkdirSync(carpetaDatos, { recursive: true });
+  registroBase = crearRegistro(join(carpetaDatos, 'turnero.log'), {
+    version: app.getVersion(),
+  });
   limpiarTemporalesJson(carpetaDatos, registrar);
   Menu.setApplicationMenu(null);
   // Una página de Vite con el mismo ETag puede conservar una CSP antigua en el perfil.
@@ -94,12 +99,15 @@ async function iniciar() {
   });
 
   const rutaConfig = join(carpetaDatos, 'config.json');
+  migrarDesde02(join(app.getPath('userData'), 'comal.sqlite'), carpetaDatos, registrar);
   let config: Config = leerConfig(rutaConfig, registrar);
   let inventario: Inventario;
   let pantallas: Pantallas = { publica: 'ninguna' };
   const store = crearStore({ ruta: join(carpetaDatos, 'estado.json'), registrar });
   let saludAudio: 'correcto' | 'degradado' | 'desconocido' = 'desconocido';
   let saludYouTube: 'activo' | 'no disponible' | 'inactivo' = 'inactivo';
+  let entregaAudio: EntregaAudio | null = null;
+  let servidorWeb: Awaited<ReturnType<typeof crearServidorWeb>> | null = null;
 
   const ventanas = crearVentanas({
     preload: join(import.meta.dirname, 'preload.cjs'),
@@ -109,6 +117,7 @@ async function iniciar() {
     alCambiarPantallas: (nuevas) => {
       pantallas = nuevas;
       ipc.difundirPantallas(nuevas);
+      servidorWeb?.difundirPantallas(nuevas);
     },
     alCerrarOperador: () => app.quit(),
     registrar,
@@ -148,17 +157,31 @@ async function iniciar() {
     if (error) throw new Error(`No se pudo abrir la carpeta de multimedia: ${error}`);
   };
 
+  const diagnostico = crearProveedorDiagnostico({
+    carpetaDatos,
+    version: app.getVersion(),
+    store,
+    config: () => config,
+    inventario: () => inventario,
+    pantallas: () => pantallas,
+    ventanas: ventanas.estadoVentanas,
+    salud: () => ({ audio: saludAudio, youtube: saludYouTube, ultimoErrorAplicacion }),
+  });
+  const configurarYouTube = (url: string | null) => {
+    const nueva = { ...leerConfig(rutaConfig, registrar), youtubeUrl: url };
+    try {
+      escribirJsonAtomico(rutaConfig, nueva, 2);
+    } catch (error) {
+      registrar(`No se pudo guardar config.json: ${(error as Error).message}`);
+      throw error;
+    }
+    config = { ...config, youtubeUrl: url };
+    ipc.difundirConfig(config);
+    servidorWeb?.difundirConfig(config);
+  };
+
   const ipc = conectarIpc({
-    diagnostico: crearProveedorDiagnostico({
-      carpetaDatos,
-      version: app.getVersion(),
-      store,
-      config: () => config,
-      inventario: () => inventario,
-      pantallas: () => pantallas,
-      ventanas: ventanas.estadoVentanas,
-      salud: () => ({ audio: saludAudio, youtube: saludYouTube, ultimoErrorAplicacion }),
-    }),
+    diagnostico,
     informarSalud: (tipo, estado) => {
       if (tipo === 'audio') {
         const siguiente = estado === 'correcto' ? 'correcto' : 'degradado';
@@ -174,19 +197,22 @@ async function iniciar() {
         }
       }
     },
-    configurarYouTube: (url) => {
-      const nueva = { ...leerConfig(rutaConfig, registrar), youtubeUrl: url };
-      try {
-        escribirJsonAtomico(rutaConfig, nueva, 2);
-      } catch (error) {
-        registrar(`No se pudo guardar config.json: ${(error as Error).message}`);
-        throw error;
-      }
-      config = { ...config, youtubeUrl: url };
-      ipc.difundirConfig(config);
+    confirmarAnuncio: (id, n, estado) => {
+      if (
+        !entregaAudio ||
+        entregaAudio.id !== id ||
+        entregaAudio.n !== n ||
+        entregaAudio.estado !== 'pendiente'
+      )
+        return;
+      entregaAudio = { ...entregaAudio, estado, fecha: new Date().toISOString() };
+      ipc.difundirEntregaAudio(entregaAudio);
+      servidorWeb?.difundirEntregaAudio(entregaAudio);
+      registrar(`Audio del turno ${n}: ${estado} por la vista pública.`);
     },
+    configurarYouTube,
     store,
-    inicial: () => ({ instantanea: store.obtener(), config, inventario, pantallas }),
+    inicial: () => ({ instantanea: store.obtener(), config, inventario, pantallas, entregaAudio }),
     esOperador: ventanas.esOperador,
     esPublica: ventanas.esPublica,
     urlVista,
@@ -196,6 +222,17 @@ async function iniciar() {
     abrirCarpetaContenido,
     registrar,
   });
+  store.suscribir((_instantanea, anuncio) => {
+    if (!anuncio) return;
+    entregaAudio = {
+      id: anuncio.id,
+      n: anuncio.n,
+      estado: 'pendiente',
+      fecha: new Date().toISOString(),
+    };
+    ipc.difundirEntregaAudio(entregaAudio);
+    servidorWeb?.difundirEntregaAudio(entregaAudio);
+  });
 
   sembrarContenido(contenidoDeFabrica, carpetaContenido, registrar);
   const contenido = vigilarContenido(
@@ -203,6 +240,7 @@ async function iniciar() {
     (nuevo) => {
       inventario = nuevo;
       ipc.difundirContenido(nuevo);
+      servidorWeb?.difundirContenido(nuevo);
     },
     registrar,
   );
@@ -213,9 +251,14 @@ async function iniciar() {
   const programarRecarga = () => {
     clearTimeout(recarga);
     recarga = setTimeout(() => {
-      store.reiniciarSiCambioDia();
-      ventanas.recargarPublica();
-      programarRecarga();
+      try {
+        store.reiniciarSiCambioDia();
+        ventanas.recargarPublica();
+      } catch (error) {
+        registrar(`No se pudo reiniciar la jornada: ${(error as Error).message}`);
+      } finally {
+        programarRecarga();
+      }
     }, msHastaHora(config.recargaDiaria));
   };
 
@@ -226,6 +269,7 @@ async function iniciar() {
       const cambioRecarga = nueva.recargaDiaria !== config.recargaDiaria;
       config = nueva;
       ipc.difundirConfig(nueva);
+      servidorWeb?.difundirConfig(nueva);
       if (cambioPantalla) ventanas.sincronizar();
       if (cambioRecarga) programarRecarga();
     },
@@ -238,11 +282,35 @@ async function iniciar() {
     contenido.detener();
     clearTimeout(recarga);
     store.cerrar();
+    servidorWeb?.cerrar();
     ventanas.cerrar();
   });
   app.on('window-all-closed', () => app.quit());
 
   ventanas.iniciar();
+  try {
+    servidorWeb = await crearServidorWeb({
+      vistas: carpetaVistas,
+      contenido: carpetaContenido,
+      store,
+      inicial: () => ({
+        instantanea: store.obtener(),
+        config,
+        inventario,
+        pantallas,
+        entregaAudio,
+      }),
+      diagnostico,
+      configurarYouTube,
+      importarContenido,
+      quitarContenido,
+      abrirCarpetaContenido,
+      registrar,
+    });
+    registrar(`Navegador local: ${servidorWeb.origen} y ${servidorWeb.origen}/publica`);
+  } catch (error) {
+    registrar(`No se pudo iniciar el navegador local: ${(error as Error).message}`);
+  }
   programarRecarga();
   registrar(`Turnero iniciado · datos en ${carpetaDatos}`);
 }
@@ -254,13 +322,19 @@ if (!app.requestSingleInstanceLock()) {
     .whenReady()
     .then(iniciar)
     .catch(async (error: unknown) => {
-      registrar(`No se pudo iniciar: ${error instanceof Error ? error.stack : String(error)}`);
-      await dialog.showMessageBox({
-        type: 'error',
-        title: 'Turnero',
-        message: 'No se pudo iniciar el turnero.',
-        detail: error instanceof Error ? error.message : String(error),
-      });
-      app.quit();
+      const detalle = error instanceof Error ? error.message : String(error);
+      registrar(`No se pudo iniciar: ${error instanceof Error ? error.stack : detalle}`);
+      try {
+        await dialog.showMessageBox({
+          type: 'error',
+          title: 'Turnero',
+          message: 'No se pudo iniciar el turnero.',
+          detail: `${detalle}\n\nCarpeta de datos: ${carpetaDatos}. Revise permisos, ruta y espacio disponible.`,
+        });
+      } catch (dialogError) {
+        console.error('No se pudo mostrar el diagnóstico de arranque:', dialogError);
+      } finally {
+        app.quit();
+      }
     });
 }

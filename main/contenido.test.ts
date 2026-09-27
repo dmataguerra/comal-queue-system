@@ -108,6 +108,36 @@ test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el admi
   }
 });
 
+test('sembrar repara audio obligatorio faltante o vacío sin sobrescribir MP3 personalizados ni banners borrados', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-reparar-'));
+  const fabrica = join(raiz, 'fabrica');
+  const datos = join(raiz, 'datos');
+  try {
+    mkdirSync(join(fabrica, 'voz'), { recursive: true });
+    mkdirSync(join(datos, 'voz'), { recursive: true });
+    writeFileSync(join(fabrica, 'voz', '08.wav'), 'voz de fábrica');
+    writeFileSync(join(fabrica, 'voz', '09.wav'), 'voz 09');
+    writeFileSync(join(fabrica, 'aviso.wav'), 'aviso');
+    writeFileSync(join(datos, 'voz', '08.mp3'), 'voz personalizada');
+    writeFileSync(join(datos, 'voz', '09.wav'), '');
+    const registro: string[] = [];
+    sembrarContenido(fabrica, datos, (mensaje) => registro.push(mensaje));
+    assert.equal(readFileSync(join(datos, 'voz', '08.mp3'), 'utf8'), 'voz personalizada');
+    assert.equal(existsSync(join(datos, 'voz', '08.wav')), false);
+    assert.equal(readFileSync(join(datos, 'voz', '09.wav'), 'utf8'), 'voz 09');
+    assert.equal(readFileSync(join(datos, 'aviso.wav'), 'utf8'), 'aviso');
+    assert.equal(existsSync(join(datos, 'banner', 'logo.png')), false);
+    assert.ok(
+      readdirSync(join(datos, 'voz')).some((nombre) => nombre.startsWith('09.wav.incompleto-')),
+    );
+    assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 2);
+    sembrarContenido(fabrica, datos, (mensaje) => registro.push(mensaje));
+    assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 2);
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
 test('administración: importa sin sobrescribir y solo elimina archivos multimedia inventariados', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-administrar-'));
   const origen = join(raiz, 'origen');

@@ -19,9 +19,13 @@
     "format:check": "prettier --check backend main nucleo shared vistas scripts",
     "lint": "eslint backend main nucleo shared vistas scripts vite.config.ts",
     "test:desktop": "npm run build && electron scripts/smoke-desktop.mjs",
+    "test:browser": "npm run build && electron scripts/smoke-browser.mjs",
+    "test:installed": "node scripts/smoke-installed.mjs",
+    "test:upgrade": "node scripts/smoke-upgrade.mjs",
     "test:media": "npm run build && node scripts/smoke-media.mjs",
     "desktop:build": "npm run build && node scripts/package-desktop.mjs --win",
     "desktop:build:signed": "npm run build && node scripts/package-desktop.mjs --win -c.win.forceCodeSigning=true",
+    "desktop:build:local-signed": "npm run build && node scripts/package-desktop.mjs --win --firma-local",
     "desktop:dir": "npm run build && node scripts/package-desktop.mjs --dir",
     "test:theme": "npm run build && electron scripts/smoke-theme.mjs",
     "test:interface": "npm run build && electron scripts/smoke-interface.mjs"

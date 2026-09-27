@@ -127,7 +127,7 @@ test('cambio de día sin reiniciar la app: el siguiente despacho arranca de cero
   }
 });
 
-test('un fallo persistente avisa al operador una vez y se recupera con el siguiente guardado correcto', () => {
+test('un fallo persistente rechaza llamadas sin anunciar ni alterar estado y permite reintentar', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-salud-'));
   const mensajes: string[] = [];
   let falla = true;
@@ -142,18 +142,53 @@ test('un fallo persistente avisa al operador una vez y se recupera con el siguie
     },
   });
   try {
-    base.despachar({ tipo: 'LLAMAR', entrada: '12' });
-    base.despachar({ tipo: 'LLAMAR', entrada: '13' });
+    const anuncios: Anuncio[] = [];
+    base.suscribir((_instantanea, anuncio) => {
+      if (anuncio) anuncios.push(anuncio);
+    });
+    assert.throws(() => base.despachar({ tipo: 'LLAMAR', entrada: '12' }), /No se pudo guardar/);
+    assert.throws(() => base.despachar({ tipo: 'LLAMAR', entrada: '13' }), /No se pudo guardar/);
+    assert.equal(base.obtener().actual, null);
+    assert.deepEqual(anuncios, []);
+    assert.equal(existsSync(join(raiz, 'estado.json')), false);
     assert.equal(base.obtener().persistencia?.estado, 'error');
     assert.equal(base.saludPersistencia().primerFallo, '2026-09-11T15:00:00.000Z');
     assert.equal(mensajes.filter((m) => m.includes('No se pudo guardar')).length, 1);
     falla = false;
     base.despachar({ tipo: 'LLAMAR', entrada: '14' });
+    assert.equal(base.obtener().actual, 14);
+    assert.deepEqual(anuncios, [{ id: 1, n: 14 }]);
     assert.equal(base.obtener().persistencia, undefined);
     assert.equal(base.saludPersistencia().restauradaEn, '2026-09-11T15:00:00.000Z');
     assert.equal(mensajes.filter((m) => m.includes('restaurada')).length, 1);
   } finally {
     base.cerrar();
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('un fallo al guardar el cambio de jornada conserva la jornada anterior', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-cambio-fallido-'));
+  const ruta = join(raiz, 'estado.json');
+  let fecha = '2026-09-11';
+  let falla = false;
+  const store = crearStore({
+    ruta,
+    hoy: () => fecha,
+    guardar: (...args) => {
+      if (falla) throw new Error('sin disco');
+      guardarEstado(...args);
+    },
+  });
+  try {
+    store.despachar({ tipo: 'LLAMAR', entrada: '42' });
+    fecha = '2026-09-12';
+    falla = true;
+    assert.throws(() => store.reiniciarSiCambioDia(), /No se pudo guardar/);
+    assert.equal(store.obtener().actual, 42);
+    assert.equal(JSON.parse(readFileSync(ruta, 'utf8')).actual, 42);
+  } finally {
+    store.cerrar();
     rmSync(raiz, { recursive: true, force: true });
   }
 });

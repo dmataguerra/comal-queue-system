@@ -74,7 +74,7 @@ export function createQueueStore({
     ...(advertenciaRecuperacion ? { advertenciaRecuperacion } : {}),
   });
 
-  function persistir() {
+  function persistir(): boolean {
     try {
       ensureCapacity();
       save(estado, fecha, desde);
@@ -84,16 +84,39 @@ export function createQueueStore({
         registrar(`Persistencia de estado.json restaurada en ${restauradaEn}.`);
         primerFallo = null;
       }
+      return true;
     } catch (error) {
       ultimoError = String((error as Error).message).slice(0, 200);
-      // Un fallo de disco no debe impedir que el número salga en la TV.
       if (!primerFallo) {
         primerFallo = new Date(ahora()).toISOString();
         registrar(
-          `No se pudo guardar estado.json; cambios de turnos podrían perderse al reiniciar: ${(error as Error).message}`,
+          `No se pudo guardar estado.json; la acción no se aplicó: ${(error as Error).message}`,
         );
       }
+      return false;
     }
+  }
+
+  const respaldo = () => ({
+    fecha,
+    estado,
+    desde,
+    desdePrevio,
+    siguienteAnuncio,
+    ultimoAnuncio,
+    advertenciaRecuperacion,
+  });
+  function restaurar(anterior: ReturnType<typeof respaldo>) {
+    ({
+      fecha,
+      estado,
+      desde,
+      desdePrevio,
+      siguienteAnuncio,
+      ultimoAnuncio,
+      advertenciaRecuperacion,
+    } = anterior);
+    notificar(null);
   }
 
   function notificar(anuncio: Anuncio | null) {
@@ -121,13 +144,18 @@ export function createQueueStore({
   }
 
   /** Un solo temporizador, para el número que vence primero. */
-  function programar() {
+  function programar(reintentoMs = 0) {
     clearTimeout(temporizador);
     if (!desde.size) return;
-    const espera = Math.max(0, Math.min(...desde.values()) + vigenciaMs - ahora());
+    const espera = Math.max(reintentoMs, Math.min(...desde.values()) + vigenciaMs - ahora());
     temporizador = setTimeout(() => {
+      const anterior = respaldo();
       if (aplicarVencidos()) {
-        persistir();
+        if (!persistir()) {
+          restaurar(anterior);
+          programar(5000);
+          return;
+        }
         notificar(null);
       }
       programar();
@@ -139,20 +167,25 @@ export function createQueueStore({
   function reiniciarSiCambioDia(): boolean {
     const nueva = today();
     if (nueva === fecha) return false;
+    const anterior = respaldo();
     fecha = nueva;
     advertenciaRecuperacion = undefined;
     if (estado.actual === null && !estado.deshacer) return false;
     estado = ESTADO_INICIAL;
     desde = new Map();
     desdePrevio = null;
+    if (!persistir()) {
+      restaurar(anterior);
+      throw new Error('No se pudo guardar el cambio de jornada. Revise disco y permisos.');
+    }
     programar();
-    persistir();
     notificar(null);
     return true;
   }
 
   function despachar(accion: Accion): ResultadoDespacho {
     reiniciarSiCambioDia();
+    const anteriorOperacion = respaldo();
     const { estado: siguiente, efecto } =
       accion.tipo === 'LLAMAR'
         ? llamar(estado, accion.entrada)
@@ -175,7 +208,12 @@ export function createQueueStore({
     // Deshacer puede traer de vuelta un número que ya había vencido: se retira en el mismo paso.
     const vencio = aplicarVencidos();
     if (cambio || anuncio || vencio) {
-      persistir();
+      if (!persistir()) {
+        restaurar(anteriorOperacion);
+        throw new Error(
+          'No se pudo guardar el turno. La TV y la cola no cambiaron. Revise disco y permisos.',
+        );
+      }
       notificar(anuncio);
     }
     programar();
@@ -183,8 +221,9 @@ export function createQueueStore({
   }
 
   // Al arrancar se descuenta el tiempo que la app estuvo cerrada.
-  if (aplicarVencidos()) persistir();
-  programar();
+  const anteriorInicial = respaldo();
+  if (aplicarVencidos() && !persistir()) restaurar(anteriorInicial);
+  programar(primerFallo ? 5000 : 0);
 
   return {
     obtener,

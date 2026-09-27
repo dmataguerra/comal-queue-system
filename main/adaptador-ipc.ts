@@ -3,6 +3,7 @@ import type {
   CategoriaContenido,
   Config,
   Diagnostico,
+  EntregaAudio,
   Inicial,
   Inventario,
   Pantallas,
@@ -66,6 +67,7 @@ interface OpcionesIpc {
   registrar: Registrar;
   diagnostico: () => Diagnostico;
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
+  confirmarAnuncio: (id: number, n: number, estado: 'reproducido' | 'fallo') => void;
 }
 
 /** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
@@ -83,6 +85,7 @@ export function conectarIpc({
   registrar,
   diagnostico,
   informarSalud,
+  confirmarAnuncio,
 }: OpcionesIpc) {
   const difundir = (canal: string, ...datos: unknown[]) => {
     for (const destino of destinos()) if (!destino.isDestroyed()) destino.send(canal, ...datos);
@@ -111,6 +114,25 @@ export function conectarIpc({
       informarSalud(tipo, estado);
     } catch {
       // Solo la vista pública principal puede comunicar salud multimedia.
+    }
+  });
+  ipcMain.on(IPC_CHANNELS.audioReceipt, (evento, ...argumentos: unknown[]) => {
+    try {
+      autorizar(evento, 'publica');
+      validarCantidad(argumentos, 3);
+      const [id, n, estado] = argumentos;
+      if (
+        !Number.isInteger(id) ||
+        (id as number) < 1 ||
+        !Number.isInteger(n) ||
+        (n as number) < 0 ||
+        (n as number) > 99 ||
+        (estado !== 'reproducido' && estado !== 'fallo')
+      )
+        return;
+      confirmarAnuncio(id as number, n as number, estado);
+    } catch {
+      // Solo la vista pública registrada puede confirmar su reproducción.
     }
   });
   ipcMain.handle(IPC_CHANNELS.dispatch, (evento, ...argumentos: unknown[]) => {
@@ -181,6 +203,8 @@ export function conectarIpc({
   );
 
   return {
+    difundirEntregaAudio: (entrega: EntregaAudio) =>
+      difundir(IPC_CHANNELS.audioReceiptChanged, entrega),
     difundirConfig: (config: Config) => difundir(IPC_CHANNELS.configChanged, config),
     difundirContenido: (inventario: Inventario) =>
       difundir(IPC_CHANNELS.contentChanged, inventario),

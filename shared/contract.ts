@@ -18,6 +18,13 @@ export interface Anuncio {
   n: number;
 }
 
+export interface EntregaAudio {
+  id: number;
+  n: number;
+  estado: 'pendiente' | 'reproducido' | 'fallo';
+  fecha: string;
+}
+
 export interface ResultadoDespacho {
   instantanea: Instantanea;
   efecto: 'ANUNCIAR' | 'CAPTURA_INVALIDA' | null;
@@ -62,6 +69,7 @@ export interface Inicial {
   config: Config;
   inventario: Inventario;
   pantallas: Pantallas;
+  entregaAudio?: EntregaAudio | null;
 }
 
 export interface Diagnostico {
@@ -96,6 +104,7 @@ export interface Diagnostico {
 export interface TurneroApi {
   diagnostico(): Promise<Diagnostico>;
   informarSalud(tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado'): void;
+  confirmarAnuncio(id: number, n: number, estado: 'reproducido' | 'fallo'): void;
   configurarYouTube(url: string | null): Promise<void>;
   ajustarVolumenYouTube(volumen: number, rampa: number): Promise<number>;
   obtener(): Promise<Inicial>;
@@ -107,5 +116,6 @@ export interface TurneroApi {
   alCambiarConfig(fn: (config: Config) => void): () => void;
   alCambiarContenido(fn: (inventario: Inventario) => void): () => void;
   alCambiarPantallas(fn: (pantallas: Pantallas) => void): () => void;
+  alCambiarEntregaAudio(fn: (entrega: EntregaAudio) => void): () => void;
   registrar(mensaje: string): void;
 }
