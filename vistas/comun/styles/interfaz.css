@@ -145,26 +145,30 @@
 .size-control {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px 4px;
-  border: 1px solid var(--theme-control-border, #afcae0);
-  border-radius: 10px;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--theme-primary, #0758bd) 22%, transparent);
+  border-radius: 14px;
   color: var(--theme-strong, #075091);
-  background: var(--theme-soft, #f8fbfe);
+  background: color-mix(in srgb, var(--theme-soft, #f8fbfe) 88%, white);
+  box-shadow: 0 4px 14px rgb(var(--theme-shadow-rgb, 18, 58, 94) / 0.12);
 }
 .size-label {
-  font-size: 11px;
-  padding: 0 6px;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 0 7px;
+  font-weight: 700;
 }
 .size-control button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 36px;
+  min-width: 30px;
+  height: 32px;
   padding: 4px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 9px;
   background: transparent;
 }
 .size-control button:hover:not(:disabled) {
@@ -175,14 +179,14 @@
   height: 16px;
 }
 .size-control .size-reset {
-  min-width: 48px;
-  font-size: 12px;
-  font-weight: 600;
+  min-width: 54px;
+  font-size: 13px;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
 }
 .admin-shell .theme-controls {
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 @media (max-width: 760px) {
   .admin-shell .admin-topbar {

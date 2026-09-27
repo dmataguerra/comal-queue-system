@@ -21,6 +21,7 @@ import { getQueueTransport } from './transport';
 interface Contexto extends Inicial {
   diagnostico: TurneroApi['diagnostico'];
   informarSalud: TurneroApi['informarSalud'];
+  confirmarAnuncio: TurneroApi['confirmarAnuncio'];
   configurarYouTube: TurneroApi['configurarYouTube'];
   ajustarVolumenYouTube: TurneroApi['ajustarVolumenYouTube'];
   despachar: (accion: Accion) => Promise<ResultadoDespacho>;
@@ -44,6 +45,8 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
       diagnostico: () => api!.diagnostico(),
       informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') =>
         api!.informarSalud(tipo, estado),
+      confirmarAnuncio: (id: number, n: number, estado: 'reproducido' | 'fallo') =>
+        api!.confirmarAnuncio(id, n, estado),
       configurarYouTube: (url: string | null) => api!.configurarYouTube(url),
       ajustarVolumenYouTube: (volumen: number, rampa: number) =>
         api!.ajustarVolumenYouTube(volumen, rampa),
@@ -76,6 +79,9 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
       ),
       api.alCambiarPantallas((pantallas) =>
         setInicial((previo) => previo && { ...previo, pantallas }),
+      ),
+      api.alCambiarEntregaAudio((entregaAudio) =>
+        setInicial((previo) => previo && { ...previo, entregaAudio }),
       ),
     ];
     api

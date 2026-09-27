@@ -8,6 +8,7 @@ import './youtube.css';
 import { AnimatedBackground } from '../comun/components/AnimatedBackground';
 import { Contenido } from './Contenido';
 import { useAnuncios } from './useAnuncios';
+import { DisplayCanvas } from './DisplayCanvas';
 
 /** RF-02, RF-05, RF-08, RF-09 · turno actual destacado, hasta 5 llamados y el área de contenido. */
 export function PublicaPage() {
@@ -28,51 +29,53 @@ export function PublicaPage() {
   ];
 
   return (
-    <div
-      className={`public-screen ${anuncio ? 'is-announcing' : ''} ${config.youtubeUrl ? 'has-youtube' : ''}`}
-    >
-      <AnimatedBackground />
-      <section className="public-queue glass-panel" aria-labelledby="public-title">
-        <header className="public-queue-heading">
-          <div className="public-title-row">
-            <h1 id="public-title">Pedidos listos</h1>
-          </div>
-        </header>
-        <div className="public-turn-list" key={actual ?? 'vacio'} aria-live="polite">
-          {filas.map(({ n, ultimo }) => (
-            <div
-              className={`public-turn ${(anuncio ? anuncio.n === n : ultimo) ? 'latest' : ''} ${anuncio?.n === n ? 'calling' : ''}`}
-              key={n}
-            >
-              {(anuncio ? anuncio.n === n : ultimo) && (
-                <span className="public-turn-state">
-                  {anuncio?.n === n ? 'Llamando ahora' : 'Pedido listo'}
-                </span>
-              )}
-              <strong>{formatear(n)}</strong>
+    <DisplayCanvas>
+      <div
+        className={`public-screen ${anuncio ? 'is-announcing' : ''} ${config.youtubeUrl ? 'has-youtube' : ''}`}
+      >
+        <AnimatedBackground />
+        <section className="public-queue glass-panel" aria-labelledby="public-title">
+          <header className="public-queue-heading">
+            <div className="public-title-row">
+              <h1 id="public-title">Pedidos listos</h1>
             </div>
-          ))}
-        </div>
-        <div className="public-queue-bottom">
-          <span>
-            <Icon name="receipt" />
-            Presenta tu ticket al recoger
-          </span>
-        </div>
-      </section>
-      <section className="public-media-frame" aria-label="Contenido">
-        <div className="public-media">
-          <Contenido
-            videos={inventario.videos}
-            banner={inventario.banner}
-            config={config}
-            atenuado={atenuado}
-            registrar={registrar}
-          />
-        </div>
-        <TarjetaAnuncio anuncio={anuncio} />
-      </section>
-      <PublicFooter messages={config.mensajes} />
-    </div>
+          </header>
+          <div className="public-turn-list" key={actual ?? 'vacio'} aria-live="polite">
+            {filas.map(({ n, ultimo }) => (
+              <div
+                className={`public-turn ${(anuncio ? anuncio.n === n : ultimo) ? 'latest' : ''} ${anuncio?.n === n ? 'calling' : ''}`}
+                key={n}
+              >
+                {(anuncio ? anuncio.n === n : ultimo) && (
+                  <span className="public-turn-state">
+                    {anuncio?.n === n ? 'Llamando ahora' : 'Pedido listo'}
+                  </span>
+                )}
+                <strong>{formatear(n)}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="public-queue-bottom">
+            <span>
+              <Icon name="receipt" />
+              Presenta tu ticket al recoger
+            </span>
+          </div>
+        </section>
+        <section className="public-media-frame" aria-label="Contenido">
+          <div className="public-media">
+            <Contenido
+              videos={inventario.videos}
+              banner={inventario.banner}
+              config={config}
+              atenuado={atenuado}
+              registrar={registrar}
+            />
+          </div>
+          <TarjetaAnuncio anuncio={anuncio} />
+        </section>
+        <PublicFooter messages={config.mensajes} />
+      </div>
+    </DisplayCanvas>
   );
 }

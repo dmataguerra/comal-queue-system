@@ -1,11 +1,13 @@
 /* La paleta azul permanece en los fallbacks de cada componente. */
 :root[data-tema='morado'] {
-  --background-indigo: #8069e9;
-  --background-pink: #f8c7ee;
-  --background-blue: #68a4fa;
-  --background-blue-soft: #dcecff;
-  --background-fog: #eee8ff;
-  --background-line: #af9dfa;
+  --wave-light-start: #e3d8ff;
+  --wave-light-end: #baa3f5;
+  --wave-blue-start: #8069e9;
+  --wave-blue-end: #7056d8;
+  --wave-navy-start: #493a9a;
+  --wave-navy-end: #34276e;
+  --wave-corner-start: #7359cd;
+  --wave-corner-end: #5741b1;
   --theme-primary: #6c5ce7;
   --theme-strong: #5142b8;
   --theme-hover: #5b4acb;

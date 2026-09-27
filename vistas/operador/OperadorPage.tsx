@@ -13,7 +13,7 @@ import { DiagnosticoPanel } from './DiagnosticoPanel';
 /** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
   const { tema, cambiarTema } = useTema();
-  const { instantanea, pantallas, despachar } = useTurnero(),
+  const { instantanea, pantallas, entregaAudio, despachar } = useTurnero(),
     clock = useClock();
   const { actual, llamados, puedeDeshacer } = instantanea;
   const [pagina, setPagina] = useState<'turnos' | 'multimedia' | 'diagnostico'>('turnos'),
@@ -283,13 +283,25 @@ export function OperadorPage() {
               </span>
             </div>
           )}
+          {entregaAudio && (
+            <div className="connection-banner" role="status">
+              <Icon name={entregaAudio.estado === 'fallo' ? 'warning' : 'volume'} />
+              <span>
+                Turno {formatear(entregaAudio.n)}:{' '}
+                {entregaAudio.estado === 'pendiente'
+                  ? 'audio pendiente en la vista pública.'
+                  : entregaAudio.estado === 'reproducido'
+                    ? 'audio terminado en la vista pública. Comprueba las bocinas en el local.'
+                    : 'la vista pública informó un fallo de audio.'}
+              </span>
+            </div>
+          )}
           {instantanea.persistencia?.estado === 'error' && (
             <div className="connection-banner" role="alert">
               <Icon name="warning" />
               <span>
-                No se pueden guardar los turnos. Los cambios recientes pueden perderse al reiniciar.
-                Revisa el espacio y los permisos de la carpeta de datos; el guardado se reintentará
-                con el próximo cambio.
+                No se pueden guardar los turnos. La última acción no se aplicó ni se anunció. Revisa
+                el espacio y los permisos de la carpeta de datos y vuelve a intentarlo.
               </span>
             </div>
           )}

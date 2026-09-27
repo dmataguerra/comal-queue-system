@@ -100,16 +100,16 @@
   min-width: 0;
 }
 .admin-topbar {
-  height: 66px;
+  min-height: 72px;
   border-bottom: 1px solid #9fe7f620;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 24px;
-  padding: 0 32px;
-  background: linear-gradient(105deg, #07445d94, #02233475);
+  gap: 28px;
+  padding: 0 34px;
+  background: linear-gradient(105deg, #07445de8, #022334c7);
   backdrop-filter: blur(26px) saturate(145%);
-  box-shadow: inset 0 -1px 0 #9fe7f608;
+  box-shadow: inset 0 -1px 0 #9fe7f615, 0 8px 24px #00131d18;
 }
 .breadcrumb {
   display: flex;
@@ -122,7 +122,6 @@
 .breadcrumb .icon {
   width: 11px;
   height: 11px;
-  transform: rotate(-90deg);
 }
 .breadcrumb > span {
   color: #c5d0e3;

@@ -38,7 +38,31 @@ const nombres = new Set([
   'plus',
   'minus',
 ]);
-/** Local Phosphor Duotone SVG images, MIT. Masks preserve theme colors and duotone opacity. */
+const pixel = new Set([
+  'coffee',
+  'receipt',
+  'play',
+  'media',
+  'calendar',
+  'clock',
+  'sun',
+  'cloud',
+  'chevron',
+  'checkCircle',
+  'volume',
+  'close',
+  'monitor',
+  'info',
+  'folder',
+  'undo',
+  'warning',
+  'trash',
+  'image',
+  'plus',
+  'minus',
+]);
+
+/** Comal pixel artwork; masks inherit control colors. Keep legacy icons without a pixel version. */
 export function Icon({
   name,
   className = '',
@@ -49,11 +73,12 @@ export function Icon({
   style?: CSSProperties;
 }) {
   const archivo = nombres.has(name) ? name : 'info';
+  const coleccion = pixel.has(archivo) ? 'pixel' : 'phosphor';
   return (
     <span
       aria-hidden="true"
       className={`icon ${className}`}
-      style={{ maskImage: `url('/assets/icons/phosphor/${archivo}.svg')`, ...style }}
+      style={{ maskImage: `url('/assets/icons/${coleccion}/${archivo}.svg')`, ...style }}
     />
   );
 }

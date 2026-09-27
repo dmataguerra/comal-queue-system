@@ -14,7 +14,8 @@ const TARJETA_MINIMA = 6000; // Mantener visible seis segundos, o hasta terminar
  * Al montar o recargar no se repite ningún anuncio viejo: solo reacciona a eventos nuevos.
  */
 export function useAnuncios() {
-  const { config, inventario, suscribirAnuncio, registrar, informarSalud } = useTurnero();
+  const { config, inventario, suscribirAnuncio, registrar, informarSalud, confirmarAnuncio } =
+    useTurnero();
   const [anuncio, setAnuncio] = useState<Anuncio | null>(null),
     [atenuado, setAtenuado] = useState(false);
   const ultimos = useRef({ config, inventario });
@@ -46,10 +47,12 @@ export function useAnuncios() {
           inventario: { aviso, voz },
         } = ultimos.current;
         const inicio = performance.now();
+        let audioCompleto = true;
         try {
           if (aviso) await reproducir(aviso, volumenVoz, signal);
           const url = voz[nuevo.n];
           if (!url) {
+            audioCompleto = false;
             informarSalud('audio', 'degradado');
             if (!vozFaltante.current.has(nuevo.n)) {
               vozFaltante.current.add(nuevo.n);
@@ -62,11 +65,13 @@ export function useAnuncios() {
             }
         } catch (error) {
           if (!signal.aborted) {
+            audioCompleto = false;
             informarSalud('audio', 'degradado');
             registrar(`Audio: ${(error as Error).message}`);
           }
         }
         if (signal.aborted) return;
+        confirmarAnuncio(nuevo.id, nuevo.n, audioCompleto ? 'reproducido' : 'fallo');
         setAtenuado(false);
         await pausa(Math.max(0, TARJETA_MINIMA - (performance.now() - inicio)), signal);
         if (!signal.aborted) setAnuncio(null);
@@ -81,6 +86,6 @@ export function useAnuncios() {
       cola.detener();
       cerrarAudio();
     };
-  }, [suscribirAnuncio, registrar, informarSalud]);
+  }, [suscribirAnuncio, registrar, informarSalud, confirmarAnuncio]);
   return { anuncio, atenuado };
 }

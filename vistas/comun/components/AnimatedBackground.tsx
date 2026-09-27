@@ -1,72 +1,111 @@
-/**
- * Capa decorativa inspirada directamente en la composición de referencia:
- * un centro despejado y ondas superpuestas que entran por las esquinas.
- * La geometría es fija; las variaciones suaves viven solamente en CSS.
- */
+import { useId, useSyncExternalStore } from 'react';
+
+const motionQuery = '(prefers-reduced-motion: reduce)';
+const subscribe = (notify: () => void) => {
+  const query = window.matchMedia(motionQuery);
+  query.addEventListener('change', notify);
+  return () => query.removeEventListener('change', notify);
+};
+const reducedMotion = () => window.matchMedia(motionQuery).matches;
+
+// Puntos tomados de assets/reference/public-background.png (1672 × 941).
+// Se normalizan una sola vez al lienzo de DisplayCanvas, sin sangrado ni zoom.
+const outlines = [
+  [
+    'light',
+    'M1030 -40 C1100 23 1147 92 1245 101 C1313 106 1366 91 1407 101 C1474 115 1519 151 1556 202 C1589 250 1620 281 1672 302 L1712 320 L1712 -40 Z',
+  ],
+  [
+    'blue',
+    'M1090 -40 C1156 15 1186 64 1270 76 C1350 84 1388 63 1446 77 C1520 88 1552 123 1583 170 C1610 212 1635 231 1672 250 L1712 270 L1712 -40 Z',
+  ],
+  [
+    'navy',
+    'M1220 -40 C1266 0 1302 41 1374 51 C1434 57 1484 34 1541 48 C1603 63 1633 95 1660 136 C1665 145 1670 151 1672 154 L1712 185 L1712 -40 Z',
+  ],
+  [
+    'light',
+    'M-40 579 C75 580 144 625 210 696 C260 750 278 779 347 812 C416 847 473 824 556 835 C660 846 735 881 806 941 L830 981 L-40 981 Z',
+  ],
+  [
+    'blue',
+    'M-40 631 C65 630 127 668 188 733 C238 788 260 818 326 839 C389 859 434 838 502 848 C583 857 645 888 702 941 L730 981 L-40 981 Z',
+  ],
+  [
+    'navy',
+    'M-40 712 C46 708 89 735 136 786 C177 833 203 869 264 876 C319 883 365 863 426 869 C490 872 548 898 594 941 L630 981 L-40 981 Z',
+  ],
+  [
+    'corner',
+    'M1411 941 C1401 914 1411 887 1422 874 C1453 835 1500 838 1536 827 C1565 818 1572 799 1585 773 C1600 739 1634 724 1672 725 L1712 725 L1712 981 Z',
+  ],
+] as const;
+
+function geometry(source: string, amount = 0, phase = 0) {
+  let coordinate = 0;
+  return source.replace(/([MC LZ])|(-?\d+(?:\.\d+)?)/g, (token, command: string | undefined) => {
+    if (command) return command;
+    const index = coordinate++;
+    const value = Number(token);
+    const axis = index % 2;
+    const limit = axis === 0 ? 1672 : 941;
+    // Los puntos fuera del lienzo quedan anclados. La deformación máxima es 8 px.
+    const offset = value > 0 && value < limit ? amount * Math.sin(index * 0.7 + phase) : 0;
+    return (value * (axis === 0 ? 1920 / 1672 : 1080 / 941) + offset).toFixed(2);
+  });
+}
+const waves = outlines.map(([color, outline], index) => {
+  const base = geometry(outline);
+  const amplitude = index === 6 ? 3 : 6;
+  return {
+    color,
+    base,
+    values: [
+      base,
+      geometry(outline, amplitude, index * 0.25),
+      base,
+      geometry(outline, -amplitude, index * 0.25),
+      base,
+    ].join(';'),
+    duration: 28 + index,
+  };
+});
+
+/** SMIL interpola las curvas en el navegador; React sólo atiende cambios de accesibilidad. */
 export function AnimatedBackground() {
+  const id = useId();
+  const reduce = useSyncExternalStore(subscribe, reducedMotion, () => true);
   return (
     <svg
       className="public-animated-background"
       viewBox="0 0 1920 1080"
-      preserveAspectRatio="xMidYMid slice"
+      preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
       focusable="false"
     >
-      {/* Esquina superior izquierda: dos manchas amplias y una cinta clara. */}
-      <g className="background-motion background-top-left">
-        <g transform="scale(.78)">
-          <path
-            className="background-blob background-indigo"
-            d="M0 0h336c94 39 135 111 128 187-7 75-79 119-144 92C-45 253-91 192-136 139V0Z"
-          />
-          <path
-            className="background-blob background-pink background-pink-top"
-            d="M211 0c97 41 196 100 219 175 24 75-30 143-106 153-80 11-140-42-209-80C64 217 21 195 0 182V0h211Z"
-          />
-          <path
-            className="background-blob background-fog"
-            d="M0 239c69-48 141-42 205-9 66 34 96 90 136 119-79 12-163 65-211 138-36 54-76 59-130 51V239Z"
-          />
-        </g>
-      </g>
-
-      <g className="background-motion background-top-right" />
-
-      {/* Esquina inferior izquierda: azul sólido, velo translúcido y línea de contorno. */}
-      <g className="background-motion background-bottom-left">
-        <g transform="translate(0 238) scale(.78)">
-          <path
-            className="background-blob background-blue"
-            d="M0 647c74-15 160 8 223 73 73 76 70 156 144 186 51 21 95-5 159 7 103 19 155 78 172 167H0V647Z"
-          />
-          <path
-            className="background-blob background-blue-soft"
-            d="M0 521c89 1 157 42 218 108 62 67 101 153 192 181 45 14 91 5 143 27 64 27 104 78 121 143H0V521Z"
-          />
-          <path
-            className="background-line"
-            d="M0 518c103-3 174 42 235 110 66 74 114 150 205 175 76 21 169 7 252 53 88 49 129 127 155 224"
-          />
-        </g>
-      </g>
-
-      {/* Esquina inferior derecha: capas rosa, lila y violeta como la referencia. */}
-      <g className="background-motion background-bottom-right">
-        <g transform="translate(422 238) scale(.78)">
-          <path
-            className="background-blob background-lilac"
-            d="M889 1080c13-107 63-181 157-230 74-39 135-57 184-124 58-80 128-128 223-136 94-8 163 25 220 72 74 61 152 41 247 56v362H889Z"
-          />
-          <path
-            className="background-blob background-pink"
-            d="M1101 1080c7-86 49-139 128-170 74-29 127-20 171-73 42-49 48-126 109-186 68-68 154-90 245-66 64 17 111 54 166 76v338h-819Z"
-          />
-          <path
-            className="background-blob background-indigo"
-            d="M1197 1080c9-104 49-166 124-198 79-34 141-9 203-49 75-48 98-116 188-149 72-27 144-16 208 18v358h-723Z"
-          />
-        </g>
-      </g>
+      <defs>
+        {['light', 'blue', 'navy', 'corner'].map((color) => (
+          <linearGradient key={color} id={`${id}-${color}`} x1="0" y1="0" x2="1" y2="1">
+            <stop className={`background-${color}-start`} />
+            <stop offset="1" className={`background-${color}-end`} />
+          </linearGradient>
+        ))}
+      </defs>
+      {waves.map((wave, index) => (
+        <path key={index} d={wave.base} fill={`url(#${id}-${wave.color})`}>
+          {!reduce && (
+            <animate
+              attributeName="d"
+              values={wave.values}
+              dur={`${wave.duration}s`}
+              repeatCount="indefinite"
+              calcMode="spline"
+              keyTimes="0;0.25;0.5;0.75;1"
+              keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"
+            />
+          )}
+        </path>
+      ))}
     </svg>
   );
 }
