@@ -2,6 +2,10 @@
 
 Aplicación local de Windows para llamar pedidos listos. La persona operadora captura los dos últimos dígitos del ticket (00–99), y la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. El sistema no registra ventas ni imprime tickets.
 
+## Estado actual
+
+La rama actual es `codex/comal-architecture-refactor` y este estado corresponde al commit `d6030b10f4063ccc3f050a8ebce497f6cde82cd1`. El arbol Git esta limpio despues de publicar los cambios de arquitectura, interfaz, smoke tests y documentacion. La version del proyecto es `0.3.0`; el instalador debe reconstruirse desde un commit limpio antes de una entrega.
+
 ## Arquitectura actual
 
 Electron ejecuta un proceso principal y dos ventanas construidas con React y Vite: **operador** y **pública**. Las ventanas se comunican con el proceso principal mediante IPC. El mismo proceso ofrece ambas vistas a navegadores de la **misma PC** en `http://127.0.0.1:4317/` (operador) y `http://127.0.0.1:4317/publica` (pantalla pública). El servidor solo escucha en la interfaz local; no admite acceso desde otros equipos. La lógica de turnos y cola está en `nucleo/`. El estado de la jornada se guarda en `estado.json`, y las opciones se leen de `config.json`.
@@ -10,7 +14,7 @@ En Windows, la pantalla pública se coloca en la pantalla secundaria configurada
 
 La carpeta de datos de producción es `Documentos/Turnero Comal`. Puede cambiarse con la variable `TURNERO_DATOS` para pruebas aisladas. Contiene `config.json`, `estado.json`, `turnero.log` y `contenido/`. El instalador incluye contenido de fábrica que se copia a esa carpeta en el primer arranque. Los archivos locales de `contenido/videos`, `contenido/banner`, `contenido/voz` y `contenido/aviso.wav` se usan sin red. Para cada voz y para el aviso, la aplicación prefiere MP3 no vacío cuando existe; de lo contrario usa WAV.
 
-Los turnos, el estado y el contenido local funcionan sin internet. YouTube y el clima requieren internet. Si YouTube falla o el sistema detecta la pérdida de conexión, la pantalla pública usa el contenido local; al reconectarse intenta de nuevo la fuente configurada.
+Los turnos, el estado y el contenido local funcionan sin internet. YouTube y el clima requieren internet. Si YouTube falla o el sistema detecta la perdida de conexion, la pantalla publica usa el contenido local; al reconectarse intenta de nuevo la fuente configurada. El servidor HTTP local solo sirve las dos vistas y el transporte de navegador en `127.0.0.1`; no expone una API de administracion a la red.
 
 Desde **Ayuda**, el operador puede abrir **Diagnósticos** para revisar versiones, rutas de datos, estado de ventanas, último guardado, errores recientes, audio, YouTube, inventario y espacio libre cuando Windows permite consultarlo. Los detalles técnicos no aparecen en la pantalla pública. El registro `turnero.log` usa líneas JSON y rota al llegar a 5 MB; conserva hasta cinco archivos anteriores (`turnero.log.1` a `.5`).
 
@@ -64,6 +68,8 @@ npm run lint
 
 `npm run test:upgrade` usa el instalador 0.2.0 archivado y el 0.3.0 actual en una carpeta aislada. Crea un turno en SQLite 0.2.0, comprueba su migración a 0.3.0 y después reinstala 0.2.0 con el perfil respaldado. El primer arranque de 0.3.0 migra los turnos listos de la jornada y mensajes de configuración cuando aún no existe `estado.json`; deja intacta la base SQLite anterior.
 
+La escala de la pantalla publica se valida con `npx electron scripts/smoke-display-scale.mjs` despues de `npm run build`; comprueba la composicion 16:9 en ventanas Full HD, 1440p y 4K. La firma local protegida por TPM se prepara con `npm run desktop:build:local-signed` y `COMAL_SIGNING_CERT_SHA1`; no hay todavia un certificado emitido ni un instalador firmado aprobado.
+
 ## Estructura
 
 - `main/`: proceso principal de Electron, ventanas, IPC, configuración, contenido y persistencia.
@@ -86,7 +92,7 @@ npm run lint
 
 ## Documentación
 
-La [arquitectura local](docs/arquitectura.md) describe el diseño Electron. También incluye topologías futuras que aún no están implementadas. La documentación LaTeX en `docs/` conserva material histórico del sistema anterior y debe leerse como referencia, no como descripción del producto actual.
+La [arquitectura vigente](docs/current-architecture.md) describe el diseño Electron instalado, incluido el servidor HTTP local y sus limites. [Arquitectura](docs/arquitectura.md) conserva topologias historicas y propuestas futuras que aun no estan implementadas. La documentacion LaTeX en `docs/` debe leerse como referencia historica salvo que indique lo contrario.
 
 La [guía de operación y recuperación](docs/operacion-recuperacion.md) explica el guardado atómico, la salud de persistencia, los límites de importación, los respaldos y la restauración con la aplicación cerrada. La [lista de publicación](docs/lista-publicacion.md) recoge las comprobaciones de cada instalador.
 La [guía de seguridad y publicación](docs/seguridad-y-publicacion.md) describe ESLint, CI, auditoría de dependencias, CSP, IPC y firma de Windows.

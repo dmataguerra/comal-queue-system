@@ -1,6 +1,6 @@
 # Plan de SQA — prueba en las instalaciones de COMAL
 
-> Actualización Phase 5: abrir **Diagnósticos** desde el final de Ayuda y comprobar versiones, rutas, último guardado, inventario, espacio y transiciones de recuperación. La arquitectura vigente es Electron local sin servidor ni base de datos. Registrar la evidencia de publicación en la [lista de publicación](lista-publicacion.md).
+> Actualización Phase 5: abrir **Diagnósticos** desde el final de Ayuda y comprobar versiones, rutas, último guardado, inventario, espacio y transiciones de recuperación. La operación normal es local y no requiere una base de datos; el servidor web opcional solo escucha en `127.0.0.1` para las vistas del mismo equipo. Registrar la evidencia de publicación en la [lista de publicación](lista-publicacion.md).
 
 **Fecha de prueba:** 25 de septiembre de 2026  
 **Sistema:** Comal++ / turnero local, versión declarada `0.3.0`  
