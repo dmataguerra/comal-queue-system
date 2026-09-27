@@ -49,14 +49,14 @@ function geometry(source: string, amount = 0, phase = 0) {
     const value = Number(token);
     const axis = index % 2;
     const limit = axis === 0 ? 1672 : 941;
-    // Los puntos fuera del lienzo quedan anclados. La deformación máxima es 8 px.
+    // Los puntos fuera del lienzo quedan anclados. Las curvas interiores se desplazan hasta 42 px.
     const offset = value > 0 && value < limit ? amount * Math.sin(index * 0.7 + phase) : 0;
     return (value * (axis === 0 ? 1920 / 1672 : 1080 / 941) + offset).toFixed(2);
   });
 }
 const waves = outlines.map(([color, outline], index) => {
   const base = geometry(outline);
-  const amplitude = index === 6 ? 3 : 6;
+  const amplitude = index === 6 ? 24 : 34 + (index % 3) * 4;
   return {
     color,
     base,
@@ -67,7 +67,7 @@ const waves = outlines.map(([color, outline], index) => {
       geometry(outline, -amplitude, index * 0.25),
       base,
     ].join(';'),
-    duration: 28 + index,
+    duration: 12 + index * 0.8,
   };
 });
 

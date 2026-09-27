@@ -20,7 +20,7 @@
   height: 1080px;
   min-height: 520px;
   display: grid;
-  grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.65fr);
+  grid-template-columns: 480px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto auto;
   gap: 12.96px var(--display-gap);
   overflow: hidden;

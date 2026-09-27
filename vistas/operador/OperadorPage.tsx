@@ -434,7 +434,6 @@ export function OperadorPage() {
                             onClick={() => solicitarAccion(n, 'anunciar')}
                           >
                             <Icon name="volume" />
-                            <span>Anunciar</span>
                           </button>
                           <button
                             type="button"
@@ -445,7 +444,6 @@ export function OperadorPage() {
                             onClick={() => solicitarAccion(n, 'quitar')}
                           >
                             <Icon name="trash" />
-                            <span>Quitar</span>
                           </button>
                         </div>
                       </div>
