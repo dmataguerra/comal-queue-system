@@ -1,6 +1,6 @@
 # Seguridad, calidad y publicación de Windows
 
-Esta aplicación es Electron local. Las dos vistas cargan desde `turnero://app` en producción; el servidor Vite en `127.0.0.1:5173` se usa solo durante desarrollo. El proceso principal conserva el estado y los archivos. No hay servicio web ni base de datos.
+Esta aplicación es Electron local. Las dos vistas cargan desde `turnero://app` en producción; un servidor HTTP limitado a `127.0.0.1:4317` permite operarlas desde un navegador de la misma PC. Vite en `127.0.0.1:5173` se usa solo durante desarrollo. El proceso principal conserva el estado y los archivos JSON; la base SQLite anterior solo se lee durante la migración desde 0.2.0.
 
 ## Comprobaciones automáticas
 
@@ -37,7 +37,7 @@ El preload aislado expone solo `window.turnero`. Cada llamada IPC debe venir de 
 
 ## Firma de código y publicación
 
-El responsable de publicación debe obtener un certificado de firma de código para Windows de una autoridad de certificación reconocida por Windows (o usar un proveedor de firma administrada compatible con `electron-builder`). No guardar certificados, contraseñas ni tokens en este repositorio. Para la opción de archivo PFX, `electron-builder` lee `WIN_CSC_LINK` (ruta o enlace seguro al certificado) y `WIN_CSC_KEY_PASSWORD` del entorno; también admite `CSC_LINK` y `CSC_KEY_PASSWORD` como respaldo. Inyectarlos solo durante el trabajo de publicación desde un almacén de secretos, nunca en argumentos de consola, archivos `.env` versionados o registros. En GitHub Actions, usar secretos cifrados y un entorno protegido con revisión; no exponerlos a pull requests de bifurcaciones. No se ha configurado publicación automática con secretos. Ver la [guía de firma de electron-builder](https://www.electron.build/v26/docs/features/code-signing/code-signing-win/).
+Para distribución pública, el responsable de publicación debe obtener un certificado de firma de código para Windows de una autoridad de certificación reconocida por Windows (o usar un proveedor de firma administrada compatible con `electron-builder`). Para la única PC de la cafetería puede evaluarse la [firma local gratuita](firma-local.md), con confianza instalada manualmente en esa PC; **no** proporciona identidad verificada ni reputación de SmartScreen. No guardar claves privadas, certificados con clave privada, contraseñas ni tokens en este repositorio. Para la opción de archivo PFX, `electron-builder` lee `WIN_CSC_LINK` (ruta o enlace seguro al certificado) y `WIN_CSC_KEY_PASSWORD` del entorno; también admite `CSC_LINK` y `CSC_KEY_PASSWORD` como respaldo. Inyectarlos solo durante el trabajo de publicación desde un almacén de secretos, nunca en argumentos de consola, archivos `.env` versionados o registros. En GitHub Actions, usar secretos cifrados y un entorno protegido con revisión; no exponerlos a pull requests de bifurcaciones. No se ha configurado publicación automática con secretos. Ver la [guía de firma de electron-builder](https://www.electron.build/v26/docs/features/code-signing/code-signing-win/).
 
 La compilación de desarrollo sin certificado sigue disponible con `npm run desktop:build`. La orden `npm run desktop:build:signed` exige que `electron-builder` encuentre una identidad de firma y debe fallar sin ella. Verificar tanto el ejecutable instalado como el instalador desde PowerShell:
 
@@ -46,7 +46,7 @@ Get-AuthenticodeSignature -FilePath 'ruta\al\instalador.exe' | Format-List Statu
 Get-AuthenticodeSignature -FilePath 'ruta\a\Comal++.exe' | Format-List Status,SignerCertificate,TimeStamperCertificate
 ```
 
-Ambos deben mostrar `Status: Valid`, el firmante esperado y un sello de tiempo válido. También puede usarse `signtool verify /pa /v` del Windows SDK. No hay certificados locales configurados en este proyecto; la firma y su verificación final corresponden al responsable de publicación.
+Para un certificado de autoridad reconocida, ambos deben mostrar `Status: Valid`, el firmante esperado y un sello de tiempo válido. También puede usarse `signtool verify /pa /v` del Windows SDK. Para firma local, comprobar además la huella exacta del certificado público aprobado y validar en la PC de destino tras establecer su confianza; el estado puede ser `UnknownError` en una PC que no confía en ese certificado. No hay certificados locales configurados todavía; la firma y su verificación final corresponden al responsable de publicación.
 
 ### Lista de publicación
 

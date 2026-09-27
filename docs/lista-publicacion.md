@@ -14,6 +14,7 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | `npm test` | ____ |
 | `npm run build` | ____ |
 | `npm run test:desktop` en datos aislados | ____ |
+| `npm run test:installed` sobre el SHA-256 exacto; revisar `resultado.json` | ____ |
 | Prueba de escritorio offline y estado/config corruptos en datos aislados | ____ |
 | Voz 00–99 y aviso: validación automática y escucha humana | ____ |
 | TV desconectada/reconectada, ventana pública terminada y reinicio/persistencia | ____ |
@@ -22,6 +23,7 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | Firma (`Get-AuthenticodeSignature`) o «no firmado» | ____ |
 | Instalación nueva con usuario estándar y dos pantallas | ____ |
 | Actualización desde versión anterior y conservación de datos | ____ |
+| Migración de SQLite 0.2.0 a JSON 0.3.0 y conservación de la base anterior | ____ |
 | Restauración de respaldo en carpeta aislada | ____ |
 | Reversión probada: cerrar app, reinstalar instalador anterior verificado, restaurar respaldo y comprobar llamadas | ____ |
 | Problemas conocidos aceptados y responsable | ____ |

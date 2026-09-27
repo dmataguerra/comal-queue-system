@@ -4,7 +4,7 @@ La aplicación guarda sus datos en `Documentos\Turnero Comal` en producción, o 
 
 ## Guardado y salud
 
-Los cambios de `config.json` realizados desde la aplicación y los cambios de `estado.json` se escriben primero en un archivo temporal en la misma carpeta, se vacían al disco y después sustituyen el archivo anterior. Un error de escritura se registra en `turnero.log`. Si falla el guardado de turnos, la ventana del operador muestra una advertencia: los cambios recientes pueden perderse tras un reinicio. La aplicación vuelve a intentar guardar con el siguiente cambio de turno; cuando lo consigue, retira la advertencia y registra la recuperación.
+Los cambios de `config.json` realizados desde la aplicación y los cambios de `estado.json` se escriben primero en un archivo temporal en la misma carpeta, se vacían al disco y después sustituyen el archivo anterior. Un error de escritura se registra en `turnero.log`. El turno solo se confirma y anuncia después de guardar correctamente. Si falla, la ventana del operador muestra una advertencia, la cola y la TV no cambian, y el operador puede reintentar cuando corrija disco o permisos.
 
 Si falta `estado.json`, se inicia una jornada vacía. Si pertenece a otro día, también se inicia vacía y se conserva el archivo anterior hasta el siguiente guardado. Si contiene JSON, estructura o fechas inválidas, la aplicación intenta crear una copia `estado.json.corrupto-*` y comienza vacía; revise el registro y conserve la copia para diagnóstico. Si el archivo no puede leerse por permisos u otro error de E/S, el inicio falla con un mensaje en lugar de tratarlo como ausente. Para recuperar un turno tras un reinicio inesperado, compruebe la fecha y el contenido de `estado.json` antes de continuar la operación.
 
@@ -26,6 +26,12 @@ npx tsx scripts/datos.ts restore "D:\Respaldos Comal\turnero-..." "$env:USERPROF
 
 La opción `--app-cerrada` es una confirmación explícita de que verificó el cierre; la utilidad no puede detectar de forma fiable todas las instancias remotas o renombradas. La restauración prepara una carpeta nueva y luego la coloca en la ruta de datos. Conserva los datos anteriores en una carpeta `Turnero Comal.antes-de-restaurar-*` junto a la ruta de datos. Inicie la aplicación y compruebe en la ventana del operador la pantalla pública, el audio y los turnos. Un `estado.json` de otra fecha no reabre turnos de una jornada anterior.
 
+### Actualización desde 0.2.0 y reversión
+
+La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del perfil de Electron, no en `Documentos\Turnero Comal`. Con 0.2.0 cerrada, respalde el directorio que contiene `comal.sqlite` junto con posibles archivos `comal.sqlite-wal` y `comal.sqlite-shm`. Conserve también el instalador 0.2.0 verificado. Al abrir 0.3.0 por primera vez, si no existe `estado.json`, se leen sin modificar la base anterior, los turnos listos anunciados durante la jornada actual (máximo seis) y los mensajes/YouTube compatibles; se escriben los JSON nuevos. Los turnos de otras fechas y el historial permanecen en la base anterior. Compruebe turno, configuración y contenido antes de operar.
+
+Para volver a 0.2.0, cierre 0.3.0, reinstale el instalador 0.2.0 verificado y restaure el respaldo del perfil de 0.2.0 con la aplicación cerrada. Los turnos creados después de migrar a 0.3.0 no aparecen en 0.2.0: registre esos turnos antes de revertir y concílielos manualmente. `npm run test:upgrade` prueba esta secuencia con datos aislados.
+
 ## Incidencias durante la operación
 
 | Situación | Acción |
@@ -34,6 +40,7 @@ La opción `--app-cerrada` es una confirmación explícita de que verificó el c
 | La vista pública o la del operador se bloquea | La aplicación intenta recargar la vista. Si no vuelve, reinicie la aplicación y revise `turnero.log`. |
 | Configuración inválida | Corrija `config.json` con la aplicación cerrada. Los valores inválidos se sustituyen por los predeterminados y se registran. |
 | Falta audio | Revise `contenido/voz` y el aviso; ejecute `npm run verify:audio` desde el repositorio antes de instalar. |
+| La primera copia de contenido quedó incompleta | Al arrancar se reponen las voces y el aviso obligatorios faltantes o vacíos desde el instalador. Los archivos vacíos reemplazados se conservan con sufijo `.incompleto-*`. Para banners y videos, cierre la aplicación, respalde datos y reponga manualmente solo los archivos necesarios. |
 | YouTube o internet falla | Use videos e imágenes locales en `contenido/`. La lista de turnos y la voz local funcionan sin internet. |
 | Poco espacio en disco | Libere espacio en la unidad de datos antes de importar contenido o continuar la jornada. |
 
@@ -52,11 +59,12 @@ Abra **Ayuda** y seleccione el enlace a **Diagnósticos** al final de la lista. 
 | `estado.json` ausente o de otro día | Inicia jornada vacía; puede operar. | Día anterior se registra. No se requiere reintento; el siguiente cambio guarda el archivo. |
 | Estado corrupto | Inicia vacío con aviso de recuperación; puede operar tras revisar los turnos. | Copia `estado.json.corrupto-*` si es posible. Se recupera al confirmar o restaurar datos válidos con la app cerrada. |
 | Estado ilegible por permisos | El arranque se detiene con error. | Revisar permiso/ruta y reabrir; no se trata como jornada vacía. |
-| Guardado de estado o configuración falla | Turnos siguen en memoria con aviso persistente; cambio de YouTube fallido no se aplica. | Registra inicio del fallo. El estado se reintenta con el siguiente cambio y registra recuperación; para configuración, corrija disco/permisos y repita la acción. |
+| No se puede crear la carpeta de datos | El arranque se detiene y muestra la ruta y el error de Windows. | Revise permisos, ruta y espacio disponible antes de reabrir. Si la carpeta nunca se creó, el error se escribe en la consola porque todavía no existe `turnero.log`. |
+| Guardado de estado o configuración falla | La acción de turno no se aplica ni se anuncia; cambio de YouTube fallido tampoco se aplica. | Registra el fallo. Corrija disco/permisos y repita la acción; al guardar correctamente se retira la advertencia. |
 | Configuración inválida | Se conserva la última configuración válida o valores predeterminados al arrancar. | Registra la validación; corrija `config.json` y vuelva a cargar o reinicie. |
 | Ventana pública termina o TV se desconecta | La barra indica TV no disponible; las llamadas siguen en la cola de estado. | Se registra. La vista se recarga o vuelve al reconectar Windows; repita manualmente llamadas emitidas durante la ausencia de TV si procede. |
 | Ventana de operador termina | Se intenta recargar; si se cierra, termina la aplicación. | Se registra. Reabrir y comprobar estado antes de seguir. |
-| Audio falla o falta una voz | La tarjeta visual sigue; el indicador audio marca degradado. | Se registra la voz o fallo. Reponga archivos con la app cerrada y reinicie; compruebe sonido en el equipo real. |
+| Audio falla o falta una voz | El operador ve el acuse del último anuncio: pendiente, terminado o fallo en la vista pública. | Se registra la voz o fallo. El acuse confirma reproducción en software, no que el HDMI o las bocinas emitieron sonido. Compruebe sonido en el equipo real. |
 | YouTube o internet falla | La pantalla usa videos o banners locales; los turnos continúan. | El indicador cambia a no disponible. Al volver la conexión se intenta YouTube de nuevo; si falla un enlace, cambie a uno válido o use fuente local. |
 | Espacio bajo | Se rechazan importaciones que no dejan 512 MB y guardados de estado con menos de 16 MB libres; se muestra alerta. | Se registra el rechazo. Libere espacio y repita la operación; si Windows no informa espacio, se confía en el resultado de escritura. |
 | Cierre durante operación o temporal previo | Se detiene la vigilancia y temporizadores; la escritura atómica deja original válido o temporal. | Al reiniciar se usa el archivo principal; temporales y copias no se importan como estado. El inicio retira temporales `estado.json`/`config.json` con el nombre conocido y más de un minuto de antigüedad. Otros archivos quedan intactos. |

@@ -4,7 +4,7 @@ Aplicación local de Windows para llamar pedidos listos. La persona operadora ca
 
 ## Arquitectura actual
 
-Electron ejecuta un proceso principal y dos ventanas construidas con React y Vite: **operador** y **pública**. Las ventanas se comunican con el proceso principal mediante IPC; no hay servidor local ni acceso desde un navegador. La lógica de turnos y cola está en `nucleo/`. El estado de la jornada se guarda en `estado.json`, y las opciones se leen de `config.json`.
+Electron ejecuta un proceso principal y dos ventanas construidas con React y Vite: **operador** y **pública**. Las ventanas se comunican con el proceso principal mediante IPC. El mismo proceso ofrece ambas vistas a navegadores de la **misma PC** en `http://127.0.0.1:4317/` (operador) y `http://127.0.0.1:4317/publica` (pantalla pública). El servidor solo escucha en la interfaz local; no admite acceso desde otros equipos. La lógica de turnos y cola está en `nucleo/`. El estado de la jornada se guarda en `estado.json`, y las opciones se leen de `config.json`.
 
 En Windows, la pantalla pública se coloca en la pantalla secundaria configurada como **pantalla extendida**. Sin una pantalla secundaria, la aplicación empaquetada abre solo la ventana del operador. En desarrollo, la ventana pública también puede abrirse en el monitor principal para pruebas.
 
@@ -39,6 +39,8 @@ npm run desktop:build
 
 El instalador se escribe en `release/`. `npm run desktop:dir` genera una carpeta de aplicación sin instalador. Para una publicación firmada, usar `npm run desktop:build:signed` con el certificado del responsable de publicación.
 
+Para una instalación controlada solo en la PC de la cafetería, existe además `npm run desktop:build:local-signed`: exige un certificado de firma con clave no exportable protegida por el TPM de esta PC de desarrollo. La [guía de firma local](docs/firma-local.md) explica sus límites y requisitos; todavía no se ha emitido ese certificado. Una firma local gratuita no elimina por sí sola los avisos de SmartScreen ni impide copiar la aplicación.
+
 ## Validación
 
 ```powershell
@@ -48,10 +50,19 @@ npm run verify:audio
 npm test
 npm run build
 npm run test:desktop
+npm run test:browser
+npm run test:installed
+npm run test:upgrade
 npm run lint
 ```
 
 `npm test` incluye la validación del catálogo de audio y las pruebas del dominio y del proceso principal. El validador exige una voz para cada número 00–99, rechaza archivos de audio vacíos y revisa el aviso. `npm run test:desktop` usa datos aislados bajo `test-results/`, comprueba ambas vistas, llamadas y multimedia, y decodifica en Chromium las 100 voces seleccionadas y el aviso. Comprueba que se crea el iframe de YouTube; la reproducción real requiere una aceptación aparte con internet. La herramienta de generación y sus instrucciones están en `tooling/audio/`.
+
+`npm run test:installed` requiere un instalador ya construido. Lo instala en `test-results/`, ejecuta el `.exe` instalado con datos aislados, comprueba una llamada y su recuperación tras reiniciar, y registra el hash probado en `resultado.json`. Para probar otro instalador: `node scripts/smoke-installed.mjs 'ruta\al\instalador.exe'`. No sustituye las pruebas con cuenta estándar, actualización, reversión ni hardware real.
+
+`npm run test:browser` abre las vistas en un navegador Chromium sin preload de Electron, verifica llamadas y sincronización, y comprueba que las peticiones externas no puedan despachar turnos. El servidor local arranca junto con la aplicación; si el puerto 4317 está ocupado, la aplicación de escritorio continúa y registra el problema en `turnero.log`.
+
+`npm run test:upgrade` usa el instalador 0.2.0 archivado y el 0.3.0 actual en una carpeta aislada. Crea un turno en SQLite 0.2.0, comprueba su migración a 0.3.0 y después reinstala 0.2.0 con el perfil respaldado. El primer arranque de 0.3.0 migra los turnos listos de la jornada y mensajes de configuración cuando aún no existe `estado.json`; deja intacta la base SQLite anterior.
 
 ## Estructura
 
@@ -66,10 +77,10 @@ npm run lint
 ## Limitaciones conocidas
 
 - La aplicación empaquetada necesita una pantalla secundaria para mostrar la vista pública.
-- No hay acceso operativo desde Chrome, Edge o un teléfono.
-- La entrega efectiva del anuncio y del audio a la TV no tiene acuse de recibo visible para el operador.
-- Si falla el guardado de turnos, el operador ve una advertencia persistente. Los cambios en memoria pueden perderse tras reiniciar hasta que un guardado posterior tenga éxito.
-- Si la primera copia del contenido de fábrica falla o una instalación anterior ya tiene una carpeta `contenido/` incompleta, el arranque no repara automáticamente los archivos faltantes.
+- Chrome y Edge pueden abrir el operador y la vista pública en la misma PC. El acceso desde teléfonos u otros equipos no está habilitado.
+- El operador ve si la vista pública de Electron terminó o falló al reproducir el audio de cada turno. Este acuse de software no confirma la salida física por HDMI o bocinas.
+- Si falla el guardado de un turno, la acción se rechaza: la cola y la TV no cambian. Corrija disco o permisos y vuelva a intentar.
+- Al arrancar se reparan voces 00–99 y `aviso` faltantes o vacíos desde el contenido de fábrica sin sobrescribir audio personalizado válido. Banners y videos eliminados no se reponen automáticamente.
 - YouTube y el clima dependen de servicios externos. El contenido local se usa como respaldo cuando YouTube falla; la detección de una conexión intermitente puede tardar hasta 20 segundos y requiere validación en la red real.
 - La aceptación final requiere pruebas en la PC, TV, bocinas y escala de pantalla reales del local.
 
@@ -79,6 +90,6 @@ La [arquitectura local](docs/arquitectura.md) describe el diseño Electron. Tamb
 
 La [guía de operación y recuperación](docs/operacion-recuperacion.md) explica el guardado atómico, la salud de persistencia, los límites de importación, los respaldos y la restauración con la aplicación cerrada. La [lista de publicación](docs/lista-publicacion.md) recoge las comprobaciones de cada instalador.
 La [guía de seguridad y publicación](docs/seguridad-y-publicacion.md) describe ESLint, CI, auditoría de dependencias, CSP, IPC y firma de Windows.
-La [lista de publicación de 0.3.0](docs/publicacion-0.3.0.md) registra el commit base, los comandos, la salida del instalador, el hash y la prueba manual pendiente para la versión final.
+La [lista de publicación de 0.3.0](docs/publicacion-0.3.0.md) registra el instalador local verificado y la aceptación pendiente para una entrega final.
 
 No se ha documentado una licencia de distribución para este repositorio.

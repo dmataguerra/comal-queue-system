@@ -1,42 +1,41 @@
 # Publicación de Comal++ 0.3.0
 
-El `package.json`, la raíz de `package-lock.json` y la configuración de `electron-builder` indican la versión **0.3.0**. El instalador esperado para Windows x64 es `release/Comal++ Setup 0.3.0.exe` (NSIS). `release/` también contiene un instalador 0.2.0 y un `latest.yml` antiguo; ninguno demuestra el estado de la versión actual.
+## Estado al 26 de septiembre de 2026
 
-## Estado de la revisión
+La rama es `codex/comal-architecture-refactor`, con HEAD `8560767cda5525b7efbbe6f867d4c27e4ea98f97`. El instalador descrito aquí se construyó **con cambios locales sin confirmar** sobre ese commit. Por tanto, el commit por sí solo no reproduce el binario. Para una publicación definitiva, confirme los cambios, reconstruya desde el commit final y registre el nuevo hash.
 
-La base de esta revisión es `529b5d422e3c02d19e4f83280ec975525a46ac0f`. El código de la aplicación quedó dividido en los commits `113e325` (núcleo) y `7474021` (interfaz). El instalador anterior de 0.3.0 tenía SHA-256 `9E7F16E471A1468AAA790A145324CC9ECCD2A26A67DFD64D3F12412F46FA6E96`; ya no representa el código actual.
+El instalador local `release/Comal++ Setup 0.3.0.exe` mide **125,123,434 bytes** y tiene SHA-256 **`DF5ED721D234CDFA7C49BCBC0D1566642FA5E3634B461CB359BB6691D0A89DAC`**. `Get-AuthenticodeSignature` informa **NotSigned**. Este artefacto aún no es una entrega final aprobada.
 
-El 25 de septiembre de 2026 se reconstruyó `release/Comal++ Setup 0.3.0.exe` desde esos dos commits con `npm run desktop:build`: tamaño **125,116,558 bytes**, SHA-256 **`573B4EFBC3A400180113969F9579E36D1B813DCB6FCA0C57CF2BF141B8A57229`**. Authenticode informa **NotSigned**. El `app.asar` contiene `package.json` 0.3.0, `build/main/main.js` y ambas vistas bajo `dist/`. El contenido externo incluye `40.wav` y las dos imágenes locales. Este hash identifica el instalador local reconstruido; debe conservarse el binario junto con la revisión publicada para poder rastrear la entrega.
+El 0.2.0 y su `latest.yml` antiguo se conservaron en `release/archive-0.2.0/`. No hay `latest.yml` vigente para 0.3.0 ni un flujo de actualización automática configurado. Esos archivos antiguos no deben acompañar la entrega 0.3.0.
 
-La instalación aislada del instalador nuevo terminó con código 0 en `test-results/verify-installer-ui-20260925`; se comprobaron el ejecutable, `40.wav` y las dos imágenes. Las pruebas de escritorio del árbol de código pasaron, incluida la decodificación de 101 audios y la carga de imágenes. El ejecutable recién instalado no se sometió de nuevo a la secuencia completa de turnos y cierre. La aceptación en la PC, TV y bocinas reales de COMAL sigue pendiente.
+## Evidencia disponible
 
-## Comandos de construcción y validación
+- `npm run build` y `npm test` pasaron; `npm test` terminó con 88 pruebas correctas. `npm run test:browser` comprobó operador, pantalla pública, sincronización, acuse visible del audio y bloqueo de solicitudes externas. `npm run test:desktop` comprobó las vistas, audio y geometría en 1080p, 1440p y 4K.
+- `npm run test:installed` instaló silenciosamente **ese SHA-256** en una carpeta aislada, verificó el ejecutable y contenido de fábrica, llamó el turno 42 y comprobó que `estado.json` conservó el turno tras reiniciar. Evidencia: `test-results/installed-ehEZMZ/resultado.json` (ignorada por Git).
+- `npm run test:upgrade` instaló 0.2.0, creó el turno 42 en SQLite y respaldó ese perfil; instaló 0.3.0, migró el 42 y guardó el 43; reinstaló 0.2.0 y recuperó el 42 desde el respaldo. Evidencia: `test-results/upgrade-HrKZ8k/resultado.json` (ignorada por Git). Ambas pruebas usaron la cuenta Windows actual y rutas aisladas.
+- Quedan pendientes la cuenta estándar independiente, salida audible en bocinas, presentación en la TV real, firma digital y aceptación en el local.
 
-En Windows con Node.js 22 o posterior, desde el repositorio:
+## Procedimiento de publicación
+
+Desde un árbol Git limpio y con Node.js 22 o posterior en Windows:
 
 ```powershell
 git rev-parse HEAD
 git status --short
 npm ci
 npm run format:check
-npm run verify:audio
 npm run lint
 npm test
-npm run build
-npm run test:desktop
-npm run desktop:build
+npm run test:browser
+npm run desktop:build:signed
 Get-FileHash -Algorithm SHA256 -LiteralPath 'release\Comal++ Setup 0.3.0.exe'
+Get-AuthenticodeSignature -LiteralPath 'release\Comal++ Setup 0.3.0.exe'
+npm run test:installed
+npm run test:upgrade
 ```
 
-Registre en el expediente de entrega el commit, versión, fecha, salida exacta del instalador, tamaño y SHA-256. `npm run desktop:build` produce un artefacto sin firma cuando no hay certificado configurado. Para una distribución firmada siga la [política de seguridad y publicación](seguridad-y-publicacion.md) y use `npm run desktop:build:signed` con credenciales inyectadas por el responsable de publicación.
+El certificado de firma debe proporcionarlo el responsable de publicación según la [política de seguridad](seguridad-y-publicacion.md). Compruebe `Status: Valid` tanto para el instalador como para el ejecutable instalado. Registre commit, estado Git limpio, versión, tamaño, SHA-256, firma, fecha, pruebas y responsable en una copia de la [lista de publicación](lista-publicacion.md). Una nueva compilación, firma o cambio de origen genera otro binario y exige repetir el hash y la prueba instalada.
 
-## Prueba manual del instalador exacto
+## Aceptación pendiente en destino
 
-1. Copie el instalador cuyo hash se registró a una cuenta Windows estándar de prueba. Verifique de nuevo el hash antes de ejecutarlo.
-2. Cierre cualquier instalación previa y respalde `Documentos\Turnero Comal` según la [guía de operación](operacion-recuperacion.md). Instale y compruebe que el ejecutable informa la versión 0.3.0.
-3. Con dos pantallas en modo extendido y datos de prueba aislados, abra la aplicación. Confirme que la ventana del operador queda en la pantalla principal y la pública en la secundaria.
-4. Llame el turno 40 y otro turno. Confirme imagen y voz audibles, guardado en `estado.json`, corrección de turno y recuperación tras cerrar y abrir la aplicación.
-5. Compruebe imágenes y videos locales sin internet, reconexión de la TV, importación de un archivo pequeño, aviso por archivo demasiado grande y respaldo/restauración con la aplicación detenida.
-6. Revise `turnero.log`, cierre limpio y ausencia de procesos Electron residuales. Registre las condiciones de PC, TV, bocinas, escala de pantalla y resultado.
-
-La prueba en la PC y pantalla reales del local sigue siendo obligatoria antes de declarar lista la publicación.
+Con datos respaldados y una cuenta Windows estándar, repita instalación limpia, actualización desde 0.2.0 y reversión con restauración del respaldo. En la PC, TV y bocinas reales del local, confirme pantallas extendidas, escalas, HDMI, llamadas 40 y otro turno, audio audible, acuse mostrado al operador, multimedia sin internet, desconexión y reconexión de TV, cierre y reinicio, persistencia, `turnero.log` y recuperación. Registre evidencia y resultado de cada paso; el acuse de software no certifica que el sonido salió por las bocinas.
