@@ -4,7 +4,7 @@
 
 The current implementation is documented in [Current desktop architecture](current-architecture.md). The topology B, WebSocket, and server sections below are historical proposals and do not describe the installed product.
 
-En producción, `config.json`, `estado.json`, `turnero.log` y `contenido/` viven en `Documentos/Turnero Comal` (o en `TURNERO_DATOS` para pruebas). `estado.json` y las modificaciones de configuración se publican por escritura temporal, sincronización y renombrado. La carpeta `contenido/` almacena videos, banners, 100 voces y el aviso. La pantalla pública solo recibe estado, inventario y configuración necesarios para mostrar turnos y multimedia; los diagnósticos completos se consultan únicamente en operador.
+En producción, `config.json`, `estado.json`, `turnero.log` y `contenido/` viven en `%APPDATA%/comal-local/datos` (o en `TURNERO_DATOS` para pruebas). `estado.json` y las modificaciones de configuración se publican por escritura temporal, sincronización y renombrado. La carpeta `contenido/` almacena videos, banners, 100 voces y el aviso. La pantalla pública solo recibe estado, inventario y configuración necesarios para mostrar turnos y multimedia; los diagnósticos completos se consultan únicamente en operador.
 
 El operador accede a **Diagnósticos** desde el final de la lista de Ayuda; allí consulta persistencia, TV, audio, YouTube, disco y recuperación. El registro usa JSON por línea con hora ISO/local, nivel, componente, versión y sesión. Rota a 5 MB y retiene cinco archivos. Los mensajes idénticos se agrupan durante 30 segundos. El proveedor de diagnósticos tolera fallos individuales de disco, inventario y ventanas.
 
@@ -329,10 +329,10 @@ turnero/
 ```
 
 `contenido/`, `config.json` y `estado.json` viven **fuera de la instalación**, en
-`Documentos\Turnero Comal`, para que el administrador pueda tocarlos sin reinstalar nada. No van
+`%APPDATA%\comal-local\datos`, para que el administrador pueda tocarlos sin reinstalar nada. No van
 junto al `.exe`: el desinstalador de NSIS borra esa carpeta en cada actualización, y si se
 instala en Program Files no se puede escribir ahí. El instalador deja el contenido de fábrica
-junto al `.exe` y la app lo copia a Documentos en el primer arranque; la app crea `config.json`
+junto al `.exe` y la app lo copia a su carpeta de datos en el primer arranque; la app crea `config.json`
 si falta. Así una actualización nunca pisa lo que el administrador editó.
 
 ---

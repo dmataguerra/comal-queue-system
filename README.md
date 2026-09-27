@@ -4,7 +4,7 @@ Aplicación local de Windows para llamar pedidos listos. La persona operadora ca
 
 ## Estado actual
 
-La rama actual es `codex/comal-architecture-refactor` y este estado corresponde al commit `d6030b10f4063ccc3f050a8ebce497f6cde82cd1`. El arbol Git esta limpio despues de publicar los cambios de arquitectura, interfaz, smoke tests y documentacion. La version del proyecto es `0.3.0`; el instalador debe reconstruirse desde un commit limpio antes de una entrega.
+La versión del proyecto es `0.3.1`. Esta revisión corrige el guardado en carpetas protegidas de Documentos/OneDrive y prepara la solicitud de firma pública gratuita; todavía no hay un certificado público aprobado.
 
 ## Arquitectura actual
 
@@ -12,7 +12,7 @@ Electron ejecuta un proceso principal y dos ventanas construidas con React y Vit
 
 En Windows, la pantalla pública se coloca en la pantalla secundaria configurada como **pantalla extendida**. Sin una pantalla secundaria, la aplicación empaquetada abre solo la ventana del operador. En desarrollo, la ventana pública también puede abrirse en el monitor principal para pruebas.
 
-La carpeta de datos de producción es `Documentos/Turnero Comal`. Puede cambiarse con la variable `TURNERO_DATOS` para pruebas aisladas. Contiene `config.json`, `estado.json`, `turnero.log` y `contenido/`. El instalador incluye contenido de fábrica que se copia a esa carpeta en el primer arranque. Los archivos locales de `contenido/videos`, `contenido/banner`, `contenido/voz` y `contenido/aviso.wav` se usan sin red. Para cada voz y para el aviso, la aplicación prefiere MP3 no vacío cuando existe; de lo contrario usa WAV.
+La carpeta de datos de producción es `app.getPath('userData')/datos` (normalmente `%APPDATA%/comal-local/datos` en Windows), fuera de Documentos/OneDrive. La ruta efectiva aparece en **Ayuda → Diagnósticos**. Al actualizar se copian los datos anteriores una sola vez, conservando los originales; si la copia falla, el arranque informa del problema. Puede cambiarse con la variable `TURNERO_DATOS` para pruebas aisladas. Contiene `config.json`, `estado.json`, `turnero.log` y `contenido/`. El instalador incluye contenido de fábrica que se copia a esa carpeta en el primer arranque. Los archivos locales de `contenido/videos`, `contenido/banner`, `contenido/voz` y `contenido/aviso.wav` se usan sin red. Para cada voz y para el aviso, la aplicación prefiere MP3 no vacío cuando existe; de lo contrario usa WAV.
 
 Los turnos, el estado y el contenido local funcionan sin internet. YouTube y el clima requieren internet. Si YouTube falla o el sistema detecta la perdida de conexion, la pantalla publica usa el contenido local; al reconectarse intenta de nuevo la fuente configurada. El servidor HTTP local solo sirve las dos vistas y el transporte de navegador en `127.0.0.1`; no expone una API de administracion a la red.
 
@@ -42,6 +42,8 @@ npm run desktop:build
 ```
 
 El instalador se escribe en `release/`. `npm run desktop:dir` genera una carpeta de aplicación sin instalador. Para una publicación firmada, usar `npm run desktop:build:signed` con el certificado del responsable de publicación.
+
+La instalación crea un acceso en el menú Inicio, sin escribir un acceso directo en el Escritorio: este puede estar redirigido a OneDrive y protegido por Windows.
 
 Para una instalación controlada solo en la PC de la cafetería, existe además `npm run desktop:build:local-signed`: exige un certificado de firma con clave no exportable protegida por el TPM de esta PC de desarrollo. La [guía de firma local](docs/firma-local.md) explica sus límites y requisitos; todavía no se ha emitido ese certificado. Una firma local gratuita no elimina por sí sola los avisos de SmartScreen ni impide copiar la aplicación.
 
@@ -99,3 +101,7 @@ La [guía de seguridad y publicación](docs/seguridad-y-publicacion.md) describe
 La [lista de publicación de 0.3.0](docs/publicacion-0.3.0.md) registra el instalador local verificado y la aceptación pendiente para una entrega final.
 
 No se ha documentado una licencia de distribución para este repositorio.
+
+## Licencia y firma pública
+
+El código propio se distribuye bajo [MIT](LICENSE). Los recursos y dependencias de terceros conservan sus licencias. La [preparación de firma pública gratuita](docs/firma-publica-gratuita.md) documenta los requisitos pendientes de SignPath y la corrección del bloqueo de carpetas protegidas.

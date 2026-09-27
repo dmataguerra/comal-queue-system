@@ -1,6 +1,7 @@
 import { app, dialog, Menu, protocol, shell, session } from 'electron';
 import { mkdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
+import { migrarDatosDocumentos, resolverCarpetaDatos } from './carpeta-datos.js';
 import { conectarIpc } from './adaptador-ipc.js';
 import { leerConfig, msHastaHora, vigilarConfig } from './config.js';
 import {
@@ -45,14 +46,13 @@ protocol.registerSchemesAsPrivileged([
 const desarrollo = !app.isPackaged;
 const urlDesarrollo = process.env.TURNERO_DEV_URL;
 const raizApp = app.getAppPath();
-// config.json, contenido/ y estado.json van en Documentos para que el administrador los edite (§5).
-// Junto al .exe no: el desinstalador de NSIS borra esa carpeta en cada actualización, y en
-// Program Files no se puede escribir. En desarrollo, la raíz del proyecto.
-const carpetaDatos = process.env.TURNERO_DATOS
-  ? resolve(process.env.TURNERO_DATOS)
-  : app.isPackaged
-    ? join(app.getPath('documents'), 'Turnero Comal')
-    : raizApp;
+// Datos privados en el perfil de la aplicación, fuera de Documentos/OneDrive y del instalador.
+const carpetaDatos = resolverCarpetaDatos({
+  personalizada: process.env.TURNERO_DATOS,
+  empaquetada: app.isPackaged,
+  perfil: app.getPath('userData'),
+  raiz: raizApp,
+});
 const carpetaContenido = join(carpetaDatos, 'contenido');
 // El instalador deja el contenido de fábrica junto al .exe (extraFiles); se copia en el primer arranque.
 const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : raizApp, 'contenido');
@@ -73,10 +73,16 @@ const urlVista = (vista: Vista) =>
 
 async function iniciar() {
   // Preparar la carpeta dentro del mismo manejador que muestra errores de arranque.
+  const migrados =
+    app.isPackaged && !process.env.TURNERO_DATOS
+      ? migrarDatosDocumentos(join(app.getPath('documents'), 'Turnero Comal'), carpetaDatos)
+      : false;
   mkdirSync(carpetaDatos, { recursive: true });
   registroBase = crearRegistro(join(carpetaDatos, 'turnero.log'), {
     version: app.getVersion(),
   });
+  if (migrados)
+    registrar(`Datos copiados desde Documentos a ${carpetaDatos}; originales conservados.`);
   limpiarTemporalesJson(carpetaDatos, registrar);
   Menu.setApplicationMenu(null);
   // Una página de Vite con el mismo ETag puede conservar una CSP antigua en el perfil.

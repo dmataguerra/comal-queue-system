@@ -20,7 +20,8 @@ const raiz = fileURLToPath(new URL('../', import.meta.url));
 const anterior = resolve(
   process.argv[2] ?? join(raiz, 'release', 'archive-0.2.0', 'Comal++ Setup 0.2.0.exe'),
 );
-const actual = resolve(process.argv[3] ?? join(raiz, 'release', 'Comal++ Setup 0.3.0.exe'));
+const version = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8')).version;
+const actual = resolve(process.argv[3] ?? join(raiz, 'release', `Comal++ Setup ${version}.exe`));
 for (const ruta of [anterior, actual]) assert.ok(existsSync(ruta), `Falta el instalador: ${ruta}`);
 const hash = (ruta) => createHash('sha256').update(readFileSync(ruta)).digest('hex').toUpperCase();
 const resultados = join(raiz, 'test-results');
@@ -186,7 +187,7 @@ try {
   app.cerrar();
   detener();
   await pausa(500);
-  reporte.pasos.push('actualización a 0.3.0 conservó 42 y guardó 43');
+  reporte.pasos.push(`actualización a ${version} conservó 42 y guardó 43`);
 
   instalar(anterior);
   cpSync(respaldo, restaurado, { recursive: true });

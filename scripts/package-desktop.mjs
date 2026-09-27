@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import { prepararCompatibilidadNsis } from './nsis-compat.mjs';
 
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pruebas = join(raiz, 'test-results');
@@ -91,7 +92,11 @@ if (firmaLocal) {
 try {
   mkdirSync(temporal, { recursive: true });
   mkdirSync(cacheBuilder, { recursive: true });
-  for (const nombre of ['build', 'dist', 'contenido'])
+  paquete.build.nsis = {
+    ...paquete.build.nsis,
+    include: prepararCompatibilidadNsis(raiz, temporal),
+  };
+  for (const nombre of ['build', 'dist', 'contenido', 'LICENSE'])
     cpSync(join(raiz, nombre), join(temporal, nombre), { recursive: true });
   writeFileSync(join(temporal, 'package.json'), `${JSON.stringify(paquete, null, 2)}\n`);
   const resultado = spawnSync(

@@ -1,6 +1,8 @@
 # Operación y recuperación local
 
-La aplicación guarda sus datos en `Documentos\Turnero Comal` en producción, o en la carpeta indicada por `TURNERO_DATOS`. Cierre la aplicación antes de manipular esa carpeta. En desarrollo, los datos están en la raíz del repositorio salvo que se defina `TURNERO_DATOS`.
+La aplicación guarda sus datos en `%APPDATA%\comal-local\datos` en producción, o en la carpeta indicada por `TURNERO_DATOS`. Cierre la aplicación antes de manipular esa carpeta. En desarrollo, los datos están en la raíz del repositorio salvo que se defina `TURNERO_DATOS`.
+
+La ruta efectiva se muestra en **Ayuda → Diagnósticos**. Desde 0.3.1, Documentos/OneDrive ya no es el destino de escritura. Si todavía no existe la carpeta nueva, se copian los datos de `Documentos/Turnero Comal` una sola vez y se conserva el original. Si falla la copia, el arranque informa del problema; no comience con datos vacíos ni elimine el original. Tras migrar, los respaldos deben hacerse de la nueva ruta. Volver a 0.3.0 reutilizaría la copia antigua de Documentos, no los turnos posteriores a la migración.
 
 ## Guardado y salud
 
@@ -13,7 +15,7 @@ Si falta `estado.json`, se inicia una jornada vacía. Si pertenece a otro día, 
 Haga copias con la aplicación cerrada. Desde el repositorio y con las dependencias instaladas, ejecute:
 
 ```powershell
-npx tsx scripts/datos.ts backup "$env:USERPROFILE\Documents\Turnero Comal" "D:\Respaldos Comal"
+npx tsx scripts/datos.ts backup "$env:APPDATA\comal-local\datos" "D:\Respaldos Comal"
 ```
 
 La utilidad copia `config.json`, `estado.json`, `contenido/` y `turnero.log` cuando existen. Crea una carpeta nueva con fecha, hora e identificador único; el nombre final aparece solo cuando termina la copia. Compruebe que contiene los archivos esperados antes de moverla a otro disco. El registro puede contener rutas locales; protéjalo como dato de operación.
@@ -21,14 +23,14 @@ La utilidad copia `config.json`, `estado.json`, `contenido/` y `turnero.log` cua
 Para restaurar, cierre la aplicación y compruebe en el Administrador de tareas que `Comal++` no sigue ejecutándose. Cree primero una copia de la carpeta de datos actual. Después ejecute:
 
 ```powershell
-npx tsx scripts/datos.ts restore "D:\Respaldos Comal\turnero-..." "$env:USERPROFILE\Documents\Turnero Comal" --app-cerrada
+npx tsx scripts/datos.ts restore "D:\Respaldos Comal\turnero-..." "$env:APPDATA\comal-local\datos" --app-cerrada
 ```
 
-La opción `--app-cerrada` es una confirmación explícita de que verificó el cierre; la utilidad no puede detectar de forma fiable todas las instancias remotas o renombradas. La restauración prepara una carpeta nueva y luego la coloca en la ruta de datos. Conserva los datos anteriores en una carpeta `Turnero Comal.antes-de-restaurar-*` junto a la ruta de datos. Inicie la aplicación y compruebe en la ventana del operador la pantalla pública, el audio y los turnos. Un `estado.json` de otra fecha no reabre turnos de una jornada anterior.
+La opción `--app-cerrada` es una confirmación explícita de que verificó el cierre; la utilidad no puede detectar de forma fiable todas las instancias remotas o renombradas. La restauración prepara una carpeta nueva y luego la coloca en la ruta de datos. Conserva los datos anteriores en una carpeta `datos.antes-de-restaurar-*` junto a la ruta de datos. Inicie la aplicación y compruebe en la ventana del operador la pantalla pública, el audio y los turnos. Un `estado.json` de otra fecha no reabre turnos de una jornada anterior.
 
 ### Actualización desde 0.2.0 y reversión
 
-La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del perfil de Electron, no en `Documentos\Turnero Comal`. Con 0.2.0 cerrada, respalde el directorio que contiene `comal.sqlite` junto con posibles archivos `comal.sqlite-wal` y `comal.sqlite-shm`. Conserve también el instalador 0.2.0 verificado. Al abrir 0.3.0 por primera vez, si no existe `estado.json`, se leen sin modificar la base anterior, los turnos listos anunciados durante la jornada actual (máximo seis) y los mensajes/YouTube compatibles; se escriben los JSON nuevos. Los turnos de otras fechas y el historial permanecen en la base anterior. Compruebe turno, configuración y contenido antes de operar.
+La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del perfil de Electron, no en `%APPDATA%\comal-local\datos`. Con 0.2.0 cerrada, respalde el directorio que contiene `comal.sqlite` junto con posibles archivos `comal.sqlite-wal` y `comal.sqlite-shm`. Conserve también el instalador 0.2.0 verificado. Al abrir 0.3.0 por primera vez, si no existe `estado.json`, se leen sin modificar la base anterior, los turnos listos anunciados durante la jornada actual (máximo seis) y los mensajes/YouTube compatibles; se escriben los JSON nuevos. Los turnos de otras fechas y el historial permanecen en la base anterior. Compruebe turno, configuración y contenido antes de operar.
 
 Para volver a 0.2.0, cierre 0.3.0, reinstale el instalador 0.2.0 verificado y restaure el respaldo del perfil de 0.2.0 con la aplicación cerrada. Los turnos creados después de migrar a 0.3.0 no aparecen en 0.2.0: registre esos turnos antes de revertir y concílielos manualmente. `npm run test:upgrade` prueba esta secuencia con datos aislados.
 

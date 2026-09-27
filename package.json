@@ -1,7 +1,8 @@
 {
   "name": "comal-local",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
+  "license": "MIT",
   "description": "Turnero de El Comal: anuncia en la TV el número de pedido listo, sin red ni base de datos.",
   "author": "Comal++",
   "type": "module",
@@ -65,7 +66,8 @@
     "files": [
       "dist/**/*",
       "build/**/*",
-      "package.json"
+      "package.json",
+      "LICENSE"
     ],
     "extraFiles": [
       {
@@ -90,6 +92,8 @@
     "nsis": {
       "oneClick": false,
       "perMachine": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
       "allowToChangeInstallationDirectory": true
     }
   }

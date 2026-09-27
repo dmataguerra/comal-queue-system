@@ -25,7 +25,7 @@ Comprobar en la computadora, monitor de barra y TV reales que el operador puede 
 | PRE-06 · P1 | Llevar copia local del instalador, cable/adaptadores HDMI, bocinas o cable de audio, mouse/teclado, videos MP4 H.264 y al menos dos imágenes JPG/PNG. | Material disponible aunque falle el internet del local. | ____ |
 | PRE-07 · P0 | Reparar la voz 40 y verificar las 100 voces elegidas por la app (MP3 prioritario, WAV de respaldo), además del aviso. | Todas decodifican y corresponden al número correcto. La auditoría detectó `40.mp3` vacío y ausencia de `40.wav`. | ____ |
 
-> **Aislamiento:** hacer las pruebas destructivas (quitar archivos, editar configuración, simular día nuevo) en una carpeta de datos de prueba con `TURNERO_DATOS` o en una copia de los datos, nunca sobre la jornada activa. La instalación empaquetada usa por defecto `Documentos\Turnero Comal`. Guardar antes y restaurar después. No cambiar la fecha del equipo de COMAL durante la operación real.
+> **Aislamiento:** hacer las pruebas destructivas (quitar archivos, editar configuración, simular día nuevo) en una carpeta de datos de prueba con `TURNERO_DATOS` o en una copia de los datos, nunca sobre la jornada activa. La instalación empaquetada usa por defecto `%APPDATA%\comal-local\datos`. Guardar antes y restaurar después. No cambiar la fecha del equipo de COMAL durante la operación real.
 
 ## 3. Levantamiento al llegar (anotar valores reales)
 
@@ -89,7 +89,7 @@ La aplicación de operador tiene tamaño mínimo **900 × 600**. Verificar al me
 
 ## 6. Preparación final para operar y reversión
 
-1. Cerrar la app; respaldar `Documentos\Turnero Comal` completo (o la ruta `TURNERO_DATOS` definida), incluyendo `estado.json`, `config.json`, `contenido/` y `turnero.log`. Etiquetar copia **antes de pruebas**.
+1. Cerrar la app; respaldar `%APPDATA%\comal-local\datos` completo (o la ruta `TURNERO_DATOS` definida), incluyendo `estado.json`, `config.json`, `contenido/` y `turnero.log`. Etiquetar copia **antes de pruebas**.
 2. Ejecutar las pruebas que alteran estado y archivos con datos aislados. Si se probó sobre la carpeta real, cerrar la app, restaurar respaldo y volver a abrir. Verificar la fuente multimedia elegida, mensajes y volúmenes.
 3. Confirmar que la TV está extendida, ventana pública a pantalla completa, sonido sale por el dispositivo correcto y no queda una cola de prueba visible. Hacer una llamada final acordada con el personal y retirarla.
 4. Registrar versión final, hora, resultados y pendientes. Si aparece P0 fallido, no declarar listo el sistema: corregir, generar nuevo instalador y repetir al menos los casos afectados y el smoke básico.

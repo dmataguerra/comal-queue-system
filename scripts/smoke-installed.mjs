@@ -20,6 +20,7 @@ const version = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8')).ver
 const instalador = resolve(
   process.argv[2] ?? join(raiz, 'release', `Comal++ Setup ${version}.exe`),
 );
+const instaladorAnterior = process.argv[3] ? resolve(process.argv[3]) : null;
 assert.ok(existsSync(instalador), `Falta el instalador: ${instalador}`);
 const hash = createHash('sha256').update(readFileSync(instalador)).digest('hex').toUpperCase();
 const resultados = join(raiz, 'test-results');
@@ -31,6 +32,7 @@ mkdirSync(datos);
 const ejecutable = join(instalacion, 'Comal++.exe');
 const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 const reporte = {
+  inicio: new Date().toISOString(),
   instalador,
   archivo: basename(instalador),
   version,
@@ -113,6 +115,28 @@ function detener(proceso) {
 
 let proceso;
 try {
+  if (instaladorAnterior) {
+    assert.ok(existsSync(instaladorAnterior), 'No existe el instalador anterior.');
+    const anterior = spawnSync(
+      instaladorAnterior,
+      ['/S', '--no-desktop-shortcut', `/D=${join(prueba, 'legacy-app')}`],
+      {
+        timeout: 180000,
+        windowsHide: true,
+        stdio: 'ignore',
+      },
+    );
+    if (anterior.error) throw anterior.error;
+    assert.equal(anterior.status, 0, 'Falló la preparación de la instalación anterior.');
+    reporte.instaladorAnterior = instaladorAnterior;
+    reporte.sha256Anterior = createHash('sha256')
+      .update(readFileSync(instaladorAnterior))
+      .digest('hex')
+      .toUpperCase();
+    reporte.pasos.push(
+      'instalador histórico preparado en otra carpeta sin crear acceso de Escritorio',
+    );
+  }
   const instalacionResultado = spawnSync(instalador, ['/S', `/D=${instalacion}`], {
     timeout: 180000,
     windowsHide: true,
@@ -124,14 +148,16 @@ try {
   assert.ok(existsSync(join(instalacion, 'contenido', 'voz', '40.wav')));
   reporte.pasos.push('instalación aislada y contenido de fábrica');
 
-  async function abrir() {
+  async function abrir(usarRutaPredeterminada = false) {
     const puerto = await puertoLibre();
     const salida = openSync(join(prueba, 'aplicacion.log'), 'a');
+    const entorno = { ...process.env, TURNERO_DATOS: datos };
+    if (usarRutaPredeterminada) delete entorno.TURNERO_DATOS;
     proceso = spawn(
       ejecutable,
       [`--remote-debugging-port=${puerto}`, `--user-data-dir=${join(prueba, 'electron-profile')}`],
       {
-        env: { ...process.env, TURNERO_DATOS: datos },
+        env: entorno,
         windowsHide: true,
         stdio: ['ignore', salida, salida],
       },
@@ -164,6 +190,80 @@ try {
   assert.equal(restaurado.instantanea.actual, 42);
   cliente.cerrar();
   reporte.pasos.push('conservación de estado tras reinicio del ejecutable');
+  detener(proceso);
+  await pausa(500);
+
+  // Aislar también la ruta predeterminada. Crear el destino evita importar datos
+  // reales de Documentos; la migración tiene sus propias pruebas con copias ficticias.
+  const datosPerfil = join(prueba, 'electron-profile', 'datos');
+  mkdirSync(datosPerfil, { recursive: true });
+  cliente = await abrir(true);
+  const estadoPerfil = await cliente.evaluar('window.turnero.obtener()');
+  assert.equal(estadoPerfil.instantanea.actual, null);
+  const llamadaPerfil = await cliente.evaluar(
+    "window.turnero.despachar({tipo:'LLAMAR',entrada:'43'})",
+  );
+  assert.equal(llamadaPerfil.instantanea.actual, 43);
+  assert.equal(JSON.parse(readFileSync(join(datosPerfil, 'estado.json'), 'utf8')).actual, 43);
+  assert.ok(existsSync(join(datosPerfil, 'config.json')));
+  assert.ok(existsSync(join(datosPerfil, 'contenido', 'voz', '40.wav')));
+  cliente.cerrar();
+  detener(proceso);
+  await pausa(500);
+  cliente = await abrir(true);
+  const persistidoPerfil = await cliente.evaluar('window.turnero.obtener()');
+  assert.equal(persistidoPerfil.instantanea.actual, 43);
+  cliente.cerrar();
+  reporte.pasos.push(
+    'ruta predeterminada sin TURNERO_DATOS: llamada 43, contenido y persistencia en perfil/datos',
+  );
+  const defender = spawnSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `
+    $ErrorActionPreference = 'Stop'
+    $eventos = @(Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Windows Defender/Operational'; Id=1123; StartTime=[datetime]::Parse($env:COMAL_TEST_START)} -ErrorAction SilentlyContinue -ErrorVariable consultaError)
+    foreach ($fallo in $consultaError) {
+      if ($fallo.FullyQualifiedErrorId -notlike 'NoMatchingEventsFound*') { throw $fallo }
+    }
+    $bloqueos = @($eventos | Where-Object {
+      $_.Message.IndexOf($env:COMAL_TEST_INSTALLER, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+      $_.Message.IndexOf($env:COMAL_TEST_DIRECTORY, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+      $_.Message.IndexOf('old-uninstaller.exe', [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+      $_.Message.IndexOf('Uninstall Comal', [StringComparison]::OrdinalIgnoreCase) -ge 0
+    } | Select-Object TimeCreated, Message)
+    ConvertTo-Json -InputObject $bloqueos -Compress
+  `,
+    ],
+    {
+      encoding: 'utf8',
+      windowsHide: true,
+      timeout: 30000,
+      env: {
+        ...process.env,
+        COMAL_TEST_START: reporte.inicio,
+        COMAL_TEST_INSTALLER: instalador,
+        COMAL_TEST_DIRECTORY: instalacion,
+      },
+    },
+  );
+  assert.equal(
+    defender.status,
+    0,
+    `No se pudo verificar el registro de Defender: ${defender.stderr || defender.error}`,
+  );
+  reporte.bloqueosDefender = JSON.parse(defender.stdout.replace(/^\uFEFF/, '').trim());
+  assert.equal(
+    reporte.bloqueosDefender.length,
+    0,
+    'Defender bloqueó al instalador o a la aplicación durante la prueba.',
+  );
+  reporte.pasos.push(
+    'sin eventos 1123 de acceso a carpetas protegidas para el instalador y aplicación probados',
+  );
   console.log(`PASS: instalador ${hash}; evidencia en ${prueba}`);
 } catch (error) {
   reporte.error = String(error);
