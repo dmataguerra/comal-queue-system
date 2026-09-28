@@ -65,6 +65,7 @@ export function crearVentanas({
     contextIsolation: true,
     sandbox: true,
     nodeIntegration: false,
+    spellcheck: false,
     ...extra,
   });
 
