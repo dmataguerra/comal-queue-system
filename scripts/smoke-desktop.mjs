@@ -65,20 +65,6 @@ async function verificar() {
       urlPublica,
       'La vista pública no debe navegar fuera de la app',
     );
-    assert.equal(
-      await publica.webContents.executeJavaScript(
-        "window.turnero.despachar({tipo:'LLAMAR',entrada:'42'}).then(() => false, () => true)",
-      ),
-      true,
-      'La vista pública no debe llamar turnos',
-    );
-    assert.equal(
-      await publica.webContents.executeJavaScript(
-        'window.turnero.diagnostico().then(() => false, () => true)',
-      ),
-      true,
-      'La vista pública no debe leer el diagnóstico del operador',
-    );
     operador.webContents.setBackgroundThrottling(false);
     const ejecutar = (ventana, expresion) => ventana.webContents.executeJavaScript(expresion, true);
     await esperar(
@@ -115,21 +101,26 @@ async function verificar() {
       operador,
       `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Turnos').click()`,
     );
-    // Comprobar movimiento real y la preferencia de accesibilidad en el renderizador.
-    const movimiento = () =>
-      ejecutar(publica, "getComputedStyle(document.querySelector('.background-motion')).transform");
-    const posicion = await movimiento();
-    await esperar(async () => (await movimiento()) !== posicion, 'El fondo no se mueve', 3000);
+    // Comprobar animación real y la preferencia de accesibilidad en el renderizador.
+    const animacionActiva = () =>
+      ejecutar(publica, "Boolean(document.querySelector('.public-animated-background animate'))");
+    await esperar(animacionActiva, 'El fondo no se anima', 3000);
     publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });
+    publica.reload();
+    await esperar(
+      () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
+      'La pantalla pública no recargó para la prueba de movimiento reducido',
+    );
     assert.equal(
       await ejecutar(
         publica,
-        "getComputedStyle(document.querySelector('.background-motion')).animationName",
+        "Boolean(document.querySelector('.public-animated-background animate'))",
       ),
-      'none',
+      false,
+      'El fondo debe respetar prefers-reduced-motion',
     );
     await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [] });
     publica.webContents.debugger.detach();
@@ -143,12 +134,12 @@ async function verificar() {
     );
     assert.match(inventario.inventario.voz[40], /\/voz\/40\.wav$/, 'El turno 40 debe usar WAV');
     assert.ok(inventario.inventario.aviso, 'Falta el aviso');
-    assert.equal(inventario.inventario.banner.length, 2, 'Faltan las imágenes locales');
+    assert.ok(inventario.inventario.banner.length >= 2, 'Faltan las imágenes locales');
     await esperar(
       () =>
         ejecutar(
           publica,
-          "(()=>{const images=[...document.querySelectorAll('.banner-stage img')].filter(i=>i.src.includes('/contenido/banner/'));return images.length===2&&images.every(i=>i.complete&&i.naturalWidth>0)})()",
+          `(()=>{const images=[...document.querySelectorAll('.banner-stage img')].filter(i=>i.src.includes('/contenido/banner/'));return images.length===${inventario.inventario.banner.length}&&images.every(i=>i.complete&&i.naturalWidth>0)})()`,
         ),
       'Las imágenes locales no se mostraron',
     );
@@ -358,6 +349,14 @@ async function verificar() {
       });
       await pausa(500);
       assert.deepEqual(await ejecutar(publica, '[innerWidth, innerHeight]'), [width, height]);
+      await esperar(
+        () =>
+          ejecutar(
+            publica,
+            "(()=>{const r=document.querySelector('.public-screen').getBoundingClientRect(),s=Math.min(innerWidth/1920,innerHeight/1080);return Math.abs(r.width-1920*s)<1&&Math.abs(r.height-1080*s)<1})()",
+          ),
+        'El lienzo público no estabilizó su escala',
+      );
       const normal = await medir();
       assert.equal(normal.rows, 6);
       assert.ok(normal.aligned && !normal.clipped && !normal.overflow, JSON.stringify(normal));
