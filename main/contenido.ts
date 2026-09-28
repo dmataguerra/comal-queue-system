@@ -245,6 +245,10 @@ export function sembrarContenido(
     registrar(`contenido: se copió el contenido de fábrica a ${destino}`);
   } catch (error) {
     registrar(`contenido: no se pudo copiar el contenido de fábrica (${(error as Error).message})`);
+    throw new Error(
+      'No se pudo preparar el contenido de fábrica. Revisa los permisos y vuelve a abrir la aplicación.',
+      { cause: error },
+    );
   }
 }
 

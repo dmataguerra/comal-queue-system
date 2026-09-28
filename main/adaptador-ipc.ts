@@ -23,37 +23,16 @@ import {
   validarSinArgumentos,
   validarUrlContenido,
   validarVolumen,
+  validarVolumenes,
   validarYouTube,
 } from './seguridad-ipc.js';
 
 const ORIGENES_YOUTUBE = ['https://www.youtube.com', 'https://www.youtube-nocookie.com'];
 
-/**
- * RF-11 · el IFrame API habla por postMessage y YouTube no acepta el origen turnero://, así que
- * setVolume se pierde. Desde main se entra al iframe y se mueve el volumen del <video> con la misma
- * rampa que los videos locales. No toca muted ni paused: la pausa o el mute del usuario se respetan.
- */
-const scriptVolumen = (volumen: number, rampa: number) => `(() => {
-  const destino = ${JSON.stringify(volumen)}, ms = ${JSON.stringify(rampa)};
-  const id = (window.__turneroRampa = (window.__turneroRampa || 0) + 1);
-  const videos = [...document.querySelectorAll('video')];
-  for (const video of videos) {
-    const desde = video.volume, inicio = performance.now();
-    const paso = (ahora) => {
-      if (window.__turneroRampa !== id) return;
-      const t = ms ? Math.min(1, (ahora - inicio) / ms) : 1;
-      video.volume = desde + (destino - desde) * t;
-      if (t < 1) requestAnimationFrame(paso);
-    };
-    paso(inicio);
-  }
-  return {
-    videos: videos.length,
-    sonando: videos.filter((v) => !v.paused && !v.muted && v.volume > 0).length,
-  };
-})()`;
+import { scriptVolumen } from './volumen-youtube.js';
 
 interface OpcionesIpc {
+  configurarVolumen: (voz: number, multimedia: number) => void;
   configurarYouTube: (url: string | null) => void;
   store: Store;
   inicial: () => Inicial;
@@ -67,7 +46,11 @@ interface OpcionesIpc {
   registrar: Registrar;
   diagnostico: () => Diagnostico;
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
-  confirmarAnuncio: (id: number, n: number, estado: 'reproducido' | 'fallo') => void;
+  confirmarAnuncio: (
+    id: number,
+    n: number,
+    estado: 'reproduciendo' | 'reproducido' | 'fallo',
+  ) => void;
 }
 
 /** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
@@ -82,6 +65,7 @@ export function conectarIpc({
   quitarContenido,
   abrirCarpetaContenido,
   configurarYouTube,
+  configurarVolumen,
   registrar,
   diagnostico,
   informarSalud,
@@ -127,7 +111,7 @@ export function conectarIpc({
         !Number.isInteger(n) ||
         (n as number) < 0 ||
         (n as number) > 99 ||
-        (estado !== 'reproducido' && estado !== 'fallo')
+        (estado !== 'reproduciendo' && estado !== 'reproducido' && estado !== 'fallo')
       )
         return;
       confirmarAnuncio(id as number, n as number, estado);
@@ -144,6 +128,11 @@ export function conectarIpc({
     autorizar(evento, 'operador');
     validarCantidad(argumentos, 1);
     configurarYouTube(validarYouTube(argumentos[0]));
+  });
+  ipcMain.handle(IPC_CHANNELS.setVolume, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarCantidad(argumentos, 2);
+    configurarVolumen(...validarVolumenes(argumentos[0], argumentos[1]));
   });
   ipcMain.handle(IPC_CHANNELS.importContent, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'operador');

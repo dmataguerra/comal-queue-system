@@ -8,12 +8,13 @@ import { Icon } from '../comun/components/Icon';
 import { Modal } from '../comun/components/Modal';
 import { MultimediaPanel } from './MultimediaPanel';
 import { SizeControl } from '../comun/components/SizeControl';
+import { VolumeControl } from '../comun/components/VolumeControl';
 import { DiagnosticoPanel } from './DiagnosticoPanel';
 
 /** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
   const { tema, cambiarTema } = useTema();
-  const { instantanea, pantallas, entregaAudio, despachar } = useTurnero(),
+  const { instantanea, pantallas, entregasAudio = [], despachar } = useTurnero(),
     clock = useClock();
   const { actual, llamados, puedeDeshacer } = instantanea;
   const [pagina, setPagina] = useState<'turnos' | 'multimedia' | 'diagnostico'>('turnos'),
@@ -143,6 +144,9 @@ export function OperadorPage() {
   }, []);
   useEffect(() => {
     document.title = 'Troyanos · Operador';
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
   }, []);
   // La TV es una sola lista: el actual arriba y detrás los llamados, del más reciente al más viejo.
   const filas = [
@@ -235,6 +239,7 @@ export function OperadorPage() {
           </div>
           <div className="theme-controls">
             <SizeControl notificar={notificar} />
+            <VolumeControl notificar={notificar} />
             <button
               type="button"
               className="theme-switch"
@@ -283,16 +288,13 @@ export function OperadorPage() {
               </span>
             </div>
           )}
-          {entregaAudio && (
-            <div className="connection-banner" role="status">
-              <Icon name={entregaAudio.estado === 'fallo' ? 'warning' : 'volume'} />
+          {entregasAudio.some(
+            (e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n),
+          ) && (
+            <div className="connection-banner" role="alert">
+              <Icon name="warning" />
               <span>
-                Turno {formatear(entregaAudio.n)}:{' '}
-                {entregaAudio.estado === 'pendiente'
-                  ? 'audio pendiente en la vista pública.'
-                  : entregaAudio.estado === 'reproducido'
-                    ? 'audio terminado en la vista pública. Comprueba las bocinas en el local.'
-                    : 'la vista pública informó un fallo de audio.'}
+                Falló el audio de un turno. Revisa las filas marcadas y vuelve a anunciarlo.
               </span>
             </div>
           )}
@@ -396,6 +398,9 @@ export function OperadorPage() {
                   <div className="ready-heading">
                     <div>
                       <h2 id="screen-heading">
+                        <span className="section-icon">
+                          <Icon name="monitor" />
+                        </span>
                         En pantalla{' '}
                         <span className="count-badge">
                           {actual === null ? 0 : llamados.length + 1}
@@ -411,6 +416,35 @@ export function OperadorPage() {
                           {destacada && <span>Turno actual</span>}
                         </div>
                         <div className="cashier-counter">
+                          {entregasAudio
+                            .filter((e) => e.n === n)
+                            .map((e) => (
+                              <span
+                                key={e.id}
+                                className={`turn-audio turn-audio-${e.estado}`}
+                                role="status"
+                              >
+                                <Icon
+                                  name={
+                                    e.estado === 'fallo'
+                                      ? 'warning'
+                                      : e.estado === 'reproducido'
+                                        ? 'checkCircle'
+                                        : e.estado === 'pendiente'
+                                          ? 'clock'
+                                          : 'volume'
+                                  }
+                                />
+                                {
+                                  {
+                                    pendiente: 'En espera',
+                                    reproduciendo: 'Anunciando',
+                                    reproducido: 'Anunciado',
+                                    fallo: 'Falló el audio',
+                                  }[e.estado]
+                                }
+                              </span>
+                            ))}
                           {destacada ? (
                             <span className="row-ready">
                               <i />
@@ -524,8 +558,8 @@ export function OperadorPage() {
             </dt>
             <dd>
               Teclea el número del ticket y presiona Enter. Solo cuentan los dos últimos dígitos:{' '}
-              <strong>213298</strong> se anuncia como <strong>98</strong>. Antes de presionar Enter
-              ves el número que va a salir.
+              <strong>213298</strong> se anuncia como <strong>98</strong>. Se aceptan de 1 a 6
+              dígitos, incluidos los tickets que terminan en 00.
             </dd>
             <dt>
               <Icon name="volume" /> Repetir
@@ -548,14 +582,15 @@ export function OperadorPage() {
             <dd>
               Cada turno de <strong>En pantalla</strong> tiene dos botones:{' '}
               <strong>Anunciar</strong> añade su voz a la cola, y <strong>Quitar</strong> lo borra y
-              descarta la corrección pendiente.
+              descarta la corrección pendiente. Se pide confirmación; puedes omitirla para ambas
+              acciones durante esta sesión. Quitar un turno no cancela su audio ya encolado.
             </dd>
             <dt>
               <Icon name="monitor" /> La TV no muestra nada
             </dt>
             <dd>
-              Revisa que esté encendida y conectada. La pantalla pública aparece sola cuando se
-              detecta.
+              Revisa que esté encendida y conectada y que Windows esté configurado para extender las
+              pantallas. La pantalla pública aparece sola cuando se detecta la TV.
             </dd>
             <dt>
               <Icon name="clock" /> Vaciado automático
@@ -565,8 +600,45 @@ export function OperadorPage() {
               <Icon name="calendar" /> Cada día
             </dt>
             <dd>
-              La lista arranca vacía al comenzar la jornada. Si se va la luz, al volver se recupera
-              lo que estaba en pantalla.
+              Al cambiar de jornada se limpia la lista. Tras reiniciar se recuperan los turnos
+              guardados de la jornada que todavía no vencieron; los anuncios antiguos no se
+              reproducen automáticamente.
+            </dd>
+            <dt>
+              <Icon name="volume" /> Volumen y estado del audio
+            </dt>
+            <dd>
+              En la barra superior puedes ajustar por separado voz y multimedia y pulsar Aplicar. La
+              voz cambia en el siguiente anuncio; superar el 100% puede distorsionarla. La
+              multimedia baja durante el anuncio. Cada fila indica En espera, Anunciando, Anunciado
+              o Falló el audio. Anunciado confirma la reproducción por la aplicación: comprueba
+              también las bocinas y la salida HDMI. Si falla, revisa Diagnósticos y repite el turno.
+              Los llamados se reproducen en orden.
+            </dd>
+            <dt>
+              <Icon name="media" /> Videos, imágenes y YouTube
+            </dt>
+            <dd>
+              En Multimedia puedes agregar videos MP4 o WebM e imágenes JPG, PNG o WebP y quitar
+              archivos con confirmación. YouTube tiene prioridad; si no está disponible se usa
+              contenido local. Sin YouTube se reproducen videos y, si no hay videos reproducibles,
+              imágenes. YouTube necesita internet; los turnos y archivos locales funcionan sin él.
+            </dd>
+            <dt>
+              <Icon name="zoomIn" /> Tamaño y tema
+            </dt>
+            <dd>
+              Las lupas de la barra superior ajustan el tamaño entre 90%, 100% y 110%. El
+              interruptor Azul/Morado cambia el tema. Ambos ajustes se aplican a las dos pantallas.
+            </dd>
+            <dt>
+              <Icon name="warning" /> Problemas al guardar
+            </dt>
+            <dd>
+              Si aparece un error de guardado, la acción no se aplica ni se anuncia. Revisa el
+              espacio disponible y los permisos de la carpeta indicada en Diagnósticos; después
+              vuelve a intentarlo. Cierra la aplicación antes de respaldar o restaurar sus datos.
+              Puedes abrir esta ayuda con F1 y cerrarla con Escape.
             </dd>
             <dt>Diagnósticos</dt>
             <dd>

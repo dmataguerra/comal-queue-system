@@ -11,11 +11,13 @@ export function YouTubeVideo({
   volumen,
   rampa,
   alFallar,
+  alAjustar,
 }: {
   url: string;
   volumen: number;
   rampa: number;
   alFallar: () => void;
+  alAjustar?: () => void;
 }) {
   const { ajustarVolumenYouTube, registrar, informarSalud } = useTurnero();
   const host = useRef<HTMLDivElement>(null);
@@ -103,14 +105,24 @@ export function YouTubeVideo({
   }, [url, intento, alFallar, informarSalud]);
 
   useEffect(() => {
-    const aplicar = (ms: number) =>
-      ajustarVolumenYouTube(volumenActual.current, ms).catch((e: Error) =>
-        registrar(`No se pudo ajustar el volumen de YouTube: ${e.message}`),
-      );
+    let vigente = true;
+    let id: ReturnType<typeof setTimeout> | undefined;
+    const aplicar = async (ms: number) => {
+      try {
+        const videos = await ajustarVolumenYouTube(volumenActual.current, ms);
+        if (vigente && videos > 0) alAjustar?.();
+      } catch (e) {
+        if (vigente) registrar(`No se pudo ajustar el volumen de YouTube: ${(e as Error).message}`);
+      } finally {
+        if (vigente) id = setTimeout(() => void aplicar(0), REAPLICAR_MS);
+      }
+    };
     void aplicar(rampa);
-    const id = setInterval(() => void aplicar(0), REAPLICAR_MS);
-    return () => clearInterval(id);
-  }, [volumen, rampa, url, intento, ajustarVolumenYouTube, registrar]);
+    return () => {
+      vigente = false;
+      clearTimeout(id);
+    };
+  }, [volumen, rampa, url, intento, ajustarVolumenYouTube, registrar, alAjustar]);
 
   return (
     <div className="youtube-stage">

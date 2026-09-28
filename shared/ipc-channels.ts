@@ -11,6 +11,7 @@ export const IPC_CHANNELS = {
   openContentFolder: 'turnero:contenido:abrir',
   screensChanged: 'turnero:pantallas',
   setYouTube: 'turnero:youtube',
+  setVolume: 'turnero:volumen',
   setYouTubeVolume: 'turnero:youtube:volumen',
   diagnostics: 'turnero:diagnostico',
   health: 'turnero:salud',

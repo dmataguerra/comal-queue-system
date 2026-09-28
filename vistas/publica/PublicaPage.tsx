@@ -18,7 +18,7 @@ export function PublicaPage() {
     inventario,
     registrar,
   } = useTurnero();
-  const { anuncio, atenuado } = useAnuncios();
+  const { anuncio, atenuado, confirmarAtenuacion } = useAnuncios();
   useEffect(() => {
     document.title = 'Troyanos · Turnos';
   }, []);
@@ -69,6 +69,7 @@ export function PublicaPage() {
               banner={inventario.banner}
               config={config}
               atenuado={atenuado}
+              confirmarAtenuacion={confirmarAtenuacion}
               registrar={registrar}
             />
           </div>

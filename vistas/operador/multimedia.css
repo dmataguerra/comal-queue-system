@@ -32,9 +32,19 @@
   color: var(--theme-strong, #073e70);
   font-size: calc(11px * var(--ui-scale, 1));
 }
-.recent-link:hover:not(:disabled) { background: var(--theme-pale, #e9f3fb); }
-.recent-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.recent-link .icon { width: 13px; height: 13px; flex: none; }
+.recent-link:hover:not(:disabled) {
+  background: var(--theme-pale, #e9f3fb);
+}
+.recent-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-link .icon {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
 .media-library-panel {
   padding: 24px;
 }

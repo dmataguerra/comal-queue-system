@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
 
 const nombres = new Set([
+  'zoomIn',
+  'zoomOut',
   'coffee',
   'receipt',
   'counter',
@@ -39,6 +41,8 @@ const nombres = new Set([
   'minus',
 ]);
 const pixel = new Set([
+  'zoomIn',
+  'zoomOut',
   'coffee',
   'receipt',
   'play',

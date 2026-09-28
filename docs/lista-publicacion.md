@@ -14,6 +14,7 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | `npm test` | ____ |
 | `npm run build` | ____ |
 | `npm run test:desktop` en datos aislados | ____ |
+| `npm run test:full-day` jornada simulada de 7 horas, métricas, vencimientos y audio | ____ |
 | `npm run test:installed` sobre el SHA-256 exacto; revisar `resultado.json` | ____ |
 | Prueba de escritorio offline y estado/config corruptos en datos aislados | ____ |
 | Voz 00–99 y aviso: validación automática y escucha humana | ____ |

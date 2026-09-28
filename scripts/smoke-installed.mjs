@@ -65,31 +65,64 @@ async function esperar(comprobar, mensaje, limite = 30000) {
 
 async function conectar(puerto) {
   const pagina = await esperar(async () => {
-    const respuesta = await fetch(`http://127.0.0.1:${puerto}/json/list`);
+    const respuesta = await fetch(`http://127.0.0.1:${puerto}/json/list`, {
+      signal: AbortSignal.timeout(5000),
+    });
     const paginas = await respuesta.json();
     return paginas.find((p) => p.type === 'page' && p.url.includes('/vistas/operador/'));
   }, 'No apareció la vista del operador en el ejecutable instalado.');
   const socket = new WebSocket(pagina.webSocketDebuggerUrl);
   await new Promise((resolver, rechazar) => {
-    socket.addEventListener('open', resolver, { once: true });
-    socket.addEventListener('error', rechazar, { once: true });
+    const limite = setTimeout(() => {
+      socket.close();
+      rechazar(new Error('Timeout al conectar DevTools.'));
+    }, 10000);
+    socket.addEventListener(
+      'open',
+      () => {
+        clearTimeout(limite);
+        resolver();
+      },
+      { once: true },
+    );
+    const fallo = () => {
+      clearTimeout(limite);
+      rechazar(new Error('DevTools cerró durante la conexión.'));
+    };
+    socket.addEventListener('error', fallo, { once: true });
+    socket.addEventListener('close', fallo, { once: true });
   });
   let id = 0;
   const pendientes = new Map();
+  const fallarPendientes = () => {
+    for (const pendiente of pendientes.values()) {
+      clearTimeout(pendiente.limite);
+      pendiente.rechazar(new Error('Se perdió la conexión con el ejecutable instalado.'));
+    }
+    pendientes.clear();
+  };
+  socket.addEventListener('close', fallarPendientes);
+  socket.addEventListener('error', fallarPendientes);
   socket.addEventListener('message', (evento) => {
     const mensaje = JSON.parse(evento.data);
     if (!mensaje.id || !pendientes.has(mensaje.id)) return;
-    const { resolver, rechazar } = pendientes.get(mensaje.id);
+    const { resolver, rechazar, limite } = pendientes.get(mensaje.id);
+    clearTimeout(limite);
     pendientes.delete(mensaje.id);
     if (mensaje.error) rechazar(new Error(mensaje.error.message));
     else resolver(mensaje.result);
   });
   return {
     async evaluar(expresion) {
+      if (socket.readyState !== WebSocket.OPEN) throw new Error('DevTools no está conectado.');
       const numero = ++id;
-      const respuesta = new Promise((resolver, rechazar) =>
-        pendientes.set(numero, { resolver, rechazar }),
-      );
+      const respuesta = new Promise((resolver, rechazar) => {
+        const limite = setTimeout(() => {
+          pendientes.delete(numero);
+          rechazar(new Error('El ejecutable no respondió a DevTools en 15 segundos.'));
+        }, 15000);
+        pendientes.set(numero, { resolver, rechazar, limite });
+      });
       socket.send(
         JSON.stringify({
           id: numero,

@@ -2,8 +2,12 @@ name: CI
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
+      - main
+      - master
+      - 'codex/**'
       - copilot/comal-interactive-mockup
 
 jobs:
@@ -26,8 +30,12 @@ jobs:
       - name: Desktop smoke test
         id: desktop
         run: npm run test:desktop
+      - name: Audio controls smoke test
+        run: npx electron scripts/smoke-audio-controls.mjs
+      - name: Interface smoke test
+        run: npx electron scripts/smoke-interface.mjs
       - name: Upload desktop diagnostics
-        if: failure() && steps.desktop.outcome == 'failure'
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: desktop-diagnostics

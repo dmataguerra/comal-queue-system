@@ -19,6 +19,7 @@ import type {
 import { getQueueTransport } from './transport';
 
 interface Contexto extends Inicial {
+  configurarVolumen: TurneroApi['configurarVolumen'];
   diagnostico: TurneroApi['diagnostico'];
   informarSalud: TurneroApi['informarSalud'];
   confirmarAnuncio: TurneroApi['confirmarAnuncio'];
@@ -45,9 +46,14 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
       diagnostico: () => api!.diagnostico(),
       informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') =>
         api!.informarSalud(tipo, estado),
-      confirmarAnuncio: (id: number, n: number, estado: 'reproducido' | 'fallo') =>
-        api!.confirmarAnuncio(id, n, estado),
+      confirmarAnuncio: (
+        id: number,
+        n: number,
+        estado: 'reproduciendo' | 'reproducido' | 'fallo',
+      ) => api!.confirmarAnuncio(id, n, estado),
       configurarYouTube: (url: string | null) => api!.configurarYouTube(url),
+      configurarVolumen: (voz: number, multimedia: number) =>
+        api!.configurarVolumen(voz, multimedia),
       ajustarVolumenYouTube: (volumen: number, rampa: number) =>
         api!.ajustarVolumenYouTube(volumen, rampa),
       despachar: (accion: Accion) => api!.despachar(accion),
@@ -70,7 +76,16 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
     // Primero se escucha y luego se pide la instantánea: la respuesta siempre es más nueva que lo que llegó antes.
     const quitar = [
       api.alCambiarEstado((instantanea, anuncio) => {
-        setInicial((previo) => previo && { ...previo, instantanea });
+        setInicial(
+          (previo) =>
+            previo && {
+              ...previo,
+              instantanea,
+              entregasAudio: previo.entregasAudio?.filter((e) =>
+                [instantanea.actual, ...instantanea.llamados].includes(e.n),
+              ),
+            },
+        );
         if (anuncio) anuncios.current.forEach((fn) => fn(anuncio));
       }),
       api.alCambiarConfig((config) => setInicial((previo) => previo && { ...previo, config })),
@@ -81,7 +96,17 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
         setInicial((previo) => previo && { ...previo, pantallas }),
       ),
       api.alCambiarEntregaAudio((entregaAudio) =>
-        setInicial((previo) => previo && { ...previo, entregaAudio }),
+        setInicial(
+          (previo) =>
+            previo && {
+              ...previo,
+              entregaAudio,
+              entregasAudio: [
+                ...(previo.entregasAudio ?? []).filter((e) => e.n !== entregaAudio.n),
+                entregaAudio,
+              ],
+            },
+        ),
       ),
     ];
     api

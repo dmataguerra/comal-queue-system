@@ -40,8 +40,10 @@ if (firmaLocal) {
     [
       '-NoProfile',
       '-NonInteractive',
-      '-Command',
-      `$c = Get-Item 'Cert:\\CurrentUser\\My\\${huellaFirmaLocal}' -ErrorAction SilentlyContinue; if (!$c -or !$c.HasPrivateKey) { exit 2 }; $rsa = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($c); if (!$rsa -or $rsa.Key.Provider.Provider -ne 'Microsoft Platform Crypto Provider') { exit 3 }; $rsa.Dispose()`,
+      '-File',
+      join(raiz, 'scripts', 'validar-certificado-local.ps1'),
+      '-Huella',
+      huellaFirmaLocal,
     ],
     { encoding: 'utf8', windowsHide: true },
   );

@@ -76,13 +76,16 @@ async function verify() {
       'true',
     );
     assert.equal(
-      await run(client, `getComputedStyle(document.querySelector('.background-indigo')).fill`),
-      'rgb(128, 105, 233)',
+      await run(
+        client,
+        `getComputedStyle(document.querySelector('.background-blue-start')).stopColor`,
+      ),
+      'rgb(168, 131, 206)',
     );
     assert.equal(
       await run(
         operator,
-        `getComputedStyle(document.querySelector('.button.primary')).backgroundImage.includes('108, 92, 231')`,
+        `getComputedStyle(document.querySelector('.button.primary')).backgroundImage.includes('129, 85, 166')`,
       ),
       true,
     );
@@ -91,17 +94,11 @@ async function verify() {
     await wait(() => run(client, "Boolean(document.querySelector('.announcement-number'))"));
     await capture(client, 'theme-morado-anuncio');
     await capture(client, 'theme-morado-cliente');
-    const movement = await run(
-      client,
-      `getComputedStyle(document.querySelector('.background-top-right')).transform`,
-    );
-    await pause(500);
-    assert.notEqual(
+    assert.ok(
       await run(
         client,
-        `getComputedStyle(document.querySelector('.background-top-right')).transform`,
+        `document.querySelectorAll('.public-animated-background animate').length > 0`,
       ),
-      movement,
     );
     for (const window of [operator, client]) {
       window.reload();
@@ -121,8 +118,11 @@ async function verify() {
     await run(operator, `document.querySelector('.theme-switch').click()`);
     await wait(async () => (await theme(client)) === 'azul');
     assert.equal(
-      await run(client, `getComputedStyle(document.querySelector('.background-indigo')).fill`),
-      'rgb(95, 121, 215)',
+      await run(
+        client,
+        `getComputedStyle(document.querySelector('.background-blue-start')).stopColor`,
+      ),
+      'rgb(0, 88, 200)',
     );
     await run(client, `localStorage.setItem('comal.tema', 'unknown')`);
     client.reload();
@@ -131,10 +131,13 @@ async function verify() {
     await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });
+    await wait(() =>
+      run(client, `document.querySelectorAll('.public-animated-background animate').length === 0`),
+    );
     assert.equal(
       await run(
         client,
-        `Array.from(document.querySelectorAll('.background-motion')).every(el => getComputedStyle(el).animationName === 'none')`,
+        `document.querySelectorAll('.public-animated-background animate').length === 0`,
       ),
       true,
     );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatear } from '../../nucleo/turnos';
 import { crearCola } from '../../nucleo/cola';
 import type { Anuncio } from '../../shared/contract';
@@ -21,6 +21,10 @@ export function useAnuncios() {
   const ultimos = useRef({ config, inventario });
   ultimos.current = { config, inventario };
   const vozFaltante = useRef(new Set<number>());
+  const atenuacionLista = useRef<{ id: number; resolver: () => void } | null>(null);
+  const confirmarAtenuacion = useCallback(() => {
+    if (atenuacionLista.current?.id === anuncio?.id) atenuacionLista.current?.resolver();
+  }, [anuncio?.id]);
 
   useEffect(() => {
     precargar(inventario)
@@ -40,6 +44,22 @@ export function useAnuncios() {
     const cola = crearCola<Anuncio>(
       async (nuevo, signal) => {
         setAnuncio(nuevo);
+        let temporizador: ReturnType<typeof setTimeout>;
+        let cancelarEspera: () => void = () => {};
+        const esperarAtenuacion = new Promise<void>((resolve, reject) => {
+          atenuacionLista.current = { id: nuevo.id, resolver: resolve };
+          cancelarEspera = () => resolve();
+          temporizador = setTimeout(
+            () =>
+              reject(
+                new Error(
+                  'La multimedia no confirmó la atenuación. No se reproduce la voz sobre el volumen normal.',
+                ),
+              ),
+            8000,
+          );
+          signal.addEventListener('abort', cancelarEspera, { once: true });
+        });
         setAtenuado(true);
         // CU-06 2a · la configuración se toma al inicio: un cambio aplica en el siguiente llamado.
         const {
@@ -49,6 +69,10 @@ export function useAnuncios() {
         const inicio = performance.now();
         let audioCompleto = true;
         try {
+          await esperarAtenuacion;
+          clearTimeout(temporizador!);
+          if (signal.aborted) return;
+          confirmarAnuncio(nuevo.id, nuevo.n, 'reproduciendo');
           if (aviso) await reproducir(aviso, volumenVoz, signal);
           const url = voz[nuevo.n];
           if (!url) {
@@ -69,6 +93,10 @@ export function useAnuncios() {
             informarSalud('audio', 'degradado');
             registrar(`Audio: ${(error as Error).message}`);
           }
+        } finally {
+          clearTimeout(temporizador!);
+          signal.removeEventListener('abort', cancelarEspera);
+          atenuacionLista.current = null;
         }
         if (signal.aborted) return;
         confirmarAnuncio(nuevo.id, nuevo.n, audioCompleto ? 'reproducido' : 'fallo');
@@ -87,5 +115,5 @@ export function useAnuncios() {
       cerrarAudio();
     };
   }, [suscribirAnuncio, registrar, informarSalud, confirmarAnuncio]);
-  return { anuncio, atenuado };
+  return { anuncio, atenuado, confirmarAtenuacion };
 }

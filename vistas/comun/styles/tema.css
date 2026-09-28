@@ -1,33 +1,33 @@
 /* La paleta azul permanece en los fallbacks de cada componente. */
 :root[data-tema='morado'] {
-  --wave-light-start: #e3d8ff;
-  --wave-light-end: #baa3f5;
-  --wave-blue-start: #8069e9;
-  --wave-blue-end: #7056d8;
-  --wave-navy-start: #493a9a;
-  --wave-navy-end: #34276e;
-  --wave-corner-start: #7359cd;
-  --wave-corner-end: #5741b1;
-  --theme-primary: #6c5ce7;
-  --theme-strong: #5142b8;
-  --theme-hover: #5b4acb;
+  --wave-light-start: #eed9f5;
+  --wave-light-end: #d9afe6;
+  --wave-blue-start: #a883ce;
+  --wave-blue-end: #9368bd;
+  --wave-navy-start: #79539f;
+  --wave-navy-end: #624187;
+  --wave-corner-start: #ad8fbe;
+  --wave-corner-end: #8b6da0;
+  --theme-primary: #8155a6;
+  --theme-strong: #643d89;
+  --theme-hover: #704495;
   --theme-ink: #171a2c;
   --theme-muted: #62647b;
   --theme-border: #e8eaf2;
-  --theme-control-border: #b8b0df;
-  --theme-pale: #eeebfc;
-  --theme-soft: #f7f8fc;
-  --theme-pink: #f472b6;
+  --theme-control-border: #c6b3cf;
+  --theme-pale: #f5e7f0;
+  --theme-soft: #fcf8fb;
+  --theme-pink: #d78fb7;
   --theme-light-blue: #cfe5fc;
   --theme-blue: #3b82f6;
-  --theme-sidebar: #493a9a;
-  --theme-sidebar-end: #34276e;
+  --theme-sidebar: #79539f;
+  --theme-sidebar-end: #624187;
   --theme-media: #211b3e;
   --theme-shadow-rgb: 45, 32, 85;
-  --theme-primary-rgb: 108, 92, 231;
-  --theme-pale-rgb: 238, 235, 252;
+  --theme-primary-rgb: 129, 85, 166;
+  --theme-pale-rgb: 245, 231, 240;
   --theme-border-rgb: 216, 210, 238;
-  --theme-soft-rgb: 247, 248, 252;
+  --theme-soft-rgb: 252, 248, 251;
 }
 .theme-controls {
   display: flex;

@@ -20,6 +20,7 @@ import {
   validarCategoriaOpcional,
   validarUrlContenido,
   validarYouTube,
+  validarVolumenes,
 } from './seguridad-ipc.js';
 import type { Store } from './store.js';
 
@@ -46,6 +47,7 @@ function inventarioNavegador(inventario: Inventario): Inventario {
 }
 
 interface OpcionesServidor {
+  configurarVolumen: (voz: number, multimedia: number) => void;
   vistas: string;
   contenido: string;
   puerto?: number;
@@ -166,7 +168,11 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
         const dato = await cuerpoJson(req);
         if (url.pathname === '/api/accion')
           respuestaJson(res, opciones.store.despachar(validarAccion(dato)));
-        else if (url.pathname === '/api/youtube') {
+        else if (url.pathname === '/api/volumen') {
+          if (!Array.isArray(dato) || dato.length !== 2) throw new Error('Volumen inválido.');
+          opciones.configurarVolumen(...validarVolumenes(dato[0], dato[1]));
+          respuestaJson(res, null);
+        } else if (url.pathname === '/api/youtube') {
           opciones.configurarYouTube(validarYouTube(dato));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/contenido/importar')

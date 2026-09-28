@@ -113,6 +113,7 @@ async function iniciar() {
   let saludAudio: 'correcto' | 'degradado' | 'desconocido' = 'desconocido';
   let saludYouTube: 'activo' | 'no disponible' | 'inactivo' = 'inactivo';
   let entregaAudio: EntregaAudio | null = null;
+  const entregasAudio = new Map<number, EntregaAudio>();
   let servidorWeb: Awaited<ReturnType<typeof crearServidorWeb>> | null = null;
 
   const ventanas = crearVentanas({
@@ -186,7 +187,19 @@ async function iniciar() {
     servidorWeb?.difundirConfig(config);
   };
 
+  const configurarVolumen = (voz: number, multimedia: number) => {
+    const nueva = {
+      ...leerConfig(rutaConfig, registrar),
+      volumenVoz: voz,
+      volumenMusica: multimedia,
+    };
+    escribirJsonAtomico(rutaConfig, nueva, 2);
+    config = { ...config, volumenVoz: voz, volumenMusica: multimedia };
+    ipc.difundirConfig(config);
+    servidorWeb?.difundirConfig(config);
+  };
   const ipc = conectarIpc({
+    configurarVolumen,
     diagnostico,
     informarSalud: (tipo, estado) => {
       if (tipo === 'audio') {
@@ -204,21 +217,29 @@ async function iniciar() {
       }
     },
     confirmarAnuncio: (id, n, estado) => {
+      const anterior = entregasAudio.get(n);
       if (
-        !entregaAudio ||
-        entregaAudio.id !== id ||
-        entregaAudio.n !== n ||
-        entregaAudio.estado !== 'pendiente'
+        !anterior ||
+        anterior.id !== id ||
+        (anterior.estado !== 'pendiente' && anterior.estado !== 'reproduciendo')
       )
         return;
-      entregaAudio = { ...entregaAudio, estado, fecha: new Date().toISOString() };
+      entregaAudio = { ...anterior, estado, fecha: new Date().toISOString() };
+      entregasAudio.set(n, entregaAudio);
       ipc.difundirEntregaAudio(entregaAudio);
       servidorWeb?.difundirEntregaAudio(entregaAudio);
       registrar(`Audio del turno ${n}: ${estado} por la vista pública.`);
     },
     configurarYouTube,
     store,
-    inicial: () => ({ instantanea: store.obtener(), config, inventario, pantallas, entregaAudio }),
+    inicial: () => ({
+      instantanea: store.obtener(),
+      config,
+      inventario,
+      pantallas,
+      entregaAudio,
+      entregasAudio: [...entregasAudio.values()],
+    }),
     esOperador: ventanas.esOperador,
     esPublica: ventanas.esPublica,
     urlVista,
@@ -229,6 +250,8 @@ async function iniciar() {
     registrar,
   });
   store.suscribir((_instantanea, anuncio) => {
+    const visibles = [_instantanea.actual, ..._instantanea.llamados];
+    for (const n of entregasAudio.keys()) if (!visibles.includes(n)) entregasAudio.delete(n);
     if (!anuncio) return;
     entregaAudio = {
       id: anuncio.id,
@@ -236,6 +259,7 @@ async function iniciar() {
       estado: 'pendiente',
       fecha: new Date().toISOString(),
     };
+    entregasAudio.set(anuncio.n, entregaAudio);
     ipc.difundirEntregaAudio(entregaAudio);
     servidorWeb?.difundirEntregaAudio(entregaAudio);
   });
@@ -305,9 +329,11 @@ async function iniciar() {
         inventario,
         pantallas,
         entregaAudio,
+        entregasAudio: [...entregasAudio.values()],
       }),
       diagnostico,
       configurarYouTube,
+      configurarVolumen,
       importarContenido,
       quitarContenido,
       abrirCarpetaContenido,

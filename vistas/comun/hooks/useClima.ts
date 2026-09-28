@@ -22,13 +22,18 @@ export interface Clima {
   soleado: boolean;
 }
 
-/** Clima actual, refrescado cada 15 min. Sin red queda en null y no se muestra. */
+/** Refresca cada 15 min; conserva la última lectura si la red falla. */
 export function useClima() {
   const [clima, setClima] = useState<Clima | null>(null);
   useEffect(() => {
+    const control = new AbortController();
     const cargar = async () => {
+      const solicitud = new AbortController();
+      const cancelar = () => solicitud.abort();
+      control.signal.addEventListener('abort', cancelar, { once: true });
+      const limite = setTimeout(cancelar, 10000);
       try {
-        const respuesta = await fetch(URL_CLIMA);
+        const respuesta = await fetch(URL_CLIMA, { signal: solicitud.signal });
         if (!respuesta.ok) return;
         const datos: unknown = await respuesta.json();
         if (!datos || typeof datos !== 'object' || !('current' in datos)) return;
@@ -36,6 +41,12 @@ export function useClima() {
         if (!actual || typeof actual !== 'object') return;
         if (!('temperature_2m' in actual) || typeof actual.temperature_2m !== 'number') return;
         if (!('weather_code' in actual) || typeof actual.weather_code !== 'number') return;
+        if (
+          control.signal.aborted ||
+          !Number.isFinite(actual.temperature_2m) ||
+          !Number.isFinite(actual.weather_code)
+        )
+          return;
         setClima({
           temperatura: Math.round(actual.temperature_2m),
           descripcion: describir(actual.weather_code),
@@ -43,11 +54,17 @@ export function useClima() {
         });
       } catch {
         // El clima es opcional cuando no hay conexión.
+      } finally {
+        clearTimeout(limite);
+        control.signal.removeEventListener('abort', cancelar);
       }
     };
     void cargar();
     const id = setInterval(() => void cargar(), 15 * 60_000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      control.abort();
+    };
   }, []);
   return clima;
 }

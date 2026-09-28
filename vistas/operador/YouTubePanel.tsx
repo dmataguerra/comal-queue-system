@@ -9,7 +9,9 @@ const MAX_RECIENTES = 3;
 function leerRecientes(): string[] {
   try {
     const valor: unknown = JSON.parse(localStorage.getItem(CLAVE_RECIENTES) ?? '[]');
-    return Array.isArray(valor) ? valor.filter((item): item is string => typeof item === 'string').slice(0, MAX_RECIENTES) : [];
+    return Array.isArray(valor)
+      ? valor.filter((item): item is string => typeof item === 'string').slice(0, MAX_RECIENTES)
+      : [];
   } catch {
     return [];
   }
@@ -34,7 +36,10 @@ export function YouTubePanel({
       if (valor) parseYouTube(valor);
       await configurarYouTube(valor);
       if (valor) {
-        const nuevos = [valor, ...recientes.filter((reciente) => reciente !== valor)].slice(0, MAX_RECIENTES);
+        const nuevos = [valor, ...recientes.filter((reciente) => reciente !== valor)].slice(
+          0,
+          MAX_RECIENTES,
+        );
         setRecientes(nuevos);
         try {
           localStorage.setItem(CLAVE_RECIENTES, JSON.stringify(nuevos));

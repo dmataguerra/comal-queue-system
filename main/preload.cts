@@ -15,6 +15,7 @@ const turnero: TurneroApi = {
   informarSalud: (tipo, estado) => ipcRenderer.send('turnero:salud', tipo, estado),
   confirmarAnuncio: (id, n, estado) => ipcRenderer.send('turnero:anuncio:acuse', id, n, estado),
   configurarYouTube: (url) => ipcRenderer.invoke('turnero:youtube', url),
+  configurarVolumen: (voz, multimedia) => ipcRenderer.invoke('turnero:volumen', voz, multimedia),
   ajustarVolumenYouTube: (volumen, rampa) =>
     ipcRenderer.invoke('turnero:youtube:volumen', volumen, rampa),
   obtener: () => ipcRenderer.invoke('turnero:obtener'),

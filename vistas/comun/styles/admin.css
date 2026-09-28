@@ -109,7 +109,9 @@
   padding: 0 34px;
   background: linear-gradient(105deg, #07445de8, #022334c7);
   backdrop-filter: blur(26px) saturate(145%);
-  box-shadow: inset 0 -1px 0 #9fe7f615, 0 8px 24px #00131d18;
+  box-shadow:
+    inset 0 -1px 0 #9fe7f615,
+    0 8px 24px #00131d18;
 }
 .breadcrumb {
   display: flex;
@@ -1302,7 +1304,7 @@
   width: 34px;
   height: 34px;
 }
-/* Side by side, "Llamar turno" and "En pantalla" share the same grid row and height. */
+/* En pantalla abarca la captura y la corrección, incluido el espacio entre ellas. */
 @media (min-width: 761px) {
   .admin-shell .entry-column {
     display: contents;
@@ -1317,7 +1319,7 @@
   }
   .admin-shell .turns-layout > .ready-panel {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 1 / 3;
     contain: none;
     min-height: 420px;
     max-height: none;

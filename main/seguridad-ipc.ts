@@ -125,3 +125,17 @@ export function validarSalud(
     throw new Error('Estado de salud no válido.');
   return [tipo, estado];
 }
+export function validarVolumenes(voz: unknown, multimedia: unknown): [number, number] {
+  if (
+    typeof voz !== 'number' ||
+    !Number.isFinite(voz) ||
+    voz < 0 ||
+    voz > 3 ||
+    typeof multimedia !== 'number' ||
+    !Number.isFinite(multimedia) ||
+    multimedia < 0 ||
+    multimedia > 1
+  )
+    throw new Error('Volumen inválido.');
+  return [voz, multimedia];
+}

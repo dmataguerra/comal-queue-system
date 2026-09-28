@@ -33,13 +33,14 @@ if (!window.turnero) {
   };
   eventos.onopen = async () => {
     try {
-      const { instantanea, config, inventario, pantallas, entregaAudio } =
+      const { instantanea, config, inventario, pantallas, entregaAudio, entregasAudio } =
         await solicitar('/api/inicial');
       avisar('estado', instantanea, null);
       avisar('config', config);
       avisar('contenido', inventario);
       avisar('pantallas', pantallas);
       if (entregaAudio) avisar('entregaAudio', entregaAudio);
+      for (const entrega of entregasAudio ?? []) avisar('entregaAudio', entrega);
     } catch {
       /* La conexión se reintentará. */
     }
@@ -49,6 +50,7 @@ if (!window.turnero) {
     diagnostico: () => solicitar('/api/diagnostico'),
     despachar: (accion) => solicitar('/api/accion', accion),
     configurarYouTube: (url) => solicitar('/api/youtube', url),
+    configurarVolumen: (voz, multimedia) => solicitar('/api/volumen', [voz, multimedia]),
     importarContenido: (categoria) => solicitar('/api/contenido/importar', categoria),
     quitarContenido: (url) => solicitar('/api/contenido/quitar', url),
     abrirCarpetaContenido: (categoria) => solicitar('/api/contenido/abrir', categoria ?? null),

@@ -57,7 +57,7 @@ async function verify() {
     for (const w of [operator, client]) w.webContents.setBackgroundThrottling(false);
     operator.setContentSize(1366, 900);
     client.setContentSize(1920, 1080);
-    await wait(() => run(operator, "Boolean(document.querySelector('.size-control'))"));
+    await wait(() => run(operator, "Boolean(document.querySelector('.zoom-tools'))"));
     await wait(() => run(client, "Boolean(document.querySelector('.public-screen'))"));
     const click = (selector) =>
       run(operator, 'document.querySelector(' + JSON.stringify(selector) + ').click()');
@@ -125,17 +125,30 @@ async function verify() {
         'Panel titles differ',
       );
       for (const size of [110, 100, 90, 100]) {
-        await click(
-          size === 110
-            ? '[aria-label="Aumentar tamaño"]'
-            : size === 90
-              ? '[aria-label="Reducir tamaño"]'
-              : '.size-reset',
-        );
+        const currentSize = Number(await run(operator, 'document.documentElement.dataset.tamanio'));
+        if (currentSize !== size)
+          await click(
+            size > currentSize ? '[aria-label="Aumentar tamaño"]' : '[aria-label="Reducir tamaño"]',
+          );
         await wait(() =>
           run(client, 'document.documentElement.dataset.tamanio === "' + size + '"'),
         );
         assert.equal(await run(operator, 'document.documentElement.dataset.tamanio'), String(size));
+        assert.equal(
+          await run(
+            operator,
+            `(() => {
+            const top = document.querySelector('.new-turn-panel').getBoundingClientRect();
+            const bottom = document.querySelector('.repeat-panel').getBoundingClientRect();
+            const ready = document.querySelector('.ready-panel').getBoundingClientRect();
+            const icon = document.querySelector('#screen-heading .icon');
+            return Math.abs(ready.top - top.top) < 2 && Math.abs(ready.bottom - bottom.bottom) < 2
+              && getComputedStyle(icon).maskImage.includes('/pixel/monitor.svg');
+          })()`,
+          ),
+          true,
+          'En pantalla debe abarcar ambos paneles y usar el monitor pixel art',
+        );
         assert.equal(
           await run(operator, 'document.documentElement.scrollWidth <= innerWidth'),
           true,
@@ -183,7 +196,7 @@ async function verify() {
     assert.ok(assets.every(Boolean), 'SVG assets unavailable');
     await click('[aria-label="Aumentar tamaño"]');
     operator.reload();
-    await wait(() => run(operator, "Boolean(document.querySelector('.size-control'))"));
+    await wait(() => run(operator, "Boolean(document.querySelector('.zoom-tools'))"));
     assert.equal(await run(operator, 'document.documentElement.dataset.tamanio'), '110');
     assert.equal(
       await run(operator, `document.querySelector('[aria-label="Aumentar tamaño"]').disabled`),

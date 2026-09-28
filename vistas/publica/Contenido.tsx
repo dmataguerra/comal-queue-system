@@ -8,6 +8,7 @@ interface Props {
   banner: string[];
   config: Config;
   atenuado: boolean;
+  confirmarAtenuacion: () => void;
   registrar: (mensaje: string) => void;
 }
 
@@ -25,7 +26,14 @@ function barajar(lista: string[], evitar?: string) {
 }
 
 /** CU-04 · videos locales en bolsa aleatoria; sin videos (o si todos fallan), modo banner (RF-12). */
-export function Contenido({ videos, banner, config, atenuado, registrar }: Props) {
+export function Contenido({
+  videos,
+  banner,
+  config,
+  atenuado,
+  registrar,
+  confirmarAtenuacion,
+}: Props) {
   const { informarSalud } = useTurnero();
   const [fallidos, setFallidos] = useState(new Set<string>());
   const [youtubeDisponible, setYoutubeDisponible] = useState(true);
@@ -50,12 +58,17 @@ export function Contenido({ videos, banner, config, atenuado, registrar }: Props
     [videos, fallidos],
   );
   const volumen = atenuado ? config.volumenMusica * config.atenuacionMusica : config.volumenMusica;
+  useEffect(() => {
+    if (atenuado && !(config.youtubeUrl && youtubeDisponible) && !reproducibles.length)
+      confirmarAtenuacion();
+  }, [atenuado, config.youtubeUrl, youtubeDisponible, reproducibles.length, confirmarAtenuacion]);
   if (config.youtubeUrl && youtubeDisponible)
     return (
       <YouTubeVideo
         url={config.youtubeUrl}
         volumen={volumen}
         rampa={atenuado ? 150 : 400}
+        alAjustar={atenuado ? confirmarAtenuacion : undefined}
         alFallar={youtubeFallo}
       />
     );
@@ -65,6 +78,7 @@ export function Contenido({ videos, banner, config, atenuado, registrar }: Props
         videos={reproducibles}
         volumen={volumen}
         atenuado={atenuado}
+        confirmarAtenuacion={confirmarAtenuacion}
         alFallar={(url) => {
           registrar(`Video no reproducible, se salta: ${nombre(url)}`);
           setFallidos((previos) => new Set(previos).add(url));
@@ -84,10 +98,12 @@ function Videos({
   volumen,
   atenuado,
   alFallar,
+  confirmarAtenuacion,
 }: {
   videos: string[];
   volumen: number;
   atenuado: boolean;
+  confirmarAtenuacion: () => void;
   alFallar: (url: string) => void;
 }) {
   const bolsa = useRef<string[]>([]),
@@ -124,6 +140,7 @@ function Videos({
           activo={indice === 0}
           volumen={volumen}
           rampa={atenuado ? 150 : 400}
+          alAjustar={atenuado ? confirmarAtenuacion : undefined}
           alTerminar={avanzar}
           alCasiTerminar={precargarSiguiente}
           alFallar={() => {
@@ -137,6 +154,7 @@ function Videos({
 }
 
 interface ClipProps {
+  alAjustar?: () => void;
   url: string;
   activo: boolean;
   volumen: number;
@@ -147,7 +165,16 @@ interface ClipProps {
 }
 
 /** Un <video> nuevo por clip; al salir se libera su decodificador (§8 medida 1). */
-function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFallar }: ClipProps) {
+function Clip({
+  url,
+  activo,
+  volumen,
+  rampa,
+  alTerminar,
+  alCasiTerminar,
+  alFallar,
+  alAjustar,
+}: ClipProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const volumenActual = useRef(volumen);
   volumenActual.current = volumen;
@@ -181,10 +208,11 @@ function Clip({ url, activo, volumen, rampa, alTerminar, alCasiTerminar, alFalla
       const t = Math.min(1, (ahora - inicio) / rampa);
       video.volume = desde + (volumen - desde) * t;
       if (t < 1) cuadro = requestAnimationFrame(paso);
+      else alAjustar?.();
     };
     cuadro = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(cuadro);
-  }, [volumen, rampa, activo]);
+  }, [volumen, rampa, activo, alAjustar]);
   return (
     // El video lo aporta el operador; no existe un archivo de subtítulos asociado.
     // eslint-disable-next-line jsx-a11y/media-has-caption

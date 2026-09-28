@@ -11,6 +11,7 @@ import {
   validarSinArgumentos,
   validarUrlContenido,
   validarVolumen,
+  validarVolumenes,
   validarYouTube,
 } from './seguridad-ipc.js';
 
@@ -18,6 +19,16 @@ const urls = {
   operador: 'turnero://app/vistas/operador/index.html',
   publica: 'turnero://app/vistas/publica/index.html',
 };
+test('volúmenes: límites, silencios y rechazo de valores no finitos', () => {
+  assert.deepEqual(validarVolumenes(0, 0), [0, 0]);
+  assert.deepEqual(validarVolumenes(3, 1), [3, 1]);
+  for (const valor of [NaN, Infinity, -1, '1', null, undefined]) {
+    assert.throws(() => validarVolumenes(valor, 0.5));
+    assert.throws(() => validarVolumenes(1, valor));
+  }
+  assert.throws(() => validarVolumenes(3.1, 1));
+  assert.throws(() => validarVolumenes(1, 1.1));
+});
 const crearRemitente = (url: string) => ({ getURL: () => url, mainFrame: { url } });
 const operador = crearRemitente(urls.operador);
 const publica = crearRemitente(urls.publica);

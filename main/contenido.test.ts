@@ -26,6 +26,27 @@ test('el protocolo sirve MP3 con el tipo MIME de audio correcto', () => {
   assert.equal(TIPOS_MIME['.mp3'], 'audio/mpeg');
 });
 
+test('un fallo de siembra impide arrancar como si hubiera contenido y permite reintentar', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'comal-siembra-'));
+  try {
+    const origen = join(raiz, 'fabrica');
+    mkdirSync(origen);
+    writeFileSync(join(origen, 'aviso.wav'), 'audio');
+    const bloqueado = join(raiz, 'bloqueado');
+    writeFileSync(bloqueado, 'no es una carpeta');
+    assert.throws(
+      () => sembrarContenido(origen, join(bloqueado, 'contenido')),
+      /preparar el contenido/,
+    );
+    unlinkSync(bloqueado);
+    mkdirSync(bloqueado);
+    sembrarContenido(origen, join(bloqueado, 'contenido'));
+    assert.equal(readFileSync(join(bloqueado, 'contenido', 'aviso.wav'), 'utf8'), 'audio');
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
 test('inventario: videos, banner, voz por número y aviso; lo no soportado se ignora y se registra una vez', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-contenido-'));
   try {
