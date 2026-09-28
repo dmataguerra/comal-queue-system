@@ -1,0 +1,38 @@
+.youtube-stage {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--theme-ink, #102a4b);
+}
+.youtube-host {
+  position: relative;
+  container-type: size;
+  overflow: hidden;
+  flex: 1;
+  min-height: 200px;
+  width: 100%;
+}
+.youtube-host iframe {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 177.7778cqh);
+  height: max(100cqh, 56.25cqw);
+  transform: translate(-50%, -50%);
+  border: 0;
+}
+.youtube-error {
+  padding: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: calc(12px * var(--ui-scale, 1));
+}
+.has-youtube .public-media::after {
+  display: none;
+}
+.has-youtube .public-media-frame {
+  cursor: auto;
+}

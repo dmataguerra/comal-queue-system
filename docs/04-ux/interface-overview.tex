@@ -1,0 +1,23 @@
+\section{User experience}
+\subsection{Interface overview}
+
+The frontend is one React bundle with pathname-based selection and in-component navigation. There is no routing library.
+
+\begin{longtable}{P{0.20\textwidth}P{0.23\textwidth}P{0.45\textwidth}}
+\toprule
+Path & Rendered interface & Evidence/notes \\
+\midrule
+\Code{/pantalla} & Public display & The only explicit public-display SPA route. \\
+\Code{/} & Cashier workspace & Electron opens this route. \\
+\Code{/caja} & Cashier workspace & Server alias; no separate component. \\
+\Code{/admin} & Cashier workspace & Alias only; no distinct admin interface or authorization. \\
+\Code{/display} & Cashier workspace & Despite its name, route logic does not render the public display. \\
+Other client paths & Depends on hosting & \Code{App} chooses cashier unless pathname begins with \Code{/pantalla}; production server only declares the five SPA routes above. \\
+\bottomrule
+\end{longtable}
+
+The cashier workspace has three client-side sections: Turns, Multimedia, and Settings. Changing section updates React state but not the URL. The public display has no navigation and no queue mutation controls.
+
+There is no login page, account management, history screen, search view, or dedicated administrator page. The historical README's claim that the cashier can search pending turns is not supported by the current UI.
+
+\Evidence{src/App.tsx; src/pages/CashierPage.tsx; server/bootstrap.ts}

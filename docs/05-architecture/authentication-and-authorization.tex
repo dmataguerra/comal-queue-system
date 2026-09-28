@@ -1,0 +1,22 @@
+\subsection{Authentication and authorization}
+
+\Status{NOT_IMPLEMENTED}.
+
+There is no login page, user table, password, hash library, session, token, cookie, identity provider, Nest guard, role decorator, route middleware, or protected frontend route. The public display is read-only only by presentation; it shares network access to unauthenticated mutation endpoints.
+
+\begin{longtable}{P{0.48\textwidth}P{0.14\textwidth}P{0.14\textwidth}P{0.14\textwidth}}
+\toprule
+Capability & Operator UI & Public UI & API enforcement \\
+\midrule
+View active state & Yes & Yes & None \\
+View up to 200 historical turns & No & No & Public endpoint \\
+Create/recall/update turns & Yes & No & None \\
+Configure media/settings & Yes & No & None \\
+Refresh media catalog & Yes & No & None \\
+Read catalogued media & Indirect & Yes & None \\
+\bottomrule
+\end{longtable}
+
+An authorization policy cannot be invented from current code. Stakeholders must determine whether trusted loopback/physical access is sufficient or whether a LAN deployment requires operator authentication and/or network segmentation. Until then, no document should describe Cashier or Administrator as enforced roles.
+
+\Evidence{package.json; server/app.controller.ts; server/app.module.ts; src/App.tsx}

@@ -1,0 +1,19 @@
+\subsection{Monitoring}
+
+\subsubsection*{Implemented signals}
+
+\begin{itemize}
+  \item \Code{GET /api/health} returns a static process-level OK response.
+  \item Nest logs startup, warnings, and errors to stdout/stderr; \Code{main.ts} logs the listen URL.
+  \item Electron forwards child stdout/stderr to its console and reports startup failure in a dialog.
+  \item Cashier/public interfaces expose current Socket.IO connection state.
+  \item MediaPlayer exposes errors/notices in UI and puts playback status/time in data attributes, but nothing collects them.
+\end{itemize}
+
+\subsubsection*{Not implemented}
+
+No structured logging, file/event-log sink, log rotation, metrics, dashboards, alerting, tracing, audit trail, database size/integrity check, media inventory check at startup, synthetic transaction, or external health supervisor exists. The health route does not test SQLite or media access.
+
+\subsubsection*{Recommended baseline}
+
+After defining the deployment topology, add a supervisor with restart policy, dependency-aware health/readiness, bounded structured logs, database-size/integrity and disk-space checks, and an operator-visible escalation procedure. Metrics and alerts need stakeholder-defined thresholds; none are prescribed here.

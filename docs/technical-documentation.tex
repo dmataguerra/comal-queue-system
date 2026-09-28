@@ -1,0 +1,103 @@
+\documentclass{ol-softwaremanual}
+\input{preamble}
+\title{COMAL Queue\\Technical Documentation}
+\version{1.0}
+\author{Comal++ / Troyanos Engineering}
+\date{14 September 2026\\[0.35em]\small Software baseline: 0.2.0\\Source baseline: \texttt{bf71e73927fc7a24ec01501c38122327a64ffa4f}}
+\softwarelogo{%
+  \vspace*{1.2cm}%
+  \includegraphics[width=8cm]{troyanos-logo.png}\\[2.2cm]%
+}
+\hypersetup{
+  pdftitle={COMAL Queue Technical Documentation},
+  pdfauthor={Comal++ / Troyanos Engineering},
+  pdfsubject={Product, architecture, API, quality, development, and operations documentation},
+  pdfkeywords={COMAL Queue, Comal++, Troyanos, technical documentation}
+}
+\begin{document}
+\pagenumbering{roman}
+\maketitle
+\pagenumbering{arabic}
+\tableofcontents
+\listoflistings
+\clearpage
+
+\input{01-product/product-vision}
+\input{01-product/business-context}
+\input{01-product/scope}
+\input{01-product/glossary}
+
+\clearpage
+\input{02-users-and-research/user-groups}
+\input{02-users-and-research/personas}
+\input{02-users-and-research/user-scenarios}
+\input{02-users-and-research/user-journeys}
+
+\clearpage
+\input{03-requirements/product-requirements}
+\input{03-requirements/functional-requirements}
+\input{03-requirements/non-functional-requirements}
+\input{03-requirements/user-stories}
+\input{03-requirements/acceptance-criteria}
+\input{03-requirements/requirements-traceability}
+
+\clearpage
+\input{04-ux/interface-overview}
+\input{04-ux/cashier-interface}
+\input{04-ux/client-display}
+\input{04-ux/administration-interface}
+\input{04-ux/ux-guidelines}
+
+\clearpage
+\input{05-architecture/system-overview}
+\input{05-architecture/frontend-architecture}
+\input{05-architecture/backend-architecture}
+\input{05-architecture/data-flow}
+\input{05-architecture/database}
+\input{05-architecture/queue-domain}
+\input{05-architecture/realtime-communication}
+\input{05-architecture/multimedia-architecture}
+\input{05-architecture/authentication-and-authorization}
+\input{05-architecture/architectural-decisions}
+
+\clearpage
+\input{06-api/api-overview}
+\input{06-api/endpoints}
+\input{06-api/data-contracts}
+\input{06-api/error-handling}
+
+\clearpage
+\input{07-quality/quality-strategy}
+\input{07-quality/testing-strategy}
+\input{07-quality/test-cases}
+\input{07-quality/known-limitations}
+\input{07-quality/technical-debt}
+
+\clearpage
+\input{08-development/development-setup}
+\input{08-development/project-structure}
+\input{08-development/coding-standards}
+\input{08-development/git-workflow}
+\input{08-development/configuration}
+\input{08-development/environment-variables}
+
+\clearpage
+\input{09-operations/deployment}
+\input{09-operations/production-considerations}
+\input{09-operations/monitoring}
+\input{09-operations/backup-and-recovery}
+\input{09-operations/security}
+
+\clearpage
+\input{10-planning/current-status}
+\input{10-planning/product-roadmap}
+\input{10-planning/technical-roadmap}
+\input{10-planning/release-plan}
+\input{10-planning/project-metrics}
+
+\clearpage
+\input{11-reference/terminology}
+\input{11-reference/repository-map}
+\input{11-reference/documentation-status}
+
+\end{document}

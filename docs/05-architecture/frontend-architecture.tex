@@ -1,0 +1,42 @@
+\subsection{Frontend architecture}
+
+\subsubsection*{Framework and bootstrap}
+
+React 19 is mounted by \Code{src/main.tsx} under Strict Mode. Vite handles development and bundling; Tailwind's Vite plugin is configured, but the UI is primarily authored in large custom CSS files rather than utility classes.
+
+\subsubsection*{Routing and page structure}
+
+\Code{App.tsx} selects \Code{PublicPage} only when the pathname begins with \Code{/pantalla}; all other paths render \Code{CashierPage}. Cashier sections are a local \Code{page} state, not routes.
+
+\subsubsection*{Shared state and transport}
+
+\Code{SystemProvider} owns the last server snapshot and Socket.IO connectivity. It connects with WebSocket-only transport, exposes a callback set for announcement events, and does not issue \Code{GET /api/state}. Components call a small \Code{fetch}-based API client for mutations. State changes arrive back through Socket.IO rather than optimistic updates.
+
+\subsubsection*{Main responsibilities}
+
+\begin{longtable}{P{0.28\textwidth}P{0.62\textwidth}}
+\toprule
+Area & Responsibility \\
+\midrule
+\Code{pages/CashierPage} & navigation, create/recall forms, global feedback, connection handling \\
+\Code{pages/PublicPage} & queue paging, announcement overlay, media and footer composition \\
+\Code{components/ReadyList} & active list and counter/deliver/cancel dialog \\
+\Code{components/MultimediaPanel} & media selection and persisted playback controls \\
+\Code{components/SettingsPanel} & display settings and cashier-context audio test \\
+\Code{components/MediaPlayer} & YouTube lifecycle, local track playback, fallback, media ducking \\
+\Code{hooks/useAnnouncements} & ephemeral queue, duration, cancellation, audio sequence \\
+\Code{hooks/useSystem} & Socket.IO state and subscriber registry \\
+\Code{services/api} & HTTP serialization, eight-second timeout, message extraction \\
+\Code{styles} & shared tokens plus cashier/public responsive layouts \\
+\bottomrule
+\end{longtable}
+
+\subsubsection*{Error and loading states}
+
+Initial state is null until the first socket snapshot. Both pages render connection text; mutations are disabled when disconnected. API errors become Spanish messages. Media maintains separate offline/provider/blocked states. There is no error boundary, retry queue for mutations, or persistent operation log.
+
+\subsubsection*{Type discrepancy}
+
+Frontend \Code{Turn} and \Code{Announcement} declare timestamps as numbers, while the server emits ISO strings. Runtime rendering currently avoids arithmetic on these fields, but the contract is incorrect and not caught because client/server types are duplicated.
+
+\Evidence{src/; vite.config.ts; tsconfig.json}

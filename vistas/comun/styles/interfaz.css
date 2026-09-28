@@ -1,0 +1,325 @@
+/* One operator type scale, based on Llamar turno. Panel grids and outer widths stay intact. */
+.admin-shell {
+  --panel-title-size: 23px;
+  --panel-description-size: 13px;
+}
+@media (min-width: 1600px) {
+  .admin-shell {
+    --panel-title-size: 26px;
+  }
+}
+@media (min-width: 761px) and (max-height: 850px) {
+  .admin-shell {
+    --panel-title-size: 21px;
+  }
+}
+.admin-shell .panel.panel :is(.section-heading, .media-library-heading, .ready-heading) h2 {
+  font-family: var(--font-sans);
+  font-size: calc(var(--panel-title-size) * var(--ui-scale, 1));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
+  color: var(--theme-ink, #123b5e);
+  overflow-wrap: anywhere;
+}
+.admin-shell .panel.panel :is(.section-heading, .media-library-heading) p,
+.admin-shell .section-subtitle {
+  font-size: calc(var(--panel-description-size) * var(--ui-scale, 1));
+  line-height: 1.7;
+  font-weight: 400;
+  color: var(--theme-muted, #617d95);
+  margin-top: 4px;
+}
+.admin-shell .panel.panel .section-icon {
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--theme-primary, #0758bd);
+}
+.admin-shell .panel.panel .section-icon .icon {
+  width: 36px;
+  height: 36px;
+}
+@media (min-width: 761px) and (max-height: 850px) {
+  .admin-shell .panel.panel .section-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .admin-shell .panel.panel .section-icon .icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+.admin-shell .panel.panel label {
+  font-size: calc(14px * var(--ui-scale, 1));
+  font-weight: 600;
+}
+.admin-shell .panel.panel .button {
+  font-size: calc(14px * var(--ui-scale, 1));
+}
+.admin-shell .panel.panel .field-hint,
+.admin-shell .panel.panel .media-requirements,
+.admin-shell .panel.panel .undo-row > span {
+  font-size: calc(13px * var(--ui-scale, 1));
+  line-height: 1.7;
+}
+.admin-shell .panel.panel .register-button {
+  font-size: calc(16px * var(--ui-scale, 1));
+}
+.admin-shell .panel.panel .media-library-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.admin-shell .panel.panel .media-count {
+  margin-left: 0;
+}
+.admin-shell .panel.panel .cashier-turn {
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.turn-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.turn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1px solid var(--theme-control-border, #afcae0);
+  border-radius: 9px;
+  background: var(--theme-pale, #e9f3fb);
+  color: var(--theme-strong, #075091);
+  font-size: calc(11px * var(--ui-scale, 1));
+  font-weight: 600;
+}
+.turn-action .icon {
+  width: 18px;
+  height: 18px;
+}
+.turn-action.danger {
+  color: #8a2935;
+  background: #fff1f2;
+  border-color: #ddb9be;
+}
+.turn-action:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+/* Labels stay visible; stack the two actions on narrower operator panels. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .turn-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .turn-action {
+    min-height: 30px;
+    padding: 3px 6px;
+  }
+}
+@media (max-width: 420px) {
+  .turn-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.admin-shell .session-confirmation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.session-confirmation input {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--theme-primary, #0758bd);
+}
+.size-control {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--theme-strong, #075091);
+}
+.size-label {
+  font-size: 10px;
+  padding: 0 0 3px;
+  font-weight: 600;
+  color: var(--theme-muted, #56657b);
+}
+.size-options {
+  display: flex;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--theme-control-border, #c7d5e4);
+  border-radius: 12px;
+  background: var(--theme-soft, #f4f7fb);
+}
+.size-option {
+  position: relative;
+  cursor: pointer;
+}
+.size-option input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.size-option span {
+  display: grid;
+  place-items: center;
+  min-width: 49px;
+  min-height: 36px;
+  padding: 0 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.size-option:hover span {
+  background: var(--theme-pale, #e9f3fb);
+}
+.size-option input:checked + span {
+  background: var(--theme-primary, #0758bd);
+  color: #fff;
+  box-shadow: 0 2px 4px rgb(var(--theme-shadow-rgb, 18, 58, 94) / 0.16);
+}
+.size-option input:focus-visible + span {
+  outline: 2px solid var(--theme-strong, #075091);
+  outline-offset: 2px;
+}
+.admin-shell .theme-controls {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .admin-shell .admin-topbar {
+    height: auto;
+    min-height: 62px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .size-label {
+    display: none;
+  }
+}
+.diagnostics-panel > .section-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+/* Supporting descriptions use the same reading scale in every operator tab. */
+.admin-shell .media-empty p,
+.admin-shell .media-note,
+.admin-shell .modal-copy,
+.admin-shell .help-list dd,
+.admin-shell .diagnostics-grid {
+  font-size: calc(13px * var(--ui-scale, 1));
+  line-height: 1.7;
+}
+.admin-shell .modal-heading h2 {
+  font-size: calc(var(--panel-title-size) * var(--ui-scale, 1));
+  font-weight: 700;
+  line-height: 1.4;
+}
+.zoom-tools {
+  display: inline-flex;
+  gap: 2px;
+}
+.zoom-tools button,
+.volume-control summary {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--theme-strong, #075091);
+  background: transparent;
+  cursor: pointer;
+}
+.zoom-tools button:hover:not(:disabled),
+.volume-control summary:hover,
+.volume-control[open] summary {
+  background: var(--theme-pale, #e9f3fb);
+}
+.zoom-tools button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.zoom-tools .icon {
+  width: 24px;
+  height: 24px;
+}
+.volume-control {
+  position: relative;
+}
+.volume-control summary {
+  list-style: none;
+}
+.volume-control summary::-webkit-details-marker {
+  display: none;
+}
+.volume-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 100;
+  width: min(290px, 80vw);
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--theme-control-border, #c7d5e4);
+  border-radius: 16px;
+  background: var(--theme-soft, #f8fbfe);
+  box-shadow: 0 12px 32px #17243b26;
+}
+.volume-popover label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.volume-popover input {
+  width: 100%;
+  accent-color: var(--theme-primary, #0758bd);
+}
+.volume-popover small {
+  color: var(--theme-muted, #56657b);
+  font-size: 11px;
+}
+.turn-audio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.turn-audio .icon {
+  width: 14px;
+  height: 14px;
+}
+.turn-audio-pendiente,
+.turn-audio-reproduciendo {
+  color: #8b5c00;
+}
+.turn-audio-reproducido {
+  color: var(--theme-muted, #56657b);
+}
+.turn-audio-fallo,
+.turn-audio-descartado {
+  color: #a72732;
+}

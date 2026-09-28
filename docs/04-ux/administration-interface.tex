@@ -1,0 +1,15 @@
+\subsection{Administration interface}
+
+\Status{NOT_IMPLEMENTED} as a distinct interface or role.
+
+The production server serves \Code{/admin}, but \Code{App.tsx} renders the same \Code{CashierPage} used at \Code{/}. The ``Multimedia'' and ``Configuración'' sections provide administrative functions inside that page:
+\begin{itemize}
+  \item select YouTube/local/fallback media and playback options;
+  \item refresh the local music catalog;
+  \item set announcement duration, page rotation, and footer messages;
+  \item run a cashier-context audio test.
+\end{itemize}
+
+There are no administrator accounts, protected routes, privilege checks, user management, audit log, environment editor, backup controls, or deployment controls. Product owners must decide whether a distinct administrator is required. Until then, documentation uses ``operator configuration'' rather than claiming an administrator permission boundary.
+
+\Evidence{src/App.tsx; src/pages/CashierPage.tsx; server/bootstrap.ts; server/app.controller.ts}

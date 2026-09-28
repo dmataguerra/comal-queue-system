@@ -1,0 +1,66 @@
+\documentclass{ol-softwaremanual}
+\input{preamble}
+\title{COMAL Queue\\Documentation Index}
+\version{1.0}
+\author{Comal++ / Troyanos Engineering}
+\date{14 September 2026}
+\softwarelogo{%
+  \vspace*{1.2cm}%
+  \includegraphics[width=8cm]{troyanos-logo.png}\\[2.2cm]%
+}
+\hypersetup{pdftitle={COMAL Queue Documentation Index},pdfauthor={Comal++ / Troyanos Engineering}}
+\begin{document}
+\pagenumbering{roman}
+\maketitle
+\pagenumbering{arabic}
+\tableofcontents
+\clearpage
+
+\section{Documentation index}
+
+This directory is the repository's documentation source of truth. The root \Code{
+  README.md} remains Markdown for repository discovery; every detailed document is LaTeX. \Code{technical-documentation.tex} assembles the complete set, \Code{preamble.tex} defines shared formatting commands, and \Code{ol-softwaremanual.cls} vendors the Overleaf Software Manual class required for reproducible builds.
+
+\subsection*{Evidence policy}
+
+Statements use four evidence classes:
+\begin{description}
+  \item[Confirmed] Directly supported by source, configuration, assets, tests, or current Git metadata.
+  \item[Inferred] Strongly suggested by two or more repository signals, but not explicitly specified.
+  \item[Undocumented] The repository does not answer the question.
+  \item[Recommendation] Proposed future work; never a claim about present behavior.
+\end{description}
+
+Implementation labels are \Status{IMPLEMENTED}, \Status{PARTIALLY_IMPLEMENTED}, \Status{PLANNED_OR_REFERENCED}, \Status{NOT_IMPLEMENTED}, \Status{UNCLEAR}, and \Status{DEPRECATED}. The audit baseline is commit \Code{bf71e73927fc7a24ec01501c38122327a64ffa4f} on 14 September 2026.
+
+\subsection*{Navigation}
+
+\begin{longtable}{P{0.25\textwidth}P{0.67\textwidth}}
+\toprule
+Directory & Purpose \\
+\midrule
+\Code{01-product} & Vision, operating context, evidence-based scope, and glossary. \\
+\Code{02-users-and-research} & Actual user groups, role-based personas, scenarios, and journeys. \\
+\Code{03-requirements} & Product, functional, and non-functional requirements with stories, criteria, and traceability. \\
+\Code{04-ux} & Implemented cashier and public-display interfaces; the absence of a distinct administrator interface. \\
+\Code{05-architecture} & Frontend, backend, data, database, queue, realtime, multimedia, security boundaries, and observed decisions. \\
+\Code{06-api} & HTTP endpoints, contracts, and error behavior. \\
+\Code{07-quality} & Test evidence, test cases, limitations, and technical debt. \\
+\Code{08-development} & Setup, structure, standards, Git evidence, and configuration. \\
+\Code{09-operations} & Deployability, production gaps, monitoring, recovery, and security. \\
+\Code{10-planning} & Current status and evidence-based, undated roadmaps. \\
+\Code{11-reference} & Terminology, repository map, and documentation confidence matrix. \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Building the combined document}
+
+Run the following from \Code{docs/}. Shell escape is enabled for the template's \Code{minted} package, and \Code{latexmk} performs the additional passes needed for the table of contents and code-listing index.
+
+\begin{CodeBlock}
+latexmk -pdf -shell-escape -interaction=nonstopmode \
+  -halt-on-error technical-documentation.tex
+\end{CodeBlock}
+
+The A4 PDF build was validated with MiKTeX pdfTeX on 14 September 2026. Every rendered page was also rasterized and visually inspected. Full validation details are recorded in \Code{11-reference/documentation-status.tex}.
+\end{document}

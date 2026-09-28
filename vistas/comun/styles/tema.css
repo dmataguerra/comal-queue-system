@@ -1,0 +1,81 @@
+/* La paleta azul permanece en los fallbacks de cada componente. */
+:root[data-tema='morado'] {
+  --wave-light-start: #eed9f5;
+  --wave-light-end: #d9afe6;
+  --wave-blue-start: #a883ce;
+  --wave-blue-end: #9368bd;
+  --wave-navy-start: #79539f;
+  --wave-navy-end: #624187;
+  --wave-corner-start: #ad8fbe;
+  --wave-corner-end: #8b6da0;
+  --theme-primary: #8155a6;
+  --theme-strong: #643d89;
+  --theme-hover: #704495;
+  --theme-ink: #171a2c;
+  --theme-muted: #62647b;
+  --theme-border: #e8eaf2;
+  --theme-control-border: #c6b3cf;
+  --theme-pale: #f5e7f0;
+  --theme-soft: #fcf8fb;
+  --theme-pink: #d78fb7;
+  --theme-light-blue: #cfe5fc;
+  --theme-blue: #3b82f6;
+  --theme-sidebar: #79539f;
+  --theme-sidebar-end: #624187;
+  --theme-media: #211b3e;
+  --theme-shadow-rgb: 45, 32, 85;
+  --theme-primary-rgb: 129, 85, 166;
+  --theme-pale-rgb: 245, 231, 240;
+  --theme-border-rgb: 216, 210, 238;
+  --theme-soft-rgb: 252, 248, 251;
+}
+.theme-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--theme-strong, #075091);
+  font-size: 12px;
+  font-weight: 600;
+}
+.theme-switch-track {
+  display: flex;
+  align-items: center;
+  width: 42px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 99px;
+  background: var(--theme-primary, #0758bd);
+}
+.theme-switch-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #171a2c40;
+  transition: transform 180ms ease;
+}
+.theme-switch[aria-checked='true'] .theme-switch-thumb {
+  transform: translateX(18px);
+}
+.theme-switch:focus-visible {
+  outline: 2px solid var(--theme-primary, #0758bd);
+}
+:root[data-tema='morado'] button:focus-visible,
+:root[data-tema='morado'] a:focus-visible {
+  outline-color: var(--theme-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch-thumb {
+    transition: none;
+  }
+}

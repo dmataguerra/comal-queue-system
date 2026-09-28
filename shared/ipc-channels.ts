@@ -1,0 +1,20 @@
+/** Named IPC capabilities. Persisted only in code; preload mirrors these literal names. */
+export const IPC_CHANNELS = {
+  getInitial: 'turnero:obtener',
+  dispatch: 'turnero:despachar',
+  log: 'turnero:registrar',
+  stateChanged: 'turnero:estado',
+  configChanged: 'turnero:config',
+  contentChanged: 'turnero:contenido',
+  importContent: 'turnero:contenido:importar',
+  removeContent: 'turnero:contenido:quitar',
+  openContentFolder: 'turnero:contenido:abrir',
+  screensChanged: 'turnero:pantallas',
+  setYouTube: 'turnero:youtube',
+  setVolume: 'turnero:volumen',
+  setYouTubeVolume: 'turnero:youtube:volumen',
+  diagnostics: 'turnero:diagnostico',
+  health: 'turnero:salud',
+  audioReceipt: 'turnero:anuncio:acuse',
+  audioReceiptChanged: 'turnero:anuncio:estado',
+} as const;

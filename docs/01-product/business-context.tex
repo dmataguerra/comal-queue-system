@@ -1,0 +1,19 @@
+\subsection{Business context}
+
+\subsubsection*{Confirmed context}
+
+UI labels, image alternatives, package metadata, and the previous README consistently place the application in a university cafeteria setting at UAQ's Facultad de Informática. Staff already receive a printed two-digit ticket identifier from another process. COMAL Queue begins only when that order is ready.
+
+The operational value implemented in code is narrow: eliminate a transient verbal-only ready list, keep the list visible on a public screen, and support an explicit repeat call. The application does not contain monetary, inventory, menu, customer, or order-line data.
+
+\subsubsection*{Documented intent requiring validation}
+
+The previous README described one cashier station, three televisions showing the same content, available speakers, and a preference for mirrored HDMI or wired local networking. These are repository statements, not enforced deployment configuration. Hardware, cabling, screen count, accessibility expectations, data-retention policy, operating hours, ownership, and support responsibilities remain \Unknown.
+
+The previous README also stated that core operation should work without Internet. Code supports local queue entry, persistence, synchronization, local audio assets, and local music without Internet; YouTube is the sole deliberate remote dependency. Public-display audio activation is incomplete, so the offline-audio objective is only partially achieved.
+
+\subsubsection*{Success definition}
+
+No business KPIs, service-level objective, queue-time metric, throughput target, or adoption target is documented. A minimum stakeholder-approved success definition is still required.
+
+\Evidence{README.md at audit baseline; index.html; package.json; public/; data/music/; src/components/MediaPlayer.tsx}

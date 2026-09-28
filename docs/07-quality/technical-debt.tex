@@ -1,0 +1,28 @@
+\subsection{Technical debt register}
+
+\small
+\begin{longtable}{P{0.10\textwidth}P{0.16\textwidth}P{0.28\textwidth}P{0.12\textwidth}P{0.25\textwidth}}
+\toprule
+ID & Area & Problem/impact & Priority & Suggested resolution \\
+\midrule
+TD-001 & Audio & Public activation path is not wired; audible calls and media sound do not work. & P0 & Add explicit user activation on each public screen and browser tests for calls/ducking. \\
+TD-002 & Security & All state/history/media mutations are unauthenticated. & P0 if LAN-exposed & Define trust model, then implement authorization or constrain network/host. \\
+TD-003 & Recovery & No backup/restore procedure for SQLite/WAL. & P0 before live use & Define RPO/RTO; implement and exercise WAL-safe backup/restore. \\
+TD-004 & Tests & No frontend, E2E, accessibility, or packaging automation. & P1 & Add browser/component tests and CI gates. \\
+TD-005 & Schema & Startup DDL has no schema version/migrations. & P1 & Introduce migration tracking before schema evolution. \\
+TD-006 & Retention & turns/requests grow indefinitely; history hides records after 200. & P1 & Define retention, archival, and idempotency-key expiry. \\
+TD-007 & Contracts & Duplicated client/server types disagree on timestamps and optional settings. & P1 & Share or generate schema/contracts; validate responses. \\
+TD-008 & Audit & Closure records lack time, actor, and reason. & P1 & Define audit requirement, then extend model/migration. \\
+TD-009 & Deployment & Electron loopback conflicts with direct multi-device LAN use. & P1 & Select mirrored-display or secured LAN topology and package accordingly. \\
+TD-010 & Validation & Frontend/server YouTube rules and duration maxima differ. & P2 & Derive both from shared validation/contract. \\
+TD-011 & Architecture & All domains/providers are in one Nest module and one state service. & P2 & Separate only as change pressure warrants; preserve transaction invariants. \\
+TD-012 & Error handling & No stable error codes or frontend error boundary. & P2 & Add an error contract and recoverable UI boundary. \\
+TD-013 & Operations & Only console logs/health exist; no metrics, alerting, rotation, or supervision. & P1 & Define local operations baseline and add appropriate telemetry. \\
+TD-014 & UX & Public empty state is missing; long cashier list has no search/filter. & P2 & Validate workflows and implement targeted states. \\
+TD-015 & Assets/brand & Unused components/assets and inconsistent names cause documentation/build noise. & P3 & Decide canonical brand and remove/archive unused assets after owner approval. \\
+TD-016 & Tooling & No lint/format configuration and source formatting is inconsistent. & P2 & Adopt and automate one TypeScript/CSS formatting standard. \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+Priorities express engineering risk, not business commitments. TD-002 depends on whether the service is confined to loopback or exposed on a shared network.
