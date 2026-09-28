@@ -181,18 +181,18 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
           opciones.configurarYouTube(validarYouTube(dato));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/audio') {
+          const valores: unknown[] = Array.isArray(dato) ? dato : [];
+          const [id, n, estado] = valores;
           if (
-            !Array.isArray(dato) ||
-            dato.length !== 3 ||
-            !Number.isInteger(dato[0]) ||
-            !Number.isInteger(dato[1]) ||
-            !['reproduciendo', 'reproducido', 'fallo'].includes(String(dato[2]))
+            !Number.isInteger(id) ||
+            !Number.isInteger(n) ||
+            !['reproduciendo', 'reproducido', 'fallo'].includes(String(estado))
           )
             throw new Error('Acuse de audio inválido.');
           opciones.confirmarAnuncio(
-            dato[0],
-            dato[1],
-            dato[2] as 'reproduciendo' | 'reproducido' | 'fallo',
+            id as number,
+            n as number,
+            estado as 'reproduciendo' | 'reproducido' | 'fallo',
           );
           respuestaJson(res, null);
         } else if (url.pathname === '/api/contenido/importar')

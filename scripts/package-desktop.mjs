@@ -100,6 +100,11 @@ try {
   };
   for (const nombre of ['build', 'dist', 'contenido', 'LICENSE'])
     cpSync(join(raiz, nombre), join(temporal, nombre), { recursive: true });
+  cpSync(
+    join(raiz, 'public', 'assets', 'branding'),
+    join(temporal, 'public', 'assets', 'branding'),
+    { recursive: true },
+  );
   writeFileSync(join(temporal, 'package.json'), `${JSON.stringify(paquete, null, 2)}\n`);
   const resultado = spawnSync(
     process.execPath,
