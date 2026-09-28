@@ -9,6 +9,8 @@ const raiz = fileURLToPath(new URL('../', import.meta.url));
 const resultados = join(raiz, 'test-results');
 mkdirSync(resultados, { recursive: true });
 process.env.TURNERO_DATOS = mkdtempSync(join(resultados, 'browser-'));
+app.commandLine.appendSwitch('disable-gpu');
+app.disableHardwareAcceleration();
 app.setAppPath(raiz);
 app.setPath('userData', join(process.env.TURNERO_DATOS, 'electron'));
 BrowserWindow.prototype.show = function () {};

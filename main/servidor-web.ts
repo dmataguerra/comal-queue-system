@@ -58,6 +58,11 @@ interface OpcionesServidor {
   importarContenido: (categoria: 'videos' | 'banner') => Promise<ResultadoImportacion>;
   quitarContenido: (url: string) => boolean;
   abrirCarpetaContenido: (categoria?: 'videos' | 'banner') => Promise<void>;
+  confirmarAnuncio: (
+    id: number,
+    n: number,
+    estado: 'reproduciendo' | 'reproducido' | 'fallo',
+  ) => void;
   registrar: (mensaje: string) => void;
 }
 
@@ -174,6 +179,21 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
           respuestaJson(res, null);
         } else if (url.pathname === '/api/youtube') {
           opciones.configurarYouTube(validarYouTube(dato));
+          respuestaJson(res, null);
+        } else if (url.pathname === '/api/audio') {
+          if (
+            !Array.isArray(dato) ||
+            dato.length !== 3 ||
+            !Number.isInteger(dato[0]) ||
+            !Number.isInteger(dato[1]) ||
+            !['reproduciendo', 'reproducido', 'fallo'].includes(String(dato[2]))
+          )
+            throw new Error('Acuse de audio inválido.');
+          opciones.confirmarAnuncio(
+            dato[0],
+            dato[1],
+            dato[2] as 'reproduciendo' | 'reproducido' | 'fallo',
+          );
           respuestaJson(res, null);
         } else if (url.pathname === '/api/contenido/importar')
           respuestaJson(res, await opciones.importarContenido(validarCategoria(dato)));

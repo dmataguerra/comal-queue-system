@@ -337,6 +337,20 @@ async function iniciar() {
       importarContenido,
       quitarContenido,
       abrirCarpetaContenido,
+      confirmarAnuncio: (id, n, estado) => {
+        const anterior = entregasAudio.get(n);
+        if (
+          !anterior ||
+          anterior.id !== id ||
+          (anterior.estado !== 'pendiente' && anterior.estado !== 'reproduciendo')
+        )
+          return;
+        entregaAudio = { ...anterior, estado, fecha: new Date().toISOString() };
+        entregasAudio.set(n, entregaAudio);
+        ipc.difundirEntregaAudio(entregaAudio);
+        servidorWeb?.difundirEntregaAudio(entregaAudio);
+        registrar(`Audio del turno ${n}: ${estado} por la vista pública.`);
+      },
       registrar,
     });
     registrar(`Navegador local: ${servidorWeb.origen} y ${servidorWeb.origen}/publica`);

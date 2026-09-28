@@ -9,6 +9,8 @@ mkdirSync(join(root, 'test-results'), { recursive: true });
 const data = mkdtempSync(join(root, 'test-results', 'audio-controls-'));
 cpSync(join(root, 'contenido'), join(data, 'contenido'), { recursive: true });
 process.env.TURNERO_DATOS = data;
+app.commandLine.appendSwitch('disable-gpu');
+app.disableHardwareAcceleration();
 app.setAppPath(root);
 app.setPath('userData', join(data, 'electron'));
 BrowserWindow.prototype.show = function () {};

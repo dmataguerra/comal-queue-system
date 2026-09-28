@@ -56,7 +56,7 @@ if (!window.turnero) {
     abrirCarpetaContenido: (categoria) => solicitar('/api/contenido/abrir', categoria ?? null),
     ajustarVolumenYouTube: async () => 0,
     informarSalud: () => {},
-    confirmarAnuncio: () => {},
+    confirmarAnuncio: (id, n, estado) => solicitar('/api/audio', [id, n, estado]),
     alCambiarEstado: (fn) => escuchar('estado', fn),
     alCambiarConfig: (fn) => escuchar('config', fn),
     alCambiarContenido: (fn) => escuchar('contenido', fn),
