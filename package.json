@@ -21,6 +21,7 @@
     "lint": "eslint backend main nucleo shared vistas scripts vite.config.ts",
     "test:desktop": "npm run build && electron scripts/smoke-desktop.mjs",
     "test:browser": "npm run build && electron scripts/smoke-browser.mjs",
+    "test:hardening": "npm run build && electron scripts/smoke-hardening.mjs",
     "test:installed": "node scripts/smoke-installed.mjs",
     "test:upgrade": "node scripts/smoke-upgrade.mjs",
     "test:media": "npm run build && node scripts/smoke-media.mjs",

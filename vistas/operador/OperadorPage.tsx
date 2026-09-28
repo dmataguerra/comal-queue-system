@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatear, normalizar } from '../../nucleo/turnos';
+import { ultimasEntregas } from '../../shared/politica-anuncios';
 import { useTurnero } from '../comun/turnero';
 import { useTema } from '../comun/tema';
 import { useClock } from '../comun/hooks/useClock';
@@ -17,6 +18,10 @@ export function OperadorPage() {
   const { instantanea, pantallas, entregasAudio = [], despachar } = useTurnero(),
     clock = useClock();
   const { actual, llamados, puedeDeshacer } = instantanea;
+  const recientes = ultimasEntregas(entregasAudio);
+  const anunciosPendientes = entregasAudio.filter(
+    (e) => e.estado === 'pendiente' || e.estado === 'reproduciendo',
+  ).length;
   const [pagina, setPagina] = useState<'turnos' | 'multimedia' | 'diagnostico'>('turnos'),
     [entrada, setEntrada] = useState(''),
     [ocupado, setOcupado] = useState(false),
@@ -288,9 +293,27 @@ export function OperadorPage() {
               </span>
             </div>
           )}
-          {entregasAudio.some(
-            (e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n),
+          {anunciosPendientes >= 5 && (
+            <div className="connection-banner" role="alert">
+              <Icon name="warning" />
+              <span>
+                Hay {anunciosPendientes} de 6 anuncios en curso o en espera. Con seis, las nuevas
+                llamadas se rechazan sin cambiar el turno. Espera antes de volver a llamar.
+              </span>
+            </div>
+          )}
+          {recientes.some(
+            (e) => e.estado === 'descartado' && [actual, ...llamados].includes(e.n),
           ) && (
+            <div className="connection-banner" role="alert">
+              <Icon name="warning" />
+              <span>
+                Hay anuncios descartados por espera o porque el turno dejó de estar vigente. Revisa
+                las filas y vuelve a llamar si hace falta.
+              </span>
+            </div>
+          )}
+          {recientes.some((e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n)) && (
             <div className="connection-banner" role="alert">
               <Icon name="warning" />
               <span>
@@ -416,13 +439,15 @@ export function OperadorPage() {
                           {destacada && <span>Turno actual</span>}
                         </div>
                         <div className="cashier-counter">
-                          {entregasAudio
+                          {recientes
                             .filter((e) => e.n === n)
                             .map((e) => (
                               <span
                                 key={e.id}
                                 className={`turn-audio turn-audio-${e.estado}`}
                                 role="status"
+                                title={e.motivo}
+                                data-anuncio-id={e.id}
                               >
                                 <Icon
                                   name={
@@ -441,6 +466,7 @@ export function OperadorPage() {
                                     reproduciendo: 'Anunciando',
                                     reproducido: 'Anunciado',
                                     fallo: 'Falló el audio',
+                                    descartado: 'No anunciado',
                                   }[e.estado]
                                 }
                               </span>

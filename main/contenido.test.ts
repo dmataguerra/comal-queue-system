@@ -13,6 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { copyFile } from 'node:fs/promises';
 import {
   TIPOS_MIME,
   URL_CONTENIDO,
@@ -21,6 +22,67 @@ import {
   quitarArchivo,
   sembrarContenido,
 } from './contenido.js';
+
+test('una copia lenta cede el hilo y no publica archivos parciales; las importaciones concurrentes no sobrescriben', async () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'comal-import-async-'));
+  const origen = join(raiz, 'video.mp4');
+  const datos = join(raiz, 'datos');
+  writeFileSync(origen, 'video');
+  let empezar!: () => void, continuar!: () => void;
+  const inicio = new Promise<void>((resolve) => {
+    empezar = resolve;
+  });
+  const espera = new Promise<void>((resolve) => {
+    continuar = resolve;
+  });
+  try {
+    const primera = importarArchivos(datos, 'videos', [origen], () => {}, {
+      copiar: async (desde, hasta) => {
+        empezar();
+        await espera;
+        await copyFile(desde, hasta);
+      },
+    });
+    await inicio;
+    let responde = false;
+    await new Promise<void>((resolve) =>
+      setImmediate(() => {
+        responde = true;
+        resolve();
+      }),
+    );
+    assert.equal(responde, true);
+    assert.deepEqual(inventariar(datos).videos, []);
+    const segunda = await importarArchivos(datos, 'videos', [origen]);
+    continuar();
+    const resultado = await primera;
+    assert.deepEqual(segunda.agregados, ['video.mp4']);
+    assert.deepEqual(resultado.agregados, ['video (2).mp4']);
+    assert.deepEqual(readdirSync(join(datos, 'videos')).sort(), ['video (2).mp4', 'video.mp4']);
+    assert.equal(readFileSync(join(datos, 'videos', 'video.mp4'), 'utf8'), 'video');
+  } finally {
+    continuar?.();
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('una copia truncada se rechaza sin publicar ni dejar temporales', async () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'comal-import-partial-'));
+  const origen = join(raiz, 'foto.png');
+  writeFileSync(origen, 'imagen completa');
+  try {
+    const resultado = await importarArchivos(join(raiz, 'datos'), 'banner', [origen], () => {}, {
+      copiar: async (_desde, hasta) => {
+        writeFileSync(hasta, 'x');
+      },
+    });
+    assert.equal(resultado.agregados.length, 0);
+    assert.equal(resultado.omitidos.length, 1);
+    assert.deepEqual(readdirSync(join(raiz, 'datos', 'banner')), []);
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
 
 test('el protocolo sirve MP3 con el tipo MIME de audio correcto', () => {
   assert.equal(TIPOS_MIME['.mp3'], 'audio/mpeg');
@@ -159,7 +221,7 @@ test('sembrar repara audio obligatorio faltante o vacío sin sobrescribir MP3 pe
   }
 });
 
-test('administración: importa sin sobrescribir y solo elimina archivos multimedia inventariados', () => {
+test('administración: importa sin sobrescribir y solo elimina archivos multimedia inventariados', async () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-administrar-'));
   const origen = join(raiz, 'origen');
   const contenido = join(raiz, 'contenido');
@@ -167,11 +229,11 @@ test('administración: importa sin sobrescribir y solo elimina archivos multimed
     mkdirSync(origen);
     writeFileSync(join(origen, 'promo.mp4'), 'primero');
     writeFileSync(join(origen, 'notas.txt'), 'no permitido');
-    const primera = importarArchivos(contenido, 'videos', [
+    const primera = await importarArchivos(contenido, 'videos', [
       join(origen, 'promo.mp4'),
       join(origen, 'notas.txt'),
     ]);
-    const segunda = importarArchivos(contenido, 'videos', [join(origen, 'promo.mp4')]);
+    const segunda = await importarArchivos(contenido, 'videos', [join(origen, 'promo.mp4')]);
     assert.deepEqual(primera, {
       agregados: ['promo.mp4'],
       omitidos: ['notas.txt'],
@@ -191,14 +253,14 @@ test('administración: importa sin sobrescribir y solo elimina archivos multimed
   }
 });
 
-test('importación: un archivo vacío (descarga incompleta) se omite y no se copia', () => {
+test('importación: un archivo vacío (descarga incompleta) se omite y no se copia', async () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-vacio-'));
   const origen = join(raiz, 'origen');
   const contenido = join(raiz, 'contenido');
   try {
     mkdirSync(origen);
     writeFileSync(join(origen, 'foto.jpeg'), '');
-    const resultado = importarArchivos(contenido, 'banner', [join(origen, 'foto.jpeg')]);
+    const resultado = await importarArchivos(contenido, 'banner', [join(origen, 'foto.jpeg')]);
     assert.deepEqual(resultado, {
       agregados: [],
       omitidos: ['foto.jpeg'],
@@ -211,21 +273,21 @@ test('importación: un archivo vacío (descarga incompleta) se omite y no se cop
   }
 });
 
-test('importación rechaza archivos grandes o disco sin reserva y limpia una copia fallida', () => {
+test('importación rechaza archivos grandes o disco sin reserva y limpia una copia fallida', async () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-limites-'));
   const origen = join(raiz, 'foto.jpeg');
   const contenido = join(raiz, 'contenido');
   try {
     writeFileSync(origen, 'imagen');
     truncateSync(origen, 25 * 1024 ** 2 + 1);
-    const demasiadoGrande = importarArchivos(contenido, 'banner', [origen]);
+    const demasiadoGrande = await importarArchivos(contenido, 'banner', [origen]);
     assert.match(demasiadoGrande.motivos?.['foto.jpeg'] ?? '', /25 MB/);
     writeFileSync(origen, 'imagen');
-    const sinEspacio = importarArchivos(contenido, 'banner', [origen], () => {}, {
+    const sinEspacio = await importarArchivos(contenido, 'banner', [origen], () => {}, {
       espacioLibre: () => 0,
     });
     assert.match(sinEspacio.motivos?.['foto.jpeg'] ?? '', /espacio suficiente/);
-    const copiaFallida = importarArchivos(contenido, 'banner', [origen], () => {}, {
+    const copiaFallida = await importarArchivos(contenido, 'banner', [origen], () => {}, {
       espacioLibre: () => Number.MAX_SAFE_INTEGER,
       copiar: (_origen, destino) => {
         writeFileSync(destino, 'parcial');

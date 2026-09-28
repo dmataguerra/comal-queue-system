@@ -1,4 +1,24 @@
-import type { Accion, CategoriaContenido } from '../shared/contract.js';
+import type { Accion, CategoriaContenido, EntregaAudio } from '../shared/contract.js';
+
+export function validarAcuseAudio(
+  valor: unknown,
+): [number, number, Exclude<EntregaAudio['estado'], 'pendiente'>] {
+  if (!Array.isArray(valor) || valor.length !== 3) throw new Error('Acuse de audio inválido.');
+  const [id, n, estado] = valor as unknown[];
+  if (
+    !Number.isSafeInteger(id) ||
+    (id as number) < 1 ||
+    !Number.isInteger(n) ||
+    (n as number) < 0 ||
+    (n as number) > 99 ||
+    (estado !== 'reproduciendo' &&
+      estado !== 'reproducido' &&
+      estado !== 'fallo' &&
+      estado !== 'descartado')
+  )
+    throw new Error('Acuse de audio inválido.');
+  return [id as number, n as number, estado];
+}
 import { esYouTube } from '../nucleo/youtube.js';
 
 type Vista = 'operador' | 'publica';

@@ -11,7 +11,10 @@ on:
       - copilot/comal-interactive-mockup
 
 jobs:
+  baseline:
+    uses: ./.github/workflows/legacy-installer.yml
   validate:
+    needs: baseline
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -32,6 +35,8 @@ jobs:
         run: npm run test:desktop
       - name: Browser transport smoke test
         run: npm run test:browser
+      - name: Announcement and async import regression test
+        run: npx electron scripts/smoke-hardening.mjs
       - name: Local media smoke test
         run: npm run test:media
       - name: Full-day preflight
@@ -44,6 +49,17 @@ jobs:
         run: npm run desktop:build
       - name: Installed application smoke test
         run: npm run test:installed
+      - name: Upgrade and rollback smoke test
+        uses: actions/download-artifact@v4
+        with:
+          name: upgrade-baseline-0.2.0
+          path: release/archive-0.2.0
+      - name: Verify upgrade baseline hash
+        shell: pwsh
+        run: |
+          $expected = (Get-Content 'release/archive-0.2.0/SHA256.txt').Trim()
+          $actual = (Get-FileHash 'release/archive-0.2.0/Comal++ Setup 0.2.0.exe' -Algorithm SHA256).Hash
+          if ($actual -ne $expected) { throw 'Upgrade baseline hash mismatch' }
       - name: Upgrade and rollback smoke test
         run: npm run test:upgrade
       - name: Upload desktop diagnostics

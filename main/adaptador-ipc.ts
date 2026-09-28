@@ -15,6 +15,7 @@ import { IPC_CHANNELS } from '../shared/ipc-channels.js';
 import {
   autorizarIpc,
   validarAccion,
+  validarAcuseAudio,
   validarCantidad,
   validarCategoria,
   validarCategoriaOpcional,
@@ -49,7 +50,7 @@ interface OpcionesIpc {
   confirmarAnuncio: (
     id: number,
     n: number,
-    estado: 'reproduciendo' | 'reproducido' | 'fallo',
+    estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
   ) => void;
 }
 
@@ -103,18 +104,7 @@ export function conectarIpc({
   ipcMain.on(IPC_CHANNELS.audioReceipt, (evento, ...argumentos: unknown[]) => {
     try {
       autorizar(evento, 'publica');
-      validarCantidad(argumentos, 3);
-      const [id, n, estado] = argumentos;
-      if (
-        !Number.isInteger(id) ||
-        (id as number) < 1 ||
-        !Number.isInteger(n) ||
-        (n as number) < 0 ||
-        (n as number) > 99 ||
-        (estado !== 'reproduciendo' && estado !== 'reproducido' && estado !== 'fallo')
-      )
-        return;
-      confirmarAnuncio(id as number, n as number, estado);
+      confirmarAnuncio(...validarAcuseAudio(argumentos));
     } catch {
       // Solo la vista pública registrada puede confirmar su reproducción.
     }

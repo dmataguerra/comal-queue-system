@@ -139,7 +139,7 @@ async function verify() {
     const fixture = join(data, 'prueba.webm');
     writeFileSync(fixture, Buffer.from(bytes));
     const { importarArchivos } = await import('../build/main/contenido.js');
-    assert.equal(importarArchivos(content, 'videos', [fixture]).agregados.length, 1);
+    assert.equal((await importarArchivos(content, 'videos', [fixture])).agregados.length, 1);
     await waitFor(
       () => execute(operator, "document.querySelector('.media-preview video')?.videoWidth===64"),
       'Falló la vista previa de video',

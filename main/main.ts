@@ -26,6 +26,8 @@ import { registerContentProtocol } from './content-protocol.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
 import { crearStore } from './store.js';
 import { crearVentanas, type Vista } from './ventanas.js';
+import { crearEntregasAudio } from './entregas-audio.js';
+import { MAX_ESPERA_ANUNCIO_MS } from '../shared/politica-anuncios.js';
 import { crearServidorWeb } from './servidor-web.js';
 import { migrarDesde02 } from './migracion-02.js';
 
@@ -108,11 +110,21 @@ async function iniciar() {
   let config: Config = leerConfig(rutaConfig, registrar);
   let inventario: Inventario;
   let pantallas: Pantallas = { publica: 'ninguna' };
-  const store = crearStore({ ruta: join(carpetaDatos, 'estado.json'), registrar });
+  const entregasAudio = crearEntregasAudio((entrega) => {
+    entregaAudio = entrega;
+    ipc.difundirEntregaAudio(entrega);
+    servidorWeb?.difundirEntregaAudio(entrega);
+    registrar(`Audio del turno ${entrega.n}, anuncio ${entrega.id}: ${entrega.estado}.`);
+  });
+  const store = crearStore({
+    ruta: join(carpetaDatos, 'estado.json'),
+    registrar,
+    antesDeAnunciar: entregasAudio.comprobarCapacidad,
+    esperaAnuncioMs: MAX_ESPERA_ANUNCIO_MS,
+  });
   let saludAudio: 'correcto' | 'degradado' | 'desconocido' = 'desconocido';
   let saludYouTube: 'activo' | 'no disponible' | 'inactivo' = 'inactivo';
   let entregaAudio: EntregaAudio | null = null;
-  const entregasAudio = new Map<number, EntregaAudio>();
   let servidorWeb: Awaited<ReturnType<typeof crearServidorWeb>> | null = null;
 
   const ventanas = crearVentanas({
@@ -145,7 +157,12 @@ async function iniciar() {
       ],
     });
     if (seleccion.canceled) return { agregados: [], omitidos: [], cancelado: true };
-    const resultado = importarArchivos(carpetaContenido, categoria, seleccion.filePaths, registrar);
+    const resultado = await importarArchivos(
+      carpetaContenido,
+      categoria,
+      seleccion.filePaths,
+      registrar,
+    );
     if (resultado.agregados.length)
       registrar(`contenido: se importaron ${resultado.agregados.join(', ')}`);
     return resultado;
@@ -215,20 +232,7 @@ async function iniciar() {
         }
       }
     },
-    confirmarAnuncio: (id, n, estado) => {
-      const anterior = entregasAudio.get(n);
-      if (
-        !anterior ||
-        anterior.id !== id ||
-        (anterior.estado !== 'pendiente' && anterior.estado !== 'reproduciendo')
-      )
-        return;
-      entregaAudio = { ...anterior, estado, fecha: new Date().toISOString() };
-      entregasAudio.set(n, entregaAudio);
-      ipc.difundirEntregaAudio(entregaAudio);
-      servidorWeb?.difundirEntregaAudio(entregaAudio);
-      registrar(`Audio del turno ${n}: ${estado} por la vista pública.`);
-    },
+    confirmarAnuncio: entregasAudio.confirmar,
     configurarYouTube,
     store,
     inicial: () => ({
@@ -237,7 +241,7 @@ async function iniciar() {
       inventario,
       pantallas,
       entregaAudio,
-      entregasAudio: [...entregasAudio.values()],
+      entregasAudio: entregasAudio.obtener(),
     }),
     esOperador: ventanas.esOperador,
     esPublica: ventanas.esPublica,
@@ -248,20 +252,11 @@ async function iniciar() {
     abrirCarpetaContenido,
     registrar,
   });
-  store.suscribir((_instantanea, anuncio) => {
-    const visibles = [_instantanea.actual, ..._instantanea.llamados];
-    for (const n of entregasAudio.keys()) if (!visibles.includes(n)) entregasAudio.delete(n);
-    if (!anuncio) return;
-    entregaAudio = {
-      id: anuncio.id,
-      n: anuncio.n,
-      estado: 'pendiente',
-      fecha: new Date().toISOString(),
-    };
-    entregasAudio.set(anuncio.n, entregaAudio);
-    ipc.difundirEntregaAudio(entregaAudio);
-    servidorWeb?.difundirEntregaAudio(entregaAudio);
+  store.suscribir((instantanea, anuncio) => {
+    entregasAudio.sincronizar(instantanea);
+    if (anuncio) entregasAudio.registrar(anuncio);
   });
+  const vigilarAnuncios = setInterval(entregasAudio.vencer, 250);
 
   sembrarContenido(contenidoDeFabrica, carpetaContenido, registrar);
   const contenido = vigilarContenido(
@@ -307,6 +302,7 @@ async function iniciar() {
 
   app.on('second-instance', () => ventanas.enfocarOperador());
   app.on('before-quit', () => {
+    clearInterval(vigilarAnuncios);
     detenerConfig();
     contenido.detener();
     clearTimeout(recarga);
@@ -328,7 +324,7 @@ async function iniciar() {
         inventario,
         pantallas,
         entregaAudio,
-        entregasAudio: [...entregasAudio.values()],
+        entregasAudio: entregasAudio.obtener(),
       }),
       diagnostico,
       configurarYouTube,
@@ -336,20 +332,7 @@ async function iniciar() {
       importarContenido,
       quitarContenido,
       abrirCarpetaContenido,
-      confirmarAnuncio: (id, n, estado) => {
-        const anterior = entregasAudio.get(n);
-        if (
-          !anterior ||
-          anterior.id !== id ||
-          (anterior.estado !== 'pendiente' && anterior.estado !== 'reproduciendo')
-        )
-          return;
-        entregaAudio = { ...anterior, estado, fecha: new Date().toISOString() };
-        entregasAudio.set(n, entregaAudio);
-        ipc.difundirEntregaAudio(entregaAudio);
-        servidorWeb?.difundirEntregaAudio(entregaAudio);
-        registrar(`Audio del turno ${n}: ${estado} por la vista pública.`);
-      },
+      confirmarAnuncio: entregasAudio.confirmar,
       registrar,
     });
     registrar(`Navegador local: ${servidorWeb.origen} y ${servidorWeb.origen}/publica`);

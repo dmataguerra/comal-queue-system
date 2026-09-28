@@ -249,7 +249,20 @@ async function dispatch(operator, action) {
 }
 
 async function dispatchBatch(operator, actions) {
-  const results = await Promise.all(actions.map((action) => dispatch(operator, action)));
+  const results = [];
+  for (const action of actions) {
+    let result;
+    for (;;) {
+      try {
+        result = await dispatch(operator, action);
+        break;
+      } catch (error) {
+        if (!String(error).includes('cola de audio está llena')) throw error;
+        await waitUntil(performance.now() + 1000);
+      }
+    }
+    results.push(result);
+  }
   report.batchesOfSix++;
   return results;
 }

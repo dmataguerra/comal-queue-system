@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
 import { mkdirSync, mkdtempSync } from 'node:fs';
@@ -36,9 +36,15 @@ async function verificar() {
       async () => (await fetch('http://127.0.0.1:4317/api/inicial')).ok,
       'El servidor de navegador no inició.',
     );
+    // El acuse debe llegar por HTTP, nunca por la ventana Electron de respaldo.
+    ipcMain.removeAllListeners('turnero:anuncio:acuse');
     const operador = new BrowserWindow({
       show: false,
-      webPreferences: { nodeIntegration: false, contextIsolation: true },
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        backgroundThrottling: false,
+      },
     });
     await operador.loadURL('http://127.0.0.1:4317/');
     await esperar(
@@ -49,7 +55,12 @@ async function verificar() {
     assert.equal(await operador.webContents.executeJavaScript('typeof window.turnero'), 'object');
     const publica = new BrowserWindow({
       show: false,
-      webPreferences: { nodeIntegration: false, contextIsolation: true },
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        backgroundThrottling: false,
+        autoplayPolicy: 'no-user-gesture-required',
+      },
     });
     await publica.loadURL('http://127.0.0.1:4317/publica');
     await esperar(
@@ -70,12 +81,12 @@ async function verificar() {
     );
     await esperar(async () => {
       const dato = await (await fetch('http://127.0.0.1:4317/api/inicial')).json();
-      return dato.entregaAudio?.id === 1 && dato.entregaAudio.estado !== 'pendiente';
-    }, 'La vista pública de Electron no informó el resultado del audio.');
+      return dato.entregaAudio?.id === 1 && dato.entregaAudio.estado === 'reproducido';
+    }, 'La vista pública del navegador no confirmó la reproducción por HTTP.');
     await esperar(
       () =>
         operador.webContents.executeJavaScript(
-          "document.body.textContent.includes('audio terminado en la vista pública') || document.body.textContent.includes('fallo de audio')",
+          "document.querySelector('.turn-audio-reproducido[data-anuncio-id=\"1\"]')?.textContent === 'Anunciado'",
         ),
       'El operador no mostró el acuse de audio.',
     );

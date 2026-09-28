@@ -28,6 +28,8 @@ export function comprobarEspacioEstado(
 }
 
 interface StoreOptions {
+  antesDeAnunciar?: () => void;
+  esperaAnuncioMs?: number;
   ruta: string;
   hoy?: () => string;
   ahora?: () => number;
@@ -38,6 +40,8 @@ interface StoreOptions {
 
 /** Bind the queue application to the existing, compatibility-preserving JSON adapter. */
 export function crearStore({
+  antesDeAnunciar,
+  esperaAnuncioMs,
   ruta,
   hoy = () => fechaLocal(),
   ahora,
@@ -46,6 +50,8 @@ export function crearStore({
   guardar = guardarEstado,
 }: StoreOptions): Store {
   return createQueueStore({
+    antesDeAnunciar,
+    esperaAnuncioMs,
     load: (today) => leerEstado(ruta, today, registrar),
     save: (state, date, since) => guardar(ruta, state, date, since),
     ensureCapacity: () => comprobarEspacioEstado(ruta),

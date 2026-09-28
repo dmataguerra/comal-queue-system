@@ -16,6 +16,7 @@ import { crearCsp } from './politica-csp.js';
 import { fileWithin } from './safe-file.js';
 import {
   validarAccion,
+  validarAcuseAudio,
   validarCategoria,
   validarCategoriaOpcional,
   validarUrlContenido,
@@ -61,7 +62,7 @@ interface OpcionesServidor {
   confirmarAnuncio: (
     id: number,
     n: number,
-    estado: 'reproduciendo' | 'reproducido' | 'fallo',
+    estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
   ) => void;
   registrar: (mensaje: string) => void;
 }
@@ -181,19 +182,7 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
           opciones.configurarYouTube(validarYouTube(dato));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/audio') {
-          const valores: unknown[] = Array.isArray(dato) ? dato : [];
-          const [id, n, estado] = valores;
-          if (
-            !Number.isInteger(id) ||
-            !Number.isInteger(n) ||
-            !['reproduciendo', 'reproducido', 'fallo'].includes(String(estado))
-          )
-            throw new Error('Acuse de audio inválido.');
-          opciones.confirmarAnuncio(
-            id as number,
-            n as number,
-            estado as 'reproduciendo' | 'reproducido' | 'fallo',
-          );
+          opciones.confirmarAnuncio(...validarAcuseAudio(dato));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/contenido/importar')
           respuestaJson(res, await opciones.importarContenido(validarCategoria(dato)));

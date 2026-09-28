@@ -14,8 +14,15 @@ const TARJETA_MINIMA = 6000; // Mantener visible seis segundos, o hasta terminar
  * Al montar o recargar no se repite ningún anuncio viejo: solo reacciona a eventos nuevos.
  */
 export function useAnuncios() {
-  const { config, inventario, suscribirAnuncio, registrar, informarSalud, confirmarAnuncio } =
-    useTurnero();
+  const {
+    config,
+    inventario,
+    suscribirAnuncio,
+    suscribirEntregaAudio,
+    registrar,
+    informarSalud,
+    confirmarAnuncio,
+  } = useTurnero();
   const [anuncio, setAnuncio] = useState<Anuncio | null>(null),
     [atenuado, setAtenuado] = useState(false);
   const ultimos = useRef({ config, inventario });
@@ -43,6 +50,11 @@ export function useAnuncios() {
   useEffect(() => {
     const cola = crearCola<Anuncio>(
       async (nuevo, signal) => {
+        const limpiar = () => {
+          setAtenuado(false);
+          setAnuncio(null);
+        };
+        signal.addEventListener('abort', limpiar, { once: true });
         setAnuncio(nuevo);
         let temporizador: ReturnType<typeof setTimeout>;
         let cancelarEspera: () => void = () => {};
@@ -72,6 +84,11 @@ export function useAnuncios() {
           await esperarAtenuacion;
           clearTimeout(temporizador!);
           if (signal.aborted) return;
+          if (nuevo.limiteInicio !== undefined && Date.now() >= nuevo.limiteInicio) {
+            confirmarAnuncio(nuevo.id, nuevo.n, 'descartado');
+            limpiar();
+            return;
+          }
           confirmarAnuncio(nuevo.id, nuevo.n, 'reproduciendo');
           if (aviso) await reproducir(aviso, volumenVoz, signal);
           const url = voz[nuevo.n];
@@ -99,21 +116,32 @@ export function useAnuncios() {
           atenuacionLista.current = null;
         }
         if (signal.aborted) return;
-        confirmarAnuncio(nuevo.id, nuevo.n, audioCompleto ? 'reproducido' : 'fallo');
         setAtenuado(false);
         await pausa(Math.max(0, TARJETA_MINIMA - (performance.now() - inicio)), signal);
-        if (!signal.aborted) setAnuncio(null);
+        if (!signal.aborted) {
+          confirmarAnuncio(nuevo.id, nuevo.n, audioCompleto ? 'reproducido' : 'fallo');
+          setAnuncio(null);
+        }
+        signal.removeEventListener('abort', limpiar);
       },
       (error) => {
         registrar(`Audio: ${String(error)}`);
       },
+      {
+        vigente: (nuevo) => nuevo.limiteInicio === undefined || Date.now() < nuevo.limiteInicio,
+        alDescartar: (nuevo) => confirmarAnuncio(nuevo.id, nuevo.n, 'descartado'),
+      },
     );
     const quitar = suscribirAnuncio((nuevo) => cola.agregar(nuevo));
+    const quitarAcuses = suscribirEntregaAudio((entrega) => {
+      if (entrega.estado === 'descartado') cola.descartar((nuevo) => nuevo.id === entrega.id);
+    });
     return () => {
       quitar();
+      quitarAcuses();
       cola.detener();
       cerrarAudio();
     };
-  }, [suscribirAnuncio, registrar, informarSalud, confirmarAnuncio]);
+  }, [suscribirAnuncio, suscribirEntregaAudio, registrar, informarSalud, confirmarAnuncio]);
   return { anuncio, atenuado, confirmarAtenuacion };
 }

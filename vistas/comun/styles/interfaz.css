@@ -319,6 +319,7 @@
 .turn-audio-reproducido {
   color: var(--theme-muted, #56657b);
 }
-.turn-audio-fallo {
+.turn-audio-fallo,
+.turn-audio-descartado {
   color: #a72732;
 }

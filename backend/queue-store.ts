@@ -29,6 +29,8 @@ export interface Store {
 }
 
 interface QueueStorePorts {
+  antesDeAnunciar?: () => void;
+  esperaAnuncioMs?: number;
   load: (today: string) => {
     estado: Estado;
     desde: Map<number, number>;
@@ -44,6 +46,8 @@ interface QueueStorePorts {
 
 /** Sole owner of queue state; file operations are supplied by the composition root. */
 export function createQueueStore({
+  antesDeAnunciar,
+  esperaAnuncioMs,
   load,
   save,
   ensureCapacity,
@@ -195,7 +199,15 @@ export function createQueueStore({
     if (efecto?.tipo === 'CAPTURA_INVALIDA') {
       return { instantanea: obtener(), efecto: 'CAPTURA_INVALIDA', anuncio: null };
     }
-    const anuncio = efecto?.tipo === 'ANUNCIAR' ? { id: siguienteAnuncio++, n: efecto.n } : null;
+    if (efecto?.tipo === 'ANUNCIAR') antesDeAnunciar?.();
+    const anuncio =
+      efecto?.tipo === 'ANUNCIAR'
+        ? {
+            id: siguienteAnuncio++,
+            n: efecto.n,
+            ...(esperaAnuncioMs === undefined ? {} : { limiteInicio: ahora() + esperaAnuncioMs }),
+          }
+        : null;
     if (anuncio) ultimoAnuncio = { n: anuncio.n, fecha: new Date(ahora()).toISOString() };
     const cambio = siguiente !== estado;
     const anterior = desde;

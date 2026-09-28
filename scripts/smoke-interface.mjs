@@ -93,8 +93,17 @@ async function verify() {
     await pause(100);
     await click('.modal-actions .danger');
     assert.equal((await state()).actual, null);
-    for (const n of [10, 20, 30, 40, 50, 60])
-      await run(operator, 'window.turnero.despachar({tipo:"LLAMAR",entrada:"' + n + '"})');
+    for (const n of [10, 20, 30, 40, 50, 60]) {
+      for (;;) {
+        try {
+          await run(operator, 'window.turnero.despachar({tipo:"LLAMAR",entrada:"' + n + '"})');
+          break;
+        } catch (error) {
+          if (!String(error).includes('cola de audio está llena')) throw error;
+          await pause(1000);
+        }
+      }
+    }
     await click('.turn-action');
     await wait(dialog);
     await click('.modal-actions .primary');

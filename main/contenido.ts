@@ -1,3 +1,4 @@
+import { copyFile, link, mkdir, rm, stat, statfs } from 'node:fs/promises';
 import {
   copyFileSync,
   cpSync,
@@ -7,7 +8,6 @@ import {
   renameSync,
   rmSync,
   statSync,
-  statfsSync,
   watch,
 } from 'node:fs';
 import { basename, dirname, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
@@ -26,13 +26,13 @@ export const LIMITE_IMAGEN = 25 * 1024 ** 2;
 export const RESERVA_DISCO = 512 * 1024 ** 2;
 
 interface OpcionesImportacion {
-  espacioLibre?: (carpeta: string) => number | null;
-  copiar?: typeof copyFileSync;
+  espacioLibre?: (carpeta: string) => number | null | Promise<number | null>;
+  copiar?: (origen: string, destino: string) => void | Promise<void>;
 }
 
-const espacioLibre = (carpeta: string): number | null => {
+const espacioLibre = async (carpeta: string): Promise<number | null> => {
   try {
-    const info = statfsSync(carpeta);
+    const info = await statfs(carpeta);
     return info.bavail * info.bsize;
   } catch (error) {
     if (['ENOSYS', 'ENOTSUP'].includes((error as NodeJS.ErrnoException).code ?? '')) return null;
@@ -64,24 +64,16 @@ const url = (base: string, carpeta: string, nombre: string) =>
 
 const extensiones = (categoria: CategoriaContenido) => (categoria === 'videos' ? VIDEOS : IMAGENES);
 
-function nombreDisponible(carpeta: string, nombre: string): string {
-  if (!existsSync(join(carpeta, nombre))) return nombre;
-  const partes = parse(nombre);
-  let indice = 2;
-  while (existsSync(join(carpeta, `${partes.name} (${indice})${partes.ext}`))) indice++;
-  return `${partes.name} (${indice})${partes.ext}`;
-}
-
 /** Copia archivos elegidos por el operador sin sobrescribir contenido existente. */
-export function importarArchivos(
+export async function importarArchivos(
   raiz: string,
   categoria: CategoriaContenido,
   origenes: string[],
   registrar: Registrar = () => {},
   opciones: OpcionesImportacion = {},
-): ResultadoImportacion {
+): Promise<ResultadoImportacion> {
   const carpeta = join(raiz, categoria);
-  mkdirSync(carpeta, { recursive: true });
+  await mkdir(carpeta, { recursive: true });
   const agregados: string[] = [],
     omitidos: string[] = [];
   const motivos: Record<string, string> = {};
@@ -97,7 +89,7 @@ export function importarArchivos(
       continue;
     }
     try {
-      const info = statSync(origen);
+      const info = await stat(origen);
       if (!info.isFile()) {
         omitir(nombre, `${nombre}: no es un archivo.`);
         continue;
@@ -115,18 +107,30 @@ export function importarArchivos(
         );
         continue;
       }
-      const libre = (opciones.espacioLibre ?? espacioLibre)(carpeta);
+      const libre = await (opciones.espacioLibre ?? espacioLibre)(carpeta);
       if (libre !== null && libre - info.size < RESERVA_DISCO) {
         omitir(nombre, `${nombre}: no hay espacio suficiente en la unidad de datos.`);
         continue;
       }
-      const destino = nombreDisponible(carpeta, nombre);
+      let destino = nombre;
       const temporal = join(carpeta, `.${crypto.randomUUID()}.tmp`);
       try {
-        (opciones.copiar ?? copyFileSync)(origen, temporal);
-        renameSync(temporal, join(carpeta, destino));
+        await (opciones.copiar ?? copyFile)(origen, temporal);
+        if ((await stat(temporal)).size !== info.size)
+          throw new Error('La copia quedó incompleta.');
+        const partes = parse(nombre);
+        for (let indice = 1; ; indice++) {
+          destino = indice === 1 ? nombre : `${partes.name} (${indice})${partes.ext}`;
+          try {
+            // Publicación atómica, sin sobrescritura incluso entre importaciones concurrentes.
+            await link(temporal, join(carpeta, destino));
+            break;
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+          }
+        }
       } finally {
-        rmSync(temporal, { force: true });
+        await rm(temporal, { force: true });
       }
       agregados.push(destino);
     } catch (error) {

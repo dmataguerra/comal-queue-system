@@ -11,6 +11,7 @@ import type {
   Accion,
   Anuncio,
   CategoriaContenido,
+  EntregaAudio,
   Inicial,
   ResultadoDespacho,
   ResultadoImportacion,
@@ -30,6 +31,7 @@ interface Contexto extends Inicial {
   quitarContenido: (url: string) => Promise<boolean>;
   abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
   suscribirAnuncio: (fn: (anuncio: Anuncio) => void) => () => void;
+  suscribirEntregaAudio: (fn: (entrega: EntregaAudio) => void) => () => void;
   registrar: (mensaje: string) => void;
 }
 const TurneroContext = createContext<Contexto | null>(null);
@@ -40,6 +42,7 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
   const [inicial, setInicial] = useState<Inicial | null>(null),
     [error, setError] = useState('');
   const anuncios = useRef(new Set<(anuncio: Anuncio) => void>());
+  const acuses = useRef(new Set<(entrega: EntregaAudio) => void>());
   // Funciones estables: los efectos que se suscriben no deben reiniciarse en cada render.
   const acciones = useMemo(
     () => ({
@@ -49,7 +52,7 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
       confirmarAnuncio: (
         id: number,
         n: number,
-        estado: 'reproduciendo' | 'reproducido' | 'fallo',
+        estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
       ) => api!.confirmarAnuncio(id, n, estado),
       configurarYouTube: (url: string | null) => api!.configurarYouTube(url),
       configurarVolumen: (voz: number, multimedia: number) =>
@@ -68,6 +71,12 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
         };
       },
       registrar: (mensaje: string) => api?.registrar(mensaje),
+      suscribirEntregaAudio: (fn: (entrega: EntregaAudio) => void) => {
+        acuses.current.add(fn);
+        return () => {
+          acuses.current.delete(fn);
+        };
+      },
     }),
     [api],
   );
@@ -95,19 +104,22 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
       api.alCambiarPantallas((pantallas) =>
         setInicial((previo) => previo && { ...previo, pantallas }),
       ),
-      api.alCambiarEntregaAudio((entregaAudio) =>
+      api.alCambiarEntregaAudio((entregaAudio) => {
+        acuses.current.forEach((fn) => fn(entregaAudio));
         setInicial(
           (previo) =>
             previo && {
               ...previo,
               entregaAudio,
               entregasAudio: [
-                ...(previo.entregasAudio ?? []).filter((e) => e.n !== entregaAudio.n),
+                ...(previo.entregasAudio ?? []).filter((e) => e.id !== entregaAudio.id),
                 entregaAudio,
-              ],
+              ]
+                .sort((a, b) => a.id - b.id)
+                .slice(-100),
             },
-        ),
-      ),
+        );
+      }),
     ];
     api
       .obtener()
