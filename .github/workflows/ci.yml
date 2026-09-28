@@ -30,10 +30,22 @@ jobs:
       - name: Desktop smoke test
         id: desktop
         run: npm run test:desktop
+      - name: Browser transport smoke test
+        run: npm run test:browser
+      - name: Local media smoke test
+        run: npm run test:media
+      - name: Full-day preflight
+        run: npm run test:full-day:preflight
       - name: Audio controls smoke test
         run: npx electron scripts/smoke-audio-controls.mjs
       - name: Interface smoke test
         run: npx electron scripts/smoke-interface.mjs
+      - name: Build unsigned Windows installer
+        run: npm run desktop:build
+      - name: Installed application smoke test
+        run: npm run test:installed
+      - name: Upgrade and rollback smoke test
+        run: npm run test:upgrade
       - name: Upload desktop diagnostics
         if: failure()
         uses: actions/upload-artifact@v4

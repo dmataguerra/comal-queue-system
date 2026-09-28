@@ -25,6 +25,7 @@
     "test:upgrade": "node scripts/smoke-upgrade.mjs",
     "test:media": "npm run build && node scripts/smoke-media.mjs",
     "test:full-day": "npm run build && electron scripts/smoke-full-day.mjs",
+    "test:full-day:preflight": "electron scripts/smoke-full-day.mjs --preflight",
     "desktop:build": "npm run build && node scripts/package-desktop.mjs --win",
     "desktop:build:signed": "npm run build && node scripts/package-desktop.mjs --win -c.win.forceCodeSigning=true",
     "desktop:build:local-signed": "npm run build && node scripts/package-desktop.mjs --win --firma-local",

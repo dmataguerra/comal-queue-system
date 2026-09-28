@@ -111,6 +111,7 @@ npm start
 | `npm run test:browser` | Valida las vistas en Chromium con transporte de navegador. |
 | `npm run test:installed` | Prueba un instalador ya generado en datos aislados. |
 | `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
+| `npm run test:full-day:preflight` | Valida el flujo de jornada sin ejecutar las 390 minutos reales. |
 | `npm run verify:audio` | Comprueba las voces `00`-`99` y el aviso. |
 
 Para una publicación firmada se utilizan `npm run desktop:build:signed` y el certificado del responsable. La firma local protegida por TPM se prepara con `npm run desktop:build:local-signed` y `COMAL_SIGNING_CERT_SHA1`; no reemplaza una firma pública ni elimina por sí sola los avisos de SmartScreen.
@@ -167,6 +168,8 @@ npm run build
 El catálogo de audio exige una voz para cada número `00`-`99`, rechaza archivos vacíos y revisa el aviso. Las pruebas de escritorio usan datos aislados bajo `test-results/`, comprueban ambas vistas, llamadas y multimedia, y decodifican las voces seleccionadas en Chromium. La reproducción real de YouTube requiere una aceptación adicional con internet.
 
 Las pruebas de instalación, actualización, reversión y escala de pantalla requieren artefactos o hardware específicos. Consulta los scripts y la [lista de publicación](docs/lista-publicacion.md) antes de declarar una entrega operativa.
+
+GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. La firma de Windows permanece fuera del pipeline hasta disponer de una identidad y secretos de publicación.
 
 ## Documentación
 

@@ -13,6 +13,12 @@ npm run lint
 npm test
 npm run build
 npm run test:desktop
+npm run test:browser
+npm run test:media
+npm run test:full-day:preflight
+npm run desktop:build
+npm run test:installed
+npm run test:upgrade
 npm audit --audit-level=high
 npm outdated
 ```
@@ -23,7 +29,7 @@ npm outdated
 
 El 25 de septiembre de 2026 (hora de México), `npm audit --json` informó **0 vulnerabilidades** (0 de severidad low, moderate, high y critical) entre 644 dependencias después de agregar ESLint. `npm outdated` señaló `@eslint/js`, `@types/node`, `@vitejs/plugin-react`, `electron`, `eslint`, `globals`, `prettier`, `tsx`, `typescript` y `vite`; no se actualizaron como parte de esta fase. ESLint 9 se conserva porque los complementos de React y accesibilidad aún declaran compatibilidad hasta esa versión mayor. Las versiones mayores de Vite y TypeScript requieren una evaluación separada.
 
-La CI de GitHub Actions corre en Windows al abrir o actualizar un pull request y al enviar cambios a `copilot/comal-interactive-mockup`. Usa Node.js 22, instala desde el lockfile y ejecuta los comandos anteriores, salvo `npm outdated`, que se revisa manualmente. Si falla el smoke de escritorio, guarda capturas y registros de `test-results/`. El smoke requiere un escritorio Windows capaz de iniciar Electron; comprueba que se crea el iframe de YouTube, pero no exige que el video externo se reproduzca por internet. El clima y la reproducción real de YouTube requieren internet y se aceptan por separado en el equipo de destino. `npm audit` y `npm outdated` también requieren acceso al registro npm.
+La CI de GitHub Actions corre en Windows al abrir o actualizar un pull request y al enviar cambios a `main`, `master`, `codex/**` o `copilot/comal-interactive-mockup`. Usa Node.js 22, instala desde el lockfile y ejecuta los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador unsigned, la prueba instalada y la actualización/reversión. Si falla un smoke, guarda capturas y registros de `test-results/`. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`; el pipeline actual no intenta firmar instaladores porque aún no existe una identidad de firma configurada. El clima y la reproducción real de YouTube requieren internet y se aceptan por separado en el equipo de destino. `npm audit` y `npm outdated` también requieren acceso al registro npm.
 
 ## Política de contenido y navegación
 
