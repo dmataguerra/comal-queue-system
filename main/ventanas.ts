@@ -128,8 +128,12 @@ export function crearVentanas({
     });
     const ventana = publica;
     ventana.once('ready-to-show', () => {
-      ventana.showInactive();
-      operador?.focus();
+      if (pantallaCompleta) {
+        ventana.showInactive();
+        operador?.focus();
+      } else {
+        ventana.show();
+      }
     });
     ventana.on('closed', () => {
       if (publica === ventana) publica = null;
