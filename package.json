@@ -67,6 +67,7 @@
     "files": [
       "dist/**/*",
       "build/**/*",
+      "public/assets/branding/comal-trojan-helmet.ico",
       "package.json",
       "LICENSE"
     ],

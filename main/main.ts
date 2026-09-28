@@ -117,6 +117,7 @@ async function iniciar() {
 
   const ventanas = crearVentanas({
     preload: join(import.meta.dirname, 'preload.cjs'),
+    icon: join(raizApp, 'public/assets/branding/comal-trojan-helmet.ico'),
     url: urlVista,
     pantallaPreferida: () => config.pantallaPublica,
     alCambiarPantallas: (nuevas) => {

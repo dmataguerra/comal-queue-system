@@ -6,6 +6,7 @@ export type Vista = 'operador' | 'publica';
 
 interface OpcionesVentanas {
   preload: string;
+  icon: string;
   url: (vista: Vista) => string;
   pantallaPreferida: () => number | null;
   alCambiarPantallas: (pantallas: Pantallas) => void;
@@ -18,6 +19,7 @@ const FONDO = '#021a28';
 /** Displays, pantalla completa y RF-13: el campo de captura nunca se muestra en la TV. */
 export function crearVentanas({
   preload,
+  icon,
   url,
   pantallaPreferida,
   alCambiarPantallas,
@@ -85,6 +87,7 @@ export function crearVentanas({
       backgroundColor: FONDO,
       autoHideMenuBar: true,
       title: 'Turnero · Operador',
+      icon,
       webPreferences: preferencias(),
     });
     operador.once('ready-to-show', () => {
@@ -118,6 +121,7 @@ export function crearVentanas({
       backgroundColor: FONDO,
       autoHideMenuBar: true,
       title: 'Turnero · Pantalla pública',
+      icon,
       frame: !pantallaCompleta,
       fullscreen: pantallaCompleta,
       // La pública nunca tiene el foco: sin estrangulamiento de temporizadores y con audio sin gesto.
