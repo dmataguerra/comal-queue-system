@@ -43,7 +43,6 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-const desarrollo = !app.isPackaged;
 const urlDesarrollo = process.env.TURNERO_DEV_URL;
 const raizApp = app.getAppPath();
 // Datos privados en el perfil de la aplicación, fuera de Documentos/OneDrive y del instalador.
@@ -119,7 +118,6 @@ async function iniciar() {
   const ventanas = crearVentanas({
     preload: join(import.meta.dirname, 'preload.cjs'),
     url: urlVista,
-    desarrollo,
     pantallaPreferida: () => config.pantallaPublica,
     alCambiarPantallas: (nuevas) => {
       pantallas = nuevas;

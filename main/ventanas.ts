@@ -7,7 +7,6 @@ export type Vista = 'operador' | 'publica';
 interface OpcionesVentanas {
   preload: string;
   url: (vista: Vista) => string;
-  desarrollo: boolean;
   pantallaPreferida: () => number | null;
   alCambiarPantallas: (pantallas: Pantallas) => void;
   alCerrarOperador: () => void;
@@ -20,7 +19,6 @@ const FONDO = '#021a28';
 export function crearVentanas({
   preload,
   url,
-  desarrollo,
   pantallaPreferida,
   alCambiarPantallas,
   alCerrarOperador,
@@ -69,12 +67,12 @@ export function crearVentanas({
     ...extra,
   });
 
-  /** La pública va al display preferido o al primero que no es el primario. Nunca al primario. */
-  function displayPublico(): Display | null {
+  /** La pública prefiere un display secundario y usa el primario como fallback. */
+  function displayPublico(): Display {
     const primario = screen.getPrimaryDisplay();
     const secundarios = screen.getAllDisplays().filter((display) => display.id !== primario.id);
     const preferido = pantallaPreferida();
-    return secundarios.find((display) => display.id === preferido) ?? secundarios[0] ?? null;
+    return secundarios.find((display) => display.id === preferido) ?? secundarios[0] ?? primario;
   }
 
   function crearOperador() {
@@ -100,20 +98,28 @@ export function crearVentanas({
     proteger(operador, 'operador');
   }
 
-  function crearPublica(display: Display | null) {
-    const bounds = display?.bounds ?? {
-      ...screen.getPrimaryDisplay().workArea,
-      width: 1280,
-      height: 720,
-    };
+  function crearPublica(display: Display, pantallaCompleta: boolean) {
+    const bounds = pantallaCompleta
+      ? display.bounds
+      : (() => {
+          const { x, y, width, height } = display.workArea;
+          const ventanaWidth = Math.min(1280, width);
+          const ventanaHeight = Math.min(720, height);
+          return {
+            x: x + Math.floor((width - ventanaWidth) / 2),
+            y: y + Math.floor((height - ventanaHeight) / 2),
+            width: ventanaWidth,
+            height: ventanaHeight,
+          };
+        })();
     publica = new BrowserWindow({
       ...bounds,
       show: false,
       backgroundColor: FONDO,
       autoHideMenuBar: true,
       title: 'Turnero · Pantalla pública',
-      frame: !display,
-      fullscreen: Boolean(display),
+      frame: !pantallaCompleta,
+      fullscreen: pantallaCompleta,
       // La pública nunca tiene el foco: sin estrangulamiento de temporizadores y con audio sin gesto.
       webPreferences: preferencias({
         autoplayPolicy: 'no-user-gesture-required',
@@ -136,13 +142,14 @@ export function crearVentanas({
   function sincronizar() {
     if (cerrando) return;
     const display = displayPublico();
-    const modo: Pantallas['publica'] = display ? 'tv' : desarrollo ? 'ventana' : 'ninguna';
+    const pantallaCompleta = display.id !== screen.getPrimaryDisplay().id;
+    const modo: Pantallas['publica'] = pantallaCompleta ? 'tv' : 'ventana';
     // Al pasar de TV a ventana (o al revés) se recrea: marco y pantalla completa no se cambian en vivo.
     if (publica && modo !== pantallas.publica) {
       publica.destroy();
       publica = null;
     }
-    if (modo !== 'ninguna' && !publica) crearPublica(display);
+    if (!publica) crearPublica(display, pantallaCompleta);
     else if (
       publica &&
       display &&

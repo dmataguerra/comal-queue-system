@@ -61,7 +61,7 @@ Electron -> ventanas, contenido local, HTTP loopback y ciclo de vida
 
 El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica`, pero no expone una API de administración ni admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
 
-En Windows, la pantalla pública se coloca en una pantalla secundaria configurada como **pantalla extendida**. Sin una pantalla secundaria, la aplicación empaquetada abre solo la ventana del operador; durante el desarrollo la vista pública también puede abrirse en el monitor principal.
+En Windows, la pantalla pública se coloca en una pantalla secundaria configurada como **pantalla extendida** cuando está disponible. Sin una pantalla secundaria, la aplicación empaquetada abre la vista pública como una ventana normal en el display primario, junto con la ventana del operador.
 
 ## Requisitos
 
@@ -182,7 +182,7 @@ Los documentos LaTeX y la [arquitectura histórica](docs/arquitectura.md) son ma
 
 ## Limitaciones conocidas
 
-- La aplicación empaquetada necesita una pantalla secundaria para mostrar la vista pública.
+- Con una pantalla secundaria la vista pública se muestra en fullscreen como `tv`; sin ella se muestra como una ventana normal en el display primario.
 - El operador y la pantalla pública pueden abrirse en Chrome o Edge de la misma PC, pero el acceso desde teléfonos u otros equipos no está habilitado.
 - El acuse de audio confirma el flujo de software, no la salida física por HDMI o bocinas.
 - Si falla el guardado de un turno, la acción se rechaza y la cola no cambia.
