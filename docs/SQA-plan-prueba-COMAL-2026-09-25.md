@@ -1,9 +1,11 @@
 # Plan de SQA — prueba en las instalaciones de COMAL
 
+> **Plan histórico:** este documento describe la versión y el estado de prueba del 25 de septiembre de 2026. Para la versión vigente y los gates actuales use [README](../README.md), [seguridad y publicación](seguridad-y-publicacion.md) y `.github/workflows/ci.yml`.
+
 > Actualización Phase 5: abrir **Diagnósticos** desde el final de Ayuda y comprobar versiones, rutas, último guardado, inventario, espacio y transiciones de recuperación. La operación normal es local y no requiere una base de datos; el servidor web opcional solo escucha en `127.0.0.1` para las vistas del mismo equipo. Registrar la evidencia de publicación en la [lista de publicación](lista-publicacion.md).
 
 **Fecha de prueba:** 25 de septiembre de 2026  
-**Sistema:** Comal++ / turnero local, versión declarada `0.3.0`  
+**Sistema:** Comal++ / turnero local, versión declarada `0.3.0` en la fecha del plan
 **Responsables:** desarrollador: ______ · operador de barra: ______ · responsable de COMAL: ______  
 **Estado de este documento:** plan y registro por completar; ninguna casilla marcada implica una prueba realizada.
 

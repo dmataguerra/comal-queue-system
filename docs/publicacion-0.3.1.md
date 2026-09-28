@@ -1,5 +1,7 @@
 # Comal++ 0.3.1: corrección de carpetas protegidas
 
+> **Evidencia de una compilación local del 27 de septiembre de 2026.** Este documento conserva hashes y resultados de ese artefacto; no sustituye la validación del commit actual ni la ejecución del workflow de release unsigned.
+
 Compilación local del 27 de septiembre de 2026. Pendiente de aceptación en la computadora de destino y de firma pública.
 
 - Instalador: `release/Comal++ Setup 0.3.1.exe`.
@@ -12,7 +14,7 @@ Compilación local del 27 de septiembre de 2026. Pendiente de aceptación en la 
 
 ## Validación
 
-- Suite de dominio/proceso principal: 92 pruebas aprobadas; después se añadió y aprobó una quinta prueba de migración para interrupción y reintento (las cinco de migración pasan).
+- Suite de dominio/proceso principal de esa compilación: 92 pruebas aprobadas; la suite actual puede tener un conteo distinto. Use `npm test` para el estado vigente.
 - Catálogo: 100 voces y aviso válidos.
 - Compilación, ESLint y formato de los archivos modificados: correctos.
 - Instalación final y actualización desde el instalador histórico 0.3.0 a una carpeta diferente: correctas. Se llamó 42 con ruta de prueba y 43 usando la ruta predeterminada sin `TURNERO_DATOS`; ambos persistieron tras reiniciar.

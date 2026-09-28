@@ -299,8 +299,9 @@ correcto ya trae su propio anuncio.
 - **1a.** Se va la luz a media jornada → al volver la corriente, el sistema arranca igual y se
   recupera sin intervención (RNF-07). Los turnos previos se pierden, lo cual es aceptable: el
   operador simplemente teclea el siguiente número cuando la cocina entregue.
-- **2a.** Solo hay una pantalla física conectada → **ver Pendiente 1**. Sin segunda pantalla, el
-  operador no tiene dónde teclear sin que se vea en la TV, y RF-13 no se puede cumplir.
+- **2a.** Solo hay una pantalla física conectada → la vista pública se abre como ventana normal en
+  el display primario y el operador puede alternar a la ventana de captura. La separación física de
+  operador y público de RF-13 solo se cumple cuando existe una pantalla secundaria.
 - **4a.** Recarga accidental de la pantalla pública → el estado se restaura desde la persistencia
   ligera de RNF-09, si se implementa.
 

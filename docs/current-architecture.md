@@ -1,6 +1,6 @@
 # Current desktop architecture
 
-The installed app is a local Electron application. The main process owns queue state and opens separate operator and public display windows. The public display cannot dispatch queue actions or request diagnostics. A loopback-only HTTP server can serve the operator and public views to a browser on the same PC, but it does not expose an administration API or listen on the LAN. No external network service or database is required for normal queue operation.
+The installed app is a local Electron application. The main process owns queue state and opens separate operator and public display windows. When a secondary display exists, the public window uses it in fullscreen; without one, it falls back to a normal window on the primary display. The public display cannot dispatch queue actions or request diagnostics. A loopback-only HTTP server can serve the operator and public views to a browser on the same PC, but it does not expose an administration API or listen on the LAN. No external network service or database is required for normal queue operation.
 
 ```text
 React views -> renderer transport -> sandboxed preload -> validated IPC

@@ -59,7 +59,7 @@ Para un certificado de autoridad reconocida, ambos deben mostrar `Status: Valid`
 ### Lista de publicación
 
 1. Revisar el diff, el estado Git y los resultados de CI; resolver fallos de formato, lint, pruebas, build y auditoría.
-2. Ejecutar el smoke de escritorio en Windows y comprobar audio, multimedia local y pantalla secundaria real. Probar YouTube y clima con internet si se usarán en operación.
+2. Ejecutar el smoke de escritorio en Windows y comprobar audio, multimedia local y la vista pública. Si existe una pantalla secundaria, comprobar también su modo extendido y fullscreen; sin ella, comprobar la ventana pública en el display primario. Probar YouTube y clima con internet si se usarán en operación.
 3. Construir el instalador firmado con el certificado autorizado y registrar versión, hash SHA-256 y fecha.
 4. Verificar la firma del instalador y del ejecutable instalado; rechazar cualquier artefacto sin `Status: Valid`.
 5. Instalar y probar el artefacto exacto en una cuenta estándar, conservando y restaurando los datos de operación.

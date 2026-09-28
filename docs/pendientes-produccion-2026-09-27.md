@@ -1,5 +1,7 @@
 # Pendientes de producción y recomendaciones
 
+> **Informe fechado:** conserva el estado observado el 27 de septiembre de 2026. No es el checklist actual de CI ni una evidencia del commit más reciente; consulte [README](../README.md), [seguridad y publicación](seguridad-y-publicacion.md) y `.github/workflows/release.yml` para el flujo vigente.
+
 Revisión del 27-09-2026. Alcance: interfaz del operador, ayuda, audio/cola,
 multimedia, transporte navegador, persistencia/importación, ventanas, registro,
 CI y firma. Es una revisión dirigida, no una garantía de ausencia de defectos
@@ -55,7 +57,7 @@ Avance posterior de esta sesión:
 - [x] Audio: descarga con timeout, espera limitada/cancelable de carga y resume,
   watchdog de reproducción según duración + 5 segundos. Cancelar, fallar al iniciar
   o no recibir onended libera nodos/listeners y resuelve o rechaza sin retener cola.
-  Se añadieron seis casos al comando npm test; total actual: 103 pruebas pasan.
+  En esa revisión se añadieron seis casos al comando npm test; entonces pasaban 103 pruebas.
 - [x] Instalador anterior A4F9ED4381A1943644033F29742451F020DA647B57FE3B65C170589417454BCF:
   smoke-installed completo correcto fuera del aislamiento. Evidencia:
   test-results/installed-3BBxJG/resultado.json. No valida cambios posteriores ni

@@ -1,6 +1,6 @@
 # Turnero El Comal — Arquitectura
 
-## Implementación vigente (0.3.0)
+## Implementación vigente (0.3.1)
 
 The current implementation is documented in [Current desktop architecture](current-architecture.md). The topology B, WebSocket, and server sections below are historical proposals and do not describe the installed product.
 

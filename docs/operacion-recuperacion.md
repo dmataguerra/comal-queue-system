@@ -48,7 +48,7 @@ Para volver a 0.2.0, cierre 0.3.0, reinstale el instalador 0.2.0 verificado y re
 
 La importación acepta videos de hasta 2 GB e imágenes de hasta 25 MB. Antes de copiar exige espacio libre para el archivo más una reserva de 512 MB cuando el sistema puede informar el espacio disponible. Si el sistema no ofrece esa medición, mantiene el límite de tamaño y sigue verificando el resultado de la copia. Un archivo rechazado se informa en la ventana del operador y se registra sin rutas de origen.
 
-La aplicación requiere una segunda pantalla en modo extendido para mostrar la vista pública en producción. YouTube y el clima son servicios externos opcionales y pueden dejar de funcionar sin conexión.
+Cuando existe una segunda pantalla configurada como extendida, la vista pública se muestra allí en pantalla completa. Sin una segunda pantalla, la aplicación la muestra como una ventana normal en el display primario; el operador puede cambiar entre ambas ventanas en la misma PC. YouTube y el clima son servicios externos opcionales y pueden dejar de funcionar sin conexión.
 
 ## Diagnósticos, registro y política de recuperación
 
