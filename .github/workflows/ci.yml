@@ -2,7 +2,9 @@ name: CI
 
 on:
   pull_request:
+
   workflow_dispatch:
+
   push:
     branches:
       - main
@@ -10,64 +12,197 @@ on:
       - 'codex/**'
       - copilot/comal-interactive-mockup
 
+# CI only needs repository read access.
+# Publishing/releases will belong to CD.
+permissions:
+  contents: read
+
+# Avoid wasting Actions minutes when several commits are pushed
+# to the same branch in a short period of time.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+
 jobs:
+  # ---------------------------------------------------------------------------
+  # Upgrade baseline
+  # ---------------------------------------------------------------------------
+  #
+  # This reusable workflow should prepare/upload:
+  #
+  #   upgrade-baseline-0.2.0
+  #
+  # which is later downloaded by the validation job.
+  #
   baseline:
+    name: Prepare upgrade baseline
     uses: ./.github/workflows/legacy-installer.yml
+
+  # ---------------------------------------------------------------------------
+  # Main validation job
+  # ---------------------------------------------------------------------------
   validate:
+    name: Validate application
     needs: baseline
+
     runs-on: windows-latest
     timeout-minutes: 45
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # -----------------------------------------------------------------------
+      # Repository
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # Node.js
+      # -----------------------------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
+
+      - name: Install dependencies
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # Static validation
+      # -----------------------------------------------------------------------
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Run lint
+        run: npm run lint
+
+      # -----------------------------------------------------------------------
+      # Automated tests
+      # -----------------------------------------------------------------------
+      - name: Run tests
+        run: npm test
+
+      # -----------------------------------------------------------------------
+      # Application build
+      # -----------------------------------------------------------------------
+      - name: Build application
+        run: npm run build
+
+      # -----------------------------------------------------------------------
+      # Dependency security
+      # -----------------------------------------------------------------------
       - name: Audit high and critical vulnerabilities
         run: npm audit --audit-level=high
+
+      # -----------------------------------------------------------------------
+      # Desktop / Electron tests
+      # -----------------------------------------------------------------------
       - name: Desktop smoke test
         id: desktop
         run: npm run test:desktop
+
       - name: Browser transport smoke test
         run: npm run test:browser
+
       - name: Announcement and async import regression test
         run: npx electron scripts/smoke-hardening.mjs
+
       - name: Local media smoke test
         run: npm run test:media
+
       - name: Full-day preflight
         run: npm run test:full-day:preflight
+
       - name: Audio controls smoke test
         run: npx electron scripts/smoke-audio-controls.mjs
+
       - name: Interface smoke test
         run: npx electron scripts/smoke-interface.mjs
+
+      # -----------------------------------------------------------------------
+      # Windows installer
+      # -----------------------------------------------------------------------
+      #
+      # IMPORTANT:
+      #
+      # --publish never prevents electron-builder from trying to publish
+      # anything to GitHub.
+      #
+      # CI builds.
+      # CD publishes.
+      #
       - name: Build unsigned Windows installer
-        run: npm run desktop:build
+        run: npm run desktop:build -- --publish never
+
+      # -----------------------------------------------------------------------
+      # Installed application validation
+      # -----------------------------------------------------------------------
       - name: Installed application smoke test
         run: npm run test:installed
-      - name: Upgrade and rollback smoke test
+
+      # -----------------------------------------------------------------------
+      # Upgrade / rollback validation
+      # -----------------------------------------------------------------------
+      - name: Download upgrade baseline
         uses: actions/download-artifact@v4
         with:
           name: upgrade-baseline-0.2.0
           path: release/archive-0.2.0
+
       - name: Verify upgrade baseline hash
         shell: pwsh
         run: |
-          $expected = (Get-Content 'release/archive-0.2.0/SHA256.txt').Trim()
-          $actual = (Get-FileHash 'release/archive-0.2.0/Comal++ Setup 0.2.0.exe' -Algorithm SHA256).Hash
-          if ($actual -ne $expected) { throw 'Upgrade baseline hash mismatch' }
+          $expected = (
+            Get-Content 'release/archive-0.2.0/SHA256.txt'
+          ).Trim()
+
+          $actual = (
+            Get-FileHash `
+              'release/archive-0.2.0/Comal++ Setup 0.2.0.exe' `
+              -Algorithm SHA256
+          ).Hash
+
+          if ($actual -ne $expected) {
+            throw "Upgrade baseline hash mismatch. Expected: $expected Actual: $actual"
+          }
+
+          Write-Host "Upgrade baseline SHA256 verified successfully."
+
       - name: Upgrade and rollback smoke test
         run: npm run test:upgrade
+
+      # -----------------------------------------------------------------------
+      # CI artifacts
+      # -----------------------------------------------------------------------
+      #
+      # This is NOT a GitHub Release.
+      #
+      # It simply lets you download the installer generated by a successful
+      # Actions run for manual testing if necessary.
+      #
+      - name: Upload CI installer
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comal-windows-installer-${{ github.sha }}
+          path: |
+            release/*.exe
+          if-no-files-found: error
+          retention-days: 7
+
+      # -----------------------------------------------------------------------
+      # Failure diagnostics
+      # -----------------------------------------------------------------------
       - name: Upload desktop diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: desktop-diagnostics
+          name: desktop-diagnostics-${{ github.sha }}
           path: |
             test-results/**
             **/turnero.log
           if-no-files-found: ignore
+          retention-days: 7
