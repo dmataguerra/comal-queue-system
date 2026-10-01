@@ -54,6 +54,11 @@ async function verify() {
       w.webContents.getURL().includes('/publica/'),
     );
     for (const window of [operator, client]) window.webContents.setBackgroundThrottling(false);
+    // Exercise both motion modes explicitly, independent of the runner's OS preference.
+    client.webContents.debugger.attach('1.3');
+    await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    });
     operator.setContentSize(1366, 900);
     client.setContentSize(1920, 1080);
     await wait(() => run(operator, "Boolean(document.querySelector('.theme-switch'))"));
@@ -127,7 +132,6 @@ async function verify() {
     await run(client, `localStorage.setItem('comal.tema', 'unknown')`);
     client.reload();
     await wait(async () => !client.webContents.isLoading() && (await theme(client)) === 'azul');
-    client.webContents.debugger.attach('1.3');
     await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });
