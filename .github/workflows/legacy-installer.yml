@@ -22,7 +22,8 @@ jobs:
       - run: npm ci
       - name: Prepare Electron binary
         run: npx electron --version
-      - run: npm run desktop:build
+      - name: Build 0.2.0 installer without publishing
+        run: npm run desktop:build -- --publish never
       - name: Record baseline hash
         shell: pwsh
         run: |

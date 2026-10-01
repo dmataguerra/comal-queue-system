@@ -9,6 +9,8 @@ on:
     branches:
       - main
       - master
+      - development
+      - 'develop/**'
       - 'codex/**'
       - copilot/comal-interactive-mockup
 

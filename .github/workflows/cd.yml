@@ -1,0 +1,67 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to create (for example v0.3.1)
+        required: true
+        default: v0.3.1
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cd-${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  CI: true
+
+jobs:
+  publish:
+    name: Build and publish Windows release
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+    steps:
+      - name: Checkout release ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref || inputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Build signed Windows installer
+        if: ${{ env.WIN_CSC_LINK != '' && env.WIN_CSC_KEY_PASSWORD != '' }}
+        run: npm run desktop:build:signed -- --publish always
+
+      - name: Build unsigned Windows installer
+        if: ${{ env.WIN_CSC_LINK == '' || env.WIN_CSC_KEY_PASSWORD == '' }}
+        run: npm run desktop:build -- --publish always
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: |
+          $assets = Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap' }
+          if (-not $assets) { throw 'No release assets were generated.' }
+          gh release create $env:RELEASE_TAG --title $env:RELEASE_TAG --generate-notes $assets.FullName
