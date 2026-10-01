@@ -102,10 +102,14 @@ async function verificar() {
       `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Turnos').click()`,
     );
     // Comprobar animación real y la preferencia de accesibilidad en el renderizador.
+    // Hosted Windows runners can default to reduced motion; control both test states.
+    publica.webContents.debugger.attach('1.3');
+    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    });
     const animacionActiva = () =>
       ejecutar(publica, "Boolean(document.querySelector('.public-animated-background animate'))");
     await esperar(animacionActiva, 'El fondo no se anima', 3000);
-    publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });
