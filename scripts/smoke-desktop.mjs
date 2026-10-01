@@ -126,8 +126,9 @@ async function verificar() {
       false,
       'El fondo debe respetar prefers-reduced-motion',
     );
-    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [] });
-    publica.webContents.debugger.detach();
+    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    });
     operador.setSize(1280, 900);
     publica.setSize(1280, 900);
     const inventario = await ejecutar(operador, 'window.turnero.obtener()');
@@ -291,7 +292,6 @@ async function verificar() {
     await capturar(publica, 'youtube-anuncio.png');
 
     await ejecutar(operador, 'window.turnero.configurarYouTube(null)');
-    publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Network.enable');
     await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
       offline: true,
@@ -318,7 +318,6 @@ async function verificar() {
       downloadThroughput: 0,
       uploadThroughput: 0,
     });
-    publica.webContents.debugger.detach();
     console.log('PASS: llamada y aviso local con la red emulada sin conexión.');
     for (const n of [11, 22, 33, 44]) {
       await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
@@ -406,6 +405,7 @@ async function verificar() {
         "document.querySelector('.youtube-error')?.textContent ?? 'Sin error reportado por el reproductor'",
       ),
     );
+    publica.webContents.debugger.detach();
     app.exit(0);
   } catch (error) {
     console.error(error);
