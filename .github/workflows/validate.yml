@@ -1,0 +1,88 @@
+name: Application validation
+on:
+  workflow_call:
+permissions:
+  contents: read
+env:
+  CI: true
+jobs:
+  quality:
+    name: Formatting, lint, tests and security
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --audit-level=high
+  baseline:
+    needs: quality
+    uses: ./.github/workflows/legacy-installer.yml
+  windows:
+    name: Windows application and installer
+    needs: [quality, baseline]
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Desktop smoke test
+        run: npx electron scripts/smoke-desktop.mjs
+      - name: Browser transport smoke test
+        run: npx electron scripts/smoke-browser.mjs
+      - name: Announcement and import regression test
+        run: npx electron scripts/smoke-hardening.mjs
+      - name: Local media smoke test
+        run: node scripts/smoke-media.mjs
+      - name: Full-day preflight
+        run: npm run test:full-day:preflight
+      - name: Audio controls smoke test
+        run: npx electron scripts/smoke-audio-controls.mjs
+      - name: Interface smoke test
+        run: npx electron scripts/smoke-interface.mjs
+      - name: Theme smoke test
+        run: npx electron scripts/smoke-theme.mjs
+      - name: Build unsigned installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: node scripts/package-desktop.mjs --win --publish never
+      - run: npm run test:installed
+      - uses: actions/download-artifact@v4
+        with:
+          name: upgrade-baseline-0.2.0
+          path: release/archive-0.2.0
+      - name: Verify upgrade baseline
+        shell: pwsh
+        run: |
+          $expected = (Get-Content 'release/archive-0.2.0/SHA256.txt').Trim()
+          $actual = (Get-FileHash 'release/archive-0.2.0/Comal++ Setup 0.2.0.exe' -Algorithm SHA256).Hash
+          if ($actual -ne $expected) { throw 'Upgrade baseline SHA256 mismatch.' }
+      - run: npm run test:upgrade
+      - name: Upload tested installer
+        uses: actions/upload-artifact@v6
+        with:
+          name: comal-windows-installer-${{ github.sha }}
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: desktop-diagnostics-${{ github.sha }}
+          path: |
+            test-results/**
+            turnero.log
+          if-no-files-found: ignore
+          retention-days: 7

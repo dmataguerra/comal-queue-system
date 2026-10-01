@@ -1,67 +1,63 @@
 name: CD
-
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Release tag to create (for example v0.3.1)
-        required: true
-        default: v0.3.1
-        type: string
-
 permissions:
-  contents: write
-
+  contents: read
 concurrency:
-  group: cd-${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+  group: cd-${{ github.ref }}
   cancel-in-progress: false
-
-env:
-  CI: true
-
 jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
   publish:
-    name: Build and publish Windows release
+    name: Publish validated Windows release
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
+    permissions:
+      contents: write
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CI: true
       WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
       WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
     steps:
-      - name: Checkout release ref
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'push' && github.ref || inputs.tag }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - name: Verify release version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Release tag must match package.json version.' }
+          if (($env:WIN_CSC_LINK -ne '') -xor ($env:WIN_CSC_KEY_PASSWORD -ne '')) { throw 'Both signing secrets must be configured together.' }
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-
-      - name: Build signed Windows installer
-        if: ${{ env.WIN_CSC_LINK != '' && env.WIN_CSC_KEY_PASSWORD != '' }}
-        run: npm run desktop:build:signed -- --publish always
-
-      - name: Build unsigned Windows installer
-        if: ${{ env.WIN_CSC_LINK == '' || env.WIN_CSC_KEY_PASSWORD == '' }}
-        run: npm run desktop:build -- --publish always
-
-      - name: Create GitHub Release
+      - run: npm ci
+      - run: npm run build
+      - name: Package signed installer
+        if: env.WIN_CSC_LINK != ''
+        run: node scripts/package-desktop.mjs --win -c.win.forceCodeSigning=true --publish never
+      - name: Package unsigned installer
+        if: env.WIN_CSC_LINK == ''
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: node scripts/package-desktop.mjs --win --publish never
+      - run: npm run test:installed
+      - name: Publish GitHub Release
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          $assets = Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap' }
-          if (-not $assets) { throw 'No release assets were generated.' }
-          gh release create $env:RELEASE_TAG --title $env:RELEASE_TAG --generate-notes $assets.FullName
+          $assets = @(Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap' })
+          if (-not ($assets | Where-Object Extension -eq '.exe')) { throw 'Installer missing.' }
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw 'Release already exists; refusing to replace published installers.'
+          }
+          gh release create $env:GITHUB_REF_NAME --verify-tag --title $env:GITHUB_REF_NAME --generate-notes --draft $assets.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed.' }
+          gh release edit $env:GITHUB_REF_NAME --draft=false
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }

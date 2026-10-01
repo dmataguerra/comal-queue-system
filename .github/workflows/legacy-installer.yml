@@ -11,11 +11,11 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Última implementación 0.2.0, con SQLite y su instalador original.
           ref: 7b10bb992fe43413262e56fd0ad3a67e6ebdf489
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
         run: |
           (Get-FileHash 'release/Comal++ Setup 0.2.0.exe' -Algorithm SHA256).Hash | Set-Content release/SHA256.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: upgrade-baseline-0.2.0
           path: |
