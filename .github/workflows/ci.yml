@@ -75,6 +75,17 @@ jobs:
       # -----------------------------------------------------------------------
       # Static validation
       # -----------------------------------------------------------------------
+      - name: Report formatting environment
+        shell: pwsh
+        run: |
+          Write-Host "Commit: $(git rev-parse HEAD)"
+          Write-Host "Node: $(node --version)"
+          Write-Host "Prettier: $(npx prettier --version)"
+          Write-Host 'Working tree:'
+          git status --short
+          Write-Host 'Files requiring formatting:'
+          npx prettier --list-different backend main nucleo shared vistas scripts
+
       - name: Check formatting
         run: npm run format:check
 
