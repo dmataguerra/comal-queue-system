@@ -171,13 +171,17 @@ async function verify() {
           true,
           'Actions overflow',
         );
+        const publicNumbers = await run(
+          client,
+          `Array.from(document.querySelectorAll('.public-turn strong')).map(el=>({number:el.textContent,height:el.getBoundingClientRect().height,rowHeight:el.parentElement.getBoundingClientRect().height,font:getComputedStyle(el).fontSize,viewport:[innerWidth,innerHeight]}))`,
+        );
         assert.equal(
           await run(
             client,
             `Array.from(document.querySelectorAll('.public-turn strong')).every(el=>el.getBoundingClientRect().height<=el.parentElement.getBoundingClientRect().height+1)`,
           ),
           true,
-          'Public numbers clipped',
+          'Public numbers clipped: ' + JSON.stringify({ size, publicNumbers }),
         );
         if (size === 110) {
           await capture(operator, 'ui-turnos-' + width);
