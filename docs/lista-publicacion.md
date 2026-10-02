@@ -16,7 +16,7 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | `npm run test:recovery`, hashes y rechazo de respaldo corrupto | ____ |
 | `npm audit --json` y SBOM (`npm sbom --sbom-format cyclonedx`) | ____ |
 | `npm run test:desktop` en datos aislados | ____ |
-| `npm run test:full-day` jornada de 390 minutos reales (6 h 30 min), métricas, vencimientos y audio | ____ |
+| `npm run test:full-day` jornada de 390 minutos reales (6 h 30 min), métricas, vencimientos y audio | **PASS local, 2026-10-02**: 124/124 anuncios. [Evidencia y alcance](resultado-jornada-2026-10-02.md). Vincular/revalidar con el candidato final en destino. |
 | `npm run test:installed` sobre el SHA-256 exacto; revisar `resultado.json` | ____ |
 | Prueba de escritorio offline y estado/config corruptos en datos aislados | ____ |
 | Voz 00–99 y aviso: validación automática y escucha humana | ____ |

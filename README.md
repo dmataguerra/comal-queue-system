@@ -218,3 +218,5 @@ Los cambios que afecten IPC, persistencia, seguridad, audio o empaquetado deben 
 ## Licencia
 
 El código propio se distribuye bajo [MIT](LICENSE). Los recursos y dependencias de terceros conservan sus respectivas licencias. Comal++ no distribuye ni imprime tickets y no requiere una base de datos o servicio de red para su operación normal.
+
+La jornada local del **2 de octubre de 2026 aprobó los 390 minutos reales**, con 124/124 anuncios y cero errores en el registro. Consulte [la evidencia y el alcance](docs/resultado-jornada-2026-10-02.md). La aceptación del hardware destino y del instalador final sigue siendo independiente.

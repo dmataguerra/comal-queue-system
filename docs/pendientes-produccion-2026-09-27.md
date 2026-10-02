@@ -157,3 +157,7 @@ operativas pendientes; las correcciones indicadas arriba ya están implementadas
 Prioridad para los dos días: firma y artefacto trazable, audio real, instalación y
 recuperación, jornada de prueba y manual operativo. Las mejoras de comodidad no
 deben desplazar esas verificaciones.
+
+## Actualización de resistencia — 2 de octubre de 2026
+
+- [x] Resistencia local: **PASS, 390 minutos reales**, 124/124 anuncios. Véase el [resultado de jornada del 2 de octubre](resultado-jornada-2026-10-02.md). El pendiente histórico queda resuelto para este alcance; la aceptación en cafetería y del instalador final permanece separada.

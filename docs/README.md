@@ -42,3 +42,7 @@ Para comprobar enlaces, fuentes, rutas HTTP, comandos y contenido PDF, ejecutar 
 Auditorías, planes SQA, pendientes, revisión de firmas, notas de publicación y verificación de producción describen **sus propias ejecuciones**. No son una lista actual de funciones ausentes ni certifican artefactos posteriores. Consulta [el registro de actualización](actualizacion-documentacion-2026-10-01.md).
 
 El diseño anterior de [arquitectura](arquitectura.md) se conserva como propuesta histórica. Capturas y auxiliares TeX de septiembre no prueban validación actual; consulta [el inventario de capturas](user-manual/SCREENSHOTS_REQUIRED.md).
+
+## Actualización del 2 de octubre de 2026
+
+La jornada local completa terminó **PASS (390 minutos reales)** el 2 de octubre de 2026, con 124/124 anuncios completados y 422 comprobaciones de integridad correctas. Véase el [resultado de jornada del 2 de octubre](resultado-jornada-2026-10-02.md). Este resultado posterior resuelve el pendiente de resistencia local; la aceptación del hardware destino y del candidato/instalador final permanece separada.
