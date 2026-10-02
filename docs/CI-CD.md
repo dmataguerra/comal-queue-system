@@ -1,4 +1,4 @@
-# CI/CD vigente · Comal++ 0.3.1
+# CI/CD vigente · Comal++ 0.4.0
 
 Revisado contra los workflows el 1 de octubre de 2026. CI corre en pull requests, pushes a main/master/development y ejecución manual. Configure protección de rama para exigir **Formatting, lint, tests and security** y **Windows application and installer**.
 

@@ -1,4 +1,4 @@
-# Multimedia: requisitos vigentes · Comal++ 0.3.1
+# Multimedia: requisitos vigentes · Comal++ 0.4.0
 
 Revisado el 1 de octubre de 2026 contra `main/contenido.ts` y la reproducción de la pantalla pública.
 

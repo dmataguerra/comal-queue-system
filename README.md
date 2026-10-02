@@ -12,14 +12,16 @@ Comal++ es una aplicación de escritorio para Windows orientada a operaciones de
 
 | Campo | Estado |
 | --- | --- |
-| Versión | `0.3.1` |
+| Versión | `0.4.0` |
 | Plataforma soportada | Windows x64 |
 | Operación normal | Local, sin internet |
 | Persistencia | Archivos JSON locales |
 | Distribución | Instalador NSIS para Windows |
 | Licencia | [MIT](LICENSE) |
 
-La versión 0.3.1 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
+La versión 0.4.0 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
+
+Notas de la versión preparada: [Comal++ 0.4.0](docs/publicacion-0.4.0.md). El tag y la publicación están pendientes de validación final.
 
 ## Contenido
 

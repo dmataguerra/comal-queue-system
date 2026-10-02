@@ -25,7 +25,7 @@ def decode(text):
 def main():
     master = (DOCS/'technical-documentation.tex').read_text(encoding='utf-8')
     chapters = [name for name in re.findall(r'\\input\{([^}]+)\}', master) if name != 'preamble']
-    story = cover('Technical Documentation', 'Software 0.3.1 · 1 October 2026', 'Local Electron architecture, operator/public interfaces, JSON persistence, IPC and HTTP/SSE, quality, recovery and release controls. Exported from the current 57 LaTeX chapters using ReportLab; this file does not certify TeX compilation.')
+    story = cover('Technical Documentation', 'Software 0.4.0 · 1 October 2026', 'Local Electron architecture, operator/public interfaces, JSON persistence, IPC and HTTP/SSE, quality, recovery and release controls. Exported from the current 57 LaTeX chapters using ReportLab; this file does not certify TeX compilation.')
     story.append(p('Contents', 'ComalH1'))
     for name in chapters:
         text = (DOCS/(name+'.tex')).read_text(encoding='utf-8')
@@ -51,7 +51,7 @@ def main():
                 else:
                     story.append(paragraph)
     out = DOCS/'technical-documentation.pdf'
-    build(out, 'Comal++ Technical Documentation 0.3.1', story, technical=True)
+    build(out, 'Comal++ Technical Documentation 0.4.0', story, technical=True)
     print(out)
 
 if __name__=='__main__':

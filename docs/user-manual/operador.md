@@ -1,4 +1,4 @@
-# Manual del operador · Comal++ 0.3.1
+# Manual del operador · Comal++ 0.4.0
 
 Actualizado el 1 de octubre de 2026. Incluye los cambios coordinados con la sesión de implementación.
 

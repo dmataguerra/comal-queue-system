@@ -32,4 +32,4 @@ The HTTP API uses Server-Sent Events at `/api/events`, not WebSocket or Socket.I
 
 Help is in the operator header and F1; Diagnostics is linked at its end. Compact expandable notices replace large stacked warnings. Size offers 70-130% in ten-point steps; Azul/Morado theme reserves control space. Both clocks use 12 hours with am/pm, while `recargaDiaria` remains 24-hour HH:MM. Wave animation is subtle and honors reduced motion. Theme/size use same-origin localStorage: Electron and HTTP browser preferences are independent and outside JSON backups.
 
-The [documentation index](README.md) links the refreshed technical chapters, user manuals and dated evidence. Legacy SQLite applies only to migration; no active order-history table, counter assignment or delivered/cancelled business workflow exists in 0.3.1.
+The [documentation index](README.md) links the refreshed technical chapters, user manuals and dated evidence. Legacy SQLite applies only to migration; no active order-history table, counter assignment or delivered/cancelled business workflow exists in 0.4.0.

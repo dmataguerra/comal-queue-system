@@ -1,6 +1,6 @@
 # Documentación de Comal++
 
-Base vigente: **0.3.1**, revisión del **1 de octubre de 2026**. Las guías se contrastan con el código; los informes de pruebas conservan la fecha y el artefacto al que corresponden.
+Base vigente: **0.4.0**, revisión del **1 de octubre de 2026**. Las guías se contrastan con el código; los informes de pruebas conservan la fecha y el artefacto al que corresponden.
 
 ## Guías vigentes
 

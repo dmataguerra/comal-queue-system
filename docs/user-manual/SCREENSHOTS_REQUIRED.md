@@ -1,6 +1,6 @@
-# Capturas de la interfaz vigente · 0.3.1
+# Capturas de la interfaz vigente · 0.4.0
 
-Las imágenes `source/screenshots/captura-1.png` a `captura-8.png` son de la interfaz anterior y se conservan como referencia histórica. Los PDF actuales no las presentan como capturas de 0.3.1.
+Las imágenes `source/screenshots/captura-1.png` a `captura-8.png` son de la interfaz anterior y se conservan como referencia histórica. Los PDF actuales no las presentan como capturas de 0.4.0.
 
 | Estado | Debe verse |
 | --- | --- |
