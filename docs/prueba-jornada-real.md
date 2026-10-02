@@ -75,3 +75,7 @@ comparar crecimiento entre ejecuciones en el mismo equipo.
 El script usa `TURNERO_PUERTO='0'` para no ocupar el 4317 de otra aplicación abierta. Cada llamada rechazada por capacidad reintenta dentro de un máximo de 120 segundos; el informe registra `capacityRetries`. Se esperan todos los acuses antes de correcciones, recargas y cierre. Los checkpoints utilizan el renombrado con reintentos de Windows; si falla guardar la evidencia de un error, el informe se conserva también en la salida. La sonda distingue épocas de recarga y cambios del número de anuncio.
 
 La revisión paralela del 1 de octubre obtuvo **PREFLIGHT_PASS con ocho anuncios** en `test-results/full-day-fgFKKb/jornada-completa.json`. Es evidencia local de esa revisión, no de 390 minutos ni de un nuevo instalador. Véase [el registro documental](actualizacion-documentacion-2026-10-01.md).
+
+## Actualización del 2 de octubre de 2026
+
+La jornada local completa terminó **PASS (390 minutos reales)** el 2 de octubre de 2026, con 124/124 anuncios completados y 422 comprobaciones de integridad correctas. Véase el [resultado de jornada del 2 de octubre](resultado-jornada-2026-10-02.md). Este resultado posterior resuelve el pendiente de resistencia local; la aceptación del hardware destino y del candidato/instalador final permanece separada.

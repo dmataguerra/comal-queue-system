@@ -66,3 +66,7 @@ El primer npm ci/test y el smoke Electron restringidos fallaron por acceso al ca
 | 10 | blocked | Audit cero, SBOM, build/instalación y gate firmado implementado | Obtener firmante aprobado; configurar secretos y huella, revisores y restricciones de tags/rama; ejecutar CD y verificar firmas válidas del artefacto final. Aprobar derechos de voces/imágenes/marcas y responsable de soporte. Ejecutar jornada real de 390 min y aceptación en usuario estándar/hardware destino. |
 
 Los límites que se aceptan en el código son el modo local sin YouTube web, la ventana de seis turnos recientes y los plazos finitos con recuperación manual visible. No se aceptan publicación unsigned, confianza de firmante sin verificar ni sustituir la jornada/hardware por el preflight. El release permanece bloqueado hasta adjuntar esa evidencia al checklist de publicación.
+
+## Actualización del 2 de octubre de 2026
+
+La jornada local completa terminó **PASS (390 minutos reales)** el 2 de octubre de 2026, con 124/124 anuncios completados y 422 comprobaciones de integridad correctas. Véase el [resultado de jornada del 2 de octubre](resultado-jornada-2026-10-02.md). Este resultado posterior resuelve el pendiente de resistencia local; la aceptación del hardware destino y del candidato/instalador final permanece separada.

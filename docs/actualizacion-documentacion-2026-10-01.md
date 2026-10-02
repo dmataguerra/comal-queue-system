@@ -42,3 +42,7 @@ La comprobación de fuentes incluye objetivos `input`, delimitadores TeX, enlace
 Se regeneraron los tres PDF y se revisaron todas sus páginas renderizadas: manual de usuario de cuatro páginas, guía rápida de una página y técnico de 23 páginas. Las comprobaciones de extracción verifican secciones y términos actuales, evitando entregar solo encabezados o fuentes antiguas. Resultados detallados quedan en `test-results/docs-validation/resultado.json` del checkout documental.
 
 El PDF técnico fue generado con **ReportLab**, no con un compilador TeX. La compilación LaTeX actual **no está verificada**: no hay compilador disponible en el entorno de esta sesión. El master multiparchivo y su clase siguen disponibles para `latexmk`; no se reutiliza el PASS de compilación de septiembre. Esta limitación no afecta a los tres PDF entregados y revisados.
+
+## Actualización del 2 de octubre de 2026
+
+La jornada local completa terminó **PASS (390 minutos reales)** el 2 de octubre de 2026, con 124/124 anuncios completados y 422 comprobaciones de integridad correctas. Véase el [resultado de jornada del 2 de octubre](resultado-jornada-2026-10-02.md). Este resultado posterior resuelve el pendiente de resistencia local; la aceptación del hardware destino y del candidato/instalador final permanece separada.

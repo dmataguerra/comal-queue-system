@@ -78,3 +78,7 @@ Para un certificado de autoridad reconocida, ambos deben mostrar `Status: Valid`
 ## Interfaz y aislamiento de pruebas
 
 Ayuda se abre desde encabezado/F1; Diagnósticos sigue al final. La franja de avisos desplegable y mensajes cortos no ocultan el rechazo de guardado/capacidad. `TURNERO_PUERTO=0` pide un puerto libre para pruebas, manteniendo el bind loopback y controles de Host/Origin. El smoke navegador verifica origen y ruta propios para evitar un falso positivo contra otra app en 4317. Consulte [la revisión documental](actualizacion-documentacion-2026-10-01.md) para base y evidencias.
+
+## Actualización del 2 de octubre de 2026
+
+La jornada local completa terminó **PASS (390 minutos reales)** el 2 de octubre de 2026, con 124/124 anuncios completados y 422 comprobaciones de integridad correctas. Véase el [resultado de jornada del 2 de octubre](resultado-jornada-2026-10-02.md). Este resultado posterior resuelve el pendiente de resistencia local; la aceptación del hardware destino y del candidato/instalador final permanece separada.

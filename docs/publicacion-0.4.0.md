@@ -37,8 +37,8 @@ Las verificaciones locales de implementación aprobaron build, formato, lint, in
 Antes de crear el tag v0.4.0 y distribuir:
 
 1. Aprobar la CI del PR final y las pruebas de instalación, actualización y recuperación.
-2. Completar los 390 minutos reales en el equipo destino y comprobar sonido físico.
+2. Conservar el [PASS local de 390 minutos del 2 de octubre](resultado-jornada-2026-10-02.md), vincular/revalidar con el candidato final en destino y comprobar sonido físico.
 3. Configurar y verificar la identidad de firma aprobada, los secretos y el entorno production.
 4. Validar el artefacto firmado final y conservar hashes y evidencia.
 
-El tag v0.4.0 debe apuntar al commit validado de main y coincidir con package.json. Crear/subir ese tag activa el workflow de publicación. Estas notas no declaran completadas la jornada real, la firma ni la publicación.
+El tag v0.4.0 debe apuntar al commit validado de main y coincidir con package.json. Crear/subir ese tag activa el workflow de publicación. La jornada local de 390 minutos está aprobada; estas notas no declaran aceptación del candidato final en destino, firma ni publicación.
