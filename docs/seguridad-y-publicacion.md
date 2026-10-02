@@ -19,6 +19,7 @@ npm run test:full-day:preflight
 npm run desktop:build
 npm run test:installed
 npm run test:upgrade
+npm run test:recovery
 npm audit --audit-level=high
 npm outdated
 ```
@@ -29,9 +30,15 @@ npm outdated
 
 El 25 de septiembre de 2026 (hora de México), `npm audit --json` informó **0 vulnerabilidades** (0 de severidad low, moderate, high y critical) entre 644 dependencias después de agregar ESLint. `npm outdated` señaló `@eslint/js`, `@types/node`, `@vitejs/plugin-react`, `electron`, `eslint`, `globals`, `prettier`, `tsx`, `typescript` y `vite`; no se actualizaron como parte de esta fase. ESLint 9 se conserva porque los complementos de React y accesibilidad aún declaran compatibilidad hasta esa versión mayor. Las versiones mayores de Vite y TypeScript requieren una evaluación separada.
 
-La CI de GitHub Actions corre en Windows al abrir o actualizar un pull request y al enviar cambios a `main`, `master`, `codex/**` o `copilot/comal-interactive-mockup`. Usa Node.js 22, instala desde el lockfile y ejecuta los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador unsigned, la prueba instalada y la actualización/reversión. Si falla un smoke, guarda capturas y registros de `test-results/`. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`; el pipeline actual no intenta firmar instaladores porque aún no existe una identidad de firma configurada. El clima y la reproducción real de YouTube requieren internet y se aceptan por separado en el equipo de destino. `npm audit` y `npm outdated` también requieren acceso al registro npm.
+La CI de GitHub Actions corre en Windows al abrir o actualizar un pull request y al enviar cambios a `main`, `master` o `development`, además de ejecución manual. Usa Node.js 22, instala desde el lockfile y ejecuta pruebas, respaldo/restauración CLI, smoke de escritorio/navegador/multimedia, preflight, instalador unsigned, instalación y actualización/reversión. Conserva capturas y registros de `test-results/` también al pasar el trabajo Windows. La jornada real de 390 minutos se ejecuta manualmente mediante `.github/workflows/release.yml` en un runner Windows protegido; aprobarla es una condición operacional separada. CD firma y bloquea publicación cuando faltan identidad o secretos. El clima y YouTube real requieren aceptación con internet en destino. `npm audit` y `npm outdated` requieren acceso al registro npm.
 
 ## Política de contenido y navegación
+
+### Puerta de publicación vigente
+
+CD (`.github/workflows/cd.yml`) exige el entorno `production`, ambos secretos de firma y la variable `COMAL_SIGNER_SHA1` (huella aprobada de 40 caracteres). No publica unsigned. Después de construir el artefacto firmado, prueba su instalación y comprueba `Status: Valid`, uso de firma de código, huella exacta y timestamp en Setup, aplicación instalada y desinstalador mediante `scripts/verificar-firmas.ps1`. Compara el hash con el registrado por el smoke instalado y ejecuta actualización/reversión sobre ese instalador firmado. Publica SHA-256 y SBOM CycloneDX; conserva evidencias aun cuando falla. La CI sigue construyendo unsigned para validación y conserva diagnósticos también al pasar.
+
+El responsable debe configurar revisores obligatorios y restricciones de tags/rama en GitHub; declarar un entorno en YAML no prueba esas protecciones. Antes de aprobarlo, verificar jornada completa, hardware destino, identidad confiable y derechos de distribución de recursos. La auditoría de dependencias no acredita licencias de voces, imágenes o marcas. El SBOM describe dependencias instaladas de desarrollo/construcción; debe revisarse junto al contenido del instalador. Véase el [dictamen y evidencia local del 1 de octubre](verificacion-produccion-2026-10-01.md): cero vulnerabilidades, publicación todavía bloqueada por firma y aceptación operacional.
 
 La CSP de producción se entrega como cabecera en las páginas HTML de `turnero://app`. La política permite el propio origen, la API de iframe de YouTube y sus recursos de script, el iframe de YouTube, y la consulta de clima a Open-Meteo. `object-src 'none'` y `base-uri 'none'` permanecen bloqueados. Cualquier origen externo nuevo exige cambiar la CSP de forma explícita y probarlo. Las ventanas rechazan nuevas ventanas y navegación principal fuera de la página prevista. La vista pública no puede abrir páginas remotas arbitrarias. Los archivos locales no envían una cabecera CORS comodín; las vistas acceden a ellos desde el mismo origen `turnero://app`.
 

@@ -59,7 +59,7 @@ React -> transporte de renderer -> preload aislado -> IPC validado
 Electron -> ventanas, contenido local, HTTP loopback y ciclo de vida
 ```
 
-El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica`, pero no expone una API de administración ni admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
+El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica` y una API local de acciones; exige Host local y el mismo Origin para escrituras, y no admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
 
 En Windows, la pantalla pública se coloca en una pantalla secundaria configurada como **pantalla extendida** cuando está disponible. Sin una pantalla secundaria, la aplicación empaquetada abre la vista pública como una ventana normal en el display primario, junto con la ventana del operador.
 
@@ -113,6 +113,7 @@ npm start
 | `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
 | `npm run test:full-day:preflight` | Valida el flujo de jornada sin ejecutar las 390 minutos reales. |
 | `npm run verify:audio` | Comprueba las voces `00`-`99` y el aviso. |
+| `npm run test:recovery` | Valida el CLI real de respaldo/restauración y conserva hashes y resultados. |
 
 Para una publicación firmada se utilizan `npm run desktop:build:signed` y el certificado del responsable. La firma local protegida por TPM se prepara con `npm run desktop:build:local-signed` y `COMAL_SIGNING_CERT_SHA1`; no reemplaza una firma pública ni elimina por sí sola los avisos de SmartScreen.
 
@@ -169,7 +170,7 @@ El catálogo de audio exige una voz para cada número `00`-`99`, rechaza archivo
 
 Las pruebas de instalación, actualización, reversión y escala de pantalla requieren artefactos o hardware específicos. Consulta los scripts y la [lista de publicación](docs/lista-publicacion.md) antes de declarar una entrega operativa.
 
-GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. La firma de Windows permanece fuera del pipeline hasta disponer de una identidad y secretos de publicación.
+GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. CD exige el entorno `production`, secretos de firma y la huella aprobada `COMAL_SIGNER_SHA1`; verifica firma y timestamp de Setup, aplicación instalada y desinstalador antes de publicar. Sin identidad configurada, la publicación se bloquea.
 
 ## Documentación
 
@@ -187,10 +188,14 @@ Los documentos LaTeX y la [arquitectura histórica](docs/arquitectura.md) son ma
 
 - Con una pantalla secundaria la vista pública se muestra en fullscreen como `tv`; sin ella se muestra como una ventana normal en el display primario.
 - El operador y la pantalla pública pueden abrirse en Chrome o Edge de la misma PC, pero el acceso desde teléfonos u otros equipos no está habilitado.
+- YouTube no está admitido en el transporte navegador: se rechaza su configuración con aviso visible y la pantalla web usa contenido local, incluso si el escritorio tiene YouTube configurado. El escritorio conserva ese modo opcional, pendiente de aceptación con YouTube real.
+- La cola de audio admite seis anuncios, incluido el activo; avisa desde cinco y rechaza nuevas llamadas antes de modificar el estado cuando está llena. La pantalla muestra seis turnos recientes y advierte cuál saldrá al llamar otro número. Consulte la política en la guía operativa.
 - El acuse de audio confirma el flujo de software, no la salida física por HDMI o bocinas.
 - Si falla el guardado de un turno, la acción se rechaza y la cola no cambia.
 - YouTube y el clima dependen de servicios externos; el contenido local se utiliza como respaldo.
 - La aceptación final requiere pruebas en la PC, TV, bocinas y red reales del local.
+
+La [verificación del 1 de octubre](docs/verificacion-produccion-2026-10-01.md) registra cambios, comandos, evidencias y bloqueos de publicación para los puntos 4, 5, 8, 9 y 10.
 
 ## Contribuir
 

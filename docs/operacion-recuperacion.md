@@ -28,6 +28,10 @@ npx tsx scripts/datos.ts restore "D:\Respaldos Comal\turnero-..." "$env:APPDATA\
 
 La opción `--app-cerrada` es una confirmación explícita de que verificó el cierre; la utilidad no puede detectar de forma fiable todas las instancias remotas o renombradas. La restauración prepara una carpeta nueva y luego la coloca en la ruta de datos. Conserva los datos anteriores en una carpeta `datos.antes-de-restaurar-*` junto a la ruta de datos. Inicie la aplicación y compruebe en la ventana del operador la pantalla pública, el audio y los turnos. Un `estado.json` de otra fecha no reabre turnos de una jornada anterior.
 
+La restauración valida JSON, estructura del estado y fechas reales antes de cambiar el destino. Rechaza configuración inválida o con claves desconocidas, archivos declarados ausentes y rutas superpuestas entre respaldo y datos. Un rechazo conserva el destino intacto; un respaldo corrupto puede conservarse para diagnóstico pero no restaurarse como estado válido. Los campos de configuración omitidos siguen usando sus valores predeterminados. Un estado válido de otra jornada puede restaurarse, pero al arrancar no reabre turnos anteriores. Se reintentan únicamente bloqueos transitorios de Windows al renombrar, con el mismo límite que el guardado atómico.
+
+`npm run test:recovery` ejecuta los comandos reales de `scripts/datos.ts`: respaldo, restauración limpia con hashes idénticos, rechazo de corrupción sin tocar destino y restauración sobre destino corrupto conservando el anterior. Guarda las invocaciones, códigos y salidas en `test-results/recovery-cli-*/resultado.json`.
+
 ### Actualización desde 0.2.0 y reversión
 
 La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del perfil de Electron, no en `%APPDATA%\comal-local\datos`. Con 0.2.0 cerrada, respalde el directorio que contiene `comal.sqlite` junto con posibles archivos `comal.sqlite-wal` y `comal.sqlite-shm`. Conserve también el instalador 0.2.0 verificado. Al abrir 0.3.0 por primera vez, si no existe `estado.json`, se leen sin modificar la base anterior, los turnos listos anunciados durante la jornada actual (máximo seis) y los mensajes/YouTube compatibles; se escriben los JSON nuevos. Los turnos de otras fechas y el historial permanecen en la base anterior. Compruebe turno, configuración y contenido antes de operar.
@@ -35,6 +39,16 @@ La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del 
 Para volver a 0.2.0, cierre 0.3.0, reinstale el instalador 0.2.0 verificado y restaure el respaldo del perfil de 0.2.0 con la aplicación cerrada. Los turnos creados después de migrar a 0.3.0 no aparecen en 0.2.0: registre esos turnos antes de revertir y concílielos manualmente. `npm run test:upgrade` prueba esta secuencia con datos aislados.
 
 ## Incidencias durante la operación
+
+### Política de cola y recuperación
+
+- Audio FIFO: máximo seis anuncios activos o pendientes; aviso al operador desde cinco. Con seis, una nueva llamada se rechaza **antes** de guardar o cambiar el turno. Reintente cuando haya capacidad; no hay descarte silencioso por saturación.
+- Repetir un número crea otro ID y ocupa otro lugar FIFO; no borra el acuse de la llamada anterior. La fila muestra el acuse de la llamada más reciente.
+- Un anuncio debe empezar en menos de 45 segundos y completar su tarea en 30 segundos. Un vencimiento queda como «No anunciado», libera capacidad y rechaza acuses tardíos. Retirar un turno descarta sus pendientes; el anuncio que ya comenzó termina. No se reproducen anuncios antiguos tras recargar/reiniciar: revise filas y vuelva a llamar manualmente.
+- La pantalla es una ventana de **seis turnos recientes**, no un registro completo de pedidos. Al llenarse, el operador ve cuál es el más antiguo que retirará una llamada de otro número. Cada turno vence cinco minutos después de su última llamada. Repetir refresca su vigencia. No use la lista como registro de ventas o entregas.
+- Falta de aviso, voz ausente/ilegible, voz silenciada o interrupción del contexto de audio nunca confirma «Anunciado». Se conserva el turno guardado, se muestra fallo y se registra; corrija la salida/archivo y vuelva a llamar. La cola continúa con el siguiente anuncio. El acuse de software no detecta un cable/bocina sin sonido cuando Windows mantiene el contexto activo.
+- Reemplazar una voz/aviso bajo el mismo nombre cambia la revisión del audio por tamaño y timestamps; el siguiente inventario invalida los buffers decodificados y vuelve a precargar. Un error al explorar archivos se registra y conserva el inventario anterior, sin derribar el proceso. Si `video.play()` se rechaza, se registra y se salta a otro video/banner local.
+- YouTube en navegador está deshabilitado explícitamente, con aviso al operador. La pantalla web usa videos/banners locales y confirma audio por HTTP. Salud y errores web se registran por el mismo servidor local. YouTube de escritorio arranca silenciado, exige volumen confirmado antes de reproducir y solo informa salud correcta al recibir el estado de reproducción; falta de confirmación activa respaldo local.
 
 | Situación | Acción |
 | --- | --- |

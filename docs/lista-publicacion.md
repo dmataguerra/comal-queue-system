@@ -13,6 +13,8 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | `npm run lint` | ____ |
 | `npm test` | ____ |
 | `npm run build` | ____ |
+| `npm run test:recovery`, hashes y rechazo de respaldo corrupto | ____ |
+| `npm audit --json` y SBOM (`npm sbom --sbom-format cyclonedx`) | ____ |
 | `npm run test:desktop` en datos aislados | ____ |
 | `npm run test:full-day` jornada simulada de 7 horas, métricas, vencimientos y audio | ____ |
 | `npm run test:installed` sobre el SHA-256 exacto; revisar `resultado.json` | ____ |
@@ -22,6 +24,9 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | `npm run desktop:build` y ruta del instalador | ____ |
 | SHA-256 (`Get-FileHash` sobre el instalador exacto) | ____ |
 | Firma (`Get-AuthenticodeSignature`) o «no firmado» | ____ |
+| `scripts/verificar-firmas.ps1`: Setup, aplicación y desinstalador válidos, huella aprobada y timestamp | ____ |
+| Entorno production: revisores y restricciones de tags/rama comprobados en GitHub | ____ |
+| Derechos de recursos y responsable de aceptación operacional | ____ |
 | Instalación nueva con usuario estándar y dos pantallas | ____ |
 | Actualización desde versión anterior y conservación de datos | ____ |
 | Migración de SQLite 0.2.0 al formato JSON vigente y conservación de la base anterior | ____ |
