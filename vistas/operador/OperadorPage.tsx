@@ -15,7 +15,7 @@ import { DiagnosticoPanel } from './DiagnosticoPanel';
 /** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
   const { tema, cambiarTema } = useTema();
-  const { instantanea, pantallas, entregasAudio = [], despachar } = useTurnero(),
+  const { instantanea, pantallas, entregasAudio = [], despachar, youtubeAdmitido } = useTurnero(),
     clock = useClock();
   const { actual, llamados, puedeDeshacer } = instantanea;
   const recientes = ultimasEntregas(entregasAudio);
@@ -58,8 +58,8 @@ export function OperadorPage() {
       else if (resultado.anuncio) {
         notificar(
           resultado.anuncio.n === actual
-            ? `Turno ${formatear(resultado.anuncio.n)} anunciado de nuevo.`
-            : `Turno ${formatear(resultado.anuncio.n)} anunciado.`,
+            ? `Turno ${formatear(resultado.anuncio.n)} en cola de audio de nuevo.`
+            : `Turno ${formatear(resultado.anuncio.n)} en cola de audio.`,
         );
         setEntrada('');
       }
@@ -102,7 +102,7 @@ export function OperadorPage() {
   const anunciarDeNuevo = (n: number) =>
     accionDeFila(async () => {
       await despachar({ tipo: 'LLAMAR', entrada: String(n) });
-      notificar(`Turno ${formatear(n)} anunciado de nuevo.`);
+      notificar(`Turno ${formatear(n)} en cola de audio de nuevo.`);
     });
   const quitarTurno = (n: number) =>
     accionDeFila(async () => {
@@ -283,6 +283,15 @@ export function OperadorPage() {
               <span>{clock.date}</span>
             </div>
           </div>
+          {!youtubeAdmitido && (
+            <div className="connection-banner" role="alert">
+              <Icon name="warning" />
+              <span>
+                YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido
+                local. La pantalla del navegador usa contenido local.
+              </span>
+            </div>
+          )}
           {pantallas.publica === 'ninguna' && (
             <div className="connection-banner" role="alert">
               <Icon name="warning" />
@@ -609,7 +618,8 @@ export function OperadorPage() {
               Cada turno de <strong>En pantalla</strong> tiene dos botones:{' '}
               <strong>Anunciar</strong> añade su voz a la cola, y <strong>Quitar</strong> lo borra y
               descarta la corrección pendiente. Se pide confirmación; puedes omitirla para ambas
-              acciones durante esta sesión. Quitar un turno no cancela su audio ya encolado.
+              acciones durante esta sesión. Quitar un turno descarta los anuncios que aún esperan;
+              el audio que ya empezó termina antes del siguiente.
             </dd>
             <dt>
               <Icon name="monitor" /> La TV no muestra nada

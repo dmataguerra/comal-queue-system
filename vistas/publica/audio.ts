@@ -3,6 +3,7 @@ import type { Inventario } from '../../shared/contract';
 // §6 · Todo el audio se decodifica al arrancar: en el camino crítico nunca se lee disco.
 let contexto: AudioContext | null = null;
 const buffers = new Map<string, Promise<AudioBuffer>>();
+let revisionAudio: string | undefined;
 const obtenerContexto = () => (contexto ??= new AudioContext());
 
 /** Al cerrar o recargar la vista se liberan el dispositivo y los buffers decodificados. */
@@ -10,6 +11,7 @@ export function cerrarAudio() {
   const anterior = contexto;
   contexto = null;
   buffers.clear();
+  revisionAudio = undefined;
   if (anterior) void anterior.close();
 }
 
@@ -45,6 +47,8 @@ function cargar(url: string) {
 
 /** Precarga el aviso y las 100 voces del inventario; descarta lo que ya no existe. */
 export async function precargar(inventario: Inventario) {
+  if (inventario.revisionAudio !== revisionAudio) buffers.clear();
+  revisionAudio = inventario.revisionAudio;
   const urls = [inventario.aviso, ...inventario.voz].filter((url): url is string => Boolean(url));
   for (const url of buffers.keys()) if (!urls.includes(url)) buffers.delete(url);
   await Promise.all(urls.map(cargar));
@@ -94,6 +98,7 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
   const ctx = obtenerContexto();
   if (ctx.state !== 'running') await esperarAudio(ctx.resume(), signal, 5000);
   if (signal.aborted) return;
+  if (ctx.state !== 'running') throw new Error('La salida de sonido no está disponible.');
   await new Promise<void>((resolve, reject) => {
     const fuente = ctx.createBufferSource(),
       ganancia = ctx.createGain();
@@ -106,6 +111,7 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
       terminado = true;
       clearTimeout(limite);
       signal.removeEventListener('abort', detener);
+      ctx.removeEventListener('statechange', comprobarDispositivo);
       fuente.onended = null;
       try {
         fuente.stop();
@@ -118,6 +124,12 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
       else resolve();
     };
     const detener = () => finalizar();
+    const comprobarDispositivo = () => {
+      if (ctx.state !== 'running')
+        finalizar(
+          new Error('La salida de sonido se interrumpió. Revisa el dispositivo y vuelve a llamar.'),
+        );
+    };
     // El dispositivo puede suspenderse sin emitir onended. Liberar la cola y
     // reportar fallo, en lugar de esperar indefinidamente a ese evento.
     const limite = setTimeout(
@@ -128,6 +140,7 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
       Math.ceil(buffer.duration * 1000) + 5000,
     );
     signal.addEventListener('abort', detener, { once: true });
+    ctx.addEventListener('statechange', comprobarDispositivo);
     fuente.onended = () => finalizar();
     try {
       fuente.start();

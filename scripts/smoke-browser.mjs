@@ -53,6 +53,18 @@ async function verificar() {
       'El operador no cargó en navegador.',
     );
     assert.equal(await operador.webContents.executeJavaScript('typeof window.turnero'), 'object');
+    assert.equal(
+      await operador.webContents.executeJavaScript('window.turnero.youtubeAdmitido'),
+      false,
+    );
+    assert.match(
+      await operador.webContents.executeJavaScript('document.body.textContent'),
+      /YouTube no está admitido en navegador/,
+    );
+    const unsupported = await operador.webContents.executeJavaScript(
+      "window.turnero.configurarYouTube('https://www.youtube.com/watch?v=dQw4w9WgXcQ').then(()=>null,e=>e.message)",
+    );
+    assert.match(unsupported, /YouTube no está admitido/);
     const publica = new BrowserWindow({
       show: false,
       webPreferences: {
@@ -68,6 +80,35 @@ async function verificar() {
         publica.webContents.executeJavaScript("Boolean(document.querySelector('.public-screen'))"),
       'La vista pública no cargó en navegador.',
     );
+    // Una configuración guardada desde Electron tampoco activa un iframe sin control en navegador.
+    const desktopOperator = BrowserWindow.getAllWindows().find((w) =>
+      w.webContents.getURL().startsWith('turnero://app/vistas/operador/'),
+    );
+    await desktopOperator.webContents.executeJavaScript(
+      "window.turnero.configurarYouTube('https://www.youtube.com/watch?v=dQw4w9WgXcQ')",
+    );
+    await pausa(300);
+    assert.equal(
+      await publica.webContents.executeJavaScript(
+        "document.querySelectorAll('.youtube-host, iframe').length",
+      ),
+      0,
+    );
+    assert.match(
+      await publica.webContents.executeJavaScript(
+        'window.turnero.ajustarVolumenYouTube(0.1,150).then(()=>null,e=>e.message)',
+      ),
+      /YouTube no está admitido/,
+    );
+    await publica.webContents.executeJavaScript(
+      "window.turnero.registrar('prueba de registro HTTP'); window.turnero.informarSalud('audio','degradado')",
+    );
+    await esperar(
+      async () =>
+        (await (await fetch('http://127.0.0.1:4317/api/diagnostico')).json()).audio === 'degradado',
+      'La salud HTTP no se registró.',
+    );
+    await operador.webContents.executeJavaScript('window.turnero.configurarYouTube(null)');
     const llamada = await operador.webContents.executeJavaScript(
       "window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})",
     );
@@ -114,7 +155,7 @@ async function verificar() {
       42,
     );
     console.log(
-      'PASS: navegador local, operador, pantalla pública, eventos y bloqueo de solicitudes externas.',
+      'PASS: navegador local, acuse HTTP, YouTube rechazado sin iframe (incluyendo config de escritorio), salud/registro HTTP y bloqueo de solicitudes externas.',
     );
     app.exit(0);
   } catch (error) {

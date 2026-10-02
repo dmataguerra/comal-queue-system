@@ -214,24 +214,25 @@ async function iniciar() {
     ipc.difundirConfig(config);
     servidorWeb?.difundirConfig(config);
   };
+  const informarSalud = (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => {
+    if (tipo === 'audio') {
+      const siguiente = estado === 'correcto' ? 'correcto' : 'degradado';
+      if (saludAudio !== siguiente) {
+        registrar(siguiente === 'correcto' ? 'Audio recuperado.' : 'Audio degradado.');
+        saludAudio = siguiente;
+      }
+    } else {
+      const siguiente = estado === 'correcto' ? 'activo' : 'no disponible';
+      if (saludYouTube !== siguiente) {
+        registrar(siguiente === 'activo' ? 'YouTube recuperado.' : 'YouTube no disponible.');
+        saludYouTube = siguiente;
+      }
+    }
+  };
   const ipc = conectarIpc({
     configurarVolumen,
     diagnostico,
-    informarSalud: (tipo, estado) => {
-      if (tipo === 'audio') {
-        const siguiente = estado === 'correcto' ? 'correcto' : 'degradado';
-        if (saludAudio !== siguiente) {
-          registrar(siguiente === 'correcto' ? 'Audio recuperado.' : 'Audio degradado.');
-          saludAudio = siguiente;
-        }
-      } else {
-        const siguiente = estado === 'correcto' ? 'activo' : 'no disponible';
-        if (saludYouTube !== siguiente) {
-          registrar(siguiente === 'activo' ? 'YouTube recuperado.' : 'YouTube no disponible.');
-          saludYouTube = siguiente;
-        }
-      }
-    },
+    informarSalud,
     confirmarAnuncio: entregasAudio.confirmar,
     configurarYouTube,
     store,
@@ -315,6 +316,7 @@ async function iniciar() {
   ventanas.iniciar();
   try {
     servidorWeb = await crearServidorWeb({
+      informarSalud,
       vistas: carpetaVistas,
       contenido: carpetaContenido,
       store,

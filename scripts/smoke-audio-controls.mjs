@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { IPC_CHANNELS } from '../build/shared/ipc-channels.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 mkdirSync(join(root, 'test-results'), { recursive: true });
@@ -88,8 +89,84 @@ async function verify() {
         !operator.webContents.isLoading() &&
         (await run(operator, "document.querySelectorAll('.turn-audio-reproducido').length === 2")),
     );
+    const original = (await run(operator, 'window.turnero.obtener()')).inventario;
+    for (const [number, inventory] of [
+      ['00', { ...original, aviso: null }],
+      ['99', { ...original, voz: original.voz.map((url, n) => (n === 99 ? null : url)) }],
+      [
+        '40',
+        {
+          ...original,
+          voz: original.voz.map((url, n) =>
+            n === 40 ? 'turnero://app/contenido/voz/invalida.wav' : url,
+          ),
+        },
+      ],
+    ]) {
+      client.webContents.send(IPC_CHANNELS.contentChanged, inventory);
+      await pause(200);
+      const result = await run(
+        operator,
+        `window.turnero.despachar({tipo:'LLAMAR',entrada:'${number}'})`,
+      );
+      await wait(() =>
+        run(
+          operator,
+          `window.turnero.obtener().then(x=>x.entregasAudio.some(e=>e.id===${result.anuncio.id}&&e.estado==='fallo'))`,
+        ),
+      );
+      assert.ok(
+        await run(operator, "document.body.textContent.includes('Falló el audio de un turno')"),
+      );
+    }
+    client.webContents.send(IPC_CHANNELS.contentChanged, original);
+    await pause(200);
+    const recovered = await run(operator, "window.turnero.despachar({tipo:'LLAMAR',entrada:'40'})");
+    await wait(() =>
+      run(
+        operator,
+        `window.turnero.obtener().then(x=>x.entregasAudio.some(e=>e.id===${recovered.anuncio.id}&&e.estado==='reproducido'))`,
+      ),
+    );
+    assert.match(readFileSync(join(data, 'turnero.log'), 'utf8'), /Falta el aviso/);
+    assert.match(readFileSync(join(data, 'turnero.log'), 'utf8'), /Falta la voz del turno 99/);
+    assert.match(readFileSync(join(data, 'turnero.log'), 'utf8'), /invalida.wav/);
+    const voice = join(data, 'contenido', 'voz', '40.wav');
+    const bytes = readFileSync(voice);
+    let revision = (await run(operator, 'window.turnero.obtener()')).inventario.revisionAudio;
+    writeFileSync(voice, 'voz dañada con el mismo nombre');
+    await wait(() =>
+      run(
+        operator,
+        `window.turnero.obtener().then(x=>x.inventario.revisionAudio!==${JSON.stringify(revision)})`,
+      ),
+    );
+    await pause(200);
+    const broken = await run(operator, "window.turnero.despachar({tipo:'LLAMAR',entrada:'40'})");
+    await wait(() =>
+      run(
+        operator,
+        `window.turnero.obtener().then(x=>x.entregasAudio.some(e=>e.id===${broken.anuncio.id}&&e.estado==='fallo'))`,
+      ),
+    );
+    revision = (await run(operator, 'window.turnero.obtener()')).inventario.revisionAudio;
+    writeFileSync(voice, bytes);
+    await wait(() =>
+      run(
+        operator,
+        `window.turnero.obtener().then(x=>x.inventario.revisionAudio!==${JSON.stringify(revision)})`,
+      ),
+    );
+    await pause(200);
+    const repaired = await run(operator, "window.turnero.despachar({tipo:'LLAMAR',entrada:'40'})");
+    await wait(() =>
+      run(
+        operator,
+        `window.turnero.obtener().then(x=>x.entregasAudio.some(e=>e.id===${repaired.anuncio.id}&&e.estado==='reproducido'))`,
+      ),
+    );
     console.log(
-      `PASS: volumen persistido y validado, autorización IPC, audio por fila y recarga. ${data}`,
+      `PASS: volumen, IPC, acuses, recarga, aviso/voz ausentes, carga inválida, reemplazo con mismo nombre detectado y recuperación sin voz en cache. ${data}`,
     );
     app.exit(0);
   } catch (error) {

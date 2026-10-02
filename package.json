@@ -14,7 +14,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/prepare-build.mjs && tsc --noEmit -p tsconfig.json && vite build && tsc -p tsconfig.main.json",
     "start": "electron .",
-    "test": "node tooling/audio/verify-audio.mjs && tsx --test nucleo/*.test.ts main/*.test.ts scripts/audio-lifecycle.test.mjs",
+    "test": "node tooling/audio/verify-audio.mjs && tsx --test nucleo/*.test.ts main/*.test.ts scripts/*-lifecycle.test.mjs",
     "verify:audio": "node tooling/audio/verify-audio.mjs",
     "test:recovery": "node scripts/validar-recuperacion.mjs",
     "format": "prettier --write backend main nucleo shared vistas scripts .github package.json .prettierrc.json",

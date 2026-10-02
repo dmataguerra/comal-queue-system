@@ -1,4 +1,5 @@
 import { copyFile, link, mkdir, rm, stat, statfs } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import {
   copyFileSync,
   cpSync,
@@ -218,8 +219,25 @@ export function inventariar(
   const aviso = EXTENSIONES_AUDIO.map((extension) => `aviso${extension}`).find((nombre) =>
     tieneContenido(join(raiz, nombre)),
   );
+  const seleccion = [
+    ...voz
+      .filter((url): url is string => Boolean(url))
+      .map((url) => join(raiz, 'voz', decodeURIComponent(url.split('/').pop()!))),
+    ...(aviso ? [join(raiz, aviso)] : []),
+  ];
+  const revisionAudio = createHash('sha256')
+    .update(
+      JSON.stringify(
+        seleccion.map((ruta) => {
+          const info = statSync(ruta);
+          return [ruta, info.size, info.mtimeMs, info.ctimeMs];
+        }),
+      ),
+    )
+    .digest('hex');
 
   return {
+    revisionAudio,
     videos: filtrar('videos', VIDEOS),
     banner: filtrar('banner', IMAGENES),
     voz,
@@ -319,11 +337,17 @@ export function vigilarContenido(
   const vigilante = watch(raiz, { recursive: true }, () => {
     clearTimeout(temporizador);
     temporizador = setTimeout(() => {
-      const inventario = inventariar(raiz, registrar, reportados);
-      const texto = JSON.stringify(inventario);
-      if (texto === ultimo) return;
-      ultimo = texto;
-      alCambiar(inventario);
+      try {
+        const inventario = inventariar(raiz, registrar, reportados);
+        const texto = JSON.stringify(inventario);
+        if (texto === ultimo) return;
+        ultimo = texto;
+        alCambiar(inventario);
+      } catch (error) {
+        registrar(
+          `contenido: no se pudo actualizar el inventario (${(error as Error).message}); se conserva el anterior.`,
+        );
+      }
     }, 500);
   });
   return {

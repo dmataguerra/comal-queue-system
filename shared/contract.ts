@@ -47,6 +47,8 @@ export interface Config {
 }
 
 export interface Inventario {
+  /** Cambia cuando cambian bytes/metadatos de audio seleccionado, aun con el mismo nombre. */
+  revisionAudio?: string;
   videos: string[];
   banner: string[];
   voz: (string | null)[];
@@ -105,6 +107,8 @@ export interface Diagnostico {
 }
 
 export interface TurneroApi {
+  /** El navegador local no permite controlar con seguridad el iframe de YouTube. */
+  youtubeAdmitido?: boolean;
   diagnostico(): Promise<Diagnostico>;
   informarSalud(tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado'): void;
   confirmarAnuncio(

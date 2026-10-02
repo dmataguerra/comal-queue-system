@@ -18,7 +18,7 @@ export const scriptVolumen = (volumen: number, rampa: number) => `(async () => {
   await Promise.all(videos.map(video => new Promise((resolve, reject) => {
     const desde = video.volume, inicio = performance.now();
     const paso = (ahora) => {
-      if (window.__turneroRampa !== id) { reject(new Error('Rampa reemplazada')); return; }
+      if (window.__turneroRampa !== id || video.isConnected === false) { reject(new Error('Rampa reemplazada o video desconectado')); return; }
       const t = ms ? Math.min(1, (ahora - inicio) / ms) : 1;
       video.volume = desde + (destino - desde) * t;
       if (t < 1) setTimeout(() => paso(performance.now()), 16);
@@ -26,6 +26,7 @@ export const scriptVolumen = (volumen: number, rampa: number) => `(async () => {
     };
     paso(inicio);
   })));
+  if (window.__turneroRampa !== id || videos.some(v => v.isConnected === false || Math.abs(v.volume - destino) > 0.001)) return { videos: 0, sonando: 0 };
   return {
     videos: videos.length,
     sonando: videos.filter((v) => !v.paused && !v.muted && v.volume > 0).length,

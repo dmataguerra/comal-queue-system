@@ -59,3 +59,14 @@ test('sin video termina sin confirmar atenuación', async () => {
   await e.avanzar(6001);
   assert.equal((await resultado).videos, 0);
 });
+
+test('una rampa reemplazada no confirma éxito ni sobrescribe el volumen nuevo', async () => {
+  const e = escenario();
+  e.videos.push({ volume: 1, paused: false, muted: false });
+  const antigua = assert.rejects(e.aplicar(0.6, 400), /reemplazada/);
+  const nueva = e.aplicar(0.1, 150);
+  await e.avanzar(150);
+  await antigua;
+  assert.equal((await nueva).videos, 1);
+  assert.equal(e.videos[0].volume, 0.1);
+});

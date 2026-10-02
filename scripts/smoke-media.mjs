@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -156,8 +156,88 @@ async function verify() {
       await execute(operator, "document.querySelectorAll('.media-file.broken').length"),
       0,
     );
+    // Instrumentar el inicio real de Web Audio y leer volumen del video en ese instante.
+    writeFileSync(
+      join(data, 'config.json'),
+      JSON.stringify({ youtubeUrl: null, volumenMusica: 0.6, volumenVoz: 0.8, repeticiones: 2 }),
+    );
+    await waitFor(
+      () => execute(screen, "document.querySelector('.content-video.visible')?.volume===0.6"),
+      'No se aplicó volumen normal',
+    );
+    await execute(
+      screen,
+      `(() => {
+      window.__mediaAudio = [];
+      const original = AudioContext.prototype.createBufferSource;
+      AudioContext.prototype.createBufferSource = function() {
+        const source = original.call(this), start = source.start.bind(source), connect = source.connect.bind(source);
+        let gain;
+        source.connect = function(target, ...args) { gain = target; return connect(target, ...args); };
+        source.start = function(...args) {
+          window.__mediaAudio.push({ time: performance.now(), videoVolume: document.querySelector('.content-video.visible')?.volume, voiceGain: gain?.gain.value });
+          return start(...args);
+        };
+        return source;
+      };
+    })()`,
+    );
+    const calls = [];
+    for (const number of ['00', '99'])
+      calls.push(
+        (await execute(operator, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${number}'})`))
+          .anuncio.id,
+      );
+    await waitFor(
+      () =>
+        execute(
+          operator,
+          `window.turnero.obtener().then(x=>${JSON.stringify(calls)}.every(id=>x.entregasAudio.some(e=>e.id===id&&e.estado==='reproducido')))`,
+        ),
+      'No terminaron llamadas repetidas sobre video local',
+      30000,
+    );
+    const timing = await execute(screen, 'window.__mediaAudio');
+    assert.equal(timing.length, 6, 'Cada llamada requiere aviso y dos voces');
+    for (const event of timing) {
+      assert.ok(Math.abs(event.videoVolume - 0.09) < 0.001, JSON.stringify(event));
+      assert.ok(Math.abs(event.voiceGain - 0.8) < 0.001, JSON.stringify(event));
+    }
+    assert.ok(timing[2].time - timing[1].time >= 300, 'La repetición debe respetar la pausa');
+    await waitFor(
+      () =>
+        execute(
+          screen,
+          "Math.abs((document.querySelector('.content-video.visible')?.volume??-1)-0.6)<0.001",
+        ),
+      'No se restauró volumen de video',
+    );
+    writeFileSync(
+      join(data, 'audio-timing.json'),
+      JSON.stringify({ mode, calls, timing }, null, 2),
+    );
+    await execute(
+      screen,
+      `(() => {
+      window.__originalVideoPlay = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = () => Promise.reject(new Error('Autoplay rechazado en prueba'));
+    })()`,
+    );
+    await waitFor(
+      () =>
+        execute(
+          screen,
+          "Boolean(document.querySelector('.banner-stage')) && !document.querySelector('.content-video.visible')",
+        ),
+      'No entró respaldo local al rechazar video.play',
+    );
+    assert.match(readFileSync(join(data, 'turnero.log'), 'utf8'), /Video no reproducible/);
+    await execute(
+      screen,
+      '(() => { HTMLMediaElement.prototype.play = window.__originalVideoPlay; })()',
+    );
     console.log(
-      `PASS multimedia ${mode}: imagen en operador/TV, audio decodificado y video en reproducción.`,
+      `PASS multimedia ${mode}: imagen, audio, video, ducking 0.09 antes de seis inicios, voz 0.8, repetición, restauración 0.6 y rechazo de play con log/respaldo local. ${data}`,
     );
     clearTimeout(timeout);
     app.exit(0);

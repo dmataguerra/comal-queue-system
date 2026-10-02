@@ -88,6 +88,22 @@ test('el protocolo sirve MP3 con el tipo MIME de audio correcto', () => {
   assert.equal(TIPOS_MIME['.mp3'], 'audio/mpeg');
 });
 
+test('reemplazar una voz con el mismo nombre cambia revisión sin alterar prioridad MP3/WAV', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'comal-revision-audio-'));
+  try {
+    inventariar(raiz);
+    writeFileSync(join(raiz, 'voz', '40.wav'), 'primera voz');
+    const anterior = inventariar(raiz);
+    writeFileSync(join(raiz, 'voz', '40.wav'), 'reemplazo de la voz');
+    const nuevo = inventariar(raiz);
+    assert.equal(nuevo.voz[40], anterior.voz[40]);
+    assert.notEqual(nuevo.revisionAudio, anterior.revisionAudio);
+    assert.equal(inventariar(raiz).revisionAudio, nuevo.revisionAudio);
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
 test('un fallo de siembra impide arrancar como si hubiera contenido y permite reintentar', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-siembra-'));
   try {

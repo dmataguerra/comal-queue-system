@@ -11,7 +11,13 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
   const raiz = mkdtempSync(join(tmpdir(), 'comal-acuses-'));
   const store = crearStore({ ruta: join(raiz, 'estado.json') });
   const recibidos: unknown[] = [];
+  const salud: unknown[] = [];
+  const logs: string[] = [];
+  const youtube: unknown[] = [];
   const servidor = await crearServidorWeb({
+    informarSalud: (...args) => {
+      salud.push(args);
+    },
     vistas: raiz,
     contenido: raiz,
     puerto: 0,
@@ -24,14 +30,18 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     }),
     diagnostico: () => ({}),
     configurarVolumen: () => {},
-    configurarYouTube: () => {},
+    configurarYouTube: (url) => {
+      youtube.push(url);
+    },
     importarContenido: async () => ({ agregados: [], omitidos: [], cancelado: true }),
     quitarContenido: () => false,
     abrirCarpetaContenido: async () => {},
     confirmarAnuncio: (...args) => {
       recibidos.push(args);
     },
-    registrar: () => {},
+    registrar: (mensaje) => {
+      logs.push(mensaje);
+    },
   });
   try {
     for (const dato of [
@@ -75,6 +85,33 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
       await r.text();
     }
     assert.equal(recibidos.length, 4);
+    const post = async (ruta: string, dato: unknown) => {
+      const r = await fetch(`${servidor.origen}/api/${ruta}`, {
+        method: 'POST',
+        headers: {
+          Origin: servidor.origen,
+          'Content-Type': 'application/json',
+          'X-Turnero-Cliente': 'navegador',
+        },
+        body: JSON.stringify(dato),
+      });
+      const body = await r.json();
+      return { status: r.status, body };
+    };
+    assert.equal(
+      (await post('youtube', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')).status,
+      400,
+    );
+    assert.deepEqual(youtube, []);
+    assert.equal((await post('youtube', null)).status, 200);
+    assert.deepEqual(youtube, [null]);
+    assert.equal((await post('salud', ['audio', 'degradado'])).status, 200);
+    assert.equal((await post('salud', ['audio', 'correcto', 'extra'])).status, 400);
+    assert.equal((await post('salud', ['audio', 'mentira'])).status, 400);
+    assert.deepEqual(salud, [['audio', 'degradado']]);
+    assert.equal((await post('registro', 'Audio de prueba falló')).status, 200);
+    assert.ok(logs.includes('[navegador] Audio de prueba falló'));
+    assert.equal((await post('registro', 'x'.repeat(501))).status, 400);
   } finally {
     servidor.cerrar();
     store.cerrar();

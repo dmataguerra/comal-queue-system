@@ -46,6 +46,7 @@ if (!window.turnero) {
     }
   };
   window.turnero = {
+    youtubeAdmitido: false,
     obtener: () => solicitar('/api/inicial'),
     diagnostico: () => solicitar('/api/diagnostico'),
     despachar: (accion) => solicitar('/api/accion', accion),
@@ -54,14 +55,22 @@ if (!window.turnero) {
     importarContenido: (categoria) => solicitar('/api/contenido/importar', categoria),
     quitarContenido: (url) => solicitar('/api/contenido/quitar', url),
     abrirCarpetaContenido: (categoria) => solicitar('/api/contenido/abrir', categoria ?? null),
-    ajustarVolumenYouTube: async () => 0,
-    informarSalud: () => {},
+    ajustarVolumenYouTube: async () => {
+      throw new Error(
+        'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',
+      );
+    },
+    informarSalud: (tipo, estado) => {
+      void solicitar('/api/salud', [tipo, estado]).catch(console.error);
+    },
     confirmarAnuncio: (id, n, estado) => solicitar('/api/audio', [id, n, estado]),
     alCambiarEstado: (fn) => escuchar('estado', fn),
     alCambiarConfig: (fn) => escuchar('config', fn),
     alCambiarContenido: (fn) => escuchar('contenido', fn),
     alCambiarPantallas: (fn) => escuchar('pantallas', fn),
     alCambiarEntregaAudio: (fn) => escuchar('entregaAudio', fn),
-    registrar: () => {},
+    registrar: (mensaje) => {
+      void solicitar('/api/registro', mensaje).catch(console.error);
+    },
   };
 }

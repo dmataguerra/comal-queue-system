@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseYouTube } from '../../nucleo/youtube';
 import { useTurnero } from '../comun/turnero';
-import { cargarYouTube, type YouTubePlayer } from './youtubeApi';
+import { cargarYouTube, iniciarYouTube, type YouTubePlayer } from './youtubeApi';
 
 // Se reaplica el volumen: el iframe tarda en aparecer y cada video nuevo de la playlist lo reinicia.
 const REAPLICAR_MS = 2000;
@@ -25,9 +25,11 @@ export function YouTubeVideo({
   volumenActual.current = volumen;
   const [error, setError] = useState('');
   const [intento, setIntento] = useState(0);
+  const [listo, setListo] = useState(false);
 
   useEffect(() => {
     let cerrado = false;
+    let volumenConfirmado = false;
     let instancia: YouTubePlayer | null = null;
     const timeout = setTimeout(() => {
       if (!cerrado) {
@@ -36,6 +38,7 @@ export function YouTubeVideo({
       }
     }, 20_000);
     setError('');
+    setListo(false);
     async function iniciar() {
       try {
         const fuente = parseYouTube(url);
@@ -49,7 +52,8 @@ export function YouTubeVideo({
           height: '100%',
           videoId: fuente.videoId,
           playerVars: {
-            autoplay: 1,
+            autoplay: 0,
+            mute: 1,
             controls: 1,
             playsinline: 1,
             loop: 1,
@@ -61,11 +65,30 @@ export function YouTubeVideo({
           events: {
             onReady: ({ target }) => {
               if (cerrado) return;
-              clearTimeout(timeout);
-              informarSalud('youtube', 'correcto');
-              target.unMute();
-              target.setLoop(true);
-              target.playVideo();
+              void iniciarYouTube(
+                target,
+                () => volumenActual.current,
+                ajustarVolumenYouTube,
+                () => !cerrado,
+              )
+                .then((iniciado) => {
+                  if (cerrado || !iniciado) return;
+                  setListo(true);
+                  volumenConfirmado = true;
+                })
+                .catch((e: Error) => {
+                  if (!cerrado) {
+                    registrar(e.message);
+                    informarSalud('youtube', 'degradado');
+                    alFallar();
+                  }
+                });
+            },
+            onStateChange: ({ data }) => {
+              if (!cerrado && volumenConfirmado && data === 1) {
+                clearTimeout(timeout);
+                informarSalud('youtube', 'correcto');
+              }
             },
             onError: ({ data }) => {
               if (!cerrado) {
@@ -102,17 +125,23 @@ export function YouTubeVideo({
       // Si la API nunca enlazó, destroy() no quita el iframe y seguiría sonando.
       nodoHost?.replaceChildren();
     };
-  }, [url, intento, alFallar, informarSalud]);
+  }, [url, intento, alFallar, informarSalud, ajustarVolumenYouTube, registrar]);
 
   useEffect(() => {
+    if (!listo) return;
     let vigente = true;
     let id: ReturnType<typeof setTimeout> | undefined;
     const aplicar = async (ms: number) => {
       try {
         const videos = await ajustarVolumenYouTube(volumenActual.current, ms);
+        if (vigente && videos < 1) throw new Error('YouTube dejó de confirmar el volumen.');
         if (vigente && videos > 0) alAjustar?.();
       } catch (e) {
-        if (vigente) registrar(`No se pudo ajustar el volumen de YouTube: ${(e as Error).message}`);
+        if (vigente) {
+          registrar(`No se pudo ajustar el volumen de YouTube: ${(e as Error).message}`);
+          informarSalud('youtube', 'degradado');
+          alFallar();
+        }
       } finally {
         if (vigente) id = setTimeout(() => void aplicar(0), REAPLICAR_MS);
       }
@@ -122,7 +151,18 @@ export function YouTubeVideo({
       vigente = false;
       clearTimeout(id);
     };
-  }, [volumen, rampa, url, intento, ajustarVolumenYouTube, registrar, alAjustar]);
+  }, [
+    volumen,
+    rampa,
+    url,
+    intento,
+    ajustarVolumenYouTube,
+    registrar,
+    alAjustar,
+    informarSalud,
+    alFallar,
+    listo,
+  ]);
 
   return (
     <div className="youtube-stage">
