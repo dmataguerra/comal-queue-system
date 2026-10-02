@@ -22,6 +22,21 @@ export function OperadorPage() {
   const anunciosPendientes = entregasAudio.filter(
     (e) => e.estado === 'pendiente' || e.estado === 'reproduciendo',
   ).length;
+  const avisos = [
+    instantanea.persistencia?.estado === 'error' &&
+      'No se guardaron los turnos. Revisa Diagnóstico.',
+    pantallas.publica === 'ninguna' && 'TV desconectada. Revisa la conexión.',
+    anunciosPendientes >= 5 && `Audio: ${anunciosPendientes}/6 en espera. Espera antes de llamar.`,
+    recientes.some((e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n)) &&
+      'Audio fallido. Revisa los turnos marcados.',
+    recientes.some((e) => e.estado === 'descartado' && [actual, ...llamados].includes(e.n)) &&
+      'Anuncios descartados. Revisa los turnos marcados.',
+    instantanea.advertenciaRecuperacion,
+    !youtubeAdmitido && 'YouTube no está admitido en navegador. Usa contenido local.',
+    actual !== null &&
+      llamados.length === 5 &&
+      `Seis turnos visibles. El siguiente retira el más antiguo (${formatear(llamados[4])}). Vencen en 5 min.`,
+  ].filter((aviso): aviso is string => Boolean(aviso));
   const [pagina, setPagina] = useState<'turnos' | 'multimedia' | 'diagnostico'>('turnos'),
     [entrada, setEntrada] = useState(''),
     [ocupado, setOcupado] = useState(false),
@@ -40,7 +55,16 @@ export function OperadorPage() {
     setMensaje(texto);
     setEsError(error);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMensaje(''), 8000);
+    timer.current = setTimeout(() => setMensaje(''), error ? 8000 : 4000);
+  }
+  function notificarError(error: unknown) {
+    const texto = error instanceof Error ? error.message : String(error);
+    notificar(
+      texto.includes('La cola de audio está llena')
+        ? 'Audio en espera: intenta de nuevo en unos segundos. El turno no cambió.'
+        : texto.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, ''),
+      true,
+    );
   }
   async function llamar(e: React.FormEvent) {
     e.preventDefault();
@@ -49,8 +73,8 @@ export function OperadorPage() {
     if (normalizar(entrada) === null) {
       notificar(
         entrada.trim()
-          ? 'Captura inválida: escribe solo números, de 1 a 6 dígitos. La TV no cambió.'
-          : 'Escribe el número del ticket antes de presionar Enter.',
+          ? 'Captura inválida: usa de 1 a 6 dígitos.'
+          : 'Escribe el número del ticket.',
         true,
       );
       input.current?.focus();
@@ -62,8 +86,8 @@ export function OperadorPage() {
       if (resultado.efecto === 'CAPTURA_INVALIDA')
         notificar(
           entrada.trim()
-            ? 'Captura inválida: escribe solo números, de 1 a 6 dígitos. La TV no cambió.'
-            : 'Escribe el número del ticket antes de presionar Enter.',
+            ? 'Captura inválida: usa de 1 a 6 dígitos.'
+            : 'Escribe el número del ticket.',
           true,
         );
       else if (resultado.anuncio) {
@@ -75,7 +99,7 @@ export function OperadorPage() {
         setEntrada('');
       }
     } catch (error) {
-      notificar((error as Error).message, true);
+      notificarError(error);
     } finally {
       setOcupado(false);
       input.current?.focus();
@@ -92,7 +116,7 @@ export function OperadorPage() {
           : `Llamado deshecho. En la TV: turno ${formatear(nueva.actual)}.`,
       );
     } catch (error) {
-      notificar((error as Error).message, true);
+      notificarError(error);
     } finally {
       setOcupado(false);
       input.current?.focus();
@@ -104,7 +128,7 @@ export function OperadorPage() {
     try {
       await hacer();
     } catch (error) {
-      notificar((error as Error).message, true);
+      notificarError(error);
     } finally {
       setOcupado(false);
       input.current?.focus();
@@ -235,10 +259,6 @@ export function OperadorPage() {
             <span>Multimedia</span>
             {pagina === 'multimedia' && <i className="nav-active-dot" />}
           </button>
-          <button aria-label="Ayuda" title="Ayuda" onClick={() => setAyuda(true)}>
-            <Icon name="info" />
-            <span>Ayuda</span>
-          </button>
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-faculty">
@@ -294,77 +314,19 @@ export function OperadorPage() {
               <span>{clock.date}</span>
             </div>
           </div>
-          {!youtubeAdmitido && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>
-                YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido
-                local. La pantalla del navegador usa contenido local.
-              </span>
-            </div>
-          )}
-          {pantallas.publica === 'ninguna' && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>
-                No se detecta la TV. La pantalla pública no se muestra para que el campo de captura
-                nunca aparezca en ella. Revisa que la TV esté encendida y conectada: en cuanto se
-                detecte, la pantalla pública vuelve sola.
-              </span>
-            </div>
-          )}
-          {anunciosPendientes >= 5 && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>
-                Hay {anunciosPendientes} de 6 anuncios en curso o en espera. Con seis, las nuevas
-                llamadas se rechazan sin cambiar el turno. Espera antes de volver a llamar.
-              </span>
-            </div>
-          )}
-          {actual !== null && llamados.length === 5 && (
-            <div className="connection-banner" role="status">
-              <Icon name="info" />
-              <span>
-                La pantalla muestra seis turnos recientes. Una llamada de otro número retira de la
-                pantalla el más antiguo ({formatear(llamados[4])}). Los turnos vencen cinco minutos
-                después de su última llamada; vuelve a llamar si aún necesitan aviso.
-              </span>
-            </div>
-          )}
-          {recientes.some(
-            (e) => e.estado === 'descartado' && [actual, ...llamados].includes(e.n),
-          ) && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>
-                Hay anuncios descartados por espera o porque el turno dejó de estar vigente. Revisa
-                las filas y vuelve a llamar si hace falta.
-              </span>
-            </div>
-          )}
-          {recientes.some((e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n)) && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>
-                Falló el audio de un turno. Revisa las filas marcadas y vuelve a anunciarlo.
-              </span>
-            </div>
-          )}
-          {instantanea.persistencia?.estado === 'error' && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>
-                No se pueden guardar los turnos. La última acción no se aplicó ni se anunció. Revisa
-                el espacio y los permisos de la carpeta de datos y vuelve a intentarlo.
-              </span>
-            </div>
-          )}
-          {instantanea.advertenciaRecuperacion && (
-            <div className="connection-banner" role="alert">
-              <Icon name="warning" />
-              <span>{instantanea.advertenciaRecuperacion}</span>
-            </div>
+          {avisos.length > 0 && (
+            <details className="operator-notices">
+              <summary>
+                <Icon name="warning" />
+                {avisos[0].split('. ')[0]}
+                {avisos.length > 1 && <span> · {avisos.length - 1} más</span>}
+              </summary>
+              <div className="operator-notices-list">
+                {avisos.map((aviso) => (
+                  <p key={aviso}>{aviso}</p>
+                ))}
+              </div>
+            </details>
           )}
           {pagina === 'turnos' ? (
             <>
@@ -684,8 +646,8 @@ export function OperadorPage() {
               <Icon name="zoomIn" /> Tamaño y tema
             </dt>
             <dd>
-              Las lupas de la barra superior ajustan el tamaño entre 90%, 100% y 110%. El
-              interruptor Azul/Morado cambia el tema. Ambos ajustes se aplican a las dos pantallas.
+              Las lupas de la barra superior ajustan el tamaño entre 70% a 130%. El interruptor
+              Azul/Morado cambia el tema. Ambos ajustes se aplican a las dos pantallas.
             </dd>
             <dt>
               <Icon name="warning" /> Problemas al guardar

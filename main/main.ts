@@ -316,6 +316,8 @@ async function iniciar() {
   ventanas.iniciar();
   try {
     servidorWeb = await crearServidorWeb({
+      // Las pruebas aisladas pueden pedir un puerto libre sin tocar la instancia habitual.
+      puerto: process.env.TURNERO_PUERTO === '0' ? 0 : undefined,
       informarSalud,
       vistas: carpetaVistas,
       contenido: carpetaContenido,

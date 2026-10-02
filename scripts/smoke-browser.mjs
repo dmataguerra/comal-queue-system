@@ -9,6 +9,7 @@ const raiz = fileURLToPath(new URL('../', import.meta.url));
 const resultados = join(raiz, 'test-results');
 mkdirSync(resultados, { recursive: true });
 process.env.TURNERO_DATOS = mkdtempSync(join(resultados, 'browser-'));
+process.env.TURNERO_PUERTO = '0';
 app.commandLine.appendSwitch('disable-gpu');
 app.disableHardwareAcceleration();
 app.setAppPath(raiz);
@@ -32,9 +33,22 @@ async function esperar(comprobar, mensaje) {
 async function verificar() {
   try {
     await import('../build/main/main.js');
-    await esperar(
-      async () => (await fetch('http://127.0.0.1:4317/api/inicial')).ok,
-      'El servidor de navegador no inició.',
+    let origen;
+    await esperar(() => {
+      const entradas = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8')
+        .trim()
+        .split(/\r?\n/)
+        .map((linea) => JSON.parse(linea));
+      origen = entradas
+        .map(
+          (entrada) => entrada.mensaje.match(/^Navegador local: (http:\/\/127\.0\.0\.1:\d+)/)?.[1],
+        )
+        .find(Boolean);
+      return Boolean(origen);
+    }, 'El servidor de navegador no inició.');
+    assert.equal(
+      (await (await fetch(`${origen}/api/diagnostico`)).json()).carpetaDatos,
+      process.env.TURNERO_DATOS,
     );
     // El acuse debe llegar por HTTP, nunca por la ventana Electron de respaldo.
     ipcMain.removeAllListeners('turnero:anuncio:acuse');
@@ -46,7 +60,7 @@ async function verificar() {
         backgroundThrottling: false,
       },
     });
-    await operador.loadURL('http://127.0.0.1:4317/');
+    await operador.loadURL(`${origen}/`);
     await esperar(
       () =>
         operador.webContents.executeJavaScript("Boolean(document.querySelector('#turn-number'))"),
@@ -74,7 +88,7 @@ async function verificar() {
         autoplayPolicy: 'no-user-gesture-required',
       },
     });
-    await publica.loadURL('http://127.0.0.1:4317/publica');
+    await publica.loadURL(`${origen}/publica`);
     await esperar(
       () =>
         publica.webContents.executeJavaScript("Boolean(document.querySelector('.public-screen'))"),
@@ -99,6 +113,13 @@ async function verificar() {
         'window.turnero.ajustarVolumenYouTube(0.1,150).then(()=>null,e=>e.message)',
       ),
       /YouTube no está admitido/,
+    );
+    // Preparar un estado conocido: si ya estaba degradado, repetirlo no crea otra transición.
+    assert.equal(
+      await publica.webContents.executeJavaScript(
+        `fetch('/api/salud', {method:'POST', headers:{'Content-Type':'application/json','X-Turnero-Cliente':'navegador'}, body:JSON.stringify(['audio','correcto'])}).then(r=>r.status)`,
+      ),
+      200,
     );
     const degradacionesPrevias = (
       readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8').match(
@@ -130,7 +151,7 @@ async function verificar() {
       'La vista pública del navegador no recibió el turno.',
     );
     await esperar(async () => {
-      const dato = await (await fetch('http://127.0.0.1:4317/api/inicial')).json();
+      const dato = await (await fetch(`${origen}/api/inicial`)).json();
       return dato.entregaAudio?.id === 1 && dato.entregaAudio.estado === 'reproducido';
     }, 'La vista pública del navegador no confirmó la reproducción por HTTP.');
     await esperar(
@@ -140,7 +161,7 @@ async function verificar() {
         ),
       'El operador no mostró el acuse de audio.',
     );
-    const sinOrigen = await fetch('http://127.0.0.1:4317/api/accion', {
+    const sinOrigen = await fetch(`${origen}/api/accion`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Turnero-Cliente': 'navegador' },
       body: JSON.stringify({ tipo: 'LLAMAR', entrada: '43' }),
@@ -148,7 +169,7 @@ async function verificar() {
     assert.equal(sinOrigen.status, 403);
     const fuera = await new Promise((resolver, rechazar) => {
       const peticion = request(
-        'http://127.0.0.1:4317/api/inicial',
+        `${origen}/api/inicial`,
         { headers: { Host: 'otro.local:4317' } },
         (respuesta) => {
           respuesta.resume();
@@ -159,10 +180,7 @@ async function verificar() {
       peticion.end();
     });
     assert.equal(fuera, 403);
-    assert.equal(
-      (await (await fetch('http://127.0.0.1:4317/api/inicial')).json()).instantanea.actual,
-      42,
-    );
+    assert.equal((await (await fetch(`${origen}/api/inicial`)).json()).instantanea.actual, 42);
     console.log(
       'PASS: navegador local, acuse HTTP, YouTube rechazado sin iframe (incluyendo config de escritorio), salud/registro HTTP y bloqueo de solicitudes externas.',
     );

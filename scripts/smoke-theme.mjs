@@ -67,7 +67,7 @@ async function verify() {
     const geometry = (w) =>
       run(
         w,
-        `JSON.stringify(Array.from(document.querySelectorAll('.panel, .public-queue, .public-media-frame')).map(el => { const r = el.getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }))`,
+        `JSON.stringify(Array.from(document.querySelectorAll('.panel, .public-queue, .public-media-frame, .theme-controls > *, .theme-switch-track')).map(el => { const r = el.getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }))`,
       );
     assert.equal(await theme(operator), 'azul');
     assert.equal(await theme(client), 'azul');
