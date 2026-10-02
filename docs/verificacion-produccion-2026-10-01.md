@@ -1,5 +1,7 @@
 # Verificación de producción: puntos 4, 5, 8, 9 y 10
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 Fecha local: 1 de octubre de 2026, America/Mexico_City. Los logs posteriores a las 18:00 muestran 2 de octubre en UTC.
 Base obtenida con `git fetch`: `origin/codex/rebuild-ci-cd`, commit `5c901043335a0e7032331a9b26392c9e97d63c13`.
 Rama de trabajo: `codex/production-readiness`. Los cambios están en el árbol de trabajo; no se publicó un release.

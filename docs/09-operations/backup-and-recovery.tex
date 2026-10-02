@@ -1,19 +1,11 @@
-\subsection{Backup and recovery}
+\subsection{Backup, restore and migration}
 
-\Status{NOT_IMPLEMENTED} as an operational procedure.
+Close Comal++ and verify its processes are stopped. Run npx tsx scripts/datos.ts backup DATA BACKUPS. The tool creates a unique dated backup of config/state/content and logs, excluding temporaries; the finished name is published only after copy completion.
 
-The durable state is a SQLite database plus operator-provided local music. In standalone mode the default database is \Code{data/comal.sqlite}; Electron stores \Code{comal.sqlite} in \Code{app.getPath('userData')}, whose resolved directory varies by platform/user. SQLite WAL mode means copying only the main file while the app is writing may produce an inconsistent/incomplete backup.
+Restore with npx tsx scripts/datos.ts restore BACKUP DATA --app-cerrada. The flag confirms the operator checked shutdown; it does not reliably detect all app processes. JSON, configuration keys, state dates and overlapping paths are validated before replacement. Prior target data is kept at datos.antes-de-restaurar-*.
 
-\subsubsection*{Recovery facts}
+Corrupt startup state is copied to estado.json.corrupto-* when possible and starts empty with warning; unreadable state due to I/O errors stops startup. Old-day state never reopens prior turns. A same-day restore uses stored timestamps and does not replay audio.
 
-At normal restart, the database reopens, startup DDL ensures the current schema exists, and ready turns/configuration/request IDs are retained. Missing database creates an empty one. There is no corruption detection, automatic repair, backup discovery, restore UI/command, version compatibility check, or remote replica.
+Migration from 0.2.0 reads legacy SQLite unchanged; migration from Documentos to 0.3.1 copies once and retains the original. Rollback requires the old verified installer and its own pre-upgrade data backup; post-migration calls are not reverse-converted to SQLite.
 
-\subsubsection*{Procedure requiring approval}
-
-Stakeholders must define what to back up (database, WAL/SHM where applicable, music, installer/config), frequency, retention, destination, access protection, recovery point/time, acceptable downtime, and who tests restores. A safe implementation should use SQLite's online backup mechanism or a controlled shutdown/checkpoint rather than an ad hoc live file copy. This is a recommendation, not an existing feature.
-
-\subsubsection*{Manual continuity}
-
-Printed tickets and verbal calls are the only repository-described contingency for service/power failure. The organization must validate and rehearse it.
-
-\Evidence{server/database.ts; electron/main.cjs; .gitignore; historical README}
+Evidence: docs/operacion-recuperacion.md; main/respaldo.ts; main/migracion-02.ts

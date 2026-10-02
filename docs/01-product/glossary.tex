@@ -1,24 +1,7 @@
-\subsection{Glossary}
+\subsection{Product glossary}
 
-\begin{longtable}{P{0.22\textwidth}P{0.70\textwidth}}
-\toprule
-Term & Repository-grounded meaning \\
-\midrule
-COMAL Queue & Canonical documentation name for the repository. The UI also uses Troyanos and historical text uses Comal++. \\
-Turn / Turno & One stored ready-order record with an internal UUID and visible two-digit ticket number. \\
-Ticket number & Existing code copied by staff, normalized by the UI to \Code{01}--\Code{99}; it is not the database identity. \\
-Ready / Listo & The only active turn status. A newly created turn enters this state immediately. \\
-Delivered / Entregado & Closed status selected after pickup; the turn remains in history but leaves the active snapshot. \\
-Cancelled / Retirado & Closed status used for an erroneous capture; it remains in history and leaves the display. \\
-Recall / Reannounce & Explicitly raise a ready turn's rank, update its last-announced timestamp, and emit a new announcement. \\
-Counter / Mostrador & Pickup location encoded as 0 (none), 1, or 2. \\
-Cashier workspace & Operational interface rendered on all SPA routes except those beginning with \Code{/pantalla}. \\
-Public display & Read-only screen at \Code{/pantalla}; it renders the queue, media, footer, and visual announcement overlay. \\
-Announcement & Ephemeral Socket.IO payload causing a visual callout and, when enabled, sequential turn/counter audio. It is not stored as its own table. \\
-Snapshot & Current ready turns plus multimedia, playlists, and settings emitted to clients. \\
-Rank & Monotonically increasing integer defining newest/recalled-first ordering across turn history. \\
-Request ID & Client-generated idempotency key stored with a fingerprint and serialized response. \\
-Fallback media & The non-YouTube visual carousel shown when YouTube is inactive, unavailable, blocked, or not selected. \\
-Playlist & Server-discovered local directory of supported audio files, or a YouTube playlist identifier when media type is YouTube. \\
-\bottomrule
-\end{longtable}
+Ticket: external order number entered by the operator. Visible number: integer 0-99, formatted as two digits. Current: most recently called visible number. Called list: up to five earlier visible numbers. Announcement: session-local ID and number sent for visual/audio playback.
+
+Correction: one-level silent restoration of the previous call state. Removal: explicit deletion from the visible list, without business delivery semantics. Expiry: removal five minutes after the number's latest call. Delivery acknowledgement: software playback status, not proof that speakers produced sound.
+
+Evidence: nucleo/turnos.ts; shared/contract.ts

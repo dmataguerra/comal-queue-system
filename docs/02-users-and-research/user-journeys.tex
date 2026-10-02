@@ -1,55 +1,7 @@
-\subsection{User journeys}
+\subsection{Daily operating journey}
 
-\subsubsection*{Ready-to-pickup journey}
+Before service: verify Windows extended display and output device, open Help from the header or F1, then Diagnostics; test a ticket and listen on the actual speakers. During service: call ready orders, monitor the compact notices and per-number audio status, and use repeat/remove only as appropriate.
 
-\begin{CodeBlock}
-Preparation outside COMAL Queue
-        |
-Operator enters existing ticket and optional counter
-        |
-Server validates + stores READY turn + request record
-        |
-Socket.IO state and announcement events
-        |
-Public display shows turn and visual announcement
-        |
-Customer presents ticket and collects order
-        |
-Operator marks DELIVERED; turn leaves active display
-\end{CodeBlock}
+After service: close the application before backing up the effective data directory. After recovery or upgrade: verify version, queue, content, sound and display before serving customers. Previous-day state and old announcements do not replay automatically.
 
-\subsubsection*{Capture-error journey}
-
-\begin{CodeBlock}
-READY turn selected in cashier list
-        |
-Operator chooses "Retirar por error de captura"
-        |
-Confirmation dialog
-        |
-PATCH status=CANCELLED
-        |
-Turn remains in history but leaves active display
-\end{CodeBlock}
-
-\subsubsection*{Recall journey}
-
-\begin{CodeBlock}
-Operator selects READY turn -> POST announce
- -> rank and last-announced time change
- -> new ephemeral announcement emitted
- -> turn becomes first in ready order
-\end{CodeBlock}
-
-\subsubsection*{Local-media journey}
-
-\begin{CodeBlock}
-Maintainer copies supported audio into data/music/<genre>
- -> operator refreshes catalog
- -> server resolves and allow-lists files
- -> operator selects playlist
- -> public client requests /media/<genre>/<filename>
- -> tracks advance on ended events
-\end{CodeBlock}
-
-The intended audio step in the pickup journey is not included as achieved behavior: assets and playback code exist, but the public screen cannot set \Code{audioEnabled} to true.
+Evidence: docs/user-manual/operador.md; docs/operacion-recuperacion.md

@@ -1,32 +1,9 @@
-\subsection{Cashier interface}
+\subsection{Operator interface}
 
-\subsubsection*{Purpose and main user}
+Turnos accepts one to six ticket digits; Enter calls the last two. A successful call clears capture. Invalid input, audio saturation or a failed save must not be mistaken for a new call. Each visible row offers Anunciar and Quitar with confirmation; the operator can omit those confirmations for the current session.
 
-The cashier workspace supports day-to-day ready-list operation and display configuration. Its main user is the queue operator; because authorization is absent, this is a UX role rather than a security identity.
+Corregir última captura restores one previous call silently. Ctrl+Z edits the input text, not queue history. Persistent warnings are grouped in a compact expandable notice; row statuses identify En espera, Anunciando, Anunciado, Falló el audio and discarded announcements. Short feedback does not replace Diagnostics.
 
-\subsubsection*{Components and actions}
+Help is in the header and F1, without sidebar duplication. There are no counters, delivered-state workflow or order-history screen.
 
-\begin{itemize}
-  \item \textbf{Sidebar/top bar:} choose Turns, Multimedia, or Settings; open the public display; view local connection state; toggle automatic turn-page rotation.
-  \item \textbf{New ready turn:} enter 1--2 digits, select optional counter 1 or 2, and submit. Successful creation clears/refocuses the number input.
-  \item \textbf{Repeat panel:} select an active turn and explicitly reannounce it.
-  \item \textbf{Ready list:} newest/recalled first, with an action dialog per turn. The dialog can save a changed counter, mark delivered, or enter a second confirmation step before cancellation.
-  \item \textbf{Multimedia:} configure YouTube or local playlists, refresh the catalog, pause/resume, mute/unmute, change volume, or return to fallback visuals.
-  \item \textbf{Settings:} set announcement duration and footer lines, test local announcement audio in the cashier browser context, and open the public display.
-\end{itemize}
-
-\subsubsection*{State and dependencies}
-
-The page reads snapshots and connection status from \Code{SystemProvider}, then writes through \Code{src/services/api.ts}. All mutation controls associated with queue/media state are intended to be disabled while disconnected. Feedback is shown in an inline live region on the Turns section and a toast elsewhere.
-
-\subsubsection*{UX constraints and discrepancies}
-
-\begin{itemize}
-  \item The interface does not search or filter a long ready list.
-  \item The announcement-duration input advertises maximum 20 seconds, while server validation permits 30.
-  \item The audio test activates only the cashier tab's Web Audio context; it does not activate public-screen audio.
-  \item Media/settings controls are effectively administrative but share the operator interface and authorization level.
-  \item The responsive layout changes from full sidebar to rail to horizontal navigation at defined CSS breakpoints.
-\end{itemize}
-
-\Evidence{src/pages/CashierPage.tsx; src/components/ReadyList.tsx; src/components/SettingsPanel.tsx; src/components/MultimediaPanel.tsx}
+Evidence: vistas/operador/OperadorPage.tsx

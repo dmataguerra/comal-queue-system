@@ -1,33 +1,32 @@
-# CI/CD
+# CI/CD vigente · Comal++ 0.3.1
 
-CI runs on pull requests, pushes to main/master/development, and manual dispatches.
-Set branch protection to require both `Formatting, lint, tests and security` and
-`Windows application and installer` before merging.
+Revisado contra los workflows el 1 de octubre de 2026. CI corre en pull requests, pushes a main/master/development y ejecución manual. Configure protección de rama para exigir **Formatting, lint, tests and security** y **Windows application and installer**.
 
-The reusable `validate.yml` first checks formatting, lint, unit/audio tests, and
-high/critical dependency vulnerabilities. Only after those pass does it build the
-pinned 0.2.0 upgrade baseline and validate the Windows application, installer,
-upgrade and rollback. The current application is built once per Windows job.
-Successful runs retain the installer for seven days; failures retain diagnostics.
+## Validación
 
-`npm run format` and `npm run format:check` cover the same files, including the
-workflows. `.gitattributes` enforces LF in text checkouts even when Windows Git has
-`core.autocrlf=true`. Prettier and EditorConfig use the same LF policy. CI checks
-formatting without rewriting files. Run `npm ci` to use the lockfile's formatter.
+`validate.yml` ejecuta primero formato, lint, pruebas unitarias/catálogo, recuperación CLI y auditoría high/critical. Luego construye el fixture 0.2.0 fijado en `legacy-installer.yml` y el trabajo Windows:
 
-CD runs the same complete validation on version tags. A tag must equal `v` plus
-the version in package.json. After validation, CD packages and tests the release
-installer, uploads assets to a draft, then publishes it. Electron-builder never
-publishes independently. Existing releases are not overwritten. Configure both
-`WIN_CSC_LINK` and `WIN_CSC_KEY_PASSWORD` for signing; without either, the installer
-is unsigned. A partially configured signing pair fails the release.
+- Build de la aplicación una vez.
+- Smoke de escritorio, navegador, anuncios/importación, multimedia, controles de audio, interfaz y tema.
+- Preflight de jornada, que no equivale a jornada completa.
+- Instalador unsigned para pruebas, instalación y actualización/reversión contra el fixture cuyo SHA-256 se comprueba.
 
-A manual CD run on a branch validates without publishing. To publish, create a
-matching version tag on the reviewed commit and push it. Manual runs on an
-existing version tag also publish if no release exists yet.
+El instalador validado se conserva siete días; diagnósticos y capturas se conservan también al pasar el trabajo Windows. El fixture 0.2.0 solo se usa para pruebas, no para distribución.
 
-`release.yml` remains the explicitly requested 390-minute endurance test. It uses
-the `production` environment and the self-hosted Windows runner labeled
-`comal-production`. Configure environment approvals and keep that runner current
-(at least Actions runner 2.327.1 for Node 24 actions). Its concurrency group
-prevents two endurance runs from using the production runner simultaneously.
+`format` y `format:check` cubren los mismos directorios de código y workflows. Markdown/LaTeX y manuales requieren revisión documental separada. `.gitattributes`, Prettier y EditorConfig usan LF; `npm ci` reproduce el formatter del lockfile.
+
+## Publicación firmada
+
+`cd.yml` repite la validación en tags de versión. Publicar exige que el tag sea `v` más la versión de `package.json`, entorno **production**, ambos secretos **WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD** y **COMAL_SIGNER_SHA1** con la huella aprobada de 40 caracteres.
+
+La publicación **falla si falta identidad**; no hay salida unsigned. Se construye el instalador firmado con `--publish never`, se prueba su instalación y se verifican Setup, app instalada y desinstalador: firma válida, uso de firma de código, huella exacta y timestamp. Se compara el hash con la evidencia instalada y se repite upgrade/rollback sobre ese artefacto.
+
+Se publican instalador, blockmap cuando existe, **SHA256.txt** y **SBOM.cdx.json**. El SBOM es de dependencias instaladas de construcción y no acredita derechos de voces/imágenes/marcas. GitHub Release se prepara como borrador y se publica después de subir archivos; se rechaza reemplazar una release existente.
+
+Una ejecución manual en rama valida sin publicar. Un tag existente puede publicar si coincide y no existe release. Declarar `production` en YAML no prueba revisores o restricciones: el responsable debe comprobarlos en GitHub.
+
+## Jornada operacional
+
+`release.yml` es la prueba manual separada de **390 minutos (6 h 30 min)**, en runner Windows propio con etiqueta `comal-production` y entorno protegido `production`. No es el workflow que publica la release. Su grupo de concurrencia evita jornadas simultáneas en ese runner.
+
+Ni la CI ni este documento prueban sonido HDMI físico o reproducción real de servicios externos. Consulte [la jornada](prueba-jornada-real.md) y [la lista de publicación](lista-publicacion.md).

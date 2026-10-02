@@ -1,25 +1,7 @@
-\subsection{Project metrics}
+\subsection{Metrics and interpretation}
 
-\subsubsection*{Observed engineering inventory}
+Operational evidence includes call/repeat/correction/expiry counts, software audio acknowledgements, dispatch latencies, process CPU/memory, log sizes and endurance duration. The endurance report records environment, limitations and RUNNING/PASS/FAIL or PREFLIGHT\_PASS status.
 
-At the audit baseline:
-\begin{itemize}
-  \item 9 JSON API routes plus 1 local media-file route;
-  \item 2 Socket.IO application events (\Code{state}, \Code{announcement});
-  \item 3 SQLite tables and 2 explicit indexes;
-  \item 3 turn statuses and 3 counter values;
-  \item 2 page components and 3 cashier workspace sections;
-  \item 5 automated backend/service/integration tests, all passing during the audit;
-  \item 99 numbered announcement WAVs, 2 counter WAVs, 1 no-counter suffix, and 6 generated demo music tracks;
-  \item 0 frontend/component/E2E tests, 0 CI workflows, 0 release tags, and 0 repository license files.
-\end{itemize}
+Dispatch latency is not time until audible sound. Queue occupancy summaries are action-based, not time-weighted. Temperature probing is optional. No benchmark, sales metric, throughput SLO, usability score or production uptime is inferred from these reports.
 
-Counts describe repository contents, not quality, progress, coverage, throughput, adoption, or production readiness.
-
-\subsubsection*{Undefined product/operational metrics}
-
-No telemetry or requirements define average wait, pickup time, abandoned turns, daily volume, queue length, announcement success, display connectivity, error rate, uptime, recovery time, or user satisfaction. Adding metrics may require privacy/retention decisions and should follow stakeholder goals rather than collecting data speculatively.
-
-\subsubsection*{Recommended engineering indicators}
-
-After CI/operations exist, useful evidence could include build/test result, restore-drill result/date, database size/integrity, display connection health, and failed mutation/media counts. Thresholds and retention are \Unknown.
+Evidence: scripts/smoke-full-day.mjs; docs/prueba-jornada-real.md

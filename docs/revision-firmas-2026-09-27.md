@@ -1,5 +1,7 @@
 # Revision de firmas — 27 de septiembre de 2026
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 Estado: NO aprobado para entrega firmada.
 
 Se revisaron los cambios existentes en la rama codex/windows-code-signing y los

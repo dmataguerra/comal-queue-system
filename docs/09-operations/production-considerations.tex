@@ -1,23 +1,9 @@
-\subsection{Production considerations}
+\subsection{Production acceptance}
 
-The repository can produce runnable artifacts, but it does not establish production readiness.
+Validate a release candidate on the intended standard Windows account with TV in extended mode and the correct sound output. Exercise disconnect/reconnect, offline content, corruption/recovery in isolated data and the exact installer upgrade/rollback.
 
-\subsubsection*{Required before operational acceptance}
+The endurance script runs 390 minutes (6 h 30 min), matching the historical 08:30-15:00 span. PREFLIGHT\_PASS is not full PASS. Logs, metrics and report must identify the artifact/environment; physical audibility still needs human acceptance.
 
-\begin{enumerate}
-  \item Fix and verify public-display audio activation on every target display/browser.
-  \item Approve physical/network topology and decide whether API authentication or isolation is required.
-  \item Define/test SQLite backup, restore, retention, integrity check, and upgrade migration.
-  \item Validate target Windows version, hardware, displays, speakers, browser/Electron autoplay behavior, storage, and power-loss recovery.
-  \item Add repeatable frontend/E2E/package smoke checks and a release checklist.
-  \item Decide process supervision, startup, logs/rotation, health monitoring, incident fallback, and ownership.
-  \item Resolve licensing for application, dependencies, logos/images, synthesized audio, and distribution.
-\end{enumerate}
+Configure production environment reviewers and tag restrictions in GitHub, approved signing secrets/thumbprint and resource distribution rights. Declaring an environment in YAML does not prove protections are enabled.
 
-\subsubsection*{Capacity and reliability}
-
-No queue-size, client-count, latency, storage, uptime, or recovery target exists. Full snapshots contain all active turns and every catalog entry; history/requests grow in SQLite. Load testing is absent. Do not infer capacity from a successful two-client integration test.
-
-\subsubsection*{Operational fallback}
-
-The prior README proposes printed tickets and verbal calls when local service, link, or power fails. That is a documented manual fallback, not an implemented recovery system, and requires stakeholder validation/training.
+Evidence: docs/lista-publicacion.md; docs/prueba-jornada-real.md; .github/workflows/cd.yml

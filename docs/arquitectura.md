@@ -1,5 +1,9 @@
 # Turnero El Comal — Arquitectura
 
+## Estado de este documento
+
+El cuerpo de diseño y propuestas se conserva como historia; no define el producto instalado. El manual técnico LaTeX fue actualizado a 0.3.1 y ya no es una descripción vigente de 0.2.0. Para operación y contratos utilice [el índice vigente](README.md).
+
 ## Implementación vigente (0.3.1)
 
 The current implementation is documented in [Current desktop architecture](current-architecture.md). The topology B, WebSocket, and server sections below are historical proposals and do not describe the installed product.

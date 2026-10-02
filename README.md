@@ -6,7 +6,7 @@
 
 > Sistema local de turnos para anunciar pedidos listos en el restaurante, con pantalla pública, audio y operación sin depender de una red.
 
-Comal++ es una aplicación de escritorio para Windows orientada a operaciones de mostrador. La persona operadora captura los dos últimos dígitos del pedido (`00`-`99`); la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. No registra ventas ni imprime tickets.
+Comal++ es una aplicación de escritorio para Windows orientada a operaciones de mostrador. La persona operadora escribe de uno a seis dígitos del ticket; se anuncian los dos últimos (`00`-`99`); la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. No registra ventas ni imprime tickets.
 
 ## Estado del proyecto
 
@@ -19,7 +19,7 @@ Comal++ es una aplicación de escritorio para Windows orientada a operaciones de
 | Distribución | Instalador NSIS para Windows |
 | Licencia | [MIT](LICENSE) |
 
-La versión actual corrige el guardado en carpetas protegidas de Documentos/OneDrive y prepara la publicación con firma pública gratuita. Todavía no existe un certificado público aprobado.
+La versión 0.3.1 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
 
 ## Contenido
 
@@ -108,6 +108,12 @@ npm start
 | `npm run lint` | Ejecuta ESLint. |
 | `npm run format:check` | Comprueba el formato con Prettier. |
 | `npm run test:desktop` | Ejecuta build y smoke tests de Electron. |
+| `npm run test:hardening` | Valida capacidad/IDs de anuncios e importación asíncrona. |
+| `npm run test:interface` | Valida captura, ayuda y controles de interfaz. |
+| `npm run test:theme` | Valida tema, escala y sincronización entre vistas. |
+| `npm run test:destructive` | Ejecuta regresiones destructivas con datos aislados. |
+| `npm run test:media` | Valida multimedia local en desarrollo y build. |
+| `npm run test:full-day` | Ejecuta una jornada de 390 minutos reales (6 h 30 min). |
 | `npm run test:browser` | Valida las vistas en Chromium con transporte de navegador. |
 | `npm run test:installed` | Prueba un instalador ya generado en datos aislados. |
 | `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
@@ -182,7 +188,7 @@ GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador
 - [Firma local](docs/firma-local.md): requisitos y límites de la firma protegida por TPM.
 - [Firma pública gratuita](docs/firma-publica-gratuita.md): preparación de la publicación firmada.
 
-Los documentos LaTeX y la [arquitectura histórica](docs/arquitectura.md) son material de referencia. No deben interpretarse como instrucciones actuales si contradicen la arquitectura vigente.
+El [índice completo](docs/README.md) enlaza guías, manuales y evidencias. Los 57 capítulos LaTeX y los tres PDF fueron actualizados a la arquitectura vigente; el [manual del operador](docs/user-manual/operador.md) contiene las instrucciones actuales. Los informes fechados y la [arquitectura histórica](docs/arquitectura.md) conservan explícitamente su contexto anterior. Consulte [la revisión documental](docs/actualizacion-documentacion-2026-10-01.md) para base y validación.
 
 ## Limitaciones conocidas
 

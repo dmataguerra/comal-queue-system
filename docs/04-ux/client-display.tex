@@ -1,33 +1,9 @@
-\subsection{Client/public display}
+\subsection{Public display}
 
-\subsubsection*{Purpose and main user}
+The public display presents one current number and up to five earlier numbers, large announcement cards, multimedia and a footer. It does not paginate an unbounded list. Numbers expire five minutes after their latest call.
 
-The display lets waiting customers match a printed ticket with a ready number and, where assigned, a pickup counter. It is read-only at the component level.
+DisplayCanvas fits and centers a 1920x1080 composition uniformly in available CSS pixels. Different aspect ratios leave black margins. This fit scale is separate from the 70-130\% size preference. A secondary Windows display gets fullscreen; without one the public view is a normal window on the primary display.
 
-\subsubsection*{Rendered regions}
+Technical diagnostics and operator capture do not appear publicly. Software audio acknowledgements do not prove that customers heard the speakers.
 
-\begin{itemize}
-  \item a five-row ready-turn panel ordered newest/recalled first;
-  \item ``Último llamado'' emphasis for the first turn and ``Llamando ahora'' for the active announcement;
-  \item automatic eight-second pagination, or a manual next-page button when rotation is disabled;
-  \item a media frame containing campus fallback images, a local-audio status overlay, or YouTube;
-  \item a large assertive live-region announcement overlay for the configured duration;
-  \item a continuous footer ticker with logos, date, time, and configured messages;
-  \item connection, audio, and provider-failure notices when those states occur.
-\end{itemize}
-
-\subsubsection*{Behavior}
-
-A new or recalled turn resets pagination to page 1. Announcements are queued, deduplicated by announcement ID in memory, skipped if their turn has already closed, and cancelled on disconnect. Media is intended to mute during an announcement and resume afterward.
-
-\subsubsection*{Current gaps}
-
-\begin{itemize}
-  \item \textbf{Audio activation:} \Code{useAnnouncements} returns \Code{enableAudio} and \Code{testAudio}, but \Code{PublicPage} does not use either. Its \Code{audioEnabled} value remains false, so announcement playback is bypassed and local/YouTube media is kept muted.
-  \item \textbf{Empty state:} no explicit ``no ready orders'' message is rendered; the list is simply empty.
-  \item \textbf{Mascot:} \Code{TrojanMascot.tsx} and its CSS/assets exist, but the component is not mounted.
-  \item \textbf{Fallback naming:} the active implementation uses a campus image carousel, not the unused \Code{coffee-welcome.png} described by older redesign documentation.
-  \item \textbf{Verification:} no automated browser, visual-regression, accessibility, or real audio/playback test exists.
-\end{itemize}
-
-\Evidence{src/pages/PublicPage.tsx; src/hooks/useAnnouncements.ts; src/components/MediaPlayer.tsx; src/styles/public.css}
+Evidence: vistas/publica/PublicaPage.tsx; DisplayCanvas.tsx; main/ventanas.ts

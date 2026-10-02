@@ -1,19 +1,11 @@
 \subsection{Known limitations}
 
-\begin{enumerate}
-  \item \textbf{Public audio is unreachable.} The hook exposes activation, but the public page neither calls it nor renders a control. All public media remains muted through the same flag.
-  \item \textbf{No authentication or authorization.} Network-level trust is the only effective boundary.
-  \item \textbf{No explicit public empty state.} An empty queue renders no explanatory message, contrary to prior requirements text.
-  \item \textbf{No history UI.} The API exposes 200 rows, without pagination/filtering/export or closure metadata.
-  \item \textbf{Loopback Electron server.} The packaged app does not directly expose the server to separate LAN devices.
-  \item \textbf{Playback is per browser.} Track position and YouTube state are not synchronized; autoplay rules vary by browser.
-  \item \textbf{Best-effort announcements.} Disconnected screens do not receive missed calls after reconnect.
-  \item \textbf{Unbounded persistence.} Turns and idempotency requests are never pruned; history merely limits query results.
-  \item \textbf{Schema is startup DDL.} No migration/version strategy exists for upgrades.
-  \item \textbf{Synchronous experimental SQLite API.} Compatibility depends on the pinned Node generation and write work blocks the event loop.
-  \item \textbf{Frontend contracts drift.} Timestamp types conflict with the server.
-  \item \textbf{Settings boundary mismatch.} UI maximum announcement duration is 20 seconds; server maximum is 30.
-  \item \textbf{No frontend/packaged automation.} Visual, audio, accessibility, and Electron behavior rely on manual validation.
-  \item \textbf{No operational tooling.} Backup, restore, monitoring, log rotation, graceful service supervision, and incident procedures are absent.
-  \item \textbf{Brand/asset drift.} COMAL, Comal++, and Troyanos coexist; mascot/reference/coffee assets or metadata are unused by the current render tree.
-\end{enumerate}
+Normal operation is one Windows x64 PC; remote/LAN devices are unsupported. Browser YouTube is disabled. Desktop YouTube, weather and embedded-content availability need real Internet acceptance. There is no authenticated administrator or persistent order history.
+
+Six visible recent numbers are not an order ledger; a seventh distinct call displaces the oldest and each number expires after five minutes. Six outstanding audio tasks may temporarily prevent further calling. Restart does not recover undo or replay old announcements.
+
+Playback acknowledgements prove software execution, not physical audio. Multiple public windows can duplicate sound. There is no synchronized media timeline between windows. Theme/size preferences are origin-local and outside the JSON backup.
+
+Public release requires approved signing identity and hardware/endurance acceptance; documentation alone does not satisfy those gates.
+
+Evidence: README.md; docs/operacion-recuperacion.md

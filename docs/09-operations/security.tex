@@ -1,32 +1,9 @@
-\subsection{Security}
+\subsection{Security and release controls}
 
-\subsubsection*{Implemented controls}
+Electron windows use sandbox and context isolation; main-frame/sender/page authorization and runtime payload checks guard IPC. Production CSP disallows inline scripts and unsafe-eval, restricts external origins and blocks objects/base URLs. Inline styles remain required for dynamic UI. Window navigation and popup creation are restricted.
 
-\begin{itemize}
-  \item CORS allow-list includes explicit local origins plus configured additions for HTTP and Socket.IO.
-  \item Input validators reject unknown fields and constrain ticket numbers, counters, statuses, request IDs, settings, media primitives, playlist IDs, and YouTube providers.
-  \item Server YouTube validation requires HTTPS, an exact allow-listed hostname, no credentials/port, and a valid video or playlist identifier.
-  \item SQL values use prepared-statement parameters; dynamic SQL fragments are internal constants.
-  \item Local media delivery resolves only entries discovered under the configured canonical root and stored in an allow-list map.
-  \item Electron renderer enables context isolation and disables Node integration.
-  \item Generated engine download is pinned and SHA-256 checked when the optional audio preparation mode is used.
-\end{itemize}
+Custom protocol and HTTP content resolution enforce allowed roots and reject escaping paths/symlinks. HTTP listens only on loopback and verifies local write headers. There is no LAN access, user identity or confidentiality boundary against a local process with data access.
 
-\subsubsection*{Security gaps}
+CI audits high/critical dependency vulnerabilities. CD requires a matching version tag, production environment, both signing secrets and approved COMAL\_SIGNER\_SHA1. It checks valid signatures, exact thumbprint, code-signing use and timestamps on Setup, installed app and uninstaller, and validates the exact artifact hash before release.
 
-\begin{itemize}
-  \item No authentication/authorization, CSRF protection, rate limiting, brute-force controls, or audit identity.
-  \item State and history endpoints expose operational data to every reachable client; all mutations are equally open.
-  \item Default transport is plain HTTP/WebSocket; no TLS or trusted reverse proxy is configured.
-  \item \Code{ALLOWED_ORIGINS} accepts arbitrary configured strings and CORS is not an authorization mechanism.
-  \item No secret-management need exists today, but no framework is established for future secrets.
-  \item SQLite/media are unencrypted at rest and filesystem permissions are left to the host.
-  \item Dependency vulnerability scanning, SBOM, code signing, update provenance, and security response policy are absent.
-  \item External YouTube use sends public-screen traffic to Google/YouTube and introduces privacy, availability, and content-policy considerations not documented by stakeholders.
-\end{itemize}
-
-\subsubsection*{Recommendations}
-
-First define the trust boundary: single locked-down PC with mirrored displays versus reachable LAN service. For LAN use, restrict bind/firewall exposure, authenticate mutation/admin operations, consider read-only display credentials or network segmentation, use TLS where appropriate, rate limit, log security-relevant changes, and protect backups. Run dependency/security review before release. Exact controls depend on stakeholder risk acceptance.
-
-\Evidence{server/bootstrap.ts; server/origins.ts; server/dto/validation.ts; server/media/media.service.ts; electron/main.cjs; package.json}
+Evidence: main/politica-csp.ts; main/seguridad-ipc.ts; main/safe-file.ts; .github/workflows/cd.yml

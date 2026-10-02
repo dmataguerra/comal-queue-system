@@ -1,24 +1,9 @@
 \subsection{Coding standards}
 
-\subsubsection*{Current conventions}
+Use TypeScript contracts at renderer/main boundaries and runtime validators for untrusted payloads. Keep pure queue transitions in nucleo and side effects behind the queue store ports. Preserve compatibility-sensitive JSON and IPC names.
 
-\begin{itemize}
-  \item Strict TypeScript, ES2022 target, ESM for application code, and NodeNext with explicit \Code{.js} relative imports in backend TypeScript.
-  \item React function components and hooks; no class components or state library beyond context/local state.
-  \item Nest decorators at controller/module boundaries; domain validation is implemented with pure functions receiving \Code{unknown}.
-  \item Prepared SQLite statements and parameter binding for values; schema/query fragments are static constants.
-  \item Spanish user-visible messages and English identifiers/file names, with domain values in English.
-  \item Component files use PascalCase; hooks use \Code{use...}; services/modules use kebab or dot suffixes.
-\end{itemize}
+ESLint covers backend/main/nucleo/shared/vistas/scripts and vite.config.ts. Prettier format and format:check target the same maintained code, workflows and package/config files; Markdown/LaTeX are reviewed separately. .gitattributes and formatting use LF.
 
-No consistent repository-wide formatting convention currently exists. Some source is highly compressed onto one line; other source uses conventional multiline formatting. There is no ESLint, Prettier, Stylelint, EditorConfig, or npm lint/format script.
+Add focused regressions for meaningful behavior changes; use isolated data for destructive tests. Never commit signing keys, API tokens or generated operational data.
 
-\subsubsection*{Required invariant-preserving practices}
-
-When changing queue mutations, preserve transaction boundaries, server-side validation, active-number uniqueness, request-ID replay semantics, state broadcast, and the rule that only new/recall operations create announcements. Do not treat UI checks as authoritative validation.
-
-When changing contracts, update both \Code{server/models/state.ts} and \Code{src/types.ts} until shared generation is introduced. When changing SPA paths, update both \Code{App.tsx} and the static route list in \Code{bootstrap.ts}.
-
-\subsubsection*{Recommendations}
-
-Adopt one formatter and linter with checked-in configuration; add type-check/lint scripts and CI; share or generate API types; use stable domain error codes; format JSX and CSS for reviewability. These are recommendations, not current standards.
+Evidence: eslint.config.js; package.json; .gitattributes; .gitignore

@@ -1,5 +1,7 @@
 # Auditoría de preparación para producción — Comal++
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 > **Evidencia histórica:** esta auditoría describe el estado observado antes del trabajo Phase 5. Varias carencias aquí indicadas tienen cambios posteriores en el código. Use la [arquitectura vigente](arquitectura.md), la [guía operativa](operacion-recuperacion.md), las pruebas y la [lista de publicación](lista-publicacion.md) para evaluar el estado actual; no tome esta auditoría como aceptación de producción.
 
 Fecha local: 24 de septiembre de 2026. Revisión inspeccionada: `529b5d4`, paquete `0.3.0`. Objetivo: funcionamiento local en navegador y, prioritariamente, aplicación Windows.
@@ -35,7 +37,7 @@ Se ejecutaron comprobaciones con datos aislados en `test-results/`, sin modifica
 | `npm audit --json` | 0 vulnerabilidades reportadas por el registro consultado. No certifica toda la seguridad de Electron ni la aplicación. |
 | Instalador, instalación limpia, actualización y recuperación eléctrica | **No ejecutados.** En `release/` se encontró un instalador 0.2.0 del 14 de septiembre, frente al paquete 0.3.0 actual. |
 
-Evidencia adicional: [resultado JSON](../test-results/audit-1EuYVI/result.json), [TV a 720p](../test-results/audit-1EuYVI/public-1280.png), [script temporal de diagnóstico](../test-results/audit-production.mjs). `test-results/` está ignorado por Git: copiar los resultados al expediente de entrega si se requiere conservarlos. Las capturas del smoke también viven allí. La captura emulada de 720p ocupa la esquina superior izquierda de una superficie física mayor; el margen oscuro restante pertenece a la emulación.
+Evidencia adicional: resultado JSON (`../test-results/audit-1EuYVI/result.json`, evidencia local de la auditoría; no incluida en el repositorio), TV a 720p (`../test-results/audit-1EuYVI/public-1280.png`, evidencia local de la auditoría; no incluida en el repositorio), script temporal de diagnóstico (`../test-results/audit-production.mjs`, evidencia local de la auditoría; no incluida en el repositorio). `test-results/` está ignorado por Git: copiar los resultados al expediente de entrega si se requiere conservarlos. Las capturas del smoke también viven allí. La captura emulada de 720p ocupa la esquina superior izquierda de una superficie física mayor; el margen oscuro restante pertenece a la emulación.
 
 ## Hallazgos y trabajo necesario
 

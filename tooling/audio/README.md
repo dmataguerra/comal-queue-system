@@ -13,7 +13,7 @@ recuperado del catálogo Piper del repositorio; no existe un MP3 válido para es
 - Formato: WAV PCM, 16 bits, 22 050 Hz, mono.
 - Secuencia en la pantalla pública: aviso → voz → (pausa de 300 ms → voz, si `repeticiones` es 2).
 
-Las voces son sintéticas, español mexicano neutro, generadas con
+El generador Piper descrito aquí produce voces sintéticas de español mexicano con
 [Piper](https://github.com/OHF-Voice/piper1-gpl) y la voz `es_MX-claude-high` (VITS neuronal,
 22 050 Hz). No es una grabación humana, pero sí una voz neuronal: entonación y ritmo naturales, muy
 lejos del timbre robótico de un sintetizador por formantes.
@@ -73,9 +73,7 @@ clave vive en el entorno; no entra al repositorio ni al instalador.
 4. Al terminar el despliegue: **Ir al recurso** → *Claves y punto de conexión* → copia **KEY 1** y
    la **Ubicación/Región**.
 
-F0 da 500 000 caracteres de voz neuronal al mes. El catálogo completo son ~2 000, así que
-regenerarlo entra de sobra aunque pruebes varias voces. El límite que sí se nota es el de 20
-peticiones por minuto: el script espera 3,1 s entre una y otra, y los 100 clips tardan ~5 minutos.
+Comprueba las cuotas vigentes del recurso antes de generar; no se garantizan aquí límites comerciales del proveedor. El generador espera 3,1 s por defecto entre peticiones (`--delay`), y la duración real depende del servicio y la configuración.
 
 ### Generar
 
@@ -111,13 +109,11 @@ Dos detalles que conviene no revertir:
 
 ## Regenerar con ElevenLabs
 
-Mismo esquema que Azure: se genera una vez, se versiona y la app sigue sin internet. El catálogo
-completo son 1 897 caracteres: ~0,19 USD con `eleven_multilingual_v2` y la mitad con
-`eleven_flash_v2_5`. La recarga mínima de saldo (*Pay As You Go*) es de 5 USD y dura 12 meses.
+Mismo esquema que Azure: se genera una vez, se versiona y la app sigue sin internet. El costo, cuotas y acceso a voces dependen del plan y las condiciones vigentes del proveedor; compruébalos en tu cuenta antes de generar. Los precios antiguos no son un presupuesto actual.
 
 1. Crea la cuenta en [elevenlabs.io](https://elevenlabs.io) → *Developers* → *API Keys* → crea una
    clave con permiso de **Text to Speech** y **Voices** (lectura).
-2. *Developers* → *Top Up* → recarga 5 USD.
+2. Verifica cuota, facturación y permisos de la voz/modelo antes de generar.
 3. Si quieres una voz de la *Voice Library* (p. ej. acento mexicano), agrégala a *My Voices*.
 
 ```powershell
@@ -132,7 +128,7 @@ node tooling/audio/verify-audio.mjs
 | Parámetro | Por defecto | Para qué |
 | --- | --- | --- |
 | `--voice` | — (obligatorio) | Id de la voz, sacado de `--voces`. |
-| `--model` | `eleven_multilingual_v2` | `eleven_flash_v2_5` cuesta la mitad; `eleven_v3` es más expresiva y menos predecible. |
+| `--model` | `eleven_multilingual_v2` | `eleven_flash_v2_5` es una alternativa; `eleven_v3` es más expresiva y menos predecible. |
 | `--speed` | `0.95` | Velocidad (0,7–1,2). |
 | `--stability` | `0.6` | Más alta, más pareja entre clips y menos expresiva. |
 | `--target-rms`, `--sin-normalizar`, `--output-dir` | como en Azure | |
@@ -156,17 +152,19 @@ archivos seleccionados.
 ## Licencias
 
 El motor, [Piper 1.8.0](https://github.com/OHF-Voice/piper1-gpl), es GPL-3.0 (embebe eSpeak NG para
-la fonemización). Se usa **solo en tiempo de compilación**: no se distribuye con la aplicación, así
-que la copyleft no alcanza al turnero. Lo mismo valía para el eSpeak NG que se usaba antes.
+la fonemización). Se usa **solo en tiempo de compilación**: no se distribuye con la aplicación, y sus condiciones deben revisarse junto con las del modelo y el audio antes de distribuir. Lo mismo valía para el eSpeak NG que se usaba antes.
 
 La voz `es_MX-claude-high` es **Apache-2.0**
 ([model card](https://huggingface.co/rhasspy/piper-voices/blob/main/es/es_MX/claude/high/MODEL_CARD)),
 que es la razón de haberla elegido sobre `es_AR-daniela-high`: esa suena muy bien, pero su dataset
 es CC-BY-SA 4.0 y arrastra obligaciones de atribución y *share-alike* sobre el audio generado.
 
-El audio sintetizado con **Azure Speech** se puede usar en productos, también en el plan gratuito
-F0; lo que los términos prohíben es hacerse pasar por una persona real y usar la salida para
-entrenar otro modelo de voz. Ninguna de las dos cosas aplica aquí. Como con Piper, el servicio se
-consume solo al compilar: no se distribuye nada de Microsoft con el turnero.
+Para **Azure Speech** y **ElevenLabs**, el responsable debe comprobar los términos vigentes de su cuenta, modelo y voz para redistribuir las salidas. El servicio se consume únicamente durante generación y no es necesario para reproducir el catálogo local.
 
 Los WAV son salida sintetizada de frases originales de este proyecto.
+
+## Integración vigente y revisión de derechos
+
+Generar audio es una tarea de mantenimiento, no un requisito de operación ni de instalación. `npm run verify:audio` y `npm test` validan catálogo; `test:desktop` prueba decodificación y `test:hardening`/`test:browser` verifican entregas. La cola admite seis anuncios, espera hasta 45 s y tarea de hasta 30 s; falta de archivo, voz silenciada o reproducción fallida no confirma Anunciado. Véase [anuncios](../../docs/anuncios-e-importacion.md).
+
+La selección MP3/WAV no identifica qué proveedor generó cada archivo. Las referencias de licencias anteriores describen los motores/modelos citados, no una auditoría del catálogo final. Antes de distribuir, el responsable debe verificar procedencia, atribución y términos del audio efectivamente seleccionado; precios y licencias de servicios deben comprobarse con sus fuentes vigentes. No versionar claves de API.

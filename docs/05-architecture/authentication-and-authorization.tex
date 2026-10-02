@@ -1,22 +1,9 @@
-\subsection{Authentication and authorization}
+\subsection{Trust and capability boundaries}
 
-\Status{NOT_IMPLEMENTED}.
+No user login or account roles exist. Desktop authorization is based on registered window, exact page URL and main frame, with runtime payload validation. Public desktop renderers cannot dispatch queue mutations or request full diagnostics; they have only the allowed playback, reading and reporting capabilities.
 
-There is no login page, user table, password, hash library, session, token, cookie, identity provider, Nest guard, role decorator, route middleware, or protected frontend route. The public display is read-only only by presentation; it shares network access to unauthenticated mutation endpoints.
+The HTTP server listens on 127.0.0.1. Every request requires the exact Host. POST additionally requires the exact local Origin, application/json and X-Turnero-Cliente: navegador. These are local request checks, not user authentication; any local client that supplies them can access the exposed API.
 
-\begin{longtable}{P{0.48\textwidth}P{0.14\textwidth}P{0.14\textwidth}P{0.14\textwidth}}
-\toprule
-Capability & Operator UI & Public UI & API enforcement \\
-\midrule
-View active state & Yes & Yes & None \\
-View up to 200 historical turns & No & No & Public endpoint \\
-Create/recall/update turns & Yes & No & None \\
-Configure media/settings & Yes & No & None \\
-Refresh media catalog & Yes & No & None \\
-Read catalogued media & Indirect & Yes & None \\
-\bottomrule
-\end{longtable}
+Do not describe the public browser UI as an authenticated security role. LAN administration, remote devices and public hosting are unsupported.
 
-An authorization policy cannot be invented from current code. Stakeholders must determine whether trusted loopback/physical access is sufficient or whether a LAN deployment requires operator authentication and/or network segmentation. Until then, no document should describe Cashier or Administrator as enforced roles.
-
-\Evidence{package.json; server/app.controller.ts; server/app.module.ts; src/App.tsx}
+Evidence: main/seguridad-ipc.ts; main/servidor-web.ts

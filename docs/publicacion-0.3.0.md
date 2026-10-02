@@ -1,5 +1,7 @@
 # Publicación de Comal++ 0.3.0
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 ## Estado al 26 de septiembre de 2026
 
 La rama es `codex/comal-architecture-refactor`, con HEAD `d6030b10f4063ccc3f050a8ebce497f6cde82cd1`. El árbol Git está limpio y ese commit contiene los cambios de arquitectura, interfaz, smoke tests y documentación publicados. El instalador descrito más abajo pertenece a una compilación anterior y no es reproducible desde este commit; para una publicación definitiva hay que reconstruirlo y registrar un nuevo hash.

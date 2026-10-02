@@ -1,25 +1,5 @@
-\subsection{Role-based personas}
+\subsection{Working personas and research limits}
 
-These personas deliberately omit demographics and fictional biographies.
+Operator persona: needs fast keyboard calling, visible confirmation and a short, actionable error when saving or audio capacity fails. Customer persona: needs legible two-digit numbers and audible announcements in the restaurant environment. Support persona: needs diagnostic routes, logs and a reversible recovery procedure.
 
-\subsubsection*{P-OPS-001 --- Queue operator}
-
-\textbf{Role:} staff member at the cashier station.
-\textbf{Primary tasks:} enter a ticket after preparation, correct its pickup counter, reannounce it, and close it after pickup or error.
-\textbf{Interaction pattern:} brief, repeated, time-sensitive actions; the form keeps focus on the ticket input after successful creation.
-\textbf{System dependency:} local server and Socket.IO connection; mutation controls are disabled while disconnected.
-\textbf{Unvalidated assumptions:} training level, language needs beyond the Spanish UI, keyboard/scanner use, and error frequency.
-
-\subsubsection*{P-DISPLAY-001 --- Public viewer}
-
-\textbf{Role:} person waiting for an already purchased order.
-\textbf{Primary task:} match a printed ticket with a large displayed number and optional counter.
-\textbf{Interaction pattern:} passive viewing; may see automatic page rotation, a visual announcement overlay, media, date/time, and footer messages.
-\textbf{System dependency:} a live local Socket.IO connection for current data. Cached React state remains visible after disconnection, with a stale-data warning.
-\textbf{Unvalidated assumptions:} viewing distance, display size, ambient noise, color/vision needs, and acceptable rotation interval.
-
-\subsubsection*{P-MAINT-001 --- Technical maintainer}
-
-\textbf{Role:} person responsible for installation and recovery.
-\textbf{Primary tasks:} install Node dependencies or a desktop build, configure host/port/data paths, manage music files, inspect health, run tests, and back up SQLite safely.
-\textbf{Unvalidated assumptions:} who fills this role, access rights, response time, and available tools.
+These personas are derived from source and operational notes, not formal interviews or measured usability research. No conversion rate, satisfaction result or accessibility certification is asserted.

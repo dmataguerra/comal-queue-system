@@ -1,40 +1,9 @@
-\subsection{Turn and queue domain}
+\subsection{Queue domain}
 
-\subsubsection*{State model}
+State is actual (number or null), llamados (at most five earlier unique numbers), and one optional undo snapshot. There are no persistent ready/delivered/cancelled records or UUID-based orders in this version.
 
-\begin{CodeBlock}
-                create
-                  |
-                  v
-               [ready] ---- mark delivered ----> [delivered]
-                  |
-                  +------ cancel capture -------> [cancelled]
+Input must be one to six decimal digits; normalizar takes the last two. 213298 becomes 98 and 100 becomes 00. Calling current repeats it without reordering; calling an earlier number promotes it and removes its prior occurrence. A new number drops the oldest if six were visible.
 
-Recall: ready -> ready (new rank, timestamp, and announcement)
-Counter edit: ready -> ready
-Closed states have no implemented outgoing transition.
-\end{CodeBlock}
+Each call refreshes five-minute expiry. Removal and expiry are silent; explicit removal discards undo. Undo cannot restore already expired numbers, and is unavailable after restarting. Day change clears queue state through persisted application logic.
 
-\textbf{Actual states:} \Code{ready}, \Code{delivered}, and \Code{cancelled}. There is no created, waiting, preparing, announced, completed, removed, or expired state. ``Removed'' in UI means cancelled; records are not deleted.
-
-\subsubsection*{Generation and identity}
-
-The cashier supplies the visible number; the UI trims, range-checks, and pads it. The server accepts only the exact two-character forms \Code{01}--\Code{99}. It generates a UUID for the turn and a separate UUID for each announcement. Request IDs are normally browser-generated UUIDs.
-
-\subsubsection*{Ordering}
-
-\Code{nextRank()} selects maximum historical rank plus one. Creation and recall receive that rank. Active snapshots sort ready turns by descending rank, so recall moves a turn to the front. History uses the same rank ordering and a 200-row limit, not closure or creation time.
-
-\subsubsection*{Persistence and duplicate prevention}
-
-Ready turns remain through page reload and process restart. Duplicate active numbers are rejected by a pre-insert query and a partial unique index. After delivery/cancellation, the same visible number can create a distinct UUID. Exact create/recall retries reuse a recorded response; mismatched reuse of a request ID returns conflict.
-
-\subsubsection*{Client awareness}
-
-Every mutation emits a full snapshot. New/recall actions also emit a transient announcement to clients connected at that moment. Reconnecting clients learn current ready state but receive no missed audio/visual announcements.
-
-\subsubsection*{Closure metadata}
-
-Delivery and cancellation only change status. There is no delivered/cancelled timestamp, actor, reason, audit event, or soft-delete marker beyond status. This limits operational auditability.
-
-\Evidence{server/models/state.ts; server/state.service.ts; server/database.ts; tests/backend.test.ts}
+Evidence: nucleo/turnos.ts; backend/queue-store.ts

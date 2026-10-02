@@ -16,3 +16,14 @@ release-test/
 *.p12
 *.pem
 *.key
+
+# Isolated worktrees and generated documentation intermediates.
+.worktrees/
+docs/**/__pycache__/
+docs/*.aux
+docs/*.fdb_latexmk
+docs/*.fls
+docs/*.lol
+docs/*.out
+docs/*.synctex.gz
+docs/*.toc

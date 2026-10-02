@@ -4,7 +4,7 @@ Esta aplicación es Electron local. Las dos vistas cargan desde `turnero://app` 
 
 ## Comprobaciones automáticas
 
-Antes de publicar, ejecutar con Node.js 22 o posterior en Windows:
+Antes de publicar, ejecutar con Node.js 22.13.0 o posterior en Windows:
 
 ```powershell
 npm ci
@@ -14,6 +14,10 @@ npm test
 npm run build
 npm run test:desktop
 npm run test:browser
+npm run test:hardening
+npm run test:interface
+npm run test:theme
+npm run test:destructive
 npm run test:media
 npm run test:full-day:preflight
 npm run desktop:build
@@ -30,7 +34,7 @@ npm outdated
 
 El 25 de septiembre de 2026 (hora de México), `npm audit --json` informó **0 vulnerabilidades** (0 de severidad low, moderate, high y critical) entre 644 dependencias después de agregar ESLint. `npm outdated` señaló `@eslint/js`, `@types/node`, `@vitejs/plugin-react`, `electron`, `eslint`, `globals`, `prettier`, `tsx`, `typescript` y `vite`; no se actualizaron como parte de esta fase. ESLint 9 se conserva porque los complementos de React y accesibilidad aún declaran compatibilidad hasta esa versión mayor. Las versiones mayores de Vite y TypeScript requieren una evaluación separada.
 
-La CI de GitHub Actions corre en Windows al abrir o actualizar un pull request y al enviar cambios a `main`, `master` o `development`, además de ejecución manual. Usa Node.js 22, instala desde el lockfile y ejecuta pruebas, respaldo/restauración CLI, smoke de escritorio/navegador/multimedia, preflight, instalador unsigned, instalación y actualización/reversión. Conserva capturas y registros de `test-results/` también al pasar el trabajo Windows. La jornada real de 390 minutos se ejecuta manualmente mediante `.github/workflows/release.yml` en un runner Windows protegido; aprobarla es una condición operacional separada. CD firma y bloquea publicación cuando faltan identidad o secretos. El clima y YouTube real requieren aceptación con internet en destino. `npm audit` y `npm outdated` requieren acceso al registro npm.
+La CI de GitHub Actions corre en Windows al abrir o actualizar un pull request y al enviar cambios a `main`, `master` o `development`, además de ejecución manual. Usa Node.js 22, instala desde el lockfile y ejecuta pruebas, respaldo/restauración CLI, smoke de escritorio/navegador/anuncios/importación/multimedia/controles de audio/interfaz/tema, preflight, instalador unsigned, instalación y actualización/reversión. Conserva capturas y registros de `test-results/` también al pasar el trabajo Windows. La jornada real de 390 minutos se ejecuta manualmente mediante `.github/workflows/release.yml` en un runner Windows protegido; aprobarla es una condición operacional separada. CD firma y bloquea publicación cuando faltan identidad o secretos. El clima y YouTube real requieren aceptación con internet en destino. `npm audit` y `npm outdated` requieren acceso al registro npm.
 
 ## Política de contenido y navegación
 
@@ -52,7 +56,7 @@ El preload aislado expone solo `window.turnero`. Cada llamada IPC debe venir de 
 
 Para este proyecto abierto se prepara la [solicitud gratuita de SignPath Foundation](firma-publica-gratuita.md). Sigue pendiente la aprobación externa; no hay una firma pública emitida. El bloqueo de acceso a Documentos/OneDrive observado en Windows 11 se corrige guardando los datos en el perfil de la aplicación desde 0.3.1, sin desactivar protecciones ni instalar confianza local.
 
-Para distribución pública, el responsable de publicación debe obtener un certificado de firma de código para Windows de una autoridad de certificación reconocida por Windows (o usar un proveedor de firma administrada compatible con `electron-builder`). Para la única PC de la cafetería puede evaluarse la [firma local gratuita](firma-local.md), con confianza instalada manualmente en esa PC; **no** proporciona identidad verificada ni reputación de SmartScreen. No guardar claves privadas, certificados con clave privada, contraseñas ni tokens en este repositorio. Para la opción de archivo PFX, `electron-builder` lee `WIN_CSC_LINK` (ruta o enlace seguro al certificado) y `WIN_CSC_KEY_PASSWORD` del entorno; también admite `CSC_LINK` y `CSC_KEY_PASSWORD` como respaldo. Inyectarlos solo durante el trabajo de publicación desde un almacén de secretos, nunca en argumentos de consola, archivos `.env` versionados o registros. En GitHub Actions, usar secretos cifrados y un entorno protegido con revisión; no exponerlos a pull requests de bifurcaciones. No se ha configurado publicación automática con secretos. Ver la [guía de firma de electron-builder](https://www.electron.build/v26/docs/features/code-signing/code-signing-win/).
+Para distribución pública, el responsable de publicación debe obtener un certificado de firma de código para Windows de una autoridad de certificación reconocida por Windows (o usar un proveedor de firma administrada compatible con `electron-builder`). Para la única PC de la cafetería puede evaluarse la [firma local gratuita](firma-local.md), con confianza instalada manualmente en esa PC; **no** proporciona identidad verificada ni reputación de SmartScreen. No guardar claves privadas, certificados con clave privada, contraseñas ni tokens en este repositorio. Para la opción de archivo PFX, `electron-builder` lee `WIN_CSC_LINK` (ruta o enlace seguro al certificado) y `WIN_CSC_KEY_PASSWORD` del entorno; también admite `CSC_LINK` y `CSC_KEY_PASSWORD` como respaldo. Inyectarlos solo durante el trabajo de publicación desde un almacén de secretos, nunca en argumentos de consola, archivos `.env` versionados o registros. En GitHub Actions, usar secretos cifrados y un entorno protegido con revisión; no exponerlos a pull requests de bifurcaciones. El workflow de publicación exige secretos, identidad y entorno protegido; el YAML no acredita que los secretos o revisores estén configurados en GitHub. Ver la [guía de firma de electron-builder](https://www.electron.build/v26/docs/features/code-signing/code-signing-win/).
 
 La compilación de desarrollo sin certificado sigue disponible con `npm run desktop:build`. La orden `npm run desktop:build:signed` exige que `electron-builder` encuentre una identidad de firma y debe fallar sin ella. Verificar tanto el ejecutable instalado como el instalador desde PowerShell:
 
@@ -70,3 +74,7 @@ Para un certificado de autoridad reconocida, ambos deben mostrar `Status: Valid`
 3. Construir el instalador firmado con el certificado autorizado y registrar versión, hash SHA-256 y fecha.
 4. Verificar la firma del instalador y del ejecutable instalado; rechazar cualquier artefacto sin `Status: Valid`.
 5. Instalar y probar el artefacto exacto en una cuenta estándar, conservando y restaurando los datos de operación.
+
+## Interfaz y aislamiento de pruebas
+
+Ayuda se abre desde encabezado/F1; Diagnósticos sigue al final. La franja de avisos desplegable y mensajes cortos no ocultan el rechazo de guardado/capacidad. `TURNERO_PUERTO=0` pide un puerto libre para pruebas, manteniendo el bind loopback y controles de Host/Origin. El smoke navegador verifica origen y ruta propios para evitar un falso positivo contra otra app en 4317. Consulte [la revisión documental](actualizacion-documentacion-2026-10-01.md) para base y evidencias.

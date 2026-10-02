@@ -1,16 +1,16 @@
-# Capturas de pantalla requeridas
+# Capturas de la interfaz vigente · 0.3.1
 
-Las capturas deben obtenerse de la versión actual de Troyanos a resolución de escritorio, sin datos personales. Se requieren para reemplazar las imágenes de ambiente del manual en una siguiente edición.
+Las imágenes `source/screenshots/captura-1.png` a `captura-8.png` son de la interfaz anterior y se conservan como referencia histórica. Los PDF actuales no las presentan como capturas de 0.3.1.
 
-| Pantalla y estado | Debe verse | Uso previsto |
-|---|---|---|
-| Panel de caja con varios turnos | Campo “Nuevo turno listo”, selector de punto de recogida, lista “Turnos listos” y un elemento “Último llamado”. | Manual: creación y lista de turnos; guía rápida. |
-| Panel de caja después de marcar un turno como listo | Número recién creado, mensaje de confirmación y turno al inicio de la lista. | Manual: resultado de crear un turno. |
-| Ventana de acciones de un turno | Selector “¿Dónde se recoge?”, botones “Guardar mostrador”, “Entregado” y “Retirar por error de captura”. | Manual: cambio de mostrador, entrega y corrección. |
-| Panel “Volver a anunciar” | Selector de turno activo y botón “Volver a anunciar”. | Manual: reanuncio. |
-| Pantalla pública durante un anuncio | Número grande, texto de pedido listo y mostrador cuando aplique. | Manual: anuncio visual y último llamado. |
-| Sección Multimedia con música local | Pestaña “Música local”, listas de reproducción y controles de pausa, silencio y volumen. | Manual: ambiente multimedia. |
-| Sección Multimedia con YouTube | Campo “URL de YouTube”, botón “Reproducir” y aviso de internet. | Manual: YouTube. |
-| Sección Configuración | Duración mínima, mensajes del pie, botón de guardar y prueba de voz. | Manual: configuración. |
+| Estado | Debe verse |
+| --- | --- |
+| Turnos | Captura, En pantalla, Anunciar, Quitar y Corregir última captura. |
+| Llamada aceptada | Número actual y acuse En espera/Anunciado. |
+| Saturación | Franja compacta, avisos desplegados y ticket conservado tras rechazo. |
+| Confirmación | Anunciar/Quitar y opción para omitir durante la sesión. |
+| Pública | Actual, cinco anteriores, tarjeta de anuncio y multimedia. |
+| Multimedia | Importación, tarjetas, YouTube desktop y motivos de rechazo. |
+| Ayuda | Encabezado/F1, sin Ayuda en sidebar, enlace a Diagnósticos. |
+| Preferencias | Siete tamaños 70–130%, Azul/Morado y relojes am/pm. |
 
-No incluir contraseñas, rutas locales, datos de tickets reales ni información personal. La pantalla pública usa anuncios visuales en la versión actual; no se debe afirmar que reproduce audio.
+Usar números ficticios y ocultar rutas de usuario. Registrar commit, fecha, transporte, resolución y escala. La pantalla pública sí reproduce audio; una captura no acredita sonido físico.

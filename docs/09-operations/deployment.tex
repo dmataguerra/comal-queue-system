@@ -1,24 +1,10 @@
 \section{Operations}
 \subsection{Deployment}
 
-\subsubsection*{Current deployment capability}
+Build the Windows x64 NSIS installer with npm run desktop:build for unsigned local validation, desktop:build:signed when an approved identity is available, or desktop:build:local-signed for the documented local-certificate workflow. Outputs go to release/.
 
-\textbf{Combined Node server.} \Code{npm run build} creates a Vite SPA and compiled Nest server. \Code{npm start} serves the API, Socket.IO, media, and explicit SPA routes from one process. Default access is loopback. An external process manager/service definition is not provided.
+NSIS permits choosing the installation directory, uses per-user installation, creates a Start menu shortcut and does not automatically create a desktop shortcut. Factory contenido is packaged beside the app and seeded into the data directory on first startup; missing/empty required voice/notice files can be repaired from factory assets on later startups.
 
-\textbf{Windows desktop.} electron-builder is configured for an x64 NSIS installer and unpacked directory output. The app launches one cashier window, starts the embedded server, polls health for up to about 15 seconds, uses a per-user SQLite file, and terminates the child on app quit. The single-instance lock prevents a second app instance.
+The effective path in Diagnostics is authoritative. For 0.3.1 it normally resides in the application profile, outside Documentos/OneDrive. Installation from USB needs the exact installer, SHA-256 and reviewed signature/acceptance status.
 
-\textbf{Development only.} Vite/Nest split-process mode is not a production deployment.
-
-\subsubsection*{Assets included}
-
-The Electron package includes the frontend, compiled backend, Electron entry point, package metadata, Node dependencies required by packaging, and \Code{data/music}. Announcement/image assets are part of \Code{dist}. Music is copied outside ASAR as an extra resource; runtime catalog mutation/write behavior in the installed resource location is not documented.
-
-\subsubsection*{Absent deployment mechanisms}
-
-No Dockerfile, Compose, Nginx/reverse-proxy config, systemd/Windows service definition, cloud manifest, Kubernetes/Helm, CI/CD pipeline, code-signing config, auto-update, release channel, or rollback automation exists.
-
-\subsubsection*{Topology decision required}
-
-For three physical displays described historically, stakeholders must choose either one mirrored graphics output or separate browser devices. The Electron server's forced loopback supports the former directly; the latter requires a secured LAN-bound server and validated CORS/firewall/startup behavior.
-
-\Evidence{package.json; electron/main.cjs; server/bootstrap.ts}
+Evidence: package.json; main/carpeta-datos.ts; README-INSTALACION-USB.md

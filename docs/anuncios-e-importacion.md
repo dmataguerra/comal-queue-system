@@ -4,7 +4,7 @@
 
 Cada llamada tiene un ID creciente durante la sesión. Los acuses se validan por ID y número; repetir un número conserva ambas entregas. Un acuse tardío no puede modificar otro anuncio ni revertir un estado terminal. El historial en memoria conserva hasta 100 entregas, sin eliminar las activas. La fila del operador muestra la entrega con el ID más reciente de ese número.
 
-Se admiten hasta seis anuncios entre el activo y los pendientes. Si la cola está llena, una nueva llamada se rechaza antes de guardar: ni el turno, ni el deshacer, ni el ID cambian. El operador conserva su captura y recibe un aviso para reintentar; también aparece un aviso al acumular cinco anuncios.
+Se admiten hasta seis anuncios entre el activo y los pendientes. Si la cola está llena, una nueva llamada se rechaza antes de guardar: ni el turno, ni el deshacer, ni el ID cambian. El operador conserva su captura y recibe un aviso breve para reintentar, sin el prefijo técnico de error de IPC; también aparece un aviso al acumular cinco anuncios. Los avisos persistentes se agrupan en una franja desplegable; el acuse por fila sigue indicando la llamada más reciente.
 
 Un anuncio puede esperar hasta 45 segundos para iniciar, incluyendo la preparación de atenuación. Cada ejecución tiene un máximo de 30 segundos. Estos límites están definidos en `shared/politica-anuncios.ts`. El plazo de 45 segundos admite la ráfaga normal de seis tarjetas de al menos seis segundos, sin permitir retrasos de varios minutos. No es una estimación de latencia física por HDMI.
 
@@ -20,7 +20,7 @@ Se conservan los límites de 2 GB por video, 25 MB por imagen y 512 MB de reserv
 
 ## Validación y CI
 
-`npm test` cubre acuses inválidos por HTTP, repetición y orden de IDs, rechazo sin mutación, plazos, descarte, historial acotado, copia lenta, nombres concurrentes y copias truncadas. `npm run test:hardening` comprueba IDs repetidos, el aviso de saturación, descarte y una acción IPC durante una importación retenida en datos aislados. No se restauraron las pruebas eliminadas de `smoke-desktop.mjs`.
+`npm test` cubre acuses inválidos por HTTP, repetición y orden de IDs, rechazo sin mutación, plazos, descarte, historial acotado, copia lenta, nombres concurrentes y copias truncadas. `npm run test:hardening` comprueba IDs repetidos, el aviso de saturación, descarte y una acción IPC durante una importación retenida en datos aislados. Los smoke de interfaz/tema verifican ayuda, avisos, siete tamaños y reloj am/pm. Que una prueba exista no acredita un PASS del artefacto que se va a distribuir.
 
 La prueba de navegador exige una reproducción confirmada por HTTP: desactiva el listener de acuse IPC solo dentro del test para impedir que la ventana Electron produzca un falso positivo.
 

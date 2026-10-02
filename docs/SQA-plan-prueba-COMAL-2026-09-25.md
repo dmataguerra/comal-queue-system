@@ -1,5 +1,7 @@
 # Plan de SQA — prueba en las instalaciones de COMAL
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 > **Plan histórico:** este documento describe la versión y el estado de prueba del 25 de septiembre de 2026. Para la versión vigente y los gates actuales use [README](../README.md), [seguridad y publicación](seguridad-y-publicacion.md) y `.github/workflows/ci.yml`.
 
 > Actualización Phase 5: abrir **Diagnósticos** desde el final de Ayuda y comprobar versiones, rutas, último guardado, inventario, espacio y transiciones de recuperación. La operación normal es local y no requiere una base de datos; el servidor web opcional solo escucha en `127.0.0.1` para las vistas del mismo equipo. Registrar la evidencia de publicación en la [lista de publicación](lista-publicacion.md).
