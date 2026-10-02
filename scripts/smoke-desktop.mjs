@@ -75,10 +75,7 @@ async function verificar() {
       () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
       'No cargó la pantalla pública',
     );
-    await ejecutar(
-      operador,
-      `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Ayuda').click()`,
-    );
+    await ejecutar(operador, `document.querySelector('.help-button').click()`);
     await ejecutar(operador, `document.querySelector('.help-diagnostics-link').click()`);
     await esperar(
       () => ejecutar(operador, "Boolean(document.querySelector('.diagnostics-grid'))"),
