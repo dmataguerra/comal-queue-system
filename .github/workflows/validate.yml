@@ -20,6 +20,7 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm test
+      - run: npm run test:recovery
       - run: npm audit --audit-level=high
   baseline:
     needs: quality
@@ -77,7 +78,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Upload diagnostics
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v6
         with:
           name: desktop-diagnostics-${{ github.sha }}
