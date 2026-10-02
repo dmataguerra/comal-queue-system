@@ -79,7 +79,7 @@ async function verify() {
     assert.equal(
       await run(
         operator,
-        "[...document.querySelectorAll('.connection-banner')].some(e => e.textContent.includes('audio terminado'))",
+        "[...document.querySelectorAll('.operator-notices')].some(e => e.textContent.includes('audio terminado'))",
       ),
       false,
     );
@@ -116,7 +116,10 @@ async function verify() {
         ),
       );
       assert.ok(
-        await run(operator, "document.body.textContent.includes('Falló el audio de un turno')"),
+        await run(
+          operator,
+          "document.querySelector('.operator-notices')?.textContent.includes('Audio fallido')",
+        ),
       );
     }
     client.webContents.send(IPC_CHANNELS.contentChanged, original);
