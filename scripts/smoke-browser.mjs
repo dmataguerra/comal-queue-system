@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
-import { mkdirSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -100,14 +100,23 @@ async function verificar() {
       ),
       /YouTube no está admitido/,
     );
+    const degradacionesPrevias = (
+      readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8').match(
+        /Audio degradado\./g,
+      ) ?? []
+    ).length;
     await publica.webContents.executeJavaScript(
       "window.turnero.registrar('prueba de registro HTTP'); window.turnero.informarSalud('audio','degradado')",
     );
-    await esperar(
-      async () =>
-        (await (await fetch('http://127.0.0.1:4317/api/diagnostico')).json()).audio === 'degradado',
-      'La salud HTTP no se registró.',
-    );
+    // La precarga de otras pantallas puede recuperar la salud antes de leer el diagnóstico.
+    // El registro conserva el efecto HTTP aunque el estado ya haya cambiado.
+    await esperar(() => {
+      const registro = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8');
+      return (
+        registro.includes('[navegador] prueba de registro HTTP') &&
+        (registro.match(/Audio degradado\./g) ?? []).length > degradacionesPrevias
+      );
+    }, 'La salud o el mensaje HTTP no se registraron.');
     await operador.webContents.executeJavaScript('window.turnero.configurarYouTube(null)');
     const llamada = await operador.webContents.executeJavaScript(
       "window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})",
