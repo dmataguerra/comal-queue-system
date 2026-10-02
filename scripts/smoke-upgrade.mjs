@@ -94,13 +94,18 @@ function iniciarProceso(puerto, carpetaDatos, carpetaPerfil) {
 async function abrirAnterior(carpetaPerfil) {
   iniciarProceso(await puertoLibre(), datos, carpetaPerfil);
   await esperar(
-    async () => (await fetch('http://127.0.0.1:3001/api/health')).ok,
+    async () =>
+      (await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) })).ok,
     'El servidor local de 0.2.0 no inició.',
   );
   return {
-    estado: async () => await (await fetch('http://127.0.0.1:3001/api/state')).json(),
+    estado: async () =>
+      await (
+        await fetch('http://127.0.0.1:3001/api/state', { signal: AbortSignal.timeout(5000) })
+      ).json(),
     crear: async (numero) => {
       const respuesta = await fetch('http://127.0.0.1:3001/api/turns', {
+        signal: AbortSignal.timeout(5000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -118,29 +123,62 @@ async function abrir(carpetaDatos) {
   const puerto = await puertoLibre();
   iniciarProceso(puerto, carpetaDatos, perfil);
   const pagina = await esperar(async () => {
-    const paginas = await (await fetch(`http://127.0.0.1:${puerto}/json/list`)).json();
+    const paginas = await (
+      await fetch(`http://127.0.0.1:${puerto}/json/list`, { signal: AbortSignal.timeout(5000) })
+    ).json();
     return paginas.find((p) => p.type === 'page' && p.url.includes('/vistas/operador/'));
   }, 'No abrió el operador instalado.');
   const socket = new WebSocket(pagina.webSocketDebuggerUrl);
   await new Promise((resolver, rechazar) => {
-    socket.addEventListener('open', resolver, { once: true });
-    socket.addEventListener('error', rechazar, { once: true });
+    const limite = setTimeout(() => {
+      socket.close();
+      rechazar(new Error('DevTools no conectó en 10 segundos.'));
+    }, 10000);
+    socket.addEventListener(
+      'open',
+      () => {
+        clearTimeout(limite);
+        resolver();
+      },
+      { once: true },
+    );
+    const fallo = () => {
+      clearTimeout(limite);
+      rechazar(new Error('DevTools cerró durante conexión.'));
+    };
+    socket.addEventListener('error', fallo, { once: true });
+    socket.addEventListener('close', fallo, { once: true });
   });
   let id = 0;
   const pendientes = new Map();
+  const fallarPendientes = () => {
+    for (const pendiente of pendientes.values()) {
+      clearTimeout(pendiente.limite);
+      pendiente.rechazar(new Error('Se perdió la conexión con el ejecutable instalado.'));
+    }
+    pendientes.clear();
+  };
+  socket.addEventListener('close', fallarPendientes);
+  socket.addEventListener('error', fallarPendientes);
   socket.addEventListener('message', (evento) => {
     const mensaje = JSON.parse(evento.data);
     const pendiente = pendientes.get(mensaje.id);
     if (!pendiente) return;
+    clearTimeout(pendiente.limite);
     pendientes.delete(mensaje.id);
     if (mensaje.error) pendiente.rechazar(new Error(mensaje.error.message));
     else pendiente.resolver(mensaje.result);
   });
   const evaluar = async (expression) => {
+    if (socket.readyState !== WebSocket.OPEN) throw new Error('DevTools no está conectado.');
     const numero = ++id;
-    const promesa = new Promise((resolver, rechazar) =>
-      pendientes.set(numero, { resolver, rechazar }),
-    );
+    const promesa = new Promise((resolver, rechazar) => {
+      const limite = setTimeout(() => {
+        pendientes.delete(numero);
+        rechazar(new Error('El ejecutable no respondió a DevTools en 15 segundos.'));
+      }, 15000);
+      pendientes.set(numero, { resolver, rechazar, limite });
+    });
     socket.send(
       JSON.stringify({
         id: numero,
@@ -158,7 +196,7 @@ async function abrir(carpetaDatos) {
 try {
   let puertoAnteriorOcupado = false;
   try {
-    await fetch('http://127.0.0.1:3001/api/health');
+    await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) });
     puertoAnteriorOcupado = true;
   } catch {
     // El puerto está libre.

@@ -16,6 +16,7 @@
     "start": "electron .",
     "test": "node tooling/audio/verify-audio.mjs && tsx --test nucleo/*.test.ts main/*.test.ts scripts/audio-lifecycle.test.mjs",
     "verify:audio": "node tooling/audio/verify-audio.mjs",
+    "test:recovery": "node scripts/validar-recuperacion.mjs",
     "format": "prettier --write backend main nucleo shared vistas scripts .github package.json .prettierrc.json",
     "format:check": "prettier --check backend main nucleo shared vistas scripts .github package.json .prettierrc.json",
     "lint": "eslint backend main nucleo shared vistas scripts vite.config.ts",

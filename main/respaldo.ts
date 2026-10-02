@@ -1,13 +1,8 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { esEstadoPersistido } from './persistencia.js';
+import { validarConfig } from './config.js';
+import { renombrarConReintentos } from './escritura-atomica.js';
 
 const elementos = [
   'config.json',
@@ -17,11 +12,22 @@ const elementos = [
   ...Array.from({ length: 5 }, (_, indice) => `turnero.log.${indice + 1}`),
 ];
 
+const dentroDe = (raiz: string, ruta: string) => {
+  const diferencia = relative(raiz, ruta);
+  return (
+    !diferencia ||
+    (!isAbsolute(diferencia) &&
+      diferencia !== '..' &&
+      !diferencia.startsWith(`..\\`) &&
+      !diferencia.startsWith('../'))
+  );
+};
+
 /** La carpeta final aparece únicamente cuando todos los archivos se han copiado. */
 export function crearRespaldo(datos: string, destino: string, ahora = new Date()): string {
   const origen = resolve(datos),
     raiz = resolve(destino);
-  if (raiz === origen || raiz.startsWith(`${origen}\\`) || raiz.startsWith(`${origen}/`))
+  if (dentroDe(origen, raiz))
     throw new Error('La carpeta de respaldos debe estar fuera de la carpeta de datos.');
   mkdirSync(raiz, { recursive: true });
   const nombre = `turnero-${ahora.toISOString().replace(/[:.]/g, '-')}-${crypto.randomUUID()}`;
@@ -45,7 +51,7 @@ export function crearRespaldo(datos: string, destino: string, ahora = new Date()
       join(temporal, 'manifest.json'),
       `${JSON.stringify({ fecha: ahora.toISOString(), incluidos }, null, 2)}\n`,
     );
-    renameSync(temporal, final);
+    renombrarConReintentos(temporal, final);
     return final;
   } catch (error) {
     rmSync(temporal, { recursive: true, force: true });
@@ -63,6 +69,8 @@ export function restaurarRespaldo(
     throw new Error('Cierre la aplicación antes de restaurar un respaldo.');
   const origen = resolve(respaldo),
     destino = resolve(datos);
+  if (dentroDe(origen, destino) || dentroDe(destino, origen))
+    throw new Error('El respaldo y la carpeta de datos deben estar separados.');
   const manifiesto: unknown = JSON.parse(readFileSync(join(origen, 'manifest.json'), 'utf8'));
   const incluidos =
     manifiesto && typeof manifiesto === 'object' && 'incluidos' in manifiesto
@@ -77,8 +85,27 @@ export function restaurarRespaldo(
   const nombres = incluidos as string[];
   for (const nombre of nombres)
     if (!existsSync(join(origen, nombre))) throw new Error(`Falta ${nombre} en el respaldo.`);
+  // Validar antes de preparar/reemplazar el destino: nunca convertir corrupción en jornada vacía.
+  for (const nombre of ['estado.json', 'config.json']) {
+    if (!nombres.includes(nombre)) continue;
+    let dato: unknown;
+    try {
+      dato = JSON.parse(readFileSync(join(origen, nombre), 'utf8'));
+    } catch {
+      throw new Error(`${nombre} del respaldo no es JSON válido. No se restauró.`);
+    }
+    if (nombre === 'estado.json' && !esEstadoPersistido(dato))
+      throw new Error('estado.json del respaldo tiene datos o fechas inválidos. No se restauró.');
+    if (nombre === 'config.json') {
+      const errores: string[] = [];
+      validarConfig(dato, (mensaje) => errores.push(mensaje));
+      if (!dato || typeof dato !== 'object' || Array.isArray(dato) || errores.length)
+        throw new Error('config.json del respaldo tiene datos inválidos. No se restauró.');
+    }
+  }
   const temporal = join(dirname(destino), `.${basename(destino)}.restaurar-${crypto.randomUUID()}`);
   const anterior = `${destino}.antes-de-restaurar-${crypto.randomUUID()}`;
+  mkdirSync(dirname(destino), { recursive: true });
   mkdirSync(temporal);
   try {
     for (const nombre of nombres)
@@ -88,11 +115,11 @@ export function restaurarRespaldo(
       });
     // No se reemplaza el directorio en uso: el llamador debe haber cerrado Electron.
     const teniaDatos = existsSync(destino);
-    if (teniaDatos) renameSync(destino, anterior);
+    if (teniaDatos) renombrarConReintentos(destino, anterior);
     try {
-      renameSync(temporal, destino);
+      renombrarConReintentos(temporal, destino);
     } catch (error) {
-      if (teniaDatos) renameSync(anterior, destino);
+      if (teniaDatos) renombrarConReintentos(anterior, destino);
       throw error;
     }
     return teniaDatos ? anterior : null;

@@ -35,6 +35,7 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
       JSON.stringify({ footerMessages: ['Bienvenidos'] }),
     );
     db.close();
+    const original = readFileSync(rutaBase);
     assert.equal(
       migrarDesde02(rutaBase, datos, () => {}, ahora),
       true,
@@ -45,10 +46,33 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
     assert.equal(estado.desde['42'], ahora.toISOString());
     assert.deepEqual(config.mensajes, ['Bienvenidos']);
     assert.equal(existsSync(rutaBase), true);
+    assert.deepEqual(readFileSync(rutaBase), original);
     assert.equal(
       migrarDesde02(rutaBase, datos, () => {}, ahora),
       false,
     );
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
+
+test('configuración legacy corrupta rechaza migración sin modificar SQLite ni publicar estado vacío', () => {
+  const raiz = mkdtempSync(join(tmpdir(), 'turnero-migracion-corrupta-'));
+  const datos = join(raiz, 'datos');
+  const rutaBase = join(raiz, 'comal.sqlite');
+  try {
+    mkdirSync(datos);
+    const db = new DatabaseSync(rutaBase);
+    db.exec(
+      'CREATE TABLE turns(number TEXT, last_announced_at TEXT, status TEXT, rank INTEGER); CREATE TABLE configuration(key TEXT, value TEXT)',
+    );
+    db.prepare('INSERT INTO configuration VALUES (?, ?)').run('settings', '{');
+    db.close();
+    const original = readFileSync(rutaBase);
+    assert.throws(() => migrarDesde02(rutaBase, datos), /No se pudo migrar/);
+    assert.deepEqual(readFileSync(rutaBase), original);
+    assert.equal(existsSync(join(datos, 'estado.json')), false);
+    assert.equal(existsSync(join(datos, 'config.json')), false);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
   }

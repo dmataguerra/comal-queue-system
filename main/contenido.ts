@@ -13,6 +13,7 @@ import {
 import { basename, dirname, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
 import type { CategoriaContenido, Inventario, ResultadoImportacion } from '../shared/contract.js';
 import type { Registrar } from './log.js';
+import { renombrarConReintentos } from './escritura-atomica.js';
 
 export const URL_CONTENIDO = 'turnero://app/contenido';
 
@@ -245,7 +246,7 @@ export function sembrarContenido(
   try {
     rmSync(temporal, { recursive: true, force: true });
     cpSync(origen, temporal, { recursive: true });
-    renameSync(temporal, destino);
+    renombrarConReintentos(temporal, destino);
     registrar(`contenido: se copió el contenido de fábrica a ${destino}`);
   } catch (error) {
     registrar(`contenido: no se pudo copiar el contenido de fábrica (${(error as Error).message})`);
