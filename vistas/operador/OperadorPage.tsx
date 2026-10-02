@@ -45,6 +45,17 @@ export function OperadorPage() {
   async function llamar(e: React.FormEvent) {
     e.preventDefault();
     if (ocupado) return;
+    // Validar la captura completa, sin recortarla ni enviarla si excede el formato del ticket.
+    if (normalizar(entrada) === null) {
+      notificar(
+        entrada.trim()
+          ? 'Captura inválida: escribe solo números, de 1 a 6 dígitos. La TV no cambió.'
+          : 'Escribe el número del ticket antes de presionar Enter.',
+        true,
+      );
+      input.current?.focus();
+      return;
+    }
     setOcupado(true);
     try {
       const resultado = await despachar({ tipo: 'LLAMAR', entrada });
@@ -382,7 +393,6 @@ export function OperadorPage() {
                           ref={input}
                           type="text"
                           inputMode="numeric"
-                          maxLength={6}
                           placeholder="213298"
                           autoComplete="off"
                           value={entrada}

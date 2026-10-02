@@ -33,7 +33,8 @@
     "desktop:build:local-signed": "npm run build && node scripts/package-desktop.mjs --win --firma-local",
     "desktop:dir": "npm run build && node scripts/package-desktop.mjs --dir",
     "test:theme": "npm run build && electron scripts/smoke-theme.mjs",
-    "test:interface": "npm run build && electron scripts/smoke-interface.mjs"
+    "test:interface": "npm run build && electron scripts/smoke-interface.mjs",
+    "test:destructive": "npm run build && node scripts/smoke-destructive-regressions.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

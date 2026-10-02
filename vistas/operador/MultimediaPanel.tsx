@@ -220,7 +220,9 @@ export function MultimediaPanel({
           requisitos="JPG, PNG o WebP · 1920 × 1080 recomendado"
           aviso={
             config.youtubeUrl || inventario.videos.length
-              ? `Ahora se muestra${config.youtubeUrl ? ' YouTube' : 'n los videos'}. Las imágenes aparecen en la TV solo cuando no hay videos ni YouTube.`
+              ? config.youtubeUrl
+                ? 'YouTube está seleccionado. Si no está disponible, la TV intenta reproducir los videos locales; si tampoco se pueden reproducir, muestra las imágenes de respaldo.'
+                : 'La TV intenta reproducir los videos locales. Si todos fallan, muestra las imágenes de respaldo.'
               : undefined
           }
           archivos={inventario.banner}
