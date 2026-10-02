@@ -1,26 +1,9 @@
-\subsection{Backend architecture}
+\subsection{Queue application and composition}
 
-\subsubsection*{Bootstrap and module}
+backend/queue-store.ts is the sole queue-state owner, with injected storage/capacity/date ports. nucleo/turnos.ts contains pure state transitions. main/store.ts binds JSON persistence and composition-specific ports. main/main.ts owns startup and shutdown.
 
-\Code{server/main.ts} validates \Code{PORT}, selects \Code{HOST}, and starts a NestJS 11 Express application. \Code{bootstrap.ts} enables CORS, shutdown hooks, production static assets, and five explicit SPA routes. \Code{AppModule} wires two controllers and four singleton providers.
+Successful actions save state before notifying subscribers and sending an announcement. On save failure the prior queue, timestamps, undo and announcement sequence are restored. Audio capacity is checked before accepting a call. Expiry uses a single timer and retries failed persistence after five seconds.
 
-\subsubsection*{Layers}
+This is a single-process local design. It has no distributed queue, service container or database repository.
 
-\begin{itemize}
-  \item \textbf{Controllers:} map HTTP routes and broadcast after successful service mutations. No authentication decorators or API version prefix exist.
-  \item \textbf{Validation functions:} accept unknown bodies, reject arrays/unknown fields, and validate every supported primitive/domain input without \Code{class-validator}.
-  \item \textbf{StateService:} owns queue lifecycle, ordering, idempotency, multimedia/settings invariants, and snapshot/history queries.
-  \item \textbf{LocalDatabase:} opens \Code{node:sqlite} \Code{DatabaseSync}, creates the current schema at startup, exposes prepared statements and a transaction helper.
-  \item \textbf{MediaService:} discovers genre directories/files, builds a cloned catalog, and resolves only previously discovered files.
-  \item \textbf{EventsGateway:} emits a snapshot at connect and broadcasts state plus optional announcement events.
-\end{itemize}
-
-\subsubsection*{Dependency direction}
-
-Controllers depend on StateService, EventsGateway, and MediaService. StateService depends on LocalDatabase and MediaService. EventsGateway depends on StateService. MediaService and LocalDatabase depend only on Node APIs. There is no repository abstraction, ORM, CQRS/event store, or domain-module separation.
-
-\subsubsection*{Concurrency model}
-
-Database writes are synchronous and wrapped in \Code{BEGIN IMMEDIATE}; this serializes writers inside the Node process/SQLite file. There is no distributed lock or multi-process coordination beyond SQLite. Reusing one database from multiple packaged processes is not documented or tested.
-
-\Evidence{server/; tsconfig.server.json}
+Evidence: backend/queue-store.ts; main/store.ts

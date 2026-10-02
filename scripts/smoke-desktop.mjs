@@ -75,10 +75,7 @@ async function verificar() {
       () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
       'No cargó la pantalla pública',
     );
-    await ejecutar(
-      operador,
-      `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Ayuda').click()`,
-    );
+    await ejecutar(operador, `document.querySelector('.help-button').click()`);
     await ejecutar(operador, `document.querySelector('.help-diagnostics-link').click()`);
     await esperar(
       () => ejecutar(operador, "Boolean(document.querySelector('.diagnostics-grid'))"),
@@ -102,10 +99,14 @@ async function verificar() {
       `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Turnos').click()`,
     );
     // Comprobar animación real y la preferencia de accesibilidad en el renderizador.
+    // Hosted Windows runners can default to reduced motion; control both test states.
+    publica.webContents.debugger.attach('1.3');
+    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    });
     const animacionActiva = () =>
       ejecutar(publica, "Boolean(document.querySelector('.public-animated-background animate'))");
     await esperar(animacionActiva, 'El fondo no se anima', 3000);
-    publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });
@@ -122,8 +123,9 @@ async function verificar() {
       false,
       'El fondo debe respetar prefers-reduced-motion',
     );
-    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [] });
-    publica.webContents.debugger.detach();
+    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    });
     operador.setSize(1280, 900);
     publica.setSize(1280, 900);
     const inventario = await ejecutar(operador, 'window.turnero.obtener()');
@@ -287,7 +289,6 @@ async function verificar() {
     await capturar(publica, 'youtube-anuncio.png');
 
     await ejecutar(operador, 'window.turnero.configurarYouTube(null)');
-    publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Network.enable');
     await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
       offline: true,
@@ -314,7 +315,6 @@ async function verificar() {
       downloadThroughput: 0,
       uploadThroughput: 0,
     });
-    publica.webContents.debugger.detach();
     console.log('PASS: llamada y aviso local con la red emulada sin conexión.');
     for (const n of [11, 22, 33, 44]) {
       await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
@@ -402,6 +402,7 @@ async function verificar() {
         "document.querySelector('.youtube-error')?.textContent ?? 'Sin error reportado por el reproductor'",
       ),
     );
+    publica.webContents.debugger.detach();
     app.exit(0);
   } catch (error) {
     console.error(error);

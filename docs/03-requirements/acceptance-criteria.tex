@@ -1,30 +1,11 @@
 \subsection{Acceptance criteria}
 
-\subsubsection*{AC-QUEUE --- ready lifecycle}
-\begin{enumerate}
-  \item A value from 1 to 99 entered in the cashier UI is sent as a two-digit string and stored with a UUID, selected counter, status \Code{ready}, equal creation/ready/last-announced timestamps, and a new rank.
-  \item The same request ID and payload returns the recorded response without another row or announcement; the same ID with different content returns conflict.
-  \item A distinct request for an already-active number returns conflict.
-  \item Recall raises the turn to the start of the ready list and produces one fresh announcement.
-  \item Delivery or cancellation removes the turn from snapshots; its number can then be used for a new UUID.
-\end{enumerate}
+AC-01: 213298 becomes 98; 00 is accepted; seven digits, signs and nonnumeric input leave state unchanged. AC-02: a recall leaves unique numbers in order; repeating current creates another announcement ID. AC-03: removal clears pending correction and pending announcements for that number.
 
-\subsubsection*{AC-SYNC --- connected screens}
-\begin{enumerate}
-  \item Each Socket.IO connection receives one current \Code{state} snapshot.
-  \item Each successful mutation broadcasts the resulting snapshot.
-  \item Only non-replayed create/announce mutations broadcast \Code{announcement}.
-  \item Reconnection restores state without replaying an old announcement.
-\end{enumerate}
+AC-04: six outstanding announcements cause a further call to fail without state/ID/undo mutation. AC-05: failed persistence produces no accepted call or new announcement. AC-06: restore rejects corrupt data without changing the target and preserves previous target data on successful replacement.
 
-\subsubsection*{AC-MEDIA --- local and optional connected media}
-\begin{enumerate}
-  \item Only supported files discovered below an allow-listed genre directory are served by \Code{/media}.
-  \item A local selection is rejected if the playlist does not exist or has no tracks.
-  \item A YouTube selection is accepted only for the server's HTTPS host/identifier allow-list.
-  \item YouTube failure leaves the queue visible and shows local fallback content/notice.
-\end{enumerate}
+AC-07: Help is available in the header and by F1, without a redundant sidebar entry; size offers seven steps from 70\% to 130\%; both clocks show a 12-hour time with am/pm. These interface changes are coordinated with the parallel implementation session.
 
-\subsubsection*{AC-AUDIO --- unresolved}
+Hardware acceptance remains separate: verify HDMI, Windows scale, speakers and real connected YouTube if used.
 
-The expected audible sequence is turn number then counter/ready suffix, with serialized announcements and media muted during the call. The code supplies those mechanics, but no public-screen control invokes \Code{enableAudio()}; therefore the end-to-end acceptance criterion is currently not met.
+Evidence: main/store.test.ts; main/respaldo.test.ts; scripts/smoke-interface.mjs; scripts/smoke-theme.mjs

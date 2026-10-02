@@ -1,21 +1,6 @@
 \section{Requirements}
-\subsection{Product requirements baseline}
+\subsection{Product requirements}
 
-This baseline reconstructs requirements from code, tests, UI copy, and the previous README. It is descriptive, not a substitute for owner approval.
+PR-01: announce ready orders without integrating the sales system. PR-02: keep capture separate from customer presentation. PR-03: preserve local state before acknowledging a call. PR-04: operate locally without mandatory Internet. PR-05: provide support diagnostics and recoverable data.
 
-\begin{longtable}{P{0.15\textwidth}P{0.50\textwidth}P{0.22\textwidth}}
-\toprule
-ID & Product requirement & Evidence/status \\
-\midrule
-PR-001 & The product manages only orders already ready for pickup, using an existing printed ticket number. & Source and prior README; \Implemented. \\
-PR-002 & Core queue entry, display, persistence, and synchronization operate on local infrastructure without an Internet dependency. & Source; \Implemented. \\
-PR-003 & A connected public display presents ready ticket numbers and pickup counter information. & Source/tests; \Implemented. \\
-PR-004 & A new or recalled turn produces a visual and audible call without duplicate calls from retried requests. & Visual/idempotency implemented; public audio \Partial. \\
-PR-005 & Optional connected media must not prevent the local queue from operating. & YouTube fallback code; \Implemented for queue independence. \\
-PR-006 & Closed turns stop appearing but remain persistently recorded. & SQLite, service, and tests; \Implemented. \\
-PR-007 & Operational changes are restricted to authorized staff. & Security expectation inferred from interface; \Missing and requires stakeholder confirmation. \\
-PR-008 & Data retention, backup, recovery, and production support are defined. & Prior README only; \Status{PLANNED_OR_REFERENCED}. \\
-\bottomrule
-\end{longtable}
-
-\textbf{Undocumented product decisions:} authoritative product name, owner, release definition, supported topology, retention period, screen/audio hardware, operator authentication need, measurable service targets, and legal/licensing constraints.
+Requirements below describe implemented behavior of 0.4.0. Historical RF/RN/CU labels remain in docs/casos-de-uso.md with an explicit current-status table; they must not be treated as a different implementation baseline.

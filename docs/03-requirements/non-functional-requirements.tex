@@ -1,24 +1,9 @@
 \subsection{Non-functional requirements}
 
-\subsubsection*{Confirmed characteristics}
+NFR-01: normal queue and local media remain functional offline. NFR-02: atomic JSON writes publish only complete files; a save failure rejects the action. NFR-03: renderer isolation, sandbox, CSP and validated IPC enforce desktop capability boundaries. NFR-04: web transport binds only to 127.0.0.1 and validates Host and write Origin.
 
-\begin{longtable}{P{0.16\textwidth}P{0.49\textwidth}P{0.23\textwidth}}
-\toprule
-ID & Characteristic & Evidence \\
-\midrule
-NFR-LOC-001 & Core application assets, queue API, database, WebSocket synchronization, local music, and announcement WAVs are locally hosted. & build/source/assets \\
-NFR-DATA-001 & SQLite uses WAL, foreign-key enforcement, and a 5-second busy timeout; mutations use \Code{BEGIN IMMEDIATE}. & \Code{database.ts} \\
-NFR-INT-001 & Active-number uniqueness is enforced in both service logic and a partial unique index. & \Code{database.ts}; tests \\
-NFR-REL-001 & Create/announce operations are idempotent for a valid request ID and fingerprint. & \Code{state.service.ts}; tests \\
-NFR-NET-001 & Client HTTP calls time out after eight seconds; Socket.IO reconnects with an 800 ms to 5 s delay. & frontend services/hooks \\
-NFR-UX-001 & Styles include breakpoints at 1180, 1000, 760/700, and 480 px, visible focus treatments, a skip link, semantic labels, live regions, and reduced-motion rules. & frontend/CSS \\
-NFR-PORT-001 & The package requires Node 22.13+ and declares a Windows x64 NSIS target. & \Code{package.json} \\
-NFR-SEC-001 & Request bodies reject unknown fields; ticket, counter, settings, media, and YouTube inputs are allow-listed and range-checked. & \Code{validation.ts} \\
-\bottomrule
-\end{longtable}
+NFR-05: queue audio is bounded to six announcements, start wait to 45 seconds and task duration to 30 seconds. NFR-06: logs rotate at 5 MB with five previous files. NFR-07: Windows x64 packaging must pass installation, upgrade and rollback validation before release.
 
-\subsubsection*{Desired but undefined requirements}
+No measured physical audio latency, formal SLO or guaranteed power-loss durability of the storage device is asserted.
 
-Availability, acceptable state propagation latency, maximum concurrent screens, history retention, backup recovery point/time, supported browsers, minimum display resolution and viewing distance, accessibility conformance, performance budgets, maximum queue length, media-storage capacity, log retention, security threat model, and maintenance response times all \textbf{require stakeholder definition}. No numerical target is asserted.
-
-The previous README requires offline core operation, but public audio activation currently prevents classifying offline audible announcements as satisfied.
+Evidence: shared/politica-anuncios.ts; main/escritura-atomica.ts; main/log.ts; .github/workflows/validate.yml

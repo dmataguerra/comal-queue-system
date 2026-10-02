@@ -1,22 +1,5 @@
 \subsection{Technical roadmap}
 
-\begin{longtable}{P{0.10\textwidth}P{0.29\textwidth}P{0.51\textwidth}}
-\toprule
-Priority & Workstream & Completion evidence \\
-\midrule
-P0 & Wire public audio activation & User gesture reaches \Code{enableAnnouncementAudio}; browser test proves sequential calls and media duck/resume. \\
-P0 & Security/topology design & Threat model and bind/firewall/auth decision approved; tests match chosen boundary. \\
-P0 & SQLite recovery & WAL-safe backup/restore documented, automated where appropriate, and tested with acceptance criteria. \\
-P1 & Continuous verification & CI runs clean install, type checks, backend tests, audio verifier, and production build. \\
-P1 & Frontend/E2E coverage & Automated two-page lifecycle, reconnect, empty state, settings, media fallback, and accessibility smoke tests. \\
-P1 & Schema lifecycle & Versioned migrations, upgrade/rollback policy, closure audit fields if approved, and integrity checks. \\
-P1 & Retention & Stakeholder-approved turn/request retention and safe pruning/archive implementation. \\
-P1 & Production runtime & Supervision, startup, logs/rotation, dependency-aware health, disk/database monitoring, installer smoke/signing decision. \\
-P2 & Contract alignment & Shared/generated schemas correct timestamp/settings types and unify browser/server validation. \\
-P2 & Error model & Stable domain error codes, frontend error boundary, and actionable recovery messages. \\
-P2 & Code quality & Formatter/linter and readable JSX/CSS enforced; tracked generated artifacts policy resolved. \\
-P3 & Modularization & Split state/media/config modules only when testing/change isolation justifies it. \\
-\bottomrule
-\end{longtable}
+Before publication, consolidate implementation commits, rerun relevant regressions and validate the exact signed candidate. Preserve CLI recovery hashes, installation/upgrade results and 390-minute evidence.
 
-No scalability redesign is proposed until screen count, queue size, and latency targets are measured and approved.
+Potential future work includes single-output audio coordination and stronger local-browser identity if deployment scope changes. Upgrading major dependencies requires compatibility and installer review. These recommendations are not implemented commitments.

@@ -1,39 +1,9 @@
-\subsection{Testing strategy}
+\subsection{Test commands and scope}
 
-\subsubsection*{Current automated testing}
+npm test validates the audio catalog and nucleo/main/lifecycle tests. npm run lint and npm run format:check validate maintained code/config. npm run build type-checks and compiles both renderer and main entry points.
 
-\Code{npm test} executes \Code{tests/backend.test.ts} through \Code{tsx} and Node's test runner. The five tests cover:
-\begin{enumerate}
-  \item ready lifecycle, ordering, duplicate/retry behavior, counter edit, closure, and number reuse;
-  \item malformed payloads and media/settings validation without unintended mutation;
-  \item SQLite persistence of turns, ordering, idempotency, media, and settings after reopen;
-  \item local catalog discovery and rejection of unlisted/traversal-like paths;
-  \item a real Nest HTTP server with two WebSocket clients, state/announcement broadcast, recall ordering, media broadcast, reconnect, close, and health.
-\end{enumerate}
+test:desktop covers windows and local playback; test:browser covers HTTP/SSE, browser audio reports and logs; test:hardening covers announcement identity/capacity and asynchronous import; test:media covers local media. test:interface and test:theme cover controls, help, preferences and UI synchronization. test:destructive covers destructive regressions in isolated data.
 
-\Code{node tooling/audio/verify-audio.mjs} is a standalone asset check, not part of \Code{npm test}. TypeScript compilation is enforced by \Code{npm run build} but no type-check-only npm script exists.
+test:recovery runs the actual backup/restore CLI and stores hashes/results. test:installed needs an already built installer. test:upgrade needs a verified 0.2.0 fixture. test:full-day:preflight is a short startup check; test:full-day runs 390 real minutes. Its updated preflight checks eight confirmed announcements, saturation rejection without mutation, invalid input, correction and reload without replay. The full run drains outstanding audio before corrections/reloads, checks TV/memory/file agreement, bounds capacity retries to 120 seconds and exercises recovery halfway through the real run. A preflight PASS does not establish a full-run PASS. Manual display-scale, background and audio-control smoke scripts remain available.
 
-\subsubsection*{Current manual testing evidence}
-
-The superseded redesign note claimed manual viewport, offline, media, YouTube fallback, queue action, and audio activation checks. Those results are historical and not reproducible from a committed test script/report. Actual YouTube playback was explicitly unverified. They are not treated as current automated assurance.
-
-\subsubsection*{Critical untested workflows}
-
-Public audio activation/playback, React rendering/actions, public empty state, pagination, media duck/resume, autoplay policy, multiple real screens, browser compatibility, Electron install/upgrade, LAN exposure, corrupted/locked database recovery, large queues/history, settings UI/server-boundary mismatch, accessibility, and backup/restore.
-
-\subsubsection*{Recommended layers}
-
-Retain service/integration tests; add component tests for validation and controls, browser tests for two synchronized pages and audio activation with mocked media, packaged-app smoke tests, and operational recovery tests. Add load/security tests only after requirements are defined.
-
-\subsubsection*{How tests are run}
-
-\begin{CodeBlock}
-npm ci
-npm test
-npx tsc --noEmit -p tsconfig.json
-npx tsc --noEmit -p tsconfig.server.json
-node tooling/audio/verify-audio.mjs
-npm run build
-\end{CodeBlock}
-
-The final build command writes generated output; the preceding TypeScript commands are non-emitting checks.
+Evidence: package.json; scripts/; docs/prueba-jornada-real.md

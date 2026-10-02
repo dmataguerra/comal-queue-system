@@ -6,20 +6,22 @@
 
 > Sistema local de turnos para anunciar pedidos listos en el restaurante, con pantalla pública, audio y operación sin depender de una red.
 
-Comal++ es una aplicación de escritorio para Windows orientada a operaciones de mostrador. La persona operadora captura los dos últimos dígitos del pedido (`00`-`99`); la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. No registra ventas ni imprime tickets.
+Comal++ es una aplicación de escritorio para Windows orientada a operaciones de mostrador. La persona operadora escribe de uno a seis dígitos del ticket; se anuncian los dos últimos (`00`-`99`); la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. No registra ventas ni imprime tickets.
 
 ## Estado del proyecto
 
 | Campo | Estado |
 | --- | --- |
-| Versión | `0.3.1` |
+| Versión | `0.4.0` |
 | Plataforma soportada | Windows x64 |
 | Operación normal | Local, sin internet |
 | Persistencia | Archivos JSON locales |
 | Distribución | Instalador NSIS para Windows |
 | Licencia | [MIT](LICENSE) |
 
-La versión actual corrige el guardado en carpetas protegidas de Documentos/OneDrive y prepara la publicación con firma pública gratuita. Todavía no existe un certificado público aprobado.
+La versión 0.4.0 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
+
+Notas de la versión preparada: [Comal++ 0.4.0](docs/publicacion-0.4.0.md). El tag y la publicación están pendientes de validación final.
 
 ## Contenido
 
@@ -59,7 +61,7 @@ React -> transporte de renderer -> preload aislado -> IPC validado
 Electron -> ventanas, contenido local, HTTP loopback y ciclo de vida
 ```
 
-El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica`, pero no expone una API de administración ni admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
+El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica` y una API local de acciones; exige Host local y el mismo Origin para escrituras, y no admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
 
 En Windows, la pantalla pública se coloca en una pantalla secundaria configurada como **pantalla extendida** cuando está disponible. Sin una pantalla secundaria, la aplicación empaquetada abre la vista pública como una ventana normal en el display primario, junto con la ventana del operador.
 
@@ -108,11 +110,18 @@ npm start
 | `npm run lint` | Ejecuta ESLint. |
 | `npm run format:check` | Comprueba el formato con Prettier. |
 | `npm run test:desktop` | Ejecuta build y smoke tests de Electron. |
+| `npm run test:hardening` | Valida capacidad/IDs de anuncios e importación asíncrona. |
+| `npm run test:interface` | Valida captura, ayuda y controles de interfaz. |
+| `npm run test:theme` | Valida tema, escala y sincronización entre vistas. |
+| `npm run test:destructive` | Ejecuta regresiones destructivas con datos aislados. |
+| `npm run test:media` | Valida multimedia local en desarrollo y build. |
+| `npm run test:full-day` | Ejecuta una jornada de 390 minutos reales (6 h 30 min). |
 | `npm run test:browser` | Valida las vistas en Chromium con transporte de navegador. |
 | `npm run test:installed` | Prueba un instalador ya generado en datos aislados. |
 | `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
 | `npm run test:full-day:preflight` | Valida el flujo de jornada sin ejecutar las 390 minutos reales. |
 | `npm run verify:audio` | Comprueba las voces `00`-`99` y el aviso. |
+| `npm run test:recovery` | Valida el CLI real de respaldo/restauración y conserva hashes y resultados. |
 
 Para una publicación firmada se utilizan `npm run desktop:build:signed` y el certificado del responsable. La firma local protegida por TPM se prepara con `npm run desktop:build:local-signed` y `COMAL_SIGNING_CERT_SHA1`; no reemplaza una firma pública ni elimina por sí sola los avisos de SmartScreen.
 
@@ -169,7 +178,7 @@ El catálogo de audio exige una voz para cada número `00`-`99`, rechaza archivo
 
 Las pruebas de instalación, actualización, reversión y escala de pantalla requieren artefactos o hardware específicos. Consulta los scripts y la [lista de publicación](docs/lista-publicacion.md) antes de declarar una entrega operativa.
 
-GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. La firma de Windows permanece fuera del pipeline hasta disponer de una identidad y secretos de publicación.
+GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. CD exige el entorno `production`, secretos de firma y la huella aprobada `COMAL_SIGNER_SHA1`; verifica firma y timestamp de Setup, aplicación instalada y desinstalador antes de publicar. Sin identidad configurada, la publicación se bloquea.
 
 ## Documentación
 
@@ -181,16 +190,20 @@ GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador
 - [Firma local](docs/firma-local.md): requisitos y límites de la firma protegida por TPM.
 - [Firma pública gratuita](docs/firma-publica-gratuita.md): preparación de la publicación firmada.
 
-Los documentos LaTeX y la [arquitectura histórica](docs/arquitectura.md) son material de referencia. No deben interpretarse como instrucciones actuales si contradicen la arquitectura vigente.
+El [índice completo](docs/README.md) enlaza guías, manuales y evidencias. Los 57 capítulos LaTeX y los tres PDF fueron actualizados a la arquitectura vigente; el [manual del operador](docs/user-manual/operador.md) contiene las instrucciones actuales. Los informes fechados y la [arquitectura histórica](docs/arquitectura.md) conservan explícitamente su contexto anterior. Consulte [la revisión documental](docs/actualizacion-documentacion-2026-10-01.md) para base y validación.
 
 ## Limitaciones conocidas
 
 - Con una pantalla secundaria la vista pública se muestra en fullscreen como `tv`; sin ella se muestra como una ventana normal en el display primario.
 - El operador y la pantalla pública pueden abrirse en Chrome o Edge de la misma PC, pero el acceso desde teléfonos u otros equipos no está habilitado.
+- YouTube no está admitido en el transporte navegador: se rechaza su configuración con aviso visible y la pantalla web usa contenido local, incluso si el escritorio tiene YouTube configurado. El escritorio conserva ese modo opcional, pendiente de aceptación con YouTube real.
+- La cola de audio admite seis anuncios, incluido el activo; avisa desde cinco y rechaza nuevas llamadas antes de modificar el estado cuando está llena. La pantalla muestra seis turnos recientes y advierte cuál saldrá al llamar otro número. Consulte la política en la guía operativa.
 - El acuse de audio confirma el flujo de software, no la salida física por HDMI o bocinas.
 - Si falla el guardado de un turno, la acción se rechaza y la cola no cambia.
 - YouTube y el clima dependen de servicios externos; el contenido local se utiliza como respaldo.
 - La aceptación final requiere pruebas en la PC, TV, bocinas y red reales del local.
+
+La [verificación del 1 de octubre](docs/verificacion-produccion-2026-10-01.md) registra cambios, comandos, evidencias y bloqueos de publicación para los puntos 4, 5, 8, 9 y 10.
 
 ## Contribuir
 

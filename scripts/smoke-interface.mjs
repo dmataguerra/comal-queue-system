@@ -58,6 +58,20 @@ async function verify() {
     operator.setContentSize(1366, 900);
     client.setContentSize(1920, 1080);
     await wait(() => run(operator, "Boolean(document.querySelector('.zoom-tools'))"));
+    assert.equal(
+      await run(operator, 'document.querySelectorAll(\'.sidebar [aria-label="Ayuda"]\').length'),
+      0,
+    );
+    for (const [window, selector] of [
+      [operator, '.workspace-clock strong'],
+      [client, '.footer-time strong'],
+    ]) {
+      await wait(() => run(window, `Boolean(document.querySelector('${selector}'))`));
+      assert.match(
+        await run(window, `document.querySelector('${selector}').textContent`),
+        /^(0?[1-9]|1[0-2]):\d{2} (am|pm)$/,
+      );
+    }
     await wait(() => run(client, "Boolean(document.querySelector('.public-screen'))"));
     const click = (selector) =>
       run(operator, 'document.querySelector(' + JSON.stringify(selector) + ').click()');
@@ -133,7 +147,7 @@ async function verify() {
         (await typography()).every((t) => t === reference),
         'Panel titles differ',
       );
-      for (const size of [110, 100, 90, 100]) {
+      for (const size of [110, 120, 130, 120, 110, 100, 90, 80, 70, 80, 90, 100]) {
         const currentSize = Number(await run(operator, 'document.documentElement.dataset.tamanio'));
         if (currentSize !== size)
           await click(
@@ -171,13 +185,17 @@ async function verify() {
           true,
           'Actions overflow',
         );
+        const publicNumbers = await run(
+          client,
+          `Array.from(document.querySelectorAll('.public-turn strong')).map(el=>({number:el.textContent,height:el.getBoundingClientRect().height,rowHeight:el.parentElement.getBoundingClientRect().height,font:getComputedStyle(el).fontSize,viewport:[innerWidth,innerHeight]}))`,
+        );
         assert.equal(
           await run(
             client,
             `Array.from(document.querySelectorAll('.public-turn strong')).every(el=>el.getBoundingClientRect().height<=el.parentElement.getBoundingClientRect().height+1)`,
           ),
           true,
-          'Public numbers clipped',
+          'Public numbers clipped: ' + JSON.stringify({ size, publicNumbers }),
         );
         if (size === 110) {
           await capture(operator, 'ui-turnos-' + width);
@@ -207,8 +225,17 @@ async function verify() {
     operator.reload();
     await wait(() => run(operator, "Boolean(document.querySelector('.zoom-tools'))"));
     assert.equal(await run(operator, 'document.documentElement.dataset.tamanio'), '110');
+    await click('[aria-label="Aumentar tamaño"]');
+    await click('[aria-label="Aumentar tamaño"]');
+    await wait(() => run(operator, "document.documentElement.dataset.tamanio === '130'"));
     assert.equal(
       await run(operator, `document.querySelector('[aria-label="Aumentar tamaño"]').disabled`),
+      true,
+    );
+    for (let i = 0; i < 6; i++) await click('[aria-label="Reducir tamaño"]');
+    await wait(() => run(operator, "document.documentElement.dataset.tamanio === '70'"));
+    assert.equal(
+      await run(operator, 'document.querySelector(\'[aria-label="Reducir tamaño"]\').disabled'),
       true,
     );
     console.log(

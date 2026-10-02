@@ -22,6 +22,8 @@ import {
   validarUrlContenido,
   validarYouTube,
   validarVolumenes,
+  validarMensaje,
+  validarSalud,
 } from './seguridad-ipc.js';
 import type { Store } from './store.js';
 
@@ -40,6 +42,7 @@ const origenContenido = 'turnero://app/contenido';
 const paraNavegador = (url: string | null) => url?.replace(origenContenido, '/contenido') ?? null;
 function inventarioNavegador(inventario: Inventario): Inventario {
   return {
+    revisionAudio: inventario.revisionAudio,
     videos: inventario.videos.map((url) => paraNavegador(url)!),
     banner: inventario.banner.map((url) => paraNavegador(url)!),
     voz: inventario.voz.map(paraNavegador),
@@ -48,6 +51,7 @@ function inventarioNavegador(inventario: Inventario): Inventario {
 }
 
 interface OpcionesServidor {
+  informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
   configurarVolumen: (voz: number, multimedia: number) => void;
   vistas: string;
   contenido: string;
@@ -179,7 +183,18 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
           opciones.configurarVolumen(...validarVolumenes(dato[0], dato[1]));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/youtube') {
+          if (dato !== null)
+            throw new Error(
+              'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',
+            );
           opciones.configurarYouTube(validarYouTube(dato));
+          respuestaJson(res, null);
+        } else if (url.pathname === '/api/salud') {
+          if (!Array.isArray(dato) || dato.length !== 2) throw new Error('Salud inválida.');
+          opciones.informarSalud(...validarSalud(dato[0], dato[1]));
+          respuestaJson(res, null);
+        } else if (url.pathname === '/api/registro') {
+          opciones.registrar(`[navegador] ${validarMensaje(dato)}`);
           respuestaJson(res, null);
         } else if (url.pathname === '/api/audio') {
           opciones.confirmarAnuncio(...validarAcuseAudio(dato));

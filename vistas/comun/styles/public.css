@@ -134,6 +134,7 @@
 }
 /* Se conservan los seis pedidos vigentes, con más espacio para el destacado. */
 .public-turn {
+  container-type: size;
   min-height: 0;
   flex: 1;
   display: flex;
@@ -159,12 +160,12 @@
   color: var(--theme-strong, #073e70);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  font-size: calc(88.56px * var(--ui-scale, 1));
+  font-size: min(calc(88.56px * var(--ui-scale, 1)), 100cqh);
   line-height: 1;
   letter-spacing: -0.03em;
 }
 .public-turn.latest > strong {
-  font-size: calc(129.6px * var(--ui-scale, 1));
+  font-size: min(calc(129.6px * var(--ui-scale, 1)), calc(100cqh - 32px * var(--ui-scale, 1)));
 }
 .public-turn-state {
   color: var(--theme-primary, #0758a0);

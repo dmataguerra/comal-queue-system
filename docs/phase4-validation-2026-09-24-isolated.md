@@ -1,5 +1,7 @@
 # Phase 4 production validation — partial execution
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 **Result: NOT PRODUCTION READY / validation incomplete.** This report covers checks that were possible in the current Windows session. It does not certify the installed application, physical TV, or customer-facing audio.
 
 ## Environment and traceability

@@ -1,15 +1,7 @@
-\subsection{Administration interface}
+\subsection{Configuration and support interface}
 
-\Status{NOT_IMPLEMENTED} as a distinct interface or role.
+There is no administrator account or separate administration page. Multimedia import/removal, YouTube and volumes are operator capabilities. Diagnostics is a support panel accessed through Help and refreshed every ten seconds while open.
 
-The production server serves \Code{/admin}, but \Code{App.tsx} renders the same \Code{CashierPage} used at \Code{/}. The ``Multimedia'' and ``Configuración'' sections provide administrative functions inside that page:
-\begin{itemize}
-  \item select YouTube/local/fallback media and playback options;
-  \item refresh the local music catalog;
-  \item set announcement duration, page rotation, and footer messages;
-  \item run a cashier-context audio test.
-\end{itemize}
+Additional config.json fields can be edited locally; watch-based validation keeps the previous configuration while JSON is incomplete. For backup/restore or manual file repair, close the app first and use the effective path shown in Diagnostics.
 
-There are no administrator accounts, protected routes, privilege checks, user management, audit log, environment editor, backup controls, or deployment controls. Product owners must decide whether a distinct administrator is required. Until then, documentation uses ``operator configuration'' rather than claiming an administrator permission boundary.
-
-\Evidence{src/App.tsx; src/pages/CashierPage.tsx; server/bootstrap.ts; server/app.controller.ts}
+Evidence: main/config.ts; vistas/operador/DiagnosticoPanel.tsx; docs/operacion-recuperacion.md

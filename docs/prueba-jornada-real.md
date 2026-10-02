@@ -12,8 +12,7 @@ de abrir las ventanas, y exige aviso, 100 voces y precarga correcta. Esto evita
 depender del renombrado de carpeta del primer arranque; no valida ese mecanismo
 de instalación de la aplicación.
 
-Para comprobar primero el arranque, seis anuncios, una recarga de la pantalla
-pública y un séptimo anuncio después de la recarga:
+Para comprobar primero el arranque, ocho anuncios confirmados, saturación sin mutación, entradas inválidas, corrección y recarga de la pantalla pública sin repetición de audio antiguo:
 
 ```powershell
 npm run test:full-day -- --preflight
@@ -41,12 +40,12 @@ no verifica captura física por teclado ni que las bocinas sean audibles.
 ## Comprobaciones
 
 - Carga determinista por franjas, ráfagas de seis llamados y rellamadas.
-- Entradas inválidas sin cambio de estado y restauración al deshacer.
+- Entradas inválidas sin cambio de estado y restauración al deshacer; se esperan los acuses pendientes antes de corregir o recargar.
 - Expiración automática después de seis minutos sin llamados.
-- Números únicos, válidos y un máximo de seis visibles.
+- Números únicos, válidos y un máximo de seis visibles; coincidencia entre TV, memoria y `estado.json`. Historial de entregas acotado a 100 y cola de audio a seis.
 - Confirmación de cada anuncio desde la vista pública, con identificador y número.
   Un fallo o más de 120 segundos sin confirmación detiene la prueba.
-- Recuperación de la sonda tras la recarga diaria de la pantalla pública.
+- Recuperación de la sonda tras recarga, sin repetir anuncios viejos, y llamada nueva tras recuperar la vista a mitad de la jornada real.
 - Fuentes de audio sin superposición y todas terminadas al cierre.
 - Diagnóstico de persistencia, salud de audio y detección de procesos caídos.
 - Respuesta de las vistas con límite de 15 segundos por consulta.
@@ -70,3 +69,9 @@ acciones, no como ocupación ponderada por tiempo.
 PASS exige completar los 390 minutos y todas las comprobaciones.
 El ensayo no impone un umbral arbitrario de memoria: los datos permiten
 comparar crecimiento entre ejecuciones en el mismo equipo.
+
+## Aislamiento y reintentos
+
+El script usa `TURNERO_PUERTO='0'` para no ocupar el 4317 de otra aplicación abierta. Cada llamada rechazada por capacidad reintenta dentro de un máximo de 120 segundos; el informe registra `capacityRetries`. Se esperan todos los acuses antes de correcciones, recargas y cierre. Los checkpoints utilizan el renombrado con reintentos de Windows; si falla guardar la evidencia de un error, el informe se conserva también en la salida. La sonda distingue épocas de recarga y cambios del número de anuncio.
+
+La revisión paralela del 1 de octubre obtuvo **PREFLIGHT_PASS con ocho anuncios** en `test-results/full-day-fgFKKb/jornada-completa.json`. Es evidencia local de esa revisión, no de 390 minutos ni de un nuevo instalador. Véase [el registro documental](actualizacion-documentacion-2026-10-01.md).

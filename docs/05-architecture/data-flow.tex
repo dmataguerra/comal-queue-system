@@ -1,29 +1,9 @@
-\subsection{Data flow}
+\subsection{Data flow and action boundaries}
 
-\subsubsection*{Create/recall mutation}
+LLAMAR -> validate input -> compute pure transition -> check audio capacity -> update latest-call time -> atomic save -> snapshot and optional announcement. Invalid capture returns CAPTURA\_INVALIDA; full audio capacity or failed saving rejects before an accepted state notification.
 
-\begin{CodeBlock}
-UI -> fetch JSON -> Controller -> StateService validation/invariants
-   -> BEGIN IMMEDIATE -> turns + requests -> COMMIT
-   -> Controller -> Socket.IO state -> every client
-                         + announcement -> every live client
-   <- HTTP turn response
-\end{CodeBlock}
+DESHACER restores one previous snapshot without announcing; QUITAR removes a number and clears undo. Expiry and day change save before publishing. Public renderers report software playback statuses by ID and number.
 
-The HTTP response confirms the mutation to the caller; client lists update from the separately broadcast state. An exact retry returns the stored response and deliberately omits a second broadcast announcement.
+Media import uses a main-process picker, asynchronous copy into a hidden destination temporary, size verification and exclusive hard-link publication. Existing files are retained with numbered names. Inventory updates reach IPC and SSE subscribers.
 
-\subsubsection*{Other mutation}
-
-Counter/status, multimedia, settings, and catalog refresh operations mutate SQLite or the in-memory catalog, then broadcast a full snapshot. They do not emit announcement events.
-
-\subsubsection*{Connection/reconnection}
-
-When a socket connects, the gateway immediately calculates and emits a full snapshot. The frontend replaces its current state. No prior announcement is replayed, because announcements are not selected from SQLite during connection.
-
-\subsubsection*{Local media request}
-
-Catalog refresh maps \Code{genre/filename} keys to canonical real paths. The browser requests an encoded \Code{/media/:genre/:filename} URL. The controller asks MediaService for the mapped path and Express sends that file. Uncatalogued, unsupported, removed, or traversal-like paths return not found.
-
-\subsubsection*{YouTube flow}
-
-The cashier validates a URL client-side, then the server applies a stricter HTTPS allow-list and persists it. Each public browser loads the remote IFrame API directly and manages its own player. Playback position is not synchronized between screens or persisted.
+Evidence: backend/queue-store.ts; main/contenido.ts; main/entregas-audio.ts

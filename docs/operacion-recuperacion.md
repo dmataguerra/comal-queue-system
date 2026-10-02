@@ -28,13 +28,27 @@ npx tsx scripts/datos.ts restore "D:\Respaldos Comal\turnero-..." "$env:APPDATA\
 
 La opción `--app-cerrada` es una confirmación explícita de que verificó el cierre; la utilidad no puede detectar de forma fiable todas las instancias remotas o renombradas. La restauración prepara una carpeta nueva y luego la coloca en la ruta de datos. Conserva los datos anteriores en una carpeta `datos.antes-de-restaurar-*` junto a la ruta de datos. Inicie la aplicación y compruebe en la ventana del operador la pantalla pública, el audio y los turnos. Un `estado.json` de otra fecha no reabre turnos de una jornada anterior.
 
+La restauración valida JSON, estructura del estado y fechas reales antes de cambiar el destino. Rechaza configuración inválida o con claves desconocidas, archivos declarados ausentes y rutas superpuestas entre respaldo y datos. Un rechazo conserva el destino intacto; un respaldo corrupto puede conservarse para diagnóstico pero no restaurarse como estado válido. Los campos de configuración omitidos siguen usando sus valores predeterminados. Un estado válido de otra jornada puede restaurarse, pero al arrancar no reabre turnos anteriores. Se reintentan únicamente bloqueos transitorios de Windows al renombrar, con el mismo límite que el guardado atómico.
+
+`npm run test:recovery` ejecuta los comandos reales de `scripts/datos.ts`: respaldo, restauración limpia con hashes idénticos, rechazo de corrupción sin tocar destino y restauración sobre destino corrupto conservando el anterior. Guarda las invocaciones, códigos y salidas en `test-results/recovery-cli-*/resultado.json`.
+
 ### Actualización desde 0.2.0 y reversión
 
-La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del perfil de Electron, no en `%APPDATA%\comal-local\datos`. Con 0.2.0 cerrada, respalde el directorio que contiene `comal.sqlite` junto con posibles archivos `comal.sqlite-wal` y `comal.sqlite-shm`. Conserve también el instalador 0.2.0 verificado. Al abrir 0.3.0 por primera vez, si no existe `estado.json`, se leen sin modificar la base anterior, los turnos listos anunciados durante la jornada actual (máximo seis) y los mensajes/YouTube compatibles; se escriben los JSON nuevos. Los turnos de otras fechas y el historial permanecen en la base anterior. Compruebe turno, configuración y contenido antes de operar.
+La versión 0.2.0 guardaba turnos y configuración en `comal.sqlite` dentro del perfil de Electron, no en `%APPDATA%\comal-local\datos`. Con 0.2.0 cerrada, respalde el directorio que contiene `comal.sqlite` junto con posibles archivos `comal.sqlite-wal` y `comal.sqlite-shm`. Conserve también el instalador 0.2.0 verificado. Al abrir una versión 0.3.x compatible por primera vez, si no existe `estado.json`, se leen sin modificar la base anterior, los turnos listos anunciados durante la jornada actual (máximo seis) y los mensajes/YouTube compatibles; se escriben los JSON nuevos. Los turnos de otras fechas y el historial permanecen en la base anterior. Los números importados reciben una ventana nueva de cinco minutos desde la migración; no conservan un vencimiento anterior de 0.2.0. Compruebe turno, configuración y contenido antes de operar.
 
 Para volver a 0.2.0, cierre 0.3.0, reinstale el instalador 0.2.0 verificado y restaure el respaldo del perfil de 0.2.0 con la aplicación cerrada. Los turnos creados después de migrar a 0.3.0 no aparecen en 0.2.0: registre esos turnos antes de revertir y concílielos manualmente. `npm run test:upgrade` prueba esta secuencia con datos aislados.
 
 ## Incidencias durante la operación
+
+### Política de cola y recuperación
+
+- Audio FIFO: máximo seis anuncios activos o pendientes; aviso al operador desde cinco. Con seis, una nueva llamada se rechaza **antes** de guardar o cambiar el turno. Reintente cuando haya capacidad; no hay descarte silencioso por saturación.
+- Repetir un número crea otro ID y ocupa otro lugar FIFO; no borra el acuse de la llamada anterior. La fila muestra el acuse de la llamada más reciente.
+- Un anuncio debe empezar en menos de 45 segundos y completar su tarea en 30 segundos. Un vencimiento queda como «No anunciado», libera capacidad y rechaza acuses tardíos. Retirar un turno descarta sus pendientes; el anuncio que ya comenzó termina. No se reproducen anuncios antiguos tras recargar/reiniciar: revise filas y vuelva a llamar manualmente.
+- La pantalla es una ventana de **seis turnos recientes**, no un registro completo de pedidos. Al llenarse, el operador ve cuál es el más antiguo que retirará una llamada de otro número. Cada turno vence cinco minutos después de su última llamada. Repetir refresca su vigencia. No use la lista como registro de ventas o entregas.
+- Falta de aviso, voz ausente/ilegible, voz silenciada o interrupción del contexto de audio nunca confirma «Anunciado». Se conserva el turno guardado, se muestra fallo y se registra; corrija la salida/archivo y vuelva a llamar. La cola continúa con el siguiente anuncio. El acuse de software no detecta un cable/bocina sin sonido cuando Windows mantiene el contexto activo.
+- Reemplazar una voz/aviso bajo el mismo nombre cambia la revisión del audio por tamaño y timestamps; el siguiente inventario invalida los buffers decodificados y vuelve a precargar. Un error al explorar archivos se registra y conserva el inventario anterior, sin derribar el proceso. Si `video.play()` se rechaza, se registra y se salta a otro video/banner local.
+- YouTube en navegador está deshabilitado explícitamente, con aviso al operador. La pantalla web usa videos/banners locales y confirma audio por HTTP. Salud y errores web se registran por el mismo servidor local. YouTube de escritorio arranca silenciado, exige volumen confirmado antes de reproducir y solo informa salud correcta al recibir el estado de reproducción; falta de confirmación activa respaldo local.
 
 | Situación | Acción |
 | --- | --- |
@@ -52,7 +66,7 @@ Cuando existe una segunda pantalla configurada como extendida, la vista pública
 
 ## Diagnósticos, registro y política de recuperación
 
-Abra **Ayuda** y seleccione el enlace a **Diagnósticos** al final de la lista. El panel muestra versiones, rutas de datos, ventanas, último guardado, último error, recuento de contenido y espacio libre. Si una lectura falla, se muestran los datos restantes; «No disponible» indica que la comprobación no pudo realizarse. El panel se actualiza cada 10 segundos mientras permanece abierto. No se exponen rutas ni errores técnicos en la pantalla pública.
+Abra **Ayuda** en el encabezado o con **F1** (sin entrada en la barra lateral) y seleccione el enlace a **Diagnósticos** al final de la lista. El panel muestra versiones, rutas de datos, ventanas, último guardado, último error, recuento de contenido y espacio libre. Si una lectura falla, se muestran los datos restantes; «No disponible» indica que la comprobación no pudo realizarse. El panel se actualiza cada 10 segundos mientras permanece abierto. No se exponen rutas ni errores técnicos en la pantalla pública.
 
 `turnero.log` contiene una línea JSON por evento con hora ISO y local, nivel, componente, versión y sesión. Al alcanzar 5 MB rota a `.1`; conserva hasta `.5`. Un mismo mensaje repetido durante 30 segundos se resume en el siguiente evento distinto. Si el registro falla, la aplicación continúa y escribe a la consola cuando puede. Los errores de archivo y medios se truncan; no copie datos sensibles en nombres de medios o mensajes de configuración.
 
@@ -64,7 +78,7 @@ Abra **Ayuda** y seleccione el enlace a **Diagnósticos** al final de la lista. 
 | No se puede crear la carpeta de datos | El arranque se detiene y muestra la ruta y el error de Windows. | Revise permisos, ruta y espacio disponible antes de reabrir. Si la carpeta nunca se creó, el error se escribe en la consola porque todavía no existe `turnero.log`. |
 | Guardado de estado o configuración falla | La acción de turno no se aplica ni se anuncia; cambio de YouTube fallido tampoco se aplica. | Registra el fallo. Corrija disco/permisos y repita la acción; al guardar correctamente se retira la advertencia. |
 | Configuración inválida | Se conserva la última configuración válida o valores predeterminados al arrancar. | Registra la validación; corrija `config.json` y vuelva a cargar o reinicie. |
-| Ventana pública termina o TV se desconecta | La barra indica TV no disponible; las llamadas siguen en la cola de estado. | Se registra. La vista se recarga o vuelve al reconectar Windows; repita manualmente llamadas emitidas durante la ausencia de TV si procede. |
+| Ventana pública termina o TV se desconecta | El aviso compacto indica TV no disponible; las llamadas siguen en la cola de estado. | Se registra. La vista se recarga o vuelve al reconectar Windows; repita manualmente llamadas emitidas durante la ausencia de TV si procede. |
 | Ventana de operador termina | Se intenta recargar; si se cierra, termina la aplicación. | Se registra. Reabrir y comprobar estado antes de seguir. |
 | Audio falla o falta una voz | El operador ve el acuse del último anuncio: pendiente, terminado o fallo en la vista pública. | Se registra la voz o fallo. El acuse confirma reproducción en software, no que el HDMI o las bocinas emitieron sonido. Compruebe sonido en el equipo real. |
 | YouTube o internet falla | La pantalla usa videos o banners locales; los turnos continúan. | El indicador cambia a no disponible. Al volver la conexión se intenta YouTube de nuevo; si falla un enlace, cambie a uno válido o use fuente local. |
@@ -72,3 +86,9 @@ Abra **Ayuda** y seleccione el enlace a **Diagnósticos** al final de la lista. 
 | Cierre durante operación o temporal previo | Se detiene la vigilancia y temporizadores; la escritura atómica deja original válido o temporal. | Al reiniciar se usa el archivo principal; temporales y copias no se importan como estado. El inicio retira temporales `estado.json`/`config.json` con el nombre conocido y más de un minuto de antigüedad. Otros archivos quedan intactos. |
 
 La herramienta de respaldo copia también los archivos de registro rotados cuando existen y excluye temporales. Una restauración reinicia la sesión en memoria: los turnos de un `estado.json` de hoy reaparecen sin reproducir audio antiguo; los de otro día no reaparecen. Verifique versión, lista, contenido, configuración, TV y voz después de restaurar.
+
+## Preferencias y avisos de interfaz
+
+Los avisos persistentes se agrupan en una franja desplegable; los errores breves no incluyen el envoltorio técnico de IPC. Cola llena conserva la captura para reintentar y no modifica el turno. Tema Azul/Morado y tamaño de 70% a 130% se guardan en `localStorage`, fuera de la copia JSON. Se sincronizan entre vistas del mismo origen, pero no entre Electron y el navegador HTTP. Ambos relojes usan 12 horas con am/pm; `recargaDiaria` conserva el formato **HH:MM de 24 horas** en configuración.
+
+Para pruebas de transporte aisladas, `TURNERO_PUERTO='0'` pide un puerto loopback libre; el origen efectivo aparece en el registro de **esa instancia**. No habilita acceso LAN ni cambia las URL habituales del restaurante cuando no se usa la opción.

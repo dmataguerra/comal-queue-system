@@ -1,24 +1,8 @@
 \section{Reference}
-\subsection{Terminology and naming rules}
+\subsection{Terminology and superseded concepts}
 
-Use these names consistently in technical work:
+Current terms: operador, pantalla pública, actual, llamados, instantanea, anuncio, entregaAudio, config.json and estado.json. HTTP uses SSE; desktop uses IPC. Version 0.4.0 has local JSON persistence and optional loopback browsing.
 
-\begin{longtable}{P{0.27\textwidth}P{0.27\textwidth}P{0.36\textwidth}}
-\toprule
-Canonical documentation term & Source/UI aliases & Rule \\
-\midrule
-COMAL Queue & Comal++, \Code{comal-local}, Troyanos & Use COMAL Queue for the system until stakeholders choose final product branding; quote UI/package names when exact. \\
-Turn & turno, ready order, ticket record & Use ``turn'' for the stored queue entity; ``ticket number'' only for visible number. \\
-Ready & listo, listo para recoger & Only active status; do not call it waiting/preparing. \\
-Delivered & entregado & Terminal stored status; not deleted. \\
-Cancelled & retirado, capture error & Terminal stored status; avoid ``deleted'' unless discussing nonexistent physical deletion. \\
-Recall & volver a anunciar & Same ready entity, new rank/timestamp/announcement. \\
-Cashier workspace & panel de caja, admin workspace & Current combined operational/configuration page; not an authenticated admin console. \\
-Public display & pantalla pública, client display & Read-only React page at \Code{/pantalla}. \\
-Counter & mostrador, pickup point & Domain values 0/1/2; 0 means no assigned counter. \\
-Announcement & llamado, call & Ephemeral live event/overlay; not a turn status or table. \\
-Local service & servidor local & NestJS/Socket.IO process serving API and state. \\
-\bottomrule
-\end{longtable}
+Legacy 0.2.0 terms such as NestJS, Socket.IO, turns/requests tables, counters, delivered/cancelled records and UUID order identities describe the old product. They apply only to explicit history and migration fixtures, not present operation.
 
-The Spanish UI replaces configured occurrences of ``Comal++'' in footer messages with ``Troyanos'' at render time. This behavior is presentation-specific and should not be mistaken for data migration.
+The current visible range includes 00. Default repetition is one, not the historical proposal of two. Six visible recent numbers must not be confused with the separate six-task announcement capacity.

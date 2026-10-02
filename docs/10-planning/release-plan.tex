@@ -1,18 +1,9 @@
-\subsection{Release plan}
+\subsection{Release process}
 
-No release tags, versioning policy, target date, environment promotion flow, or release owner exists. Package version is 0.2.0, but the repository does not define what that version means.
+CI invokes reusable validation: formatting, lint, unit/audio/recovery checks and audit, then Windows build, desktop/browser/hardening/media/audio-control/interface/theme smoke, preflight, unsigned installer, installed validation and upgrade/rollback. The pinned legacy installer is built separately and its transferred SHA-256 verified.
 
-\subsubsection*{Proposed readiness gates (not yet adopted)}
+CD runs validation on version tags and publishes only a matching v plus package version. It builds a signed candidate in production, verifies Setup/app/uninstaller trust and timestamp, checks the installed-test hash and repeats upgrade/rollback for that artifact. It uploads SHA256.txt and a CycloneDX dependency SBOM, refusing to overwrite existing releases.
 
-\begin{enumerate}
-  \item \textbf{Scope approval:} owner confirms ready-only workflow, brand, users, topology, history/retention, security, hardware, and acceptance authority.
-  \item \textbf{P0 implementation:} public audio activation and recovery/security requirements are satisfied.
-  \item \textbf{Automated quality:} clean install, type checks, backend tests, frontend/E2E checks, audio asset verifier, and production build pass in a repeatable environment.
-  \item \textbf{Target acceptance:} installer/server is exercised on actual cashier/display/audio hardware, offline and after restart; manual fallback is rehearsed.
-  \item \textbf{Operational handoff:} signed-off backup/restore, logs/monitoring, support contacts, data location, update/rollback, and content ownership.
-  \item \textbf{Release record:} approved version/tag, artifact checksum/provenance, known limitations, rollback instructions, and license decision.
-\end{enumerate}
+A branch-only manual CD run validates without publishing. release.yml is a separate manual 390-minute self-hosted Windows endurance workflow, not the publication job.
 
-\subsubsection*{Current disposition}
-
-The repository is not demonstrably production-ready because P0 audio/recovery/security-topology decisions and repeatable frontend/package acceptance remain open. This assessment does not assign a percentage or delivery date.
+Evidence: .github/workflows/ci.yml; validate.yml; legacy-installer.yml; cd.yml; release.yml

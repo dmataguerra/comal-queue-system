@@ -1,5 +1,7 @@
 # Comal++ 0.3.1: corrección de carpetas protegidas
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 > **Evidencia de una compilación local del 27 de septiembre de 2026.** Este documento conserva hashes y resultados de ese artefacto; no sustituye la validación del commit actual ni la ejecución del workflow de release unsigned.
 
 Compilación local del 27 de septiembre de 2026. Pendiente de aceptación en la computadora de destino y de firma pública.

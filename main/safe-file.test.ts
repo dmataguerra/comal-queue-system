@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
@@ -13,7 +14,11 @@ test('only regular files within the content root are served', async () => {
     writeFileSync(join(root, 'videos', 'clip.webm'), 'video');
     writeFileSync(join(base, 'private.txt'), 'private');
 
-    assert.equal(await fileWithin(root, 'videos/clip.webm'), resolve(root, 'videos/clip.webm'));
+    // Windows runners can expose TEMP through an 8.3 alias (RUNNER~1).
+    assert.equal(
+      await fileWithin(root, 'videos/clip.webm'),
+      await realpath(resolve(root, 'videos/clip.webm')),
+    );
     assert.equal(await fileWithin(root, 'videos'), null);
     assert.equal(await fileWithin(root, 'videos/missing.webm'), null);
     assert.equal(await fileWithin(root, '../private.txt'), null);

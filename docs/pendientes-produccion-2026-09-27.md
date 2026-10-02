@@ -1,5 +1,7 @@
 # Pendientes de producción y recomendaciones
 
+> **Registro histórico / evidencia fechada.** Resultados, hashes, conteos y pendientes corresponden a la ejecución descrita, no a cualquier compilación posterior con el mismo número de versión. Consulte [documentación vigente](README.md), [revisión del 1 de octubre](actualizacion-documentacion-2026-10-01.md) y [lista de publicación](lista-publicacion.md) para cambios y aceptación actual. Se conserva el cuerpo original como evidencia.
+
 > **Informe fechado:** conserva el estado observado el 27 de septiembre de 2026. No es el checklist actual de CI ni una evidencia del commit más reciente; consulte [README](../README.md), [seguridad y publicación](seguridad-y-publicacion.md) y `.github/workflows/release.yml` para el flujo vigente.
 
 Revisión del 27-09-2026. Alcance: interfaz del operador, ayuda, audio/cola,

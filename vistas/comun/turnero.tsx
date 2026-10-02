@@ -20,6 +20,7 @@ import type {
 import { getQueueTransport } from './transport';
 
 interface Contexto extends Inicial {
+  youtubeAdmitido: boolean;
   configurarVolumen: TurneroApi['configurarVolumen'];
   diagnostico: TurneroApi['diagnostico'];
   informarSalud: TurneroApi['informarSalud'];
@@ -46,6 +47,7 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
   // Funciones estables: los efectos que se suscriben no deben reiniciarse en cada render.
   const acciones = useMemo(
     () => ({
+      youtubeAdmitido: api?.youtubeAdmitido !== false,
       diagnostico: () => api!.diagnostico(),
       informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') =>
         api!.informarSalud(tipo, estado),

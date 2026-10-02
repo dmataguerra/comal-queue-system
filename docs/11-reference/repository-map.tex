@@ -1,49 +1,7 @@
-\subsection{Repository map}
+\subsection{Repository map and source ownership}
 
-\begin{CodeBlock}
-comal-queue-system/
-|-- README.md                    concise Markdown entry point
-|-- docs/                        LaTeX product/process source of truth
-|   |-- technical-documentation.tex
-|   |-- preamble.tex
-|   |-- 01-product/ ... 11-reference/
-|-- src/
-|   |-- pages/                   cashier and public composition
-|   |-- components/              queue/media/settings/display UI
-|   |-- hooks/                   socket state, announcements, clock
-|   |-- services/                HTTP, YouTube, announcement audio
-|   `-- styles/                  base/admin/public CSS
-|-- server/
-|   |-- app.controller.ts        HTTP endpoints
-|   |-- state.service.ts         queue/config domain
-|   |-- database.ts              SQLite/schema
-|   |-- events.gateway.ts        Socket.IO
-|   |-- dto/validation.ts        input validation
-|   `-- media/media.service.ts   local catalog and allow-list
-|-- tests/backend.test.ts        all automated tests
-|-- electron/main.cjs            desktop shell/server lifecycle
-|-- scripts/dev.mjs              dev process orchestration
-|-- tooling/audio/               asset generation/verification
-|-- public/                      images, logos, announcement WAVs
-|-- data/music/                  local/demo music
-|-- package.json                 commands/dependencies/packaging
-|-- vite.config.ts               frontend build/dev proxies
-`-- tsconfig*.json               frontend/backend TypeScript
-\end{CodeBlock}
+Use README.md and docs/README.md to navigate current guides. Architecture: current-architecture.md. Operator: user-manual/operador.md. Recovery: operacion-recuperacion.md. Media: user-manual/multimedia-requisitos.md and anuncios-e-importacion.md. Delivery: CI-CD.md, seguridad-y-publicacion.md and lista-publicacion.md.
 
-\subsubsection*{Feature-to-code index}
+The technical-documentation.tex master includes this 57-section hierarchy. user-manual/source/build\_user\_manuals.py regenerates the user and quick PDFs from the current operator guide. source/screenshots retains dated/reference captures and must not be passed off as current UI.
 
-\begin{longtable}{P{0.30\textwidth}P{0.60\textwidth}}
-\toprule
-Question & Start here \\
-\midrule
-How is a turn created/closed? & \Code{server/state.service.ts}; \Code{server/dto/validation.ts}; \Code{src/pages/CashierPage.tsx}; \Code{ReadyList.tsx} \\
-How is state synchronized? & \Code{server/events.gateway.ts}; \Code{src/hooks/useSystem.tsx} \\
-How are calls queued/played? & \Code{src/hooks/useAnnouncements.ts}; \Code{src/services/announcementAudio.ts} \\
-How is media discovered/served? & \Code{server/media/media.service.ts}; \Code{MediaController} \\
-How is media rendered? & \Code{src/components/MediaPlayer.tsx}; \Code{src/services/youtube.ts} \\
-Where is the database model? & startup DDL in \Code{server/database.ts}; types in \Code{server/models/state.ts} \\
-What is tested? & \Code{tests/backend.test.ts}; \Code{tooling/audio/verify-audio.mjs} \\
-How is Windows packaged? & \Code{package.json} build block; \Code{electron/main.cjs} \\
-\bottomrule
-\end{longtable}
+Dated audits, publication notes and test reports retain their historical results with status notices linking to current guides. Third-party icon README files retain their attribution; they are not product operating manuals.

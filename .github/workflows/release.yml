@@ -1,4 +1,4 @@
-name: Release validation
+name: Operational validation
 
 on:
   workflow_dispatch:
@@ -12,72 +12,19 @@ on:
 permissions:
   contents: read
 
-jobs:
-  baseline:
-    if: ${{ !inputs.full_day }}
-    uses: ./.github/workflows/legacy-installer.yml
-  release:
-    needs: baseline
-    if: ${{ !inputs.full_day }}
-    runs-on: windows-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-      - run: npm run test:desktop
-      - run: npm run test:browser
-      - run: npx electron scripts/smoke-hardening.mjs
-      - run: npm run test:media
-      - run: npm run test:full-day:preflight
-      - name: Build Windows installer
-        run: npm run desktop:build
-      - name: Installed application smoke test
-        run: npm run test:installed
-      - name: Upgrade and rollback smoke test
-        uses: actions/download-artifact@v4
-        with:
-          name: upgrade-baseline-0.2.0
-          path: release/archive-0.2.0
-      - name: Verify upgrade baseline hash
-        shell: pwsh
-        run: |
-          $expected = (Get-Content 'release/archive-0.2.0/SHA256.txt').Trim()
-          $actual = (Get-FileHash 'release/archive-0.2.0/Comal++ Setup 0.2.0.exe' -Algorithm SHA256).Hash
-          if ($actual -ne $expected) { throw 'Upgrade baseline hash mismatch' }
-      - name: Upgrade and rollback smoke test
-        run: npm run test:upgrade
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: comal-windows-release
-          path: |
-            release/*.exe
-            release/*.blockmap
-            test-results/**
-          if-no-files-found: error
-      - name: Upload failure diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-failure-diagnostics
-          path: test-results/**
-          if-no-files-found: ignore
+concurrency:
+  group: comal-production-endurance
+  cancel-in-progress: false
 
+jobs:
   full-day:
     if: ${{ inputs.full_day }}
     runs-on: [self-hosted, windows, comal-production]
     timeout-minutes: 450
+    environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -85,7 +32,7 @@ jobs:
       - run: npm run test:full-day
       - name: Upload endurance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: comal-full-day-evidence
           path: test-results/**

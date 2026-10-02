@@ -6,7 +6,9 @@ export function useClock() {
     return () => clearInterval(id);
   }, []);
   return {
-    time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }),
+    time: now
+      .toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+      .toLowerCase(),
     date: now.toLocaleDateString('es-MX', {
       weekday: 'short',
       day: 'numeric',

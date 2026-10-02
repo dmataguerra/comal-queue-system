@@ -1,21 +1,8 @@
-\section{Product documentation}
+\section{Product and scope}
 \subsection{Product vision}
 
-\textbf{Confirmed product statement.} COMAL Queue is a local application for publishing ticket numbers after orders are ready for pickup. A cashier copies the number from an existing ticket, optionally assigns pickup counter 1 or 2, and the system immediately stores and broadcasts the ready turn. A public display shows the ready list and a time-limited visual callout.
+Comal++ announces ready restaurant orders using the last two digits of a manually entered ticket. A Windows PC runs the operator interface and the public display, with local announcement audio and optional multimedia. The system supports unordered kitchen output; it does not generate an order sequence.
 
-The source and interface identify the operating context as the Troyanos/Comal++ cafeteria associated with the Facultad de Informática, Universidad Autónoma de Querétaro. The exact product name is inconsistent: repository/package text uses COMAL, Comal++, and \Code{comal-local}, while the latest interface is branded Troyanos. The commercial or institutional naming decision is \Unknown.
+Core operation needs neither Internet nor a network service on another machine. YouTube and weather are optional external features. Business acceptance requires the intended PC, extended TV display and speakers.
 
-\textbf{Problem addressed.} The application bridges the period between preparation outside this system and customer pickup. It provides a shared, persistent view of which printed ticket numbers are ready and lets staff remove them after delivery or an erroneous capture.
-
-\textbf{Operational boundary.} This is not a point-of-sale, preparation, kitchen, payment, inventory, or ticket-printing system. Its first implemented state is already \Code{ready}; all earlier order activity occurs elsewhere.
-
-\textbf{Product principles evidenced by the repository:}
-\begin{itemize}
-  \item queue operation and bundled visual/audio resources are local;
-  \item SQLite preserves operational state across process restarts;
-  \item Socket.IO distributes changes to concurrent browser views;
-  \item YouTube is optional and explicitly fails back to local visuals;
-  \item repeated network submissions are made idempotent by caller-supplied request identifiers.
-\end{itemize}
-
-\Evidence{README.md; package.json; src/pages/CashierPage.tsx; src/pages/PublicPage.tsx; server/state.service.ts}
+Evidence: README.md; nucleo/turnos.ts; main/main.ts

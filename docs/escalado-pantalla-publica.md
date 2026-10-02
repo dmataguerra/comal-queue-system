@@ -14,7 +14,7 @@ La vista pública mantiene esta composición incluso en ventanas pequeñas.
 Las medidas de `public.css` están expresadas en coordenadas del diseño base.
 No introducir unidades de viewport ni breakpoints de ventana dentro del lienzo:
 harían que la composición cambiara antes de aplicar su escala uniforme.
-Se conserva el control de tamaño existente y la interfaz del operador.
+El control de tamaño del encabezado ofrece **70%, 80%, 90%, 100%, 110%, 120% y 130%**. Es una preferencia de interfaz distinta del ajuste geométrico de `DisplayCanvas`. Tema y tamaño se propagan entre vistas del mismo origen; Electron y HTTP guardan preferencias independientes. El selector Azul/Morado reserva su ancho y ambos relojes muestran 12 horas con am/pm. El fondo animado usa movimiento sutil y respeta movimiento reducido.
 
 Verificación: ejecutar `npm run build` y luego
 `npx electron scripts/smoke-display-scale.mjs`. La prueba compara proporciones

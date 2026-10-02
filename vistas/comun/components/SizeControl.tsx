@@ -19,7 +19,7 @@ export function SizeControl({
         type="button"
         aria-label="Reducir tamaño"
         title={`Reducir tamaño · ${tamanio}%`}
-        disabled={tamanio === 90}
+        disabled={tamanio === tamanios[0]}
         onClick={() => ajustar(tamanios[Math.max(0, tamanios.indexOf(tamanio) - 1)])}
       >
         <Icon name="zoomOut" />
@@ -28,8 +28,10 @@ export function SizeControl({
         type="button"
         aria-label="Aumentar tamaño"
         title={`Aumentar tamaño · ${tamanio}%`}
-        disabled={tamanio === 110}
-        onClick={() => ajustar(tamanios[Math.min(2, tamanios.indexOf(tamanio) + 1)])}
+        disabled={tamanio === tamanios[tamanios.length - 1]}
+        onClick={() =>
+          ajustar(tamanios[Math.min(tamanios.length - 1, tamanios.indexOf(tamanio) + 1)])
+        }
       >
         <Icon name="zoomIn" />
       </button>

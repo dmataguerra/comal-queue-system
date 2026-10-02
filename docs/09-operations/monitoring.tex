@@ -1,19 +1,9 @@
-\subsection{Monitoring}
+\subsection{Diagnostics and logs}
 
-\subsubsection*{Implemented signals}
+Help -> Diagnostics displays app/Electron/Node versions, effective data/config/state/log paths, operator/public status, persistence, last successful save and errors, audio/YouTube health, media counts, visible queue length and free space. The open panel refreshes every ten seconds; individual probe failures return remaining data.
 
-\begin{itemize}
-  \item \Code{GET /api/health} returns a static process-level OK response.
-  \item Nest logs startup, warnings, and errors to stdout/stderr; \Code{main.ts} logs the listen URL.
-  \item Electron forwards child stdout/stderr to its console and reports startup failure in a dialog.
-  \item Cashier/public interfaces expose current Socket.IO connection state.
-  \item MediaPlayer exposes errors/notices in UI and puts playback status/time in data attributes, but nothing collects them.
-\end{itemize}
+turnero.log stores JSON lines with ISO/local time, level, component, version and session. It rotates at 5 MB with .1 through .5 retained; identical messages within thirty seconds are summarized. Failed logging does not stop the application.
 
-\subsubsection*{Not implemented}
+Public renderers report software audio/media health. Browser reports and messages use HTTP and reach the same log. There is no external monitoring service, alerting SLA or automated physical sound detector.
 
-No structured logging, file/event-log sink, log rotation, metrics, dashboards, alerting, tracing, audit trail, database size/integrity check, media inventory check at startup, synthetic transaction, or external health supervisor exists. The health route does not test SQLite or media access.
-
-\subsubsection*{Recommended baseline}
-
-After defining the deployment topology, add a supervisor with restart policy, dependency-aware health/readiness, bounded structured logs, database-size/integrity and disk-space checks, and an operator-visible escalation procedure. Metrics and alerts need stakeholder-defined thresholds; none are prescribed here.
+Evidence: main/diagnostico.ts; main/log.ts; vistas/operador/DiagnosticoPanel.tsx

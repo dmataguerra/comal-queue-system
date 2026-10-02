@@ -1,6 +1,29 @@
 # Turnero El Comal — Requerimientos y casos de uso
 
-> v0.2 · 11 sep 2026
+## Estado vigente al 1 de octubre de 2026
+
+La tabla siguiente contrasta las notas originales con 0.3.1. Las secciones posteriores conservan la propuesta del 11 de septiembre; si discrepan, esta tabla, [el manual](user-manual/operador.md) y el código vigente definen el comportamiento implementado.
+
+| Área / requisito | Implementación vigente |
+| --- | --- |
+| RF-01 / entrada | 1–6 dígitos, últimos dos, 00–99; entradas largas/incorrectas se rechazan sin mutar. |
+| RF-02/04/05/06 | Actual + cinco anteriores; sin duplicados; nueva llamada desplaza el más antiguo. |
+| RF-03 / audio | Aviso + voz local; una repetición por defecto, configurable a dos. Acuse software por ID/número. |
+| RF-07 / corrección | Implementada, silenciosa y de un nivel; no persiste tras reinicio. Quitar elimina corrección pendiente. |
+| Vencimiento | Cinco minutos desde el último anuncio; no es un estado de negocio EXPIRADO almacenado. |
+| Capacidad audio | Seis tareas incluida la activa; aviso desde cinco, rechazo sin mutación al llenarse. |
+| RF-08 / interfaz | Reloj de 12 horas am/pm, tema Azul/Morado, tamaño 70–130% y ondas sutiles. |
+| RF-10/11/12/14 | Videos/banners locales e importación asíncrona; atenuación durante voz. Videos 2 GB, imágenes 25 MB y reserva 512 MB. |
+| RF-13 / pantallas | Dos ventanas Electron; TV extendida fullscreen o ventana pública en monitor primario. HTTP solo misma PC. |
+| RF-15 / configuración | Voz 0–300%, música 0–100%, repeticiones 1/2; valores completos en config.json. |
+| RF-16 / ayuda | Encabezado/F1, Escape cierra; Diagnósticos al final. Sin ayuda duplicada en sidebar. |
+| Persistencia | JSON atómico antes de anunciar, copia/restauración CLI y migración legacy SQLite de solo lectura. |
+| Multimedia externa | YouTube opcional en escritorio, deshabilitado en navegador; respaldo local. |
+| Fuera de alcance | Mostradores, ventas, estados de entrega/cancelación, historial y cuentas de administrador. |
+
+## Notas originales de reunión y propuesta
+
+> v0.2 · 11 sep 2026 · referencia histórica
 
 ---
 

@@ -3,7 +3,30 @@ export interface YouTubePlayer {
   setLoop(loop: boolean): void;
   setVolume(volume: number): void;
   unMute(): void;
+  mute(): void;
   destroy(): void;
+}
+
+/** Inicio seguro: confirmar el volumen vigente antes de quitar silencio o iniciar playback. */
+export async function iniciarYouTube(
+  player: YouTubePlayer,
+  volumen: () => number,
+  ajustar: (valor: number, ms: number) => Promise<number>,
+  vigente: () => boolean,
+): Promise<boolean> {
+  player.mute();
+  player.setLoop(true);
+  while (vigente()) {
+    const solicitado = volumen();
+    const videos = await ajustar(solicitado, 0);
+    if (!vigente()) return false;
+    if (solicitado !== volumen()) continue;
+    if (videos < 1) throw new Error('YouTube no confirmó el volumen antes de reproducir.');
+    player.unMute();
+    player.playVideo();
+    return true;
+  }
+  return false;
 }
 interface PlayerOptions {
   videoId?: string;
@@ -14,6 +37,7 @@ interface PlayerOptions {
     onReady(event: { target: YouTubePlayer }): void;
     onError(event: { data: number }): void;
     onAutoplayBlocked(): void;
+    onStateChange(event: { data: number }): void;
   };
 }
 interface YouTubeApi {

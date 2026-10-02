@@ -1,35 +1,9 @@
 \subsection{Project structure}
 
-\begin{longtable}{P{0.28\textwidth}P{0.62\textwidth}}
-\toprule
-Path & Responsibility \\
-\midrule
-\Code{src/main.tsx} & React bootstrap and global style/font imports. \\
-\Code{src/App.tsx} & Raw-path selection between cashier and public page. \\
-\Code{src/pages/} & Page composition and workflow orchestration. \\
-\Code{src/components/} & Queue, media, settings, footer, modal, branding, icon, and decorative UI. \\
-\Code{src/hooks/} & Socket state, announcement queue/audio, and localized clock. \\
-\Code{src/services/} & HTTP client, YouTube integration, local announcement playback. \\
-\Code{src/styles/} & Shared, cashier, and public CSS; responsive/reduced-motion behavior. \\
-\Code{server/main.ts} & Process configuration and listen. \\
-\Code{server/bootstrap.ts} & Nest creation, CORS, static assets, SPA route declarations. \\
-\Code{server/app.controller.ts} & API and media endpoint mapping. \\
-\Code{server/state.service.ts} & Queue domain, idempotency, state/config persistence. \\
-\Code{server/database.ts} & SQLite connection, schema DDL, transaction/config helpers. \\
-\Code{server/events.gateway.ts} & Socket.IO snapshots and announcement broadcast. \\
-\Code{server/dto/validation.ts} & Manual body/domain validation. \\
-\Code{server/media/} & Local playlist discovery and file allow-list. \\
-\Code{server/models/} & Backend data interfaces. \\
-\Code{tests/backend.test.ts} & All current automated tests. \\
-\Code{public/assets/} & Bundled images/logos/favicon; some reference/mascot assets are unused. \\
-\Code{public/audio/} & 99 turn clips, two counter clips, and no-counter ready suffix. \\
-\Code{data/music/} & Demo and operator-provided local playlists plus manifest. \\
-\Code{electron/main.cjs} & Desktop process and embedded server lifecycle. \\
-\Code{scripts/dev.mjs} & Parallel dev server/client launcher. \\
-\Code{tooling/audio/} & Audio generation and structural verification. \\
-\Code{docs/} & This LaTeX product/process documentation system. \\
-\Code{build-tests/} & Committed compiled test/server output; not used by \Code{npm test}. \\
-\bottomrule
-\end{longtable}
+main/: Electron lifecycle, adapters, config, persistence, security, content and local server. backend/: queue application and ports. nucleo/: pure rules for turns, FIFO and YouTube URLs. shared/: contracts, channels and announcement limits.
 
-Generated/ignored locations include \Code{node_modules/}, \Code{build/}, \Code{dist/}, \Code{release/}, SQLite files, logs, and test results, although historical tracked output may remain visible despite ignore rules.
+vistas/: separate operator/public React entry points, shared controls and styles. public/: static assets and browser transport. contenido/: factory voices, notice, banners and optional videos. tooling/audio/: generation and verification tools. scripts/: build, packaging, recovery and regression automation.
+
+.github/workflows/: validation, legacy fixture, signed release and endurance. docs/: current Markdown guides, technical LaTeX hierarchy, historical reports and reproducible user PDFs. data/: legacy SQLite artifacts, not active production storage.
+
+Evidence: repository tree; package.json

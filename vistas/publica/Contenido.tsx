@@ -34,7 +34,7 @@ export function Contenido({
   registrar,
   confirmarAtenuacion,
 }: Props) {
-  const { informarSalud } = useTurnero();
+  const { informarSalud, youtubeAdmitido } = useTurnero();
   const [fallidos, setFallidos] = useState(new Set<string>());
   const [youtubeDisponible, setYoutubeDisponible] = useState(true);
   const youtubeFallo = useCallback(() => setYoutubeDisponible(false), []);
@@ -59,10 +59,21 @@ export function Contenido({
   );
   const volumen = atenuado ? config.volumenMusica * config.atenuacionMusica : config.volumenMusica;
   useEffect(() => {
-    if (atenuado && !(config.youtubeUrl && youtubeDisponible) && !reproducibles.length)
+    if (
+      atenuado &&
+      !(youtubeAdmitido && config.youtubeUrl && youtubeDisponible) &&
+      !reproducibles.length
+    )
       confirmarAtenuacion();
-  }, [atenuado, config.youtubeUrl, youtubeDisponible, reproducibles.length, confirmarAtenuacion]);
-  if (config.youtubeUrl && youtubeDisponible)
+  }, [
+    atenuado,
+    config.youtubeUrl,
+    youtubeAdmitido,
+    youtubeDisponible,
+    reproducibles.length,
+    confirmarAtenuacion,
+  ]);
+  if (youtubeAdmitido && config.youtubeUrl && youtubeDisponible)
     return (
       <YouTubeVideo
         url={config.youtubeUrl}
@@ -178,6 +189,8 @@ function Clip({
   const ref = useRef<HTMLVideoElement>(null);
   const volumenActual = useRef(volumen);
   volumenActual.current = volumen;
+  const falloActual = useRef(alFallar);
+  falloActual.current = alFallar;
   useEffect(() => {
     const video = ref.current!;
     // StrictMode repite montaje/limpieza en desarrollo: cada montaje debe restaurar la fuente.
@@ -195,7 +208,13 @@ function Clip({
       return;
     }
     video.volume = volumenActual.current;
-    void video.play().catch(() => {});
+    let vigente = true;
+    void video.play().catch(() => {
+      if (vigente) falloActual.current();
+    });
+    return () => {
+      vigente = false;
+    };
   }, [activo]); // el volumen al activarse; los cambios posteriores los lleva la rampa
   // RF-11 · el volumen se interpola: 150 ms al atenuar, 400 ms al restaurar.
   useEffect(() => {

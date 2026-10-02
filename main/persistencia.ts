@@ -38,7 +38,8 @@ const esTurno = (x: unknown): x is number =>
 const esFechaIso = (valor: unknown) =>
   typeof valor === 'string' &&
   /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(valor) &&
-  Number.isFinite(Date.parse(valor));
+  Number.isFinite(Date.parse(valor)) &&
+  new Date(valor).toISOString() === valor;
 
 function valido(dato: unknown): dato is Persistido {
   if (!dato || typeof dato !== 'object') return false;
@@ -46,6 +47,7 @@ function valido(dato: unknown): dato is Persistido {
   return (
     typeof fecha === 'string' &&
     /^\d{4}-\d\d-\d\d$/.test(fecha) &&
+    esFechaIso(`${fecha}T00:00:00.000Z`) &&
     (desde === undefined || (!!desde && typeof desde === 'object' && !Array.isArray(desde))) &&
     (actual === null || esTurno(actual)) &&
     Array.isArray(llamados) &&
@@ -61,6 +63,11 @@ function timestampsValidos(dato: Persistido): boolean {
     esFechaIso(dato.guardadoEn) &&
     (dato.desde === undefined || Object.values(dato.desde).every(esFechaIso))
   );
+}
+
+/** Misma validación estricta para arranque y restauración, sin modificar archivos. */
+export function esEstadoPersistido(dato: unknown): dato is Persistido {
+  return valido(dato) && timestampsValidos(dato);
 }
 
 function preservarCorrupto(ruta: string, motivo: string, registrar: Registrar): void {

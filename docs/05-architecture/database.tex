@@ -1,50 +1,9 @@
-\subsection{Database}
+\subsection{Persistence and legacy database migration}
 
-\subsubsection*{Technology and lifecycle}
+The active product stores config.json, estado.json, turnero.log and editable contenido/ under the effective data directory, normally \%APPDATA\%/comal-local/datos in packaged 0.3.1. TURNERO\_DATOS overrides it for isolated tests; development defaults to the repository root.
 
-The backend uses Node's experimental built-in \Code{node:sqlite} \Code{DatabaseSync} API. Default path is \Code{data/comal.sqlite}; Electron overrides it with \Code{app.getPath('userData')/comal.sqlite}. Parent directories and tables/indexes are created during provider construction. There are no versioned migrations or seed records.
+estado.json contains fecha, actual, llamados, optional desde timestamps and guardadoEn. Undo history and announcement deliveries are session memory and do not survive restart. Only same-day, unexpired numbers return; old announcements never replay automatically.
 
-\subsubsection*{Logical model}
+SQLite is used only to read a supported 0.2.0 profile during migration. Up to six unique ready numbers last announced today are imported, with a fresh five-minute validity window; compatible messages and YouTube configuration are mapped. The legacy database remains untouched. The data/ SQLite files in the repository are legacy material, not active storage.
 
-\begin{CodeBlock}
-turns                 requests                 configuration
------                 --------                 -------------
-id (PK)               id (PK)                  key (PK)
-number                kind                     value (JSON text)
-counter               fingerprint
-status                response (JSON text)
-timestamps            created_at
-rank
-
-No declared foreign-key relationships.
-requests.response embeds a turn and announcement; requests has no FK to turns.
-\end{CodeBlock}
-
-\subsubsection*{Turns table}
-
-\begin{longtable}{P{0.22\textwidth}P{0.25\textwidth}P{0.43\textwidth}}
-\toprule
-Column & Type/constraint & Meaning \\
-\midrule
-\Code{id} & TEXT primary key & Server-generated UUID. \\
-\Code{number} & TEXT, two digits, integer 1--99 & Visible ticket number, including leading zero. \\
-\Code{counter} & INTEGER in 0,1,2; default 0 & No assigned counter, counter 1, or counter 2. \\
-\Code{status} & TEXT in ready, delivered, or cancelled & Ready is active; other values are terminal in service logic. \\
-\Code{created_at} & TEXT not null & ISO time at creation. \\
-\Code{ready_at} & TEXT not null & Same creation time; never subsequently changed. \\
-\Code{last_announced_at} & TEXT not null & Creation or latest recall time. \\
-\Code{rank} & INTEGER not null & Display/history ordering; incremented at create and recall. \\
-\bottomrule
-\end{longtable}
-
-Indexes are \Code{one_active_number}, a unique partial index on number where status is ready, and \Code{turn_display_order} on status plus descending rank.
-
-\subsubsection*{Configuration and requests}
-
-\Code{configuration} stores JSON under \Code{multimedia} and \Code{settings}; defaults are code constants and are not written until changed. \Code{requests} stores idempotency kind, input fingerprint, serialized mutation result, and timestamp. Neither table has retention or corruption recovery logic.
-
-\subsubsection*{Durability and recovery characteristics}
-
-WAL mode, foreign keys, and a 5000 ms busy timeout are enabled. Writes in StateService use a transaction helper. No schema version, backup, restore, integrity-check command, compaction policy, encryption, or automated recovery exists.
-
-\Evidence{server/database.ts; server/state.service.ts; electron/main.cjs}
+Evidence: main/persistencia.ts; main/carpeta-datos.ts; main/migracion-02.ts

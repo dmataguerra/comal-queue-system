@@ -1,28 +1,8 @@
 \section{Users and research}
 \subsection{User groups}
 
-No repository user research, interview notes, analytics, or usability study exists. The groups below are operational roles inferred from implemented interfaces and documentation; they are not authenticated account roles.
+The operator enters tickets, repeats or removes numbers and manages multimedia on the local PC. The customer observes the public display without editing queue state. The installation/support owner configures Windows, audio, data backups and release acceptance.
 
-\subsubsection*{Cashier or queue operator --- confirmed}
+These are operating responsibilities, not authenticated accounts. Desktop IPC restricts public-window capabilities, but the loopback HTTP API trusts local access. No separate administrative identity exists.
 
-\textbf{Goals and responsibilities:} copy a ready ticket number, optionally select a counter, keep the ready list accurate, repeat a call, close a delivered turn, cancel an erroneous capture, and configure display/media behavior.
-
-\textbf{Permissions in practice:} unrestricted access to every HTTP mutation because authentication is absent. The main screen labels the session ``Estación de caja.''
-
-\textbf{Primary interface:} \Code{CashierPage}, rendered for \Code{/}, \Code{/caja}, \Code{/admin}, \Code{/display}, and any other non-\Code{/pantalla} frontend path once the SPA is served.
-
-\subsubsection*{Customer or public-display viewer --- confirmed}
-
-\textbf{Goal:} recognize that a ticket is ready and where to collect it. The public interface is read-only at the component level, shows five turns per page, and visually emphasizes the newest or currently announced turn.
-
-\textbf{Permissions in practice:} the UI contains no mutation controls, but the backend does not enforce a public role. Anyone able to reach the HTTP API can mutate state.
-
-\subsubsection*{Maintainer or installer --- inferred}
-
-The repository includes developer scripts, audio generators, local-media directory rules, production build commands, and Electron packaging. A technical maintainer is therefore needed to install, configure, back up, and troubleshoot the system. Responsibilities and operational ownership are not documented.
-
-\subsubsection*{Administrator --- not implemented as a role}
-
-Media and settings are administrative capabilities, but no administrator identity, login, separate page component, route guard, or permission model exists. Treating ``administrator'' as a security role would be inaccurate.
-
-\Evidence{src/pages/CashierPage.tsx; src/pages/PublicPage.tsx; src/components/ReadyList.tsx; server/app.controller.ts}
+Evidence: vistas/operador/OperadorPage.tsx; main/seguridad-ipc.ts

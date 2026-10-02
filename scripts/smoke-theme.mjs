@@ -54,6 +54,11 @@ async function verify() {
       w.webContents.getURL().includes('/publica/'),
     );
     for (const window of [operator, client]) window.webContents.setBackgroundThrottling(false);
+    // Exercise both motion modes explicitly, independent of the runner's OS preference.
+    client.webContents.debugger.attach('1.3');
+    await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    });
     operator.setContentSize(1366, 900);
     client.setContentSize(1920, 1080);
     await wait(() => run(operator, "Boolean(document.querySelector('.theme-switch'))"));
@@ -62,7 +67,7 @@ async function verify() {
     const geometry = (w) =>
       run(
         w,
-        `JSON.stringify(Array.from(document.querySelectorAll('.panel, .public-queue, .public-media-frame')).map(el => { const r = el.getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }))`,
+        `JSON.stringify(Array.from(document.querySelectorAll('.panel, .public-queue, .public-media-frame, .theme-controls > *, .theme-switch-track')).map(el => { const r = el.getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }))`,
       );
     assert.equal(await theme(operator), 'azul');
     assert.equal(await theme(client), 'azul');
@@ -127,7 +132,6 @@ async function verify() {
     await run(client, `localStorage.setItem('comal.tema', 'unknown')`);
     client.reload();
     await wait(async () => !client.webContents.isLoading() && (await theme(client)) === 'azul');
-    client.webContents.debugger.attach('1.3');
     await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });

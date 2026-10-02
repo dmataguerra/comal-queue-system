@@ -1,31 +1,9 @@
-\subsection{Configuration}
+\subsection{Configuration fields}
 
-\subsubsection*{Server defaults}
+config.json defaults: youtubeUrl=null; repeticiones=1 (accepted 1 or 2); volumenVoz=1 (0-3); volumenMusica=0.6 (0-1); atenuacionMusica=0.15 (0-1); segundosBanner=8 (integer 3-120); pantallaPublica=null (or integer display ID); recargaDiaria=04:00 (24-hour HH:MM); mensajes contains two default messages.
 
-\begin{longtable}{P{0.28\textwidth}P{0.23\textwidth}P{0.39\textwidth}}
-\toprule
-Setting & Default & Source/behavior \\
-\midrule
-Host & \Code{127.0.0.1} & \Code{HOST}; Electron forces loopback. \\
-Port & 3001 & \Code{PORT}; must be integer 1--65535; Electron forces 3001. \\
-Database & \Code{data/comal.sqlite} & \Code{DATABASE_PATH}; Electron uses application user data. \\
-Music root & \Code{data/music} & \Code{MUSIC_PATH}; directories created at startup. \\
-Allowed origins & localhost/127.0.0.1 on 5173, 4173, and server port & Expanded by comma-separated \Code{ALLOWED_ORIGINS}. \\
-\bottomrule
-\end{longtable}
+mensajes accepts at most ten nonblank strings, each at most 160 characters. Invalid or unknown fields are logged and defaulted/ignored. Incomplete JSON during watch keeps the prior config; valid file updates propagate after a 300 ms debounce. Voice above 100\% may distort.
 
-\subsubsection*{Persisted application defaults}
+Daily reload time remains a 24-hour configuration field even though both visible clocks use 12 hours with am/pm. Theme and size are localStorage keys comal.tema and comal.tamanio, not config.json fields and not covered by the data backup.
 
-If no configuration row exists, multimedia is fallback/stopped at volume 65 and unmuted. Settings use an 8-second visual announcement, automatic page rotation, and three Spanish footer messages. Writes merge partial input into current/default values and store the whole JSON document.
-
-\subsubsection*{Frontend/build configuration}
-
-Vite development uses fixed port 5173 with strict-port behavior and proxies \Code{/api}, \Code{/media}, and \Code{/socket.io}. The production build outputs \Code{dist}. The server serves static content only when \Code{dist/index.html} exists. TypeScript targets ES2022 and strict mode.
-
-Electron packages Windows x64 NSIS, uses per-user installation by default, permits changing installation directory, includes \Code{dist}, \Code{build}, \Code{electron}, package metadata, and copies \Code{data/music} as extra resources.
-
-\subsubsection*{Runtime configuration limits}
-
-Settings are global to the database, not per screen. Media playback progress/audio permission is browser-local. Environment variables are process settings only; there is no \Code{.env} loader, configuration file parser, or UI for server settings.
-
-\Evidence{server/main.ts; server/origins.ts; server/state.service.ts; vite.config.ts; package.json; electron/main.cjs}
+Evidence: main/config.ts; vistas/comun/tema.ts; tamanio.ts

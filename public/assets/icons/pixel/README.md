@@ -1,6 +1,6 @@
 # Comal pixel icons
 
-21 original SVG assets supplied in `comal-pixel-icons.zip`.
+The collection contains 23 original SVG assets: the supplied pixel artwork and the plus/minus controls used by the expanded size selector.
 The artwork uses a 24 × 24 grid with transparent backgrounds and crisp edges.
 
 The shared `Icon` component renders these assets as CSS masks so they inherit

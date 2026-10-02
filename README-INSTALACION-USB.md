@@ -31,7 +31,7 @@ Si no coinciden, no instales el archivo. Copia nuevamente el instalador desde la
 ## Instalar o actualizar
 
 1. Ejecuta `Comal++ Setup 0.3.1.exe`.
-2. Si Windows muestra «Editor desconocido», selecciona «Más información» y verifica que el nombre del archivo sea correcto antes de elegir «Ejecutar de todas formas».
+2. Comprueba la identidad del firmante y el hash entregado. Para distribución de producción se exige firma válida; si Windows muestra «Editor desconocido», consulta al responsable para verificar el artefacto y su estado de aceptación antes de continuar. Un instalador unsigned de pruebas no acredita una publicación aprobada.
 3. Sigue el asistente de instalación.
 4. Conserva la carpeta de datos existente cuando se trate de una actualización.
 5. Abre Comal++ al finalizar.
@@ -133,3 +133,9 @@ Reinicia Comal++ y confirma nuevamente:
 
 No retires la USB hasta comprobar que la aplicación opera correctamente. Conserva una copia del instalador y del respaldo fuera de la computadora del restaurante.
 
+
+## Controles e incidencias de la versión vigente
+
+[El manual del operador](docs/user-manual/operador.md) explica captura de 1–6 dígitos y últimos dos (incluido 00), seis turnos visibles, vigencia de cinco minutos y cola de seis anuncios. Ayuda está en el encabezado o F1, con Diagnósticos al final. El tamaño ofrece 70–130%, ambos relojes usan am/pm y los avisos se despliegan desde una franja compacta. Cola llena o guardado fallido no aceptan la llamada: conserva el ticket y reintenta tras resolver la causa.
+
+Después de instalar prueba la TV, la voz y contenido local. YouTube solo está admitido en escritorio y requiere internet. Al actualizar, conserva el respaldo anterior: una firma o hash correctos no sustituyen aceptación en la PC, TV y bocinas reales.

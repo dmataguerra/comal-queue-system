@@ -1,23 +1,10 @@
 \section{User experience}
 \subsection{Interface overview}
 
-The frontend is one React bundle with pathname-based selection and in-component navigation. There is no routing library.
+The operator workspace has Turnos and Multimedia navigation, a header with Help, voice/media volume, seven size levels (70-130\%) and Azul/Morado theme. Diagnostics is accessed at the end of Help. F1 opens Help and Escape closes it.
 
-\begin{longtable}{P{0.20\textwidth}P{0.23\textwidth}P{0.45\textwidth}}
-\toprule
-Path & Rendered interface & Evidence/notes \\
-\midrule
-\Code{/pantalla} & Public display & The only explicit public-display SPA route. \\
-\Code{/} & Cashier workspace & Electron opens this route. \\
-\Code{/caja} & Cashier workspace & Server alias; no separate component. \\
-\Code{/admin} & Cashier workspace & Alias only; no distinct admin interface or authorization. \\
-\Code{/display} & Cashier workspace & Despite its name, route logic does not render the public display. \\
-Other client paths & Depends on hosting & \Code{App} chooses cashier unless pathname begins with \Code{/pantalla}; production server only declares the five SPA routes above. \\
-\bottomrule
-\end{longtable}
+Both views use a 12-hour clock with am/pm. The theme selector reserves width to avoid a layout shift. The coordinated wave background uses subtle continuous motion over 24-31.8 seconds, with 33 sinusoidal geometry samples per cycle; reduced-motion preferences are respected.
 
-The cashier workspace has three client-side sections: Turns, Multimedia, and Settings. Changing section updates React state but not the URL. The public display has no navigation and no queue mutation controls.
+Theme and size are stored in localStorage and propagated by storage events to same-origin views. Desktop and HTTP browser storage are different origins: their preferences do not automatically synchronize with each other.
 
-There is no login page, account management, history screen, search view, or dedicated administrator page. The historical README's claim that the cashier can search pending turns is not supported by the current UI.
-
-\Evidence{src/App.tsx; src/pages/CashierPage.tsx; server/bootstrap.ts}
+Evidence: vistas/comun/tema.ts; tamanio.ts; hooks/useClock.ts; vistas/operador/OperadorPage.tsx

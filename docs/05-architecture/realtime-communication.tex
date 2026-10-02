@@ -1,28 +1,9 @@
-\subsection{Realtime communication}
+\subsection{IPC and local browser events}
 
-The application uses Socket.IO with WebSocket-only frontend transport. It does not use polling, SSE, Redis, or a message broker.
+Desktop subscriptions broadcast estado, config, contenido, pantallas and entregaAudio through named IPC channels. The sandboxed preload exposes the limited TurneroApi; its inline channel literals are checked against shared/ipc-channels.ts.
 
-\begin{longtable}{P{0.18\textwidth}P{0.19\textwidth}P{0.19\textwidth}P{0.34\textwidth}}
-\toprule
-Event & Producer & Consumer & Payload/purpose \\
-\midrule
-\Code{state} & EventsGateway & all frontend views & Full \Code{AppState}: active turns, multimedia, catalog, settings. Emitted on connection and after every successful mutation/refresh. \\
-\Code{announcement} & EventsGateway & live frontend views & Announcement ID, turn ID, number, counter, ISO creation time. Emitted only after non-replayed create/recall. \\
-\Code{connect} & Socket.IO client runtime & SystemProvider & Marks the client connected; state normally follows from gateway connection handling. \\
-\Code{disconnect} / \Code{connect_error} & Socket.IO client runtime & SystemProvider & Marks disconnected; announcement queue is cleared by the public hook. \\
-\bottomrule
-\end{longtable}
+Browser GET /api/inicial fetches current state; GET /api/events uses Server-Sent Events with JSON \{tipo, datos\}. Event types are estado, config, contenido, pantallas and entregaAudio. The browser test requests a free port, reads the origin from its own log and checks the diagnostic data directory, preventing accidental use of another running instance on 4317. This is SSE, not Socket.IO or WebSocket. Reconnection refreshes current state; it does not replay old announcements.
 
-\subsubsection*{Connection lifecycle}
+Announcement IDs increase during a session. Delivery statuses are validated by ID and number; terminal states cannot be reversed by late acknowledgements. The bounded in-memory delivery history retains up to 100 entries without evicting active ones. Multiple public windows can play the same announcement: there is no single-output election.
 
-The client enables reconnection with delay starting at 800 ms and capped at 5 seconds. No custom connection authentication, namespace, room, heartbeat setting, maximum reconnect count, or application acknowledgement is defined. Socket.IO defaults apply where the repository is silent.
-
-\subsubsection*{Ordering and failure behavior}
-
-Full-state broadcasts reduce incremental reconciliation complexity. Announcement delivery is best effort: it is not persisted as an event stream, acknowledged, or replayed. The public hook serializes received announcements, discards duplicate IDs in a bounded in-memory set, skips events whose turn has closed, and aborts on disconnect. Multiple server processes would not share gateway broadcasts.
-
-\subsubsection*{Test evidence}
-
-The integration test connects two clients, verifies initial snapshots, one announcement for an idempotent retry, recall ordering, media state broadcast, reconnect restoration without old audio, and close propagation.
-
-\Evidence{server/events.gateway.ts; src/hooks/useSystem.tsx; src/hooks/useAnnouncements.ts; tests/backend.test.ts}
+Evidence: public/browser-transport.js; main/servidor-web.ts; main/entregas-audio.ts

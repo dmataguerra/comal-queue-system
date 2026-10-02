@@ -47,3 +47,7 @@ La integración del servicio queda pendiente de esos datos y de la aprobación. 
 - [SignPath: requisitos del programa gratuito](https://signpath.org/terms.html).
 - [OSI: licencia MIT](https://opensource.org/license/mit).
 - [Electron: rutas de aplicación](https://www.electronjs.org/docs/latest/api/app#appgetpathname).
+
+## Puerta de publicación de la implementación vigente
+
+Revisado el 1 de octubre de 2026: esta guía prepara una identidad, no acredita su emisión o aceptación. CD exige `production`, `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` y la huella aprobada `COMAL_SIGNER_SHA1`; sin ellos no publica. Verifica firma/timestamp de Setup, app y desinstalador, hash exacto y upgrade/rollback. `COMAL_SIGNING_CERT_SHA1` corresponde al flujo local TPM y es una variable distinta. Integrar otro servicio de firma requiere adaptar y validar el workflow: no se asume una integración SignPath implementada. Los resultados de consultas anteriores del equipo siguen siendo evidencia fechada, no una comprobación actual del TPM. Véanse [CI/CD](CI-CD.md) y [la lista de publicación](lista-publicacion.md).

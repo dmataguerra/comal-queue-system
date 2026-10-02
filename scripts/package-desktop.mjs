@@ -12,10 +12,27 @@ const cacheBuilder = join(pruebas, 'electron-builder-cache');
 if (!temporal.startsWith(`${resolve(pruebas)}${sep}`))
   throw new Error('La carpeta temporal de empaquetado está fuera de test-results.');
 const argumentos = process.argv.slice(2);
-const permitidos = new Set(['--win', '--dir', '--firma-local', '-c.win.forceCodeSigning=true']);
-if (!argumentos.length || argumentos.some((argumento) => !permitidos.has(argumento))) {
+const permitidos = new Set([
+  '--win',
+  '--dir',
+  '--firma-local',
+  '--publish',
+  'never',
+  'always',
+  '--publish=never',
+  '--publish=always',
+  '-c.win.forceCodeSigning=true',
+]);
+const publicacionValida = (argumento, indice) =>
+  argumento === 'never' || argumento === 'always'
+    ? argumentos[indice - 1] === '--publish'
+    : permitidos.has(argumento);
+if (
+  !argumentos.length ||
+  argumentos.some((argumento, indice) => !publicacionValida(argumento, indice))
+) {
   console.error(
-    'Uso: node scripts/package-desktop.mjs --win|--dir [--firma-local|-c.win.forceCodeSigning=true]',
+    'Uso: node scripts/package-desktop.mjs --win|--dir [--publish never|always] [--firma-local|-c.win.forceCodeSigning=true]',
   );
   process.exit(2);
 }

@@ -90,7 +90,14 @@ export function useAnuncios() {
             return;
           }
           confirmarAnuncio(nuevo.id, nuevo.n, 'reproduciendo');
+          if (volumenVoz <= 0)
+            throw new Error('La voz está silenciada. Sube el volumen y vuelve a llamar.');
           if (aviso) await reproducir(aviso, volumenVoz, signal);
+          else {
+            audioCompleto = false;
+            informarSalud('audio', 'degradado');
+            registrar('Falta el aviso de audio; el anuncio no está completo.');
+          }
           const url = voz[nuevo.n];
           if (!url) {
             audioCompleto = false;

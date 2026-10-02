@@ -1,0 +1,97 @@
+name: CD
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
+  publish:
+    name: Publish validated Windows release
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    environment: production
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      CI: true
+      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      COMAL_SIGNER_SHA1: ${{ vars.COMAL_SIGNER_SHA1 }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify release version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Release tag must match package.json version.' }
+          if (!$env:WIN_CSC_LINK -or !$env:WIN_CSC_KEY_PASSWORD) { throw 'Public release requires both signing secrets.' }
+          if ($env:COMAL_SIGNER_SHA1 -notmatch '^[A-Fa-f0-9]{40}$') { throw 'Approved signer thumbprint COMAL_SIGNER_SHA1 is required.' }
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Record dependency inventory
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force test-results | Out-Null
+          npm sbom --sbom-format cyclonedx > test-results/SBOM.cdx.json
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency inventory failed.' }
+      - run: npm run build
+      - name: Package signed installer
+        run: node scripts/package-desktop.mjs --win -c.win.forceCodeSigning=true --publish never
+      - run: npm run test:installed
+      - name: Verify installer, installed application and uninstaller trust
+        shell: pwsh
+        run: |
+          $report = Get-ChildItem test-results/installed-*/resultado.json | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (!$report) { throw 'Installed validation evidence missing.' }
+          $result = Get-Content -LiteralPath $report.FullName | ConvertFrom-Json
+          if ($result.error) { throw 'Installed validation failed.' }
+          ./scripts/verificar-firmas.ps1 -Instalador $result.instalador -CarpetaInstalada (Join-Path $result.prueba 'app') -HuellaEsperada $env:COMAL_SIGNER_SHA1 > test-results/signatures.json
+          if ($LASTEXITCODE -ne 0) { throw 'Release signer trust verification failed.' }
+          $hash = (Get-FileHash -LiteralPath $result.instalador -Algorithm SHA256).Hash
+          if ($hash -ne $result.sha256) { throw 'Installer changed after validation.' }
+          "$hash  $([IO.Path]::GetFileName($result.instalador))" | Set-Content release/SHA256.txt
+          Copy-Item test-results/SBOM.cdx.json release/SBOM.cdx.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: upgrade-baseline-0.2.0
+          path: release/archive-0.2.0
+      - name: Verify baseline before signed-artifact upgrade and rollback
+        shell: pwsh
+        run: |
+          $expected = (Get-Content 'release/archive-0.2.0/SHA256.txt').Trim()
+          $actual = (Get-FileHash 'release/archive-0.2.0/Comal++ Setup 0.2.0.exe' -Algorithm SHA256).Hash
+          if ($actual -ne $expected) { throw 'Upgrade baseline SHA256 mismatch.' }
+      - run: npm run test:upgrade
+      - name: Preserve release validation evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-evidence-${{ github.sha }}
+          path: test-results/**
+          if-no-files-found: error
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = @(Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -in 'SHA256.txt', 'SBOM.cdx.json' })
+          if (-not ($assets | Where-Object Extension -eq '.exe')) { throw 'Installer missing.' }
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw 'Release already exists; refusing to replace published installers.'
+          }
+          gh release create $env:GITHUB_REF_NAME --verify-tag --title $env:GITHUB_REF_NAME --generate-notes --draft $assets.FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed.' }
+          gh release edit $env:GITHUB_REF_NAME --draft=false
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }

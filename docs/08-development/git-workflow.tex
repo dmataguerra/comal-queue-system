@@ -1,17 +1,11 @@
-\subsection{Git workflow}
+\subsection{Git workflow and parallel changes}
 
-\subsubsection*{Observed repository history}
+Use a separate branch and checkout for parallel work; do not switch the branch of a checkout being edited by another session. Coordinate file ownership and inspect the other session's committed changes before merging or publishing documentation.
 
-The audit saw branches \Code{main}, \Code{copilot/comal-interactive-mockup}, and a local \Code{codex/comal-interactive-mockup}; this documentation work starts from Copilot commit \Code{bf71e73} on \Code{docs/technical-documentation-v1}. There are no tags and no release branches. The inspected history is short and contains no evidence sufficient to establish a merge/rebase or release policy.
+This documentation branch is codex/documentacion-integral, based on f0d842a from codex/production-readiness. The parallel session owns implementation/tests; this session owns README files, docs and audio-tool documentation. Interface details are reconciled with its final code and evidence.
 
-Most recent messages resemble Conventional Commits, especially \Code{feat:}, \Code{fix:}, and \Code{docs:}, sometimes with scopes. Formatting is inconsistent (for example, extra spaces in some \Code{feat :} entries). No commit-message hook or contributor guide enforces it.
+Review the diff and exact base before opening a PR. A documentation branch based on unmerged implementation must declare that dependency. Do not claim a new installer or passing application run from a documentation-only change.
 
-\subsubsection*{Current workflow status}
+Evidence: docs/actualizacion-documentacion-2026-10-01.md
 
-Branch naming is inconsistent by tool/purpose, and no protected-branch, review, merge, versioning, or tagging convention is documented in repository files. Therefore no workflow should be described as mandatory.
-
-\subsubsection*{Recommended workflow}
-
-Use short-lived branches with a meaningful category/name, require review and passing build/test/audio checks before merging, prefer consistent Conventional Commit syntax, and tag releases only after a release/versioning policy is approved. Define whether generated \Code{dist}, \Code{build-tests}, and binary audio belong in commits; current tracking/ignore state is inconsistent.
-
-\Evidence{Git refs and log inspected 14 September 2026; .gitignore}
+Stable implementation snapshot d861e5f integrates the 13 final, previously uncommitted production-readiness source/test files. The remote production-readiness ref remains f0d842a. Verification and scope are recorded in docs/actualizacion-documentacion-2026-10-01.md.
