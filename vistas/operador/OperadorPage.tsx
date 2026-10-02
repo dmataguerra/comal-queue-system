@@ -311,6 +311,16 @@ export function OperadorPage() {
               </span>
             </div>
           )}
+          {actual !== null && llamados.length === 5 && (
+            <div className="connection-banner" role="status">
+              <Icon name="info" />
+              <span>
+                La pantalla muestra seis turnos recientes. Una llamada de otro número retira de la
+                pantalla el más antiguo ({formatear(llamados[4])}). Los turnos vencen cinco minutos
+                después de su última llamada; vuelve a llamar si aún necesitan aviso.
+              </span>
+            </div>
+          )}
           {recientes.some(
             (e) => e.estado === 'descartado' && [actual, ...llamados].includes(e.n),
           ) && (

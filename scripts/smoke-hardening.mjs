@@ -106,6 +106,14 @@ async function verify() {
       release();
     }
     assert.equal((await operation).agregados.length, 1);
+    for (const n of [44, 45, 46, 47, 48])
+      await run(operator, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
+    await wait(() =>
+      run(
+        operator,
+        "document.body.textContent.includes('La pantalla muestra seis turnos recientes') && document.body.textContent.includes('más antiguo (43)')",
+      ),
+    );
     console.log(
       'PASS: IDs repetidos, saturación sin mutación, fila más reciente, descarte de pendientes e IPC disponible durante copia lenta.',
     );
