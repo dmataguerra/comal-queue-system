@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from 'react';
 
-export const tamanios = [90, 100, 110] as const;
+export const tamanios = [70, 80, 90, 100, 110, 120, 130] as const;
 export type Tamanio = (typeof tamanios)[number];
 const clave = 'comal.tamanio';
 const oyentes = new Set<() => void>();
 function leer(): Tamanio {
   try {
     const valor = Number(localStorage.getItem(clave));
-    return valor === 90 || valor === 110 ? valor : 100;
+    return tamanios.includes(valor as Tamanio) ? (valor as Tamanio) : 100;
   } catch {
     return 100;
   }

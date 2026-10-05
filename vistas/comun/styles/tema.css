@@ -46,11 +46,19 @@
   color: var(--theme-strong, #075091);
   font-size: 12px;
   font-weight: 600;
+  width: 112px;
+  flex: 0 0 112px;
+}
+.theme-switch > span:last-child {
+  width: 54px;
+  text-align: left;
 }
 .theme-switch-track {
   display: flex;
   align-items: center;
   width: 42px;
+  flex: 0 0 42px;
+  box-sizing: border-box;
   height: 24px;
   padding: 3px;
   border-radius: 99px;
