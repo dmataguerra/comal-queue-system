@@ -52,7 +52,28 @@ async function verify() {
     );
     assert.match(error, /cola de audio está llena/);
     assert.equal((await run(operator, 'window.turnero.obtener()')).instantanea.actual, 42);
-    await wait(() => run(operator, "document.body.textContent.includes('6 de 6 anuncios')"));
+    await wait(() => run(operator, "document.body.textContent.includes('Audio: 6/6 en espera')"));
+    await run(operator, "document.querySelector('#turn-number').focus()");
+    await operator.webContents.insertText('43');
+    await wait(() =>
+      run(operator, "document.querySelector('#call-hint').textContent.includes('Turno nuevo')"),
+    );
+    await run(operator, "document.querySelector('.register-button').click()");
+    await wait(() =>
+      run(
+        operator,
+        "document.querySelector('.form-feedback').textContent.includes('Audio en espera: intenta de nuevo')",
+      ),
+    );
+    assert.equal(await run(operator, "document.querySelector('#turn-number').value"), '43');
+    assert.equal((await run(operator, 'window.turnero.obtener()')).instantanea.actual, 42);
+    assert.equal(
+      await run(
+        operator,
+        "document.querySelector('.form-feedback').textContent.includes('Error invoking remote method')",
+      ),
+      false,
+    );
     await wait(() =>
       run(
         operator,
@@ -111,7 +132,7 @@ async function verify() {
     await wait(() =>
       run(
         operator,
-        "document.body.textContent.includes('La pantalla muestra seis turnos recientes') && document.body.textContent.includes('más antiguo (43)')",
+        "document.body.textContent.includes('Seis turnos visibles') && document.body.textContent.includes('más antiguo (43)')",
       ),
     );
     console.log(

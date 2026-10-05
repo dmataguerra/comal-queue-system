@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import {
   cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
-  renameSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renombrarConReintentos } from '../build/main/escritura-atomica.js';
 
 // Jornada de resistencia: 390 minutos reales, sin modificar relojes ni temporizadores.
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -23,6 +24,7 @@ const metricsPath = join(data, 'metricas.csv');
 const actionsPath = join(data, 'acciones.jsonl');
 const realNow = Date.now;
 const durationMs = 390 * 60_000;
+const audioTimeoutMs = 120_000;
 const preflight = process.argv.includes('--preflight');
 let started;
 let operatorWindow;
@@ -32,6 +34,7 @@ let nextSample = 0;
 const expectedAudio = new Map();
 const receivedAudio = new Map();
 process.env.TURNERO_DATOS = data;
+process.env.TURNERO_PUERTO = '0';
 app.setAppPath(root);
 app.setPath('userData', join(data, 'electron'));
 
@@ -78,6 +81,7 @@ const report = {
   actionEffects: {},
   latencyMs: [],
   maxQueueLength: 0,
+  capacityRetries: 0,
   limitations: [
     'La latencia de despacho no mide el tiempo hasta oír el audio.',
     'La carga es sintética y reproducible; no representa afluencia medida en cafetería.',
@@ -92,7 +96,7 @@ function checkpoint() {
   report.latencySummary = summarizeLatencies();
   writeMetricsCsv();
   writeFileSync(reportPath + '.tmp', JSON.stringify(report, null, 2) + '\n');
-  renameSync(reportPath + '.tmp', reportPath);
+  renombrarConReintentos(reportPath + '.tmp', reportPath);
 }
 
 async function heartbeat() {
@@ -104,8 +108,8 @@ async function heartbeat() {
       assert.equal(received.estado, 'reproducido', 'Falló un anuncio de audio.');
     } else {
       assert.ok(
-        performance.now() - expected.at < 120_000,
-        'Un anuncio lleva más de 120 segundos sin confirmación.',
+        performance.now() - expected.at < audioTimeoutMs,
+        `El anuncio ${id} (turno ${expected.n}) lleva más de 120 segundos sin confirmación.`,
       );
     }
   }
@@ -224,7 +228,24 @@ async function waitForWindows() {
 
 async function dispatch(operator, action) {
   const started = performance.now();
-  const result = await run(operator, `window.turnero.despachar(${JSON.stringify(action)})`);
+  const deadline = started + audioTimeoutMs;
+  let result;
+  for (;;) {
+    try {
+      result = await run(operator, `window.turnero.despachar(${JSON.stringify(action)})`);
+      break;
+    } catch (error) {
+      if (action.tipo !== 'LLAMAR' || !String(error).includes('cola de audio está llena'))
+        throw error;
+      assert.ok(
+        performance.now() < deadline,
+        'La cola de audio no liberó capacidad en 120 segundos.',
+      );
+      report.capacityRetries++;
+      appendAction({ capacityRetry: action });
+      await waitUntil(performance.now() + 500);
+    }
+  }
   const elapsedMs = Number((performance.now() - started).toFixed(1));
   if (action.tipo === 'LLAMAR') report.calls++;
   report.actions.push({
@@ -251,20 +272,53 @@ async function dispatch(operator, action) {
 async function dispatchBatch(operator, actions) {
   const results = [];
   for (const action of actions) {
-    let result;
-    for (;;) {
-      try {
-        result = await dispatch(operator, action);
-        break;
-      } catch (error) {
-        if (!String(error).includes('cola de audio está llena')) throw error;
-        await waitUntil(performance.now() + 1000);
-      }
-    }
+    const result = await dispatch(operator, action);
     results.push(result);
   }
   report.batchesOfSix++;
   return results;
+}
+
+// Acuses y fuentes deben terminar antes de una recarga o de alterar los turnos visibles.
+// Así una corrección intencional no se confunde con pérdida de audio durante la resistencia.
+async function drainAudio(stage) {
+  const deadline = performance.now() + audioTimeoutMs;
+  while ([...expectedAudio.keys()].some((id) => !receivedAudio.has(id))) {
+    assert.ok(performance.now() < deadline, `Faltan acuses de audio en ${stage}.`);
+    await waitUntil(performance.now() + 250);
+  }
+  await heartbeat();
+  const probe = await run(displayWindow, 'window.__jornadaAudio');
+  assert.equal(probe.active, 0, `El audio sigue activo en ${stage}.`);
+  assert.equal(probe.starts, probe.ends, `Fuentes sin terminar en ${stage}.`);
+  await checkInvariants(operatorWindow, stage);
+  checkpoint();
+}
+
+async function reloadDisplay(stage) {
+  await drainAudio(`${stage}-antes-de-recarga`);
+  report.audioProbeEpochs.push({
+    at: new Date().toISOString(),
+    reason: stage,
+    probe: await run(displayWindow, 'window.__jornadaAudio'),
+    announcements: await run(displayWindow, 'window.__jornadaAnnouncements'),
+  });
+  displayWindow.webContents.reloadIgnoringCache();
+  assert.ok(await waitForPublicPage(displayWindow), `La pantalla no volvió en ${stage}.`);
+  await verifyAudio(displayWindow);
+  const deadline = performance.now() + 30_000;
+  for (;;) {
+    const diagnostic = await run(operatorWindow, 'window.turnero.diagnostico()');
+    if (diagnostic.audio === 'correcto') break;
+    assert.ok(performance.now() < deadline, `La precarga no se recuperó en ${stage}.`);
+    await pause(100);
+  }
+  await waitUntil(performance.now() + 500);
+  assert.equal(
+    (await run(displayWindow, 'window.__jornadaAudio')).starts,
+    0,
+    'La recarga repitió anuncios anteriores.',
+  );
 }
 
 function appendAction(entry) {
@@ -290,6 +344,38 @@ async function checkInvariants(operator, stage) {
   assert.equal(invariant.bounded, true, `La cola excede seis turnos en ${stage}.`);
   assert.equal(invariant.validNumbers, true, `La cola tiene un turno inválido en ${stage}.`);
   assert.equal(invariant.persisted, true, `La persistencia falló en ${stage}.`);
+  assert.ok(
+    inicial.entregasAudio.length <= 100,
+    `El historial de audio crece sin límite en ${stage}.`,
+  );
+  assert.ok(
+    inicial.entregasAudio.filter((e) => ['pendiente', 'reproduciendo'].includes(e.estado)).length <=
+      6,
+    `La cola de audio excede su capacidad en ${stage}.`,
+  );
+  const deadline = performance.now() + 5000;
+  for (;;) {
+    const current = (await run(operator, 'window.turnero.obtener()')).instantanea;
+    const expected = [current.actual, ...current.llamados].filter((n) => n !== null);
+    const publicNumbers = await run(
+      displayWindow,
+      "Array.from(document.querySelectorAll('.public-turn strong')).map(el=>Number(el.textContent.trim()))",
+    );
+    const disk = existsSync(join(data, 'estado.json'))
+      ? JSON.parse(readFileSync(join(data, 'estado.json'), 'utf8'))
+      : { actual: null, llamados: [] };
+    const persistedNumbers = [disk.actual, ...disk.llamados].filter((n) => n !== null);
+    if (
+      JSON.stringify(expected) === JSON.stringify(publicNumbers) &&
+      JSON.stringify(expected) === JSON.stringify(persistedNumbers)
+    )
+      break;
+    assert.ok(
+      performance.now() < deadline,
+      `TV, memoria y archivo no coinciden en ${stage}: ${JSON.stringify({ expected, publicNumbers, persistedNumbers })}`,
+    );
+    await pause(100);
+  }
 }
 
 async function advance(minutes) {
@@ -329,29 +415,34 @@ async function installAudioProbe(publicWindow) {
       window.__jornadaAudio = { active: 0, max: 0, starts: 0, ends: 0 };
       window.__jornadaAnnouncements = [];
       let visible = false;
+      let previousValue;
       new MutationObserver(() => {
         const element = document.querySelector('.announcement-number');
         const isVisible = Boolean(element);
         const value = element?.textContent?.trim();
-        if (isVisible && !visible && value) {
+        if (isVisible && (!visible || value !== previousValue) && value) {
           window.__jornadaAnnouncements.push({ value, at: performance.now() });
         }
         visible = isVisible;
+        previousValue = value;
       }).observe(document.body, { subtree: true, childList: true, characterData: true });
       AudioContext.prototype.createBufferSource = function() {
         const source = original.call(this);
+        let started = false;
         const finish = () => {
-          if (source.__jornadaFinished) return;
+          if (!started || source.__jornadaFinished) return;
           source.__jornadaFinished = true;
           window.__jornadaAudio.active--;
           window.__jornadaAudio.ends++;
         };
         const start = source.start.bind(source);
         source.start = (...args) => {
+          const result = start(...args);
+          started = true;
           window.__jornadaAudio.active++;
           window.__jornadaAudio.starts++;
           window.__jornadaAudio.max = Math.max(window.__jornadaAudio.max, window.__jornadaAudio.active);
-          return start(...args);
+          return result;
         };
         source.addEventListener('ended', finish, { once: true });
         return source;
@@ -548,6 +639,18 @@ async function verify() {
         operator,
         [0, 8, 99, 10, 20, 30].map((n) => ({ tipo: 'LLAMAR', entrada: String(n) })),
       );
+      const beforeRejected = (await run(operator, 'window.turnero.obtener()')).instantanea;
+      const capacityError = await run(
+        operator,
+        "window.turnero.despachar({tipo:'LLAMAR',entrada:'31'}).then(()=>null,e=>e.message)",
+      );
+      assert.match(capacityError, /cola de audio está llena/);
+      assert.deepEqual(
+        (await run(operator, 'window.turnero.obtener()')).instantanea,
+        beforeRejected,
+        'El rechazo por capacidad cambió los turnos.',
+      );
+      await drainAudio('preflight-audio');
       const deadline = performance.now() + 120_000;
       while (receivedAudio.size < expectedAudio.size) {
         assert.ok(performance.now() < deadline, 'Faltan acuses en la comprobación previa.');
@@ -559,12 +662,7 @@ async function verify() {
       assert.ok(report.audioProbe.starts > 0);
       assert.equal(report.audioProbe.active, 0);
       assert.equal(report.audioProbe.starts, report.audioProbe.ends);
-      publicWindow.webContents.reloadIgnoringCache();
-      assert.ok(
-        await waitForPublicPage(publicWindow),
-        'La pantalla no volvió después de recargar.',
-      );
-      await verifyAudio(publicWindow);
+      await reloadDisplay('preflight');
       const postReload = await dispatch(operator, { tipo: 'LLAMAR', entrada: '31' });
       assert.equal(postReload.efecto, 'ANUNCIAR');
       const reloadDeadline = performance.now() + 30_000;
@@ -575,11 +673,29 @@ async function verify() {
       await verifyAudio(publicWindow);
       assert.ok(report.audioProbe.starts > 0, 'El audio no arrancó tras la recarga.');
       assert.equal(report.audioProbe.starts, report.audioProbe.ends);
+      await drainAudio('preflight-recarga');
+      const beforeInvalid = (await run(operator, 'window.turnero.obtener()')).instantanea;
+      for (const entrada of ['', '1234567', '12x', 'no-es-un-turno']) {
+        const invalid = await dispatch(operator, { tipo: 'LLAMAR', entrada });
+        assert.equal(invalid.efecto, 'CAPTURA_INVALIDA');
+        assert.equal(invalid.anuncio, null);
+        assert.deepEqual(invalid.instantanea, beforeInvalid);
+      }
+      const beforeCorrection = (await run(operator, 'window.turnero.obtener()')).instantanea;
+      await dispatch(operator, { tipo: 'LLAMAR', entrada: '32' });
+      await drainAudio('preflight-antes-de-corregir');
+      const undo = await dispatch(operator, { tipo: 'DESHACER' });
+      assert.equal(undo.anuncio, null);
+      assert.deepEqual(
+        [undo.instantanea.actual, ...undo.instantanea.llamados],
+        [beforeCorrection.actual, ...beforeCorrection.llamados],
+      );
+      report.corrections++;
       report.status = 'PREFLIGHT_PASS';
       report.finishedAt = new Date().toISOString();
       checkpoint();
       console.log(
-        `PREFLIGHT_PASS: siete anuncios confirmados, incluido uno tras recarga; no acredita 390 minutos. Informe: ${reportPath}`,
+        `PREFLIGHT_PASS: ${expectedAudio.size} anuncios confirmados, saturación sin mutación, capturas inválidas, corrección y recarga sin repetición; no acredita 390 minutos. Informe: ${reportPath}`,
       );
       powerSaveBlocker.stop(blocker);
       app.exit(0);
@@ -608,9 +724,11 @@ async function verify() {
       }
 
       // Rellamada de un turno visible y de otro que ya pudo salir de pantalla.
+      await drainAudio(`${hour.label}-llamadas`);
       const repeat = (ticket + hourIndex * 11) % 100;
       await dispatch(operator, { tipo: 'LLAMAR', entrada: String(repeat) });
       report.repeats++;
+      await drainAudio(`${hour.label}-rellamada`);
 
       // El pico fuerza la ventana máxima de cinco llamados y comprueba que no haya duplicados.
       if (hour.peak) {
@@ -621,6 +739,7 @@ async function verify() {
             entrada: String((70 + hourIndex * 7 + offset) % 100),
           })),
         );
+        await drainAudio(`${hour.label}-pico`);
       }
 
       const beforeInvalid = (await run(operator, 'window.turnero.obtener()')).instantanea;
@@ -634,6 +753,7 @@ async function verify() {
         tipo: 'LLAMAR',
         entrada: String(((beforeUndo.actual ?? 0) + 1) % 100),
       });
+      await drainAudio(`${hour.label}-antes-de-corregir`);
       const undo = await dispatch(operator, { tipo: 'DESHACER' });
       assert.equal(undo.efecto, null, 'Deshacer produjo un anuncio inesperado.');
       assert.deepEqual(
@@ -654,18 +774,25 @@ async function verify() {
       report.expirations++;
       await checkInvariants(operator, hour.label);
       await verifyAudio(publicWindow);
+      if (hourIndex === 3) {
+        await reloadDisplay('mitad-de-jornada');
+        const recovered = await dispatch(operator, { tipo: 'LLAMAR', entrada: '31' });
+        assert.equal(recovered.efecto, 'ANUNCIAR');
+        await drainAudio('mitad-de-jornada-recuperada');
+      }
       recordHour(hour.label, actionStart);
       sample(hour.label);
       ticket = (ticket + hour.calls * 3 + 17) % 100;
       const duration = hourIndex === hours.length - 1 ? 30 : 60;
       const elapsed = hour.calls * hour.step + 6;
       assert.ok(elapsed <= duration, `La carga de ${hour.label} excedió la duración de la etapa.`);
+      assert.ok(performance.now() <= stageEnd, `La etapa ${hour.label} excedió su tiempo real.`);
       await waitUntil(stageEnd);
       checkpoint();
     }
 
     assert.ok(performance.now() - started >= durationMs, 'La jornada no duró 390 minutos reales.');
-    await heartbeat();
+    await drainAudio('cierre');
     assert.equal(receivedAudio.size, expectedAudio.size, 'Faltan confirmaciones de audio.');
     assert.ok(expectedAudio.size > 0, 'No se probaron anuncios.');
 
@@ -707,10 +834,14 @@ async function verify() {
     });
     report.metricsSummary = summarizeMetrics();
     report.logSummary = readLogSummary();
-    writeMetricsCsv();
     report.finishedAt = new Date(realNow()).toISOString();
     report.status = 'FAIL';
-    checkpoint();
+    try {
+      checkpoint();
+    } catch (evidenceError) {
+      console.error('No se pudo guardar el informe de fallo:', evidenceError);
+      console.error(JSON.stringify(report));
+    }
     console.error(error);
     if (blocker !== undefined) powerSaveBlocker.stop(blocker);
     app.exit(1);
