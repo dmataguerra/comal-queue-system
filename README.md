@@ -12,14 +12,14 @@ Comal++ es una aplicación de escritorio para Windows orientada a operaciones de
 
 | Campo | Estado |
 | --- | --- |
-| Versión | `0.3.1` |
+| Versión | `0.4.0` |
 | Plataforma soportada | Windows x64 |
 | Operación normal | Local, sin internet |
 | Persistencia | Archivos JSON locales |
 | Distribución | Instalador NSIS para Windows |
 | Licencia | [MIT](LICENSE) |
 
-La versión actual corrige el guardado en carpetas protegidas de Documentos/OneDrive y prepara la publicación con firma pública gratuita. Todavía no existe un certificado público aprobado.
+La versión 0.4.0 incorpora las mejoras de interfaz, audio, multimedia y recuperación posteriores a 0.3.1. El instalador local es un candidato de validación; la publicación firmada y la aceptación en la PC de la cafetería siguen pendientes.
 
 ## Contenido
 

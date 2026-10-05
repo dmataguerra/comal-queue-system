@@ -1,6 +1,6 @@
 {
   "name": "comal-local",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "license": "MIT",
   "description": "Turnero de El Comal: anuncia en la TV el número de pedido listo, sin red ni base de datos.",
