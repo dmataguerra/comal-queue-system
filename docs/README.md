@@ -4,6 +4,7 @@ Base vigente: **0.4.0**, revisión del **1 de octubre de 2026**. Las guías se c
 
 ## Guías vigentes
 
+- [Continuar el manual de usuario](user-manual/README.md): manual visual recuperado, fuentes vigentes y siguientes pasos de edición.
 - [Manual del operador](user-manual/operador.md) y [requisitos multimedia](user-manual/multimedia-requisitos.md).
 - [Instalación desde USB](../README-INSTALACION-USB.md).
 - [Arquitectura](current-architecture.md), [anuncios e importación](anuncios-e-importacion.md) y [escala pública](escalado-pantalla-publica.md).
