@@ -23,6 +23,7 @@ const turnero: TurneroApi = {
   importarContenido: (categoria) => ipcRenderer.invoke('turnero:contenido:importar', categoria),
   quitarContenido: (url) => ipcRenderer.invoke('turnero:contenido:quitar', url),
   abrirCarpetaContenido: (categoria) => ipcRenderer.invoke('turnero:contenido:abrir', categoria),
+  abrirManual: () => ipcRenderer.invoke('turnero:manual:abrir'),
   alCambiarEstado: (fn) => escuchar('turnero:estado', fn),
   alCambiarConfig: (fn) => escuchar('turnero:config', fn),
   alCambiarContenido: (fn) => escuchar('turnero:contenido', fn),

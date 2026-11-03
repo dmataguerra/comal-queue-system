@@ -4,10 +4,14 @@ export function Modal({
   title,
   onClose,
   children,
+  className = '',
+  testId,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
+  testId?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
@@ -17,7 +21,8 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={`modal ${className}`}
+      data-testid={testId}
       aria-labelledby={titleId}
       onCancel={onClose}
       onPointerDown={(e) => {

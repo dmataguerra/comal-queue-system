@@ -3,12 +3,15 @@ import { test } from 'node:test';
 import { crearServidorWeb } from './servidor-web.js';
 import { crearStore } from './store.js';
 import { CONFIG_POR_DEFECTO } from './config.js';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', async () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-acuses-'));
+  mkdirSync(join(raiz, 'manual'));
+  const manual = Buffer.from('%PDF-1.7\nmanual de prueba');
+  writeFileSync(join(raiz, 'manual', 'manual-usuario-0.4.0.pdf'), manual);
   const store = crearStore({ ruta: join(raiz, 'estado.json') });
   const recibidos: unknown[] = [];
   const salud: unknown[] = [];
@@ -44,6 +47,10 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     },
   });
   try {
+    const pdf = await fetch(`${servidor.origen}/manual/manual-usuario-0.4.0.pdf`);
+    assert.equal(pdf.status, 200);
+    assert.equal(pdf.headers.get('content-type'), 'application/pdf');
+    assert.deepEqual(Buffer.from(await pdf.arrayBuffer()), manual);
     for (const dato of [
       null,
       {},

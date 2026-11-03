@@ -124,6 +124,7 @@ export interface TurneroApi {
   importarContenido(categoria: CategoriaContenido): Promise<ResultadoImportacion>;
   quitarContenido(url: string): Promise<boolean>;
   abrirCarpetaContenido(categoria?: CategoriaContenido): Promise<void>;
+  abrirManual(): Promise<void>;
   alCambiarEstado(fn: (instantanea: Instantanea, anuncio: Anuncio | null) => void): () => void;
   alCambiarConfig(fn: (config: Config) => void): () => void;
   alCambiarContenido(fn: (inventario: Inventario) => void): () => void;

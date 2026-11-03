@@ -34,6 +34,7 @@
     "desktop:dir": "npm run build && node scripts/package-desktop.mjs --dir",
     "test:theme": "npm run build && electron scripts/smoke-theme.mjs",
     "test:interface": "npm run build && electron scripts/smoke-interface.mjs",
+    "test:help": "npm run build && electron scripts/smoke-help.mjs",
     "test:destructive": "npm run build && node scripts/smoke-destructive-regressions.mjs"
   },
   "devDependencies": {

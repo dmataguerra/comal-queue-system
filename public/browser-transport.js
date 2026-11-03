@@ -55,6 +55,26 @@ if (!window.turnero) {
     importarContenido: (categoria) => solicitar('/api/contenido/importar', categoria),
     quitarContenido: (url) => solicitar('/api/contenido/quitar', url),
     abrirCarpetaContenido: (categoria) => solicitar('/api/contenido/abrir', categoria ?? null),
+    abrirManual: async () => {
+      const respuesta = await fetch('/manual/manual-usuario-0.4.0.pdf');
+      if (
+        !respuesta.ok ||
+        respuesta.headers.get('content-type')?.split(';')[0] !== 'application/pdf'
+      )
+        throw new Error('No se encontró el manual PDF. Consulta al responsable.');
+      const archivo = await respuesta.blob();
+      const url = URL.createObjectURL(archivo);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = 'Comal++_Manual_de_usuario_0.4.0.pdf';
+      document.body.append(enlace);
+      try {
+        enlace.click();
+      } finally {
+        enlace.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+    },
     ajustarVolumenYouTube: async () => {
       throw new Error(
         'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',

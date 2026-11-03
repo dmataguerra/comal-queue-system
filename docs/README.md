@@ -4,6 +4,7 @@ Base vigente: **0.4.0**, revisión del **1 de octubre de 2026**. Las guías se c
 
 ## Guías vigentes
 
+- [Centro de ayuda interactivo](centro-ayuda-interactivo.md) y [evaluación de la feature](evaluacion-centro-ayuda.md): tareas, recorridos informativos y acceso local al PDF.
 - [Continuar el manual de usuario](user-manual/README.md): edición visual del 2 de noviembre, fuente editable y generación del PDF.
 - [Manual del operador](user-manual/operador.md) y [requisitos multimedia](user-manual/multimedia-requisitos.md).
 - [Instalación desde USB](../README-INSTALACION-USB.md).

@@ -44,6 +44,7 @@ interface OpcionesIpc {
   importarContenido: (categoria: CategoriaContenido) => Promise<ResultadoImportacion>;
   quitarContenido: (url: string) => boolean;
   abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
+  abrirManual: () => Promise<void>;
   registrar: Registrar;
   diagnostico: () => Diagnostico;
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
@@ -65,6 +66,7 @@ export function conectarIpc({
   importarContenido,
   quitarContenido,
   abrirCarpetaContenido,
+  abrirManual,
   configurarYouTube,
   configurarVolumen,
   registrar,
@@ -90,6 +92,11 @@ export function conectarIpc({
     autorizar(evento, 'operador');
     validarSinArgumentos(argumentos);
     return diagnostico();
+  });
+  ipcMain.handle(IPC_CHANNELS.openManual, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarSinArgumentos(argumentos);
+    return abrirManual();
   });
   ipcMain.on(IPC_CHANNELS.health, (evento, ...argumentos: unknown[]) => {
     try {

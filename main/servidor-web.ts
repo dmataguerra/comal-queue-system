@@ -36,6 +36,7 @@ const MIME: Record<string, string> = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
+  '.pdf': 'application/pdf',
   ...TIPOS_MIME,
 };
 const origenContenido = 'turnero://app/contenido';

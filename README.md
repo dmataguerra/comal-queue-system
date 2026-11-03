@@ -46,6 +46,7 @@ Notas de la versión preparada: [Comal++ 0.4.0](docs/publicacion-0.4.0.md). El t
 - Multimedia local y respaldo local cuando YouTube no está disponible.
 - Servidor HTTP de bucle local para abrir las vistas en un navegador de la misma PC.
 - Diagnósticos de versión, persistencia, ventanas, audio, contenido, espacio y errores recientes.
+- Centro de ayuda por tareas con búsqueda, recorridos informativos y manual PDF local, desde Ayuda o F1.
 - Actualización que conserva los datos existentes y migración controlada desde perfiles compatibles de `0.2.0`.
 - Instalador Windows NSIS sin acceso directo automático en el Escritorio.
 
@@ -117,6 +118,7 @@ npm start
 | `npm run test:media` | Valida multimedia local en desarrollo y build. |
 | `npm run test:full-day` | Ejecuta una jornada de 390 minutos reales (6 h 30 min). |
 | `npm run test:browser` | Valida las vistas en Chromium con transporte de navegador. |
+| `npm run test:help` | Compila y valida ayuda, recorridos, progreso, PDF y responsividad en escritorio y navegador local. |
 | `npm run test:installed` | Prueba un instalador ya generado en datos aislados. |
 | `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
 | `npm run test:full-day:preflight` | Valida el flujo de jornada sin ejecutar las 390 minutos reales. |
@@ -181,6 +183,8 @@ Las pruebas de instalación, actualización, reversión y escala de pantalla req
 GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. CD exige el entorno `production`, secretos de firma y la huella aprobada `COMAL_SIGNER_SHA1`; verifica firma y timestamp de Setup, aplicación instalada y desinstalador antes de publicar. Sin identidad configurada, la publicación se bloquea.
 
 ## Documentación
+
+- [Centro de ayuda interactivo](docs/centro-ayuda-interactivo.md): alcance, funcionamiento y límites; [evaluación y correcciones](docs/evaluacion-centro-ayuda.md).
 
 - [Arquitectura vigente](docs/current-architecture.md): diseño instalado y límites técnicos.
 - [Operación y recuperación](docs/operacion-recuperacion.md): guardado atómico, respaldos y restauración.

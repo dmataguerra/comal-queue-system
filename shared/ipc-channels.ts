@@ -9,6 +9,7 @@ export const IPC_CHANNELS = {
   importContent: 'turnero:contenido:importar',
   removeContent: 'turnero:contenido:quitar',
   openContentFolder: 'turnero:contenido:abrir',
+  openManual: 'turnero:manual:abrir',
   screensChanged: 'turnero:pantallas',
   setYouTube: 'turnero:youtube',
   setVolume: 'turnero:volumen',

@@ -30,6 +30,7 @@ import { crearEntregasAudio } from './entregas-audio.js';
 import { MAX_ESPERA_ANUNCIO_MS } from '../shared/politica-anuncios.js';
 import { crearServidorWeb } from './servidor-web.js';
 import { migrarDesde02 } from './migracion-02.js';
+import { crearAperturaManual } from './manual-usuario.js';
 
 // Debe registrarse antes de `ready`. `stream` permite servir video por rangos.
 protocol.registerSchemesAsPrivileged([
@@ -230,6 +231,13 @@ async function iniciar() {
     }
   };
   const ipc = conectarIpc({
+    abrirManual: crearAperturaManual({
+      origen: urlDesarrollo
+        ? join(raizApp, 'output', 'pdf', 'Comal++_Manual_de_usuario_0.4.0.pdf')
+        : join(carpetaVistas, 'manual', 'manual-usuario-0.4.0.pdf'),
+      cache: join(app.getPath('userData'), 'manual'),
+      abrir: (ruta) => shell.openPath(ruta),
+    }),
     configurarVolumen,
     diagnostico,
     informarSalud,
