@@ -1,5 +1,7 @@
 # Comal++ 0.4.1 — candidato para revisión
 
+> **Registro histórico:** este candidato se incorporó en la entrega [1.0.0](publicacion-1.0.0.md). Las comprobaciones y pendientes descritos aquí corresponden al candidato original.
+
 Esta actualización incorpora el centro de ayuda por tareas, los recorridos informativos y el manual local preparados después de 0.4.0, junto con las correcciones de QA. El cambio de versión no publica un instalador ni crea una etiqueta.
 
 ## Cambios

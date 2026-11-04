@@ -1,6 +1,6 @@
 # Documentación de Comal++
 
-Versión preparada: **0.4.1**, sin publicar. Consulte [las notas de versión](publicacion-0.4.1.md) para cambios y compatibilidad de las guías 0.4.0. Las guías se contrastan con el código; los informes de pruebas conservan la fecha y el artefacto al que corresponden.
+Versión estable: **1.0.0**. Consulte [las notas de versión](publicacion-1.0.0.md) para cambios y compatibilidad de las guías 0.4.0. El candidato 0.4.1 quedó incorporado en esta entrega. La disponibilidad del instalador depende de CD; los informes de pruebas conservan la fecha y el artefacto al que corresponden.
 
 ## Guías vigentes
 
