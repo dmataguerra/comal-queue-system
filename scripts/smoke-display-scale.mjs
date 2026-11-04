@@ -14,6 +14,10 @@ BrowserWindow.prototype.showInactive = function () {};
 BrowserWindow.prototype.maximize = function () {};
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function verify() {
+  const watchdog = setTimeout(() => {
+    console.error('Display scaling test exceeded 60 seconds.');
+    app.exit(1);
+  }, 60000);
   try {
     await import('../build/main/main.js');
     let client;
@@ -34,6 +38,24 @@ async function verify() {
     assert.ok(client, 'Public display opened');
     client.setFullScreen(false);
     client.webContents.setBackgroundThrottling(false);
+    const fonts = await client.webContents.executeJavaScript(`(async () => {
+      await Promise.all([document.fonts.load('700 40px Montserrat'), document.fonts.load('800 40px Montserrat')]);
+      await document.fonts.ready;
+      return [700, 800].map(weight => ({weight, loaded: [...document.fonts].some(font =>
+        font.family.replaceAll('"', '').includes('Montserrat') && font.weight === String(weight) && font.status === 'loaded')}));
+    })()`);
+    assert.ok(
+      fonts.every((font) => font.loaded),
+      `Required fonts not loaded: ${JSON.stringify(fonts)}`,
+    );
+    const selectors = [
+      '.public-queue',
+      '.public-media-frame',
+      '.public-footer',
+      '.public-title-row h1',
+      '.footer-ticker-item',
+      '.footer-logo-plate',
+    ];
     let baseline;
     for (const [width, height, zoom] of [
       [1920, 1080, 1],
@@ -47,6 +69,8 @@ async function verify() {
       client.webContents.setZoomFactor(zoom);
       const expectedViewport = [width / zoom, height / zoom];
       let metrics;
+      let previous;
+      let stable = false;
       for (let intento = 0; intento < 60; intento++) {
         metrics = await client.webContents.executeJavaScript(`(() => {
           const viewport = [innerWidth, innerHeight];
@@ -60,14 +84,7 @@ async function verify() {
           if (!canvas) return { ready: false, reason: 'canvas', viewport, expectedViewport };
           const bounds = canvas.getBoundingClientRect();
           const scale = Math.min(viewport[0] / 1920, viewport[1] / 1080);
-          const elements = [
-            '.public-queue',
-            '.public-media-frame',
-            '.public-footer',
-            '.public-title-row h1',
-            '.footer-ticker-item',
-            '.footer-logo-plate',
-          ].map((selector) => {
+          const elements = ${JSON.stringify(selectors)}.map((selector) => {
             const element = document.querySelector(selector);
             if (!element) return null;
             const rect = element.getBoundingClientRect();
@@ -89,11 +106,23 @@ async function verify() {
             elements,
           };
         })()`);
-        if (metrics?.ready) break;
+        // El lienzo puede estar listo antes de que sus hijos terminen de ajustarse.
+        stable =
+          metrics?.ready &&
+          previous?.ready &&
+          Math.abs(metrics.scale - previous.scale) < 0.00001 &&
+          metrics.elements.every(
+            (row, i) =>
+              Math.abs(row[0] - previous.elements[i][0]) < 0.05 &&
+              Math.abs(row[1] - previous.elements[i][1]) < 0.05 &&
+              row[2] === previous.elements[i][2],
+          );
+        if (stable) break;
+        previous = metrics;
         await pause(50);
       }
       assert.ok(
-        metrics?.ready,
+        stable,
         `Canvas did not stabilize at ${width}x${height}, zoom ${zoom}: ${JSON.stringify(metrics)}`,
       );
       assert.ok(Math.abs(metrics.width - 1920 * metrics.scale) < 2, JSON.stringify(metrics));
@@ -103,9 +132,19 @@ async function verify() {
       if (!baseline) baseline = metrics.elements;
       metrics.elements.forEach((row, i) => {
         if (zoom !== 1 && i === 4) return;
-        assert.ok(Math.abs(row[0] - baseline[i][0]) < 1, 'Proportional width');
-        assert.ok(Math.abs(row[1] - baseline[i][1]) < 1, 'Proportional height');
-        assert.equal(row[2], baseline[i][2], 'Stable design typography');
+        const detail = JSON.stringify({
+          selector: selectors[i],
+          requestedViewport: [width, height],
+          zoom,
+          actualViewport: metrics.viewport,
+          scale: metrics.scale,
+          baseline: baseline[i],
+          current: row,
+          difference: [row[0] - baseline[i][0], row[1] - baseline[i][1]],
+        });
+        assert.ok(Math.abs(row[0] - baseline[i][0]) < 1, `Proportional width: ${detail}`);
+        assert.ok(Math.abs(row[1] - baseline[i][1]) < 1, `Proportional height: ${detail}`);
+        assert.equal(row[2], baseline[i][2], `Stable design typography: ${detail}`);
       });
       if (zoom === 1 && width >= 1920) {
         const image = await client.webContents.capturePage(undefined, {
@@ -120,6 +159,8 @@ async function verify() {
   } catch (error) {
     console.error(error);
     app.exit(1);
+  } finally {
+    clearTimeout(watchdog);
   }
 }
 void verify();
