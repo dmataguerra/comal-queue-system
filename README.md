@@ -12,16 +12,16 @@ Comal++ es una aplicación de escritorio para Windows orientada a operaciones de
 
 | Campo | Estado |
 | --- | --- |
-| Versión | `0.4.0` |
+| Versión preparada | `0.4.1` (sin publicar) |
 | Plataforma soportada | Windows x64 |
 | Operación normal | Local, sin internet |
 | Persistencia | Archivos JSON locales |
 | Distribución | Instalador NSIS para Windows |
 | Licencia | [MIT](LICENSE) |
 
-La versión 0.4.0 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
+La versión preparada 0.4.1 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
 
-Notas de la versión preparada: [Comal++ 0.4.0](docs/publicacion-0.4.0.md). El tag y la publicación están pendientes de validación final.
+Notas de la versión preparada: [Comal++ 0.4.1](docs/publicacion-0.4.1.md) · [Historial de cambios](CHANGELOG.md) · [Informe QA](docs/qa-2026-11-03.md). La aprobación del PR, el instalador firmado y la publicación quedan a cargo del responsable. Los resultados anteriores no certifican un nuevo instalador.
 
 ## Contenido
 
@@ -65,6 +65,12 @@ Electron -> ventanas, contenido local, HTTP loopback y ciclo de vida
 El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica` y una API local de acciones; exige Host local y el mismo Origin para escrituras, y no admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
 
 En Windows, la pantalla pública se coloca en una pantalla secundaria configurada como **pantalla extendida** cuando está disponible. Sin una pantalla secundaria, la aplicación empaquetada abre la vista pública como una ventana normal en el display primario, junto con la ventana del operador.
+
+## Preparación de 0.4.1
+
+Esta revisión añade manejo de errores HTTP, contraste corregido, dependencias actualizadas y más verificaciones automáticas. El código propio usa comentarios breves para explicar reglas y casos especiales. Los documentos fechados y los recursos del manual conservan sus versiones originales; consulta las notas de versión para su aplicabilidad.
+
+Para dos TV con la misma cola, conecta una salida secundaria del equipo a un splitter HDMI de una entrada y dos salidas. Mantén el monitor del operador en una salida independiente y selecciona **Windows + P → Extender**. La aplicación abre una ventana pública; el splitter duplica esa señal.
 
 ## Requisitos
 
