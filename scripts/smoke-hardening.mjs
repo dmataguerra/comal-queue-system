@@ -4,7 +4,6 @@ import { copyFile } from 'node:fs/promises';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 mkdirSync(join(root, 'test-results'), { recursive: true });
 const data = mkdtempSync(join(root, 'test-results', 'hardening-'));
@@ -24,7 +23,6 @@ async function wait(check) {
   }
   throw new Error('Timeout de regresión de anuncios/importación.');
 }
-
 async function verify() {
   try {
     await import('../build/main/main.js');

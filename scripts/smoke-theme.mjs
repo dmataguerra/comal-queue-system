@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'test-results');
 mkdirSync(output, { recursive: true });
@@ -23,7 +22,6 @@ async function wait(check) {
   throw new Error('Theme check timed out');
 }
 async function capture(window, name) {
-  // Hidden windows can defer compositor frames; finish only finite UI transitions.
   await run(
     window,
     `document.getAnimations().filter(a => a.effect.getTiming().iterations !== Infinity).forEach(a => a.finish())`,
@@ -54,7 +52,6 @@ async function verify() {
       w.webContents.getURL().includes('/publica/'),
     );
     for (const window of [operator, client]) window.webContents.setBackgroundThrottling(false);
-    // Exercise both motion modes explicitly, independent of the runner's OS preference.
     client.webContents.debugger.attach('1.3');
     await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],

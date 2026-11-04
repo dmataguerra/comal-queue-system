@@ -4,14 +4,17 @@ import { YouTubePanel } from './YouTubePanel';
 import type { CategoriaContenido } from '../../shared/contract';
 import { Icon } from '../comun/components/Icon';
 import { useTurnero } from '../comun/turnero';
-
 const nombreArchivo = (url: string) => decodeURIComponent(url.split('/').pop() ?? url);
-
-const FORMATOS: Record<CategoriaContenido, { extensiones: string[]; nombres: string }> = {
+const FORMATOS: Record<
+  CategoriaContenido,
+  {
+    extensiones: string[];
+    nombres: string;
+  }
+> = {
   videos: { extensiones: ['mp4', 'webm'], nombres: 'MP4 o WebM' },
   banner: { extensiones: ['jpg', 'jpeg', 'png', 'webp'], nombres: 'JPG, PNG o WebP' },
 };
-
 function motivoOmitido(categoria: CategoriaContenido, nombre: string) {
   const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
   const { extensiones, nombres } = FORMATOS[categoria];
@@ -19,7 +22,6 @@ function motivoOmitido(categoria: CategoriaContenido, nombre: string) {
     ? `“${nombre}” no se agregó: el archivo está vacío o incompleto. Espera a que termine de descargarse y vuelve a intentarlo.`
     : `“${nombre}” no se agregó: formato no admitido (usa ${nombres}).`;
 }
-
 function Archivo({
   url,
   esVideo,
@@ -67,7 +69,6 @@ function Archivo({
     </article>
   );
 }
-
 interface BibliotecaProps {
   categoria: CategoriaContenido;
   titulo: string;
@@ -79,7 +80,6 @@ interface BibliotecaProps {
   agregar: (categoria: CategoriaContenido) => void;
   quitar: (url: string) => void;
 }
-
 function Biblioteca({
   categoria,
   titulo,
@@ -141,7 +141,6 @@ function Biblioteca({
     </section>
   );
 }
-
 export function MultimediaPanel({
   notificar,
 }: {
@@ -149,7 +148,6 @@ export function MultimediaPanel({
 }) {
   const { inventario, config, importarContenido, quitarContenido } = useTurnero();
   const [ocupado, setOcupado] = useState(false);
-
   async function agregar(categoria: CategoriaContenido) {
     setOcupado(true);
     try {
@@ -176,7 +174,6 @@ export function MultimediaPanel({
       setOcupado(false);
     }
   }
-
   async function quitar(url: string) {
     const nombre = nombreArchivo(url);
     if (
@@ -198,7 +195,6 @@ export function MultimediaPanel({
       setOcupado(false);
     }
   }
-
   return (
     <div className="multimedia-workspace">
       <YouTubePanel notificar={notificar} />

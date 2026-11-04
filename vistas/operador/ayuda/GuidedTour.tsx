@@ -2,13 +2,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { recorridos, type PaginaOperador, type RecorridoId } from './contenido';
 import { Icon } from '../../comun/components/Icon';
 import './ayuda.css';
-
 interface Rect {
   left: number;
   top: number;
   width: number;
   height: number;
 }
+// El recorrido muestra los controles y bloquea las acciones de operación mientras está abierto.
 export function GuidedTour({
   id,
   onNavigate,
@@ -114,7 +114,6 @@ export function GuidedTour({
           left = candidato.left;
           top = candidato.top;
         } else {
-          // A large target may leave no free rectangle. Keep as much of it visible as possible.
           const posiciones = [
             ...candidatos,
             { left: margen, top: margen },

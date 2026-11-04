@@ -9,7 +9,6 @@ import {
   rmSync,
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-
 export function resolverCarpetaDatos(opciones: {
   personalizada?: string;
   empaquetada: boolean;
@@ -19,8 +18,6 @@ export function resolverCarpetaDatos(opciones: {
   if (opciones.personalizada) return resolve(opciones.personalizada);
   return opciones.empaquetada ? join(opciones.perfil, 'datos') : opciones.raiz;
 }
-
-/** Copia una sola vez, sin escribir en Documentos ni publicar una copia incompleta. */
 export function migrarDatosDocumentos(origen: string, destino: string): boolean {
   if (existsSync(destino)) return false;
   let nombres: string[];
@@ -60,7 +57,6 @@ export function migrarDatosDocumentos(origen: string, destino: string): boolean 
       { cause: error },
     );
   } finally {
-    // Solo se elimina el directorio temporal creado por esta invocación.
     if (dirname(temporal) === dirname(destino)) rmSync(temporal, { recursive: true, force: true });
   }
 }

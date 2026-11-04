@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'test-results');
 mkdirSync(output, { recursive: true });
@@ -76,7 +75,6 @@ async function verify() {
       assert.ok(Math.abs(metrics.y - (metrics.viewport[1] - metrics.height) / 2) < 1);
       if (!baseline) baseline = metrics.elements;
       metrics.elements.forEach((row, i) => {
-        // Chromium puede rasterizar el ancho intrínseco del texto distinto bajo zoom.
         if (zoom !== 1 && i === 4) return;
         assert.ok(Math.abs(row[0] - baseline[i][0]) < 1, 'Proportional width');
         assert.ok(Math.abs(row[1] - baseline[i][1]) < 1, 'Proportional height');

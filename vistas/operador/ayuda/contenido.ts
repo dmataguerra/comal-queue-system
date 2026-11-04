@@ -17,7 +17,6 @@ export interface TemaAyuda {
   notas: string[];
   recorrido?: RecorridoId;
 }
-
 export const temas: TemaAyuda[] = [
   {
     id: 'llamar',
@@ -128,7 +127,6 @@ export const temas: TemaAyuda[] = [
     ],
   },
 ];
-
 const llamar: PasoRecorrido[] = [
   {
     id: 'ticket',
@@ -191,10 +189,13 @@ const multimedia: PasoRecorrido[] = [
       'En escritorio puedes usar YouTube con internet o volver al contenido local. En navegador solo está admitido el contenido local. Los pedidos y sus voces funcionan sin internet.',
   },
 ];
-
 export const recorridos: Record<
   RecorridoId,
-  { titulo: string; resumen: string; pasos: PasoRecorrido[] }
+  {
+    titulo: string;
+    resumen: string;
+    pasos: PasoRecorrido[];
+  }
 > = {
   completo: {
     titulo: 'Conocer Comal++',
@@ -209,7 +210,6 @@ export const recorridos: Record<
     pasos: multimedia,
   },
 };
-
 export function normalizarBusqueda(texto: string) {
   return texto
     .normalize('NFD')

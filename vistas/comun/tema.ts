@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react';
-
 type Tema = 'azul' | 'morado';
 const clave = 'comal.tema';
 const oyentes = new Set<() => void>();
@@ -17,7 +16,6 @@ function aplicar(nuevo: Tema) {
   document.documentElement.dataset.tema = tema;
   oyentes.forEach((avisar) => avisar());
 }
-// Ambas vistas comparten origen y sesión en Electron. Se aplica antes del primer render.
 aplicar(tema);
 window.addEventListener('storage', (evento) => {
   if (evento.key === clave || evento.key === null) aplicar(leer());
@@ -34,7 +32,6 @@ export function useTema() {
     tema: actual,
     cambiarTema: () => {
       const nuevo = tema === 'azul' ? 'morado' : 'azul';
-      // No indicar un cambio global si la preferencia no pudo guardarse.
       localStorage.setItem(clave, nuevo);
       aplicar(nuevo);
     },

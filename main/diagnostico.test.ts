@@ -3,7 +3,6 @@ import test from 'node:test';
 import type { Config } from '../shared/contract.js';
 import { crearProveedorDiagnostico, espacioDisponible } from './diagnostico.js';
 import type { Store } from './store.js';
-
 test('proveedor reúne salud, inventario y espacio sin exponer datos externos', () => {
   const store = {
     obtener: () => ({ actual: 42, llamados: [41], puedeDeshacer: false }),
@@ -39,7 +38,6 @@ test('proveedor reúne salud, inventario y espacio sin exponer datos externos', 
   assert.equal(dato.accionPendiente, false);
   assert.equal('env' in dato, false);
 });
-
 test('fallos de subsistemas producen datos parciales y espacio desconocido', () => {
   const obtener = crearProveedorDiagnostico({
     carpetaDatos: 'C:/datos',

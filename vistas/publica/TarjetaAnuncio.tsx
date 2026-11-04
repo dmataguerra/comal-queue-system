@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Anuncio } from '../../shared/contract';
 import { formatear } from '../../nucleo/turnos';
 import { Icon } from '../comun/components/Icon';
-
 export function TarjetaAnuncio({ anuncio }: { anuncio: Anuncio | null }) {
-  // Retener la presentación durante la salida sin cambiar la cola ni el audio.
   const [visible, setVisible] = useState(anuncio);
   useEffect(() => {
     if (anuncio) setVisible(anuncio);

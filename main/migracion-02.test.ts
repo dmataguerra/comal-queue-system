@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
 import { migrarDesde02 } from './migracion-02.js';
-
 test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni repetir la migración', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-migracion-'));
   const datos = join(raiz, 'datos');
@@ -19,7 +18,7 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
     );
     db.prepare('INSERT INTO turns VALUES (?, ?, ?, ?)').run(
       '42',
-      new Date(ahora.getTime() - 2 * 60 * 60_000).toISOString(),
+      new Date(ahora.getTime() - 2 * 60 * 60000).toISOString(),
       'ready',
       2,
     );
@@ -55,7 +54,6 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('configuración legacy corrupta rechaza migración sin modificar SQLite ni publicar estado vacío', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-migracion-corrupta-'));
   const datos = join(raiz, 'datos');

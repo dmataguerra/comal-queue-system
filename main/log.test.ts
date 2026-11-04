@@ -4,12 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { crearRegistro } from './log.js';
-
 test('crea JSON por línea y suprime errores idénticos', () => {
   const carpeta = mkdtempSync(join(tmpdir(), 'comal-log-'));
   try {
     const ruta = join(carpeta, 'turnero.log');
-    const registrar = crearRegistro(ruta, { version: '0.3.0', repeticionMs: 30_000 });
+    const registrar = crearRegistro(ruta, { version: '0.3.0', repeticionMs: 30000 });
     registrar('No se pudo guardar estado.json');
     registrar('No se pudo guardar estado.json');
     registrar('Persistencia restaurada');
@@ -26,7 +25,6 @@ test('crea JSON por línea y suprime errores idénticos', () => {
     rmSync(carpeta, { recursive: true, force: true });
   }
 });
-
 test('rota por tamaño y conserva solo el máximo configurado', () => {
   const carpeta = mkdtempSync(join(tmpdir(), 'comal-log-'));
   try {
@@ -43,7 +41,6 @@ test('rota por tamaño y conserva solo el máximo configurado', () => {
     rmSync(carpeta, { recursive: true, force: true });
   }
 });
-
 test('ruta de log no disponible no lanza ni crea archivos ajenos', () => {
   const carpeta = mkdtempSync(join(tmpdir(), 'comal-log-'));
   try {

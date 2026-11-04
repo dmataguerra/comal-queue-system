@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { test } from 'node:test';
 import { crearAperturaManual } from './manual-usuario.js';
-
 test('el lector recibe una copia real del PDF, estable y reparable, fuera de asar', async (t) => {
   const raiz = await mkdtemp(join(tmpdir(), 'comal-manual-'));
   t.after(() => rm(raiz, { recursive: true, force: true }));
@@ -31,7 +30,6 @@ test('el lector recibe una copia real del PDF, estable y reparable, fuera de asa
   assert.equal(rutas[0], rutas[1]);
   assert.deepEqual(await readFile(rutas[1]), pdf);
 });
-
 test('manual ausente, incompleto y lector no disponible ofrecen errores recuperables', async (t) => {
   const raiz = await mkdtemp(join(tmpdir(), 'comal-manual-error-'));
   t.after(() => rm(raiz, { recursive: true, force: true }));

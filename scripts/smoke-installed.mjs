@@ -14,7 +14,6 @@ import {
 import { createServer } from 'node:net';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 if (process.platform !== 'win32') throw new Error('Esta prueba requiere Windows.');
 const raiz = fileURLToPath(new URL('../', import.meta.url));
 const version = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8')).version;
@@ -41,7 +40,6 @@ const reporte = {
   prueba,
   pasos: [],
 };
-
 async function puertoLibre() {
   const servidor = createServer();
   await new Promise((resolver) => servidor.listen(0, '127.0.0.1', resolver));
@@ -49,7 +47,6 @@ async function puertoLibre() {
   await new Promise((resolver) => servidor.close(resolver));
   return puerto;
 }
-
 async function esperar(comprobar, mensaje, limite = 30000) {
   const fin = Date.now() + limite;
   while (Date.now() < fin) {
@@ -57,13 +54,12 @@ async function esperar(comprobar, mensaje, limite = 30000) {
       const resultado = await comprobar();
       if (resultado) return resultado;
     } catch {
-      // El ejecutable puede seguir arrancando.
+      /* El fallo no impide continuar con el respaldo disponible. */
     }
     await pausa(250);
   }
   throw new Error(mensaje);
 }
-
 async function conectar(puerto) {
   const pagina = await esperar(async () => {
     const respuesta = await fetch(`http://127.0.0.1:${puerto}/json/list`, {
@@ -140,13 +136,10 @@ async function conectar(puerto) {
     },
   };
 }
-
 function detener(proceso) {
   if (!proceso || proceso.exitCode !== null) return;
-  // Solo el árbol del PID que inició esta prueba.
   spawnSync('taskkill', ['/PID', String(proceso.pid), '/T', '/F'], { stdio: 'ignore' });
 }
-
 let proceso;
 try {
   if (instaladorAnterior) {
@@ -193,7 +186,6 @@ try {
   );
   reporte.manualSha256 = createHash('sha256').update(manualEmpaquetado).digest('hex');
   reporte.pasos.push('manual PDF empaquetado idéntico al documento fuente');
-
   async function abrir(usarRutaPredeterminada = false) {
     const puerto = await puertoLibre();
     const salida = openSync(join(prueba, 'aplicacion.log'), 'a');
@@ -219,7 +211,6 @@ try {
     );
     return cliente;
   }
-
   let cliente = await abrir();
   const inicial = await cliente.evaluar('window.turnero.obtener()');
   assert.equal(inicial.instantanea.actual, null);
@@ -264,7 +255,6 @@ try {
   cliente.cerrar();
   detener(proceso);
   await pausa(500);
-
   cliente = await abrir();
   const restaurado = await cliente.evaluar('window.turnero.obtener()');
   assert.equal(restaurado.instantanea.actual, 42);
@@ -272,9 +262,6 @@ try {
   reporte.pasos.push('conservación de estado tras reinicio del ejecutable');
   detener(proceso);
   await pausa(500);
-
-  // Aislar también la ruta predeterminada. Crear el destino evita importar datos
-  // reales de Documentos; la migración tiene sus propias pruebas con copias ficticias.
   const datosPerfil = join(prueba, 'electron-profile', 'datos');
   mkdirSync(datosPerfil, { recursive: true });
   cliente = await abrir(true);

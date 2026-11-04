@@ -1,5 +1,4 @@
 import { useId, useSyncExternalStore } from 'react';
-
 const motionQuery = '(prefers-reduced-motion: reduce)';
 const subscribe = (notify: () => void) => {
   const query = window.matchMedia(motionQuery);
@@ -7,9 +6,6 @@ const subscribe = (notify: () => void) => {
   return () => query.removeEventListener('change', notify);
 };
 const reducedMotion = () => window.matchMedia(motionQuery).matches;
-
-// Puntos tomados de assets/reference/public-background.png (1672 × 941).
-// Se normalizan una sola vez al lienzo de DisplayCanvas, sin sangrado ni zoom.
 const outlines = [
   [
     'light',
@@ -40,7 +36,6 @@ const outlines = [
     'M1411 941 C1401 914 1411 887 1422 874 C1453 835 1500 838 1536 827 C1565 818 1572 799 1585 773 C1600 739 1634 724 1672 725 L1712 725 L1712 981 Z',
   ],
 ] as const;
-
 function geometry(source: string, amount = 0, phase = 0) {
   let coordinate = 0;
   return source.replace(/([MC LZ])|(-?\d+(?:\.\d+)?)/g, (token, command: string | undefined) => {
@@ -49,7 +44,6 @@ function geometry(source: string, amount = 0, phase = 0) {
     const value = Number(token);
     const axis = index % 2;
     const limit = axis === 0 ? 1672 : 941;
-    // Deformación espacial suave: los controles vecinos fluyen juntos y el borde queda anclado.
     const spatialPhase = (value / limit) * 1.2 + axis * 0.4;
     const offset =
       value > 0 && value < limit
@@ -70,8 +64,6 @@ const waves = outlines.map(([color, outline], index) => {
     duration: 24 + index * 1.3,
   };
 });
-
-/** SMIL interpola las curvas en el navegador; React sólo atiende cambios de accesibilidad. */
 export function AnimatedBackground() {
   const id = useId();
   const reduce = useSyncExternalStore(subscribe, reducedMotion, () => true);

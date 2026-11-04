@@ -71,7 +71,7 @@ def main():
     for old in ['server/state.service.ts', 'src/App.tsx', 'server/database.ts', 'tests/backend.test.ts', 'electron/main.cjs']:
         if old in technical: errors.append('Obsolete source reference '+old)
 
-    # The reviewed parallel snapshot must match source byte-for-byte.
+
     source = ROOT.parent.parent
     snapshot_files = ['main/main.ts','scripts/smoke-browser.mjs','scripts/smoke-full-day.mjs','scripts/smoke-hardening.mjs','scripts/smoke-interface.mjs','scripts/smoke-theme.mjs','vistas/comun/components/AnimatedBackground.tsx','vistas/comun/components/SizeControl.tsx','vistas/comun/hooks/useClock.ts','vistas/comun/styles/interfaz.css','vistas/comun/styles/tema.css','vistas/comun/tamanio.ts','vistas/operador/OperadorPage.tsx']
     if source!=ROOT and (source/'package.json').exists():
@@ -85,7 +85,7 @@ def main():
         'user-manual/Manual-de-Usuario.pdf': ['1. Antes de atender', '2. Llamar', '8. Cierre', '70%', '130%', 'am/pm', '45 segundos'],
         'user-manual/Guia-Rapida-Cajero.pdf': ['Antes de atender', 'Cierre y recuperación', '213298', 'am/pm', '120'],
     }
-    # Quick manual describes 70-130 and has no reason to assert a timeout value.
+
     pdfs['user-manual/Guia-Rapida-Cajero.pdf'].remove('120')
     checks['pdfs'] = {}
     for name, terms in pdfs.items():

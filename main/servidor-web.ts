@@ -27,7 +27,6 @@ import {
   validarSalud,
 } from './seguridad-ipc.js';
 import type { Store } from './store.js';
-
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -51,7 +50,6 @@ function inventarioNavegador(inventario: Inventario): Inventario {
     aviso: paraNavegador(inventario.aviso),
   };
 }
-
 interface OpcionesServidor {
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
   configurarVolumen: (voz: number, multimedia: number) => void;
@@ -72,7 +70,6 @@ interface OpcionesServidor {
   ) => void;
   registrar: (mensaje: string) => void;
 }
-
 export async function crearServidorWeb(opciones: OpcionesServidor) {
   const clientes = new Set<ServerResponse>();
   let origen = '';
@@ -122,6 +119,7 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
         'Content-Range': `bytes ${inicio}-${fin}/${size}`,
         'Content-Length': fin - inicio + 1,
       });
+      // Si el archivo desaparece durante la lectura, se cierra la respuesta sin tumbar la app.
       await pipeline(createReadStream(archivo, { start: inicio, end: fin }), res);
       return;
     }

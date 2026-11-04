@@ -4,7 +4,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { limpiarTemporalesJson } from './temporales.js';
-
 test('inicio retira solo temporales JSON antiguos de nombre conocido', () => {
   const carpeta = mkdtempSync(join(tmpdir(), 'comal-temporales-'));
   try {
@@ -14,7 +13,7 @@ test('inicio retira solo temporales JSON antiguos de nombre conocido', () => {
     const original = join(carpeta, 'estado.json');
     for (const ruta of [viejo, reciente, ajeno, original]) writeFileSync(ruta, '{}');
     const ahora = Date.now();
-    utimesSync(viejo, new Date(ahora - 120_000), new Date(ahora - 120_000));
+    utimesSync(viejo, new Date(ahora - 120000), new Date(ahora - 120000));
     assert.equal(
       limpiarTemporalesJson(carpeta, () => {}, ahora),
       1,

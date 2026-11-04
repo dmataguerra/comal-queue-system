@@ -1,8 +1,7 @@
-/* Muted copy must retain readable contrast on white and pale panels in both themes. */
 :root {
   --theme-muted: #4e6980;
 }
-/* El resto de la paleta azul permanece en los fallbacks de cada componente. */
+
 :root[data-tema='morado'] {
   --wave-light-start: #eed9f5;
   --wave-light-end: #d9afe6;

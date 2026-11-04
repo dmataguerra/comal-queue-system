@@ -47,7 +47,7 @@ def color(value):
 
 
 def register_fonts():
-    # Vera and its license ship with ReportLab; no host-specific font paths.
+
     fonts = Path(reportlab.__file__).parent / "fonts"
     pdfmetrics.registerFont(TTFont("Comal", str(fonts / "Vera.ttf")))
     pdfmetrics.registerFont(TTFont("Comal-Bold", str(fonts / "VeraBd.ttf")))
@@ -231,7 +231,7 @@ class Manual:
                   size=8.5, fill="#BCDDF5")
 
     def panorama(self, p):
-        # Whole interface for orientation; following pages magnify each control.
+
         self.picture(p["imagen"], (W - 515) / 2, 133, 515, 323, padding=0, frame=False)
         for i, (title, desc) in enumerate(p["claves"]):
             x = M + i * (CW + 15) / 3
@@ -455,7 +455,7 @@ class Manual:
                           "enlaces": len(page.get("/Annots", []))})
         if internal_links != 59 or external_links != 2 or len(reader.outline) != 12:
             raise ValueError("Incomplete index, section links or PDF outline")
-        # Distinct text blocks must never paint on top of each other.
+
         text_blocks = self.measures["textos"]
         for i, a in enumerate(text_blocks):
             ax, ay, aw, ah = a["caja"]

@@ -1,4 +1,3 @@
-// El preload de Electron ya proporciona esta API; este adaptador solo corre en el navegador local.
 if (!window.turnero) {
   const oyentes = {
     estado: new Set(),
@@ -42,7 +41,7 @@ if (!window.turnero) {
       if (entregaAudio) avisar('entregaAudio', entregaAudio);
       for (const entrega of entregasAudio ?? []) avisar('entregaAudio', entrega);
     } catch {
-      /* La conexión se reintentará. */
+      /* El fallo no impide continuar con el respaldo disponible. */
     }
   };
   window.turnero = {

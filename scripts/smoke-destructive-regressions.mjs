@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 if (!process.versions.electron) {
   const { default: electron } = await import('electron');
@@ -51,7 +50,6 @@ if (!process.versions.electron) {
     }
     throw new Error('Timeout de regresión destructiva');
   }
-
   async function verify() {
     const timeout = setTimeout(() => app.exit(1), 60000);
     try {
@@ -80,7 +78,6 @@ if (!process.versions.electron) {
           operator,
           "document.querySelector('#turn-number').focus(); document.querySelector('#turn-number').select()",
         );
-        // Chromium text insertion exercises the field's native length restriction.
         await operator.webContents.insertText(text);
         await wait(() =>
           run(

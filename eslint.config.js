@@ -5,7 +5,6 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-
 export default tseslint.config(
   { ignores: ['node_modules/', 'build/', 'dist/', 'release/', 'test-results/'] },
   {
@@ -21,7 +20,14 @@ export default tseslint.config(
     ...js.configs.recommended,
   },
   {
-    files: ['backend/**/*.ts', 'main/**/*.{ts,cts}', 'nucleo/**/*.ts', 'shared/**/*.ts', 'vistas/**/*.{ts,tsx}', 'vite.config.ts'],
+    files: [
+      'backend/**/*.ts',
+      'main/**/*.{ts,cts}',
+      'nucleo/**/*.ts',
+      'shared/**/*.ts',
+      'vistas/**/*.{ts,tsx}',
+      'vite.config.ts',
+    ],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
@@ -53,7 +59,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ['backend/**/*.ts', 'main/**/*.{ts,cts}', 'nucleo/**/*.ts', 'scripts/**/*.mjs', 'vite.config.ts'],
+    files: [
+      'backend/**/*.ts',
+      'main/**/*.{ts,cts}',
+      'nucleo/**/*.ts',
+      'scripts/**/*.mjs',
+      'vite.config.ts',
+    ],
     languageOptions: { globals: globals.node },
   },
   {

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTurnero } from '../turnero';
 import { Icon } from './Icon';
-
 export function VolumeControl({
   notificar,
 }: {

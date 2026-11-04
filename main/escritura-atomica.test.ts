@@ -4,7 +4,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { escribirJsonAtomico } from './escritura-atomica.js';
-
 test('escritura atómica crea y reemplaza JSON sin dejar temporales', () => {
   const dir = mkdtempSync(join(tmpdir(), 'turnero-atomico-'));
   try {
@@ -17,7 +16,6 @@ test('escritura atómica crea y reemplaza JSON sin dejar temporales', () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
-
 test('reintenta un bloqueo temporal de Windows y luego reemplaza el original', () => {
   const dir = mkdtempSync(join(tmpdir(), 'turnero-atomico-'));
   try {
@@ -37,7 +35,6 @@ test('reintenta un bloqueo temporal de Windows y luego reemplaza el original', (
     rmSync(dir, { recursive: true, force: true });
   }
 });
-
 test('un fallo de rename conserva el original y limpia el temporal', () => {
   const dir = mkdtempSync(join(tmpdir(), 'turnero-atomico-'));
   try {

@@ -1,5 +1,3 @@
-/* El viewport se adapta; las medidas interiores pertenecen al lienzo 1920 x 1080.
-   No usar vw/vh dentro del lienzo: crecerian de nuevo antes del escalado. */
 .public-viewport {
   position: fixed;
   inset: 0;
@@ -7,7 +5,7 @@
   background: #000;
   cursor: none;
 }
-/* Public display: a restrained white-and-navy system for long-distance reading. */
+
 .public-screen {
   --display-gap: 42px;
   position: absolute;
@@ -38,7 +36,7 @@
   pointer-events: none;
   overflow: hidden;
 }
-/* Matices muestreados de la referencia; Morado conserva la misma geometría. */
+
 .background-light-start {
   stop-color: var(--wave-light-start, #b0dafd);
 }
@@ -123,8 +121,7 @@
   height: 21.12px;
   color: var(--theme-primary, #0a5da1);
 }
-/* RF-02, RF-05 · una sola lista: el último llamado destacado arriba y detrás los anteriores.
-   Los turnos salen conforme se llaman; quitar uno lo saca de la lista sin reacomodar el resto. */
+
 .public-turn-list {
   flex: 1;
   min-height: 0;
@@ -132,7 +129,7 @@
   flex-direction: column;
   animation: queue-in 0.4s var(--ease);
 }
-/* Se conservan los seis pedidos vigentes, con más espacio para el destacado. */
+
 .public-turn {
   container-type: size;
   min-height: 0;
@@ -202,7 +199,7 @@
   pointer-events: none;
   background: linear-gradient(0deg, rgba(5, 27, 47, 0.14), transparent 30%);
 }
-/* RF-10 a RF-12 · un <video> por clip; el siguiente espera oculto. Sin videos, banner con fundido. */
+
 .content-stage {
   position: absolute;
   inset: 0;

@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react';
-
 export const tamanios = [70, 80, 90, 100, 110, 120, 130] as const;
 export type Tamanio = (typeof tamanios)[number];
 const clave = 'comal.tamanio';

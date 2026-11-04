@@ -31,8 +31,6 @@ import { MAX_ESPERA_ANUNCIO_MS } from '../shared/politica-anuncios.js';
 import { crearServidorWeb } from './servidor-web.js';
 import { migrarDesde02 } from './migracion-02.js';
 import { crearAperturaManual } from './manual-usuario.js';
-
-// Debe registrarse antes de `ready`. `stream` permite servir video por rangos.
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'turnero',
@@ -45,10 +43,8 @@ protocol.registerSchemesAsPrivileged([
     },
   },
 ]);
-
 const urlDesarrollo = process.env.TURNERO_DEV_URL;
 const raizApp = app.getAppPath();
-// Datos privados en el perfil de la aplicación, fuera de Documentos/OneDrive y del instalador.
 const carpetaDatos = resolverCarpetaDatos({
   personalizada: process.env.TURNERO_DATOS,
   empaquetada: app.isPackaged,
@@ -56,10 +52,8 @@ const carpetaDatos = resolverCarpetaDatos({
   raiz: raizApp,
 });
 const carpetaContenido = join(carpetaDatos, 'contenido');
-// El instalador deja el contenido de fábrica junto al .exe (extraFiles); se copia en el primer arranque.
 const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : raizApp, 'contenido');
 const carpetaVistas = join(raizApp, 'dist');
-
 let ultimoErrorAplicacion: string | null = null;
 let registroBase: (mensaje: string) => void = (mensaje) => console.error(mensaje);
 const registrar = (mensaje: string) => {
@@ -67,14 +61,11 @@ const registrar = (mensaje: string) => {
     ultimoErrorAplicacion = mensaje.slice(0, 200);
   registroBase(mensaje);
 };
-
 const urlVista = (vista: Vista) =>
   urlDesarrollo
     ? `${urlDesarrollo}/vistas/${vista}/index.html`
     : `turnero://app/vistas/${vista}/index.html`;
-
 async function iniciar() {
-  // Preparar la carpeta dentro del mismo manejador que muestra errores de arranque.
   const migrados =
     app.isPackaged && !process.env.TURNERO_DATOS
       ? migrarDatosDocumentos(join(app.getPath('documents'), 'Turnero Comal'), carpetaDatos)
@@ -87,10 +78,7 @@ async function iniciar() {
     registrar(`Datos copiados desde Documentos a ${carpetaDatos}; originales conservados.`);
   limpiarTemporalesJson(carpetaDatos, registrar);
   Menu.setApplicationMenu(null);
-  // Una página de Vite con el mismo ETag puede conservar una CSP antigua en el perfil.
-  // Limpiar solo la caché HTTP permite aplicar la política vigente al reiniciar desarrollo.
   if (urlDesarrollo) await session.defaultSession.clearCache();
-  // Identidad de la aplicación de escritorio exigida por YouTube para páginas locales.
   session.defaultSession.webRequest.onBeforeSendHeaders(
     { urls: ['https://www.youtube.com/embed/*'] },
     (details, callback) => {
@@ -105,7 +93,6 @@ async function iniciar() {
     developmentUrl: urlDesarrollo,
     contentSecurityPolicy: crearCsp(false),
   });
-
   const rutaConfig = join(carpetaDatos, 'config.json');
   migrarDesde02(join(app.getPath('userData'), 'comal.sqlite'), carpetaDatos, registrar);
   let config: Config = leerConfig(rutaConfig, registrar);
@@ -127,7 +114,6 @@ async function iniciar() {
   let saludYouTube: 'activo' | 'no disponible' | 'inactivo' = 'inactivo';
   let entregaAudio: EntregaAudio | null = null;
   let servidorWeb: Awaited<ReturnType<typeof crearServidorWeb>> | null = null;
-
   const ventanas = crearVentanas({
     preload: join(import.meta.dirname, 'preload.cjs'),
     icon: join(raizApp, 'public/assets/branding/comal-trojan-helmet.ico'),
@@ -141,7 +127,6 @@ async function iniciar() {
     alCerrarOperador: () => app.quit(),
     registrar,
   });
-
   const importarContenido = async (
     categoria: CategoriaContenido,
   ): Promise<ResultadoImportacion> => {
@@ -180,7 +165,6 @@ async function iniciar() {
     const error = await shell.openPath(carpeta);
     if (error) throw new Error(`No se pudo abrir la carpeta de multimedia: ${error}`);
   };
-
   const diagnostico = crearProveedorDiagnostico({
     carpetaDatos,
     version: app.getVersion(),
@@ -203,7 +187,6 @@ async function iniciar() {
     ipc.difundirConfig(config);
     servidorWeb?.difundirConfig(config);
   };
-
   const configurarVolumen = (voz: number, multimedia: number) => {
     const nueva = {
       ...leerConfig(rutaConfig, registrar),
@@ -266,7 +249,6 @@ async function iniciar() {
     if (anuncio) entregasAudio.registrar(anuncio);
   });
   const vigilarAnuncios = setInterval(entregasAudio.vencer, 250);
-
   sembrarContenido(contenidoDeFabrica, carpetaContenido, registrar);
   const contenido = vigilarContenido(
     carpetaContenido,
@@ -278,8 +260,6 @@ async function iniciar() {
     registrar,
   );
   inventario = contenido.inicial;
-
-  // §8 · recarga diaria de la pública fuera del horario de servicio; de paso, reinicio por fecha.
   let recarga: ReturnType<typeof setTimeout> | undefined;
   const programarRecarga = () => {
     clearTimeout(recarga);
@@ -294,7 +274,6 @@ async function iniciar() {
       }
     }, msHastaHora(config.recargaDiaria));
   };
-
   const detenerConfig = vigilarConfig(
     rutaConfig,
     (nueva) => {
@@ -308,7 +287,6 @@ async function iniciar() {
     },
     registrar,
   );
-
   app.on('second-instance', () => ventanas.enfocarOperador());
   app.on('before-quit', () => {
     clearInterval(vigilarAnuncios);
@@ -320,11 +298,9 @@ async function iniciar() {
     ventanas.cerrar();
   });
   app.on('window-all-closed', () => app.quit());
-
   ventanas.iniciar();
   try {
     servidorWeb = await crearServidorWeb({
-      // Las pruebas aisladas pueden pedir un puerto libre sin tocar la instancia habitual.
       puerto: process.env.TURNERO_PUERTO === '0' ? 0 : undefined,
       informarSalud,
       vistas: carpetaVistas,
@@ -354,7 +330,6 @@ async function iniciar() {
   programarRecarga();
   registrar(`Turnero iniciado · datos en ${carpetaDatos}`);
 }
-
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {

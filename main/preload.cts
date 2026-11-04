@@ -1,7 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { TurneroApi } from '../shared/contract.js';
-
-// The Electron sandbox cannot load local modules; ipc-channels.test.ts checks these literals.
 function escuchar<T extends unknown[]>(canal: string, fn: (...datos: T) => void): () => void {
   const oyente = (_evento: IpcRendererEvent, ...datos: unknown[]) => fn(...(datos as T));
   ipcRenderer.on(canal, oyente);
@@ -9,7 +7,6 @@ function escuchar<T extends unknown[]>(canal: string, fn: (...datos: T) => void)
     ipcRenderer.removeListener(canal, oyente);
   };
 }
-
 const turnero: TurneroApi = {
   diagnostico: () => ipcRenderer.invoke('turnero:diagnostico'),
   informarSalud: (tipo, estado) => ipcRenderer.send('turnero:salud', tipo, estado),
@@ -31,5 +28,4 @@ const turnero: TurneroApi = {
   alCambiarEntregaAudio: (fn) => escuchar('turnero:anuncio:estado', fn),
   registrar: (mensaje) => ipcRenderer.send('turnero:registrar', mensaje),
 };
-
 contextBridge.exposeInMainWorld('turnero', turnero);

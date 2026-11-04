@@ -4,11 +4,8 @@ import { createQueueStore } from '../backend/queue-store.js';
 import type { Store } from '../backend/queue-store.js';
 import type { Registrar } from './log.js';
 import { fechaLocal, guardarEstado, leerEstado } from './persistencia.js';
-
 export type { Store } from '../backend/queue-store.js';
-
 export const RESERVA_ESTADO = 16 * 1024 * 1024;
-
 export function comprobarEspacioEstado(
   ruta: string,
   espacio = (carpeta: string) => {
@@ -26,7 +23,6 @@ export function comprobarEspacioEstado(
     throw error;
   }
 }
-
 interface StoreOptions {
   antesDeAnunciar?: () => void;
   esperaAnuncioMs?: number;
@@ -37,8 +33,6 @@ interface StoreOptions {
   registrar?: Registrar;
   guardar?: typeof guardarEstado;
 }
-
-/** Bind the queue application to the existing, compatibility-preserving JSON adapter. */
 export function crearStore({
   antesDeAnunciar,
   esperaAnuncioMs,

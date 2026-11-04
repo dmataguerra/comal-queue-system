@@ -5,7 +5,6 @@ import { Icon } from './Icon';
 export function PublicFooter({ messages }: { messages: string[] }) {
   const clock = useClock();
   const clima = useClima();
-  // También omite el texto si aún está guardado en un config.json anterior.
   const visibles = messages.filter(
     (message) => !/^el caf[eé] tambi[eé]n nos une\.?$/i.test(message.trim()),
   );

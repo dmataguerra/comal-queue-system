@@ -2,8 +2,6 @@ export interface FuenteYouTube {
   videoId?: string;
   playlistId?: string;
 }
-
-/** Solo acepta URLs de YouTube e identificadores válidos; nunca ejecuta la URL recibida. */
 export function parseYouTube(entrada: string): FuenteYouTube {
   const url = new URL(entrada.trim());
   if (url.protocol !== 'https:' || url.username || url.password || url.port)
@@ -34,7 +32,6 @@ export function parseYouTube(entrada: string): FuenteYouTube {
   }
   return { videoId, playlistId };
 }
-
 export function esYouTube(valor: unknown): valor is string {
   if (typeof valor !== 'string' || valor.length > 2000) return false;
   try {

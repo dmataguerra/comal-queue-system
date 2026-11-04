@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const results = join(root, 'test-results');
 mkdirSync(results, { recursive: true });
@@ -26,7 +25,6 @@ const report = {
   evaluations: [],
 };
 const save = () => writeFileSync(join(output, 'resultado.json'), JSON.stringify(report, null, 2));
-
 async function wait(check, message) {
   for (let i = 0; i < 150; i++) {
     if (await check()) return;
@@ -34,18 +32,15 @@ async function wait(check, message) {
   }
   throw new Error(message);
 }
-
 async function settle(window) {
   await window.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
   await pause(100);
 }
-
 async function click(window, selector) {
   assert.ok(await run(window, `Boolean(document.querySelector(${JSON.stringify(selector)}))`));
   await run(window, `document.querySelector(${JSON.stringify(selector)}).click()`);
   await settle(window);
 }
-
 async function audit(window, name) {
   await settle(window);
   const result = await run(
@@ -59,7 +54,6 @@ async function audit(window, name) {
     `${result.violations.length ? 'FAIL' : 'PASS'}: ${name} (${result.violations.length} rule violations)`,
   );
 }
-
 async function verify() {
   const timeout = setTimeout(() => {
     report.status = 'FAIL';
@@ -157,5 +151,4 @@ async function verify() {
     clearTimeout(timeout);
   }
 }
-
 void verify();

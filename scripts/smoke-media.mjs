@@ -3,10 +3,8 @@ import { spawn } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 async function waitFor(check, message, timeout = 15000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -15,8 +13,6 @@ async function waitFor(check, message, timeout = 15000) {
   }
   throw new Error(message);
 }
-
-// Vite activa StrictMode y prueba el origen HTTP; la segunda ejecución usa las vistas compiladas.
 async function launch() {
   const { createServer } = await import('vite');
   const { default: electron } = await import('electron');
@@ -48,7 +44,6 @@ async function launch() {
     await server.close();
   }
 }
-
 async function verify() {
   const { app, BrowserWindow } = await import('electron');
   const mode = process.env.TURNERO_MEDIA_MODE;
@@ -116,8 +111,6 @@ async function verify() {
       ),
       'Falló la carga y decodificación del audio',
     );
-
-    // Clip sintético: la prueba no depende de los archivos agregados/borrados por el operador.
     const bytes = await execute(
       operator,
       `(async()=>{
@@ -156,7 +149,6 @@ async function verify() {
       await execute(operator, "document.querySelectorAll('.media-file.broken').length"),
       0,
     );
-    // Instrumentar el inicio real de Web Audio y leer volumen del video en ese instante.
     writeFileSync(
       join(data, 'config.json'),
       JSON.stringify({ youtubeUrl: null, volumenMusica: 0.6, volumenVoz: 0.8, repeticiones: 2 }),
@@ -255,7 +247,6 @@ async function verify() {
     app.exit(1);
   }
 }
-
 if (process.argv.includes('--media-child')) void verify();
 else
   void launch().catch((error) => {

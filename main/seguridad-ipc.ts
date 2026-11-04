@@ -1,5 +1,4 @@
 import type { Accion, CategoriaContenido, EntregaAudio } from '../shared/contract.js';
-
 export function validarAcuseAudio(
   valor: unknown,
 ): [number, number, Exclude<EntregaAudio['estado'], 'pendiente'>] {
@@ -20,22 +19,23 @@ export function validarAcuseAudio(
   return [id as number, n as number, estado];
 }
 import { esYouTube } from '../nucleo/youtube.js';
-
 type Vista = 'operador' | 'publica';
-
 interface Remitente {
   getURL(): string;
-  mainFrame: { url: string };
+  mainFrame: {
+    url: string;
+  };
 }
-
 interface Evento {
   sender: Remitente;
-  senderFrame: { url: string } | null;
+  senderFrame: {
+    url: string;
+  } | null;
 }
-
-/** Exige la ventana registrada, su marco principal y la página local prevista. */
 export function autorizarIpc<T extends Remitente>(
-  evento: Evento & { sender: T },
+  evento: Evento & {
+    sender: T;
+  },
   vista: Vista | 'cualquiera',
   esOperador: (remitente: T) => boolean,
   esPublica: (remitente: T) => boolean,
@@ -52,15 +52,12 @@ export function autorizarIpc<T extends Remitente>(
     throw new Error('Página no autorizada.');
   return origen;
 }
-
 export function validarSinArgumentos(argumentosIpc: unknown[]): void {
   if (argumentosIpc.length !== 0) throw new Error('Argumentos no válidos.');
 }
-
 export function validarCantidad(argumentosIpc: unknown[], cantidad: number): void {
   if (argumentosIpc.length !== cantidad) throw new Error('Argumentos no válidos.');
 }
-
 export function validarAccion(accion: unknown): Accion {
   if (!accion || typeof accion !== 'object' || Array.isArray(accion))
     throw new Error('Acción no válida.');
@@ -77,21 +74,17 @@ export function validarAccion(accion: unknown): Accion {
     return { tipo: 'QUITAR', n: valor.n as number };
   throw new Error('Acción no válida.');
 }
-
 export function validarYouTube(url: unknown): string | null {
   if (url === null || esYouTube(url)) return url;
   throw new Error('Enlace de YouTube no válido.');
 }
-
 export function validarCategoria(categoria: unknown): CategoriaContenido {
   if (categoria === 'videos' || categoria === 'banner') return categoria;
   throw new Error('Categoría multimedia no válida.');
 }
-
 export function validarCategoriaOpcional(categoria: unknown): CategoriaContenido | undefined {
   return categoria === undefined ? undefined : validarCategoria(categoria);
 }
-
 export function validarUrlContenido(valor: unknown): string {
   if (typeof valor !== 'string' || valor.length > 1000)
     throw new Error('Archivo multimedia no válido.');
@@ -121,7 +114,6 @@ export function validarUrlContenido(valor: unknown): string {
     throw new Error('Archivo multimedia no válido.');
   }
 }
-
 export function validarVolumen(volumen: unknown, rampa: unknown): [number, number] {
   if (typeof volumen !== 'number' || !Number.isFinite(volumen) || volumen < 0 || volumen > 1)
     throw new Error('Volumen no válido.');
@@ -129,13 +121,11 @@ export function validarVolumen(volumen: unknown, rampa: unknown): [number, numbe
     throw new Error('Rampa no válida.');
   return [volumen, rampa];
 }
-
 export function validarMensaje(mensaje: unknown): string {
   if (typeof mensaje !== 'string' || mensaje.length > 500)
     throw new Error('Mensaje de registro no válido.');
   return mensaje;
 }
-
 export function validarSalud(
   tipo: unknown,
   estado: unknown,

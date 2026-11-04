@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
-
-// Open-Meteo: sin API key. Coordenadas de la Facultad de Informática UAQ (Juriquilla, Qro.).
 const URL_CLIMA =
   'https://api.open-meteo.com/v1/forecast?latitude=20.7033&longitude=-100.4472&current=temperature_2m,weather_code&timezone=America%2FMexico_City';
-
 function describir(codigo: number) {
   if (codigo === 0) return 'Despejado';
   if (codigo <= 2) return 'Parcialmente nublado';
@@ -15,14 +12,11 @@ function describir(codigo: number) {
   if (codigo <= 82) return 'Chubascos';
   return 'Tormenta';
 }
-
 export interface Clima {
   temperatura: number;
   descripcion: string;
   soleado: boolean;
 }
-
-/** Refresca cada 15 min; conserva la última lectura si la red falla. */
 export function useClima() {
   const [clima, setClima] = useState<Clima | null>(null);
   useEffect(() => {
@@ -53,14 +47,14 @@ export function useClima() {
           soleado: actual.weather_code <= 1,
         });
       } catch {
-        // El clima es opcional cuando no hay conexión.
+        /* El clima puede fallar sin interrumpir la pantalla. */
       } finally {
         clearTimeout(limite);
         control.signal.removeEventListener('abort', cancelar);
       }
     };
     void cargar();
-    const id = setInterval(() => void cargar(), 15 * 60_000);
+    const id = setInterval(() => void cargar(), 15 * 60000);
     return () => {
       clearInterval(id);
       control.abort();

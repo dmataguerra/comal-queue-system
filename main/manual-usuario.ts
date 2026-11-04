@@ -1,13 +1,12 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-/** Extract the one bundled PDF so an external reader can open it outside app.asar. */
 export function crearAperturaManual(opciones: {
   origen: string;
   cache: string;
   abrir: (ruta: string) => Promise<string>;
 }) {
+  // Compartir la apertura pendiente evita abrir dos lectores al pulsar varias veces.
   let pendiente: Promise<void> | undefined;
   const abrir = async () => {
     let pdf: Buffer;

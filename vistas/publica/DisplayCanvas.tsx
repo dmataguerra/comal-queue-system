@@ -1,6 +1,4 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
-
-/** Una sola composición Full HD, independiente de la resolución y del DPI. */
 export function DisplayCanvas({ children }: { children: ReactNode }) {
   const viewport = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -12,14 +10,12 @@ export function DisplayCanvas({ children }: { children: ReactNode }) {
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(element);
-    // También recalcula con zoom/cambio de monitor cuando el compositor está inactivo.
     window.addEventListener('resize', resize);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', resize);
     };
   }, []);
-
   return (
     <div className="public-viewport" ref={viewport}>
       {children}

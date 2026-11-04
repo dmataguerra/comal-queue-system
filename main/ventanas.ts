@@ -1,9 +1,7 @@
 import { BrowserWindow, screen, type Display, type WebContents } from 'electron';
 import type { Pantallas } from '../shared/contract.js';
 import type { Registrar } from './log.js';
-
 export type Vista = 'operador' | 'publica';
-
 interface OpcionesVentanas {
   preload: string;
   icon: string;
@@ -13,10 +11,7 @@ interface OpcionesVentanas {
   alCerrarOperador: () => void;
   registrar: Registrar;
 }
-
 const FONDO = '#021a28';
-
-/** Displays, pantalla completa y RF-13: el campo de captura nunca se muestra en la TV. */
 export function crearVentanas({
   preload,
   icon,
@@ -38,16 +33,14 @@ export function crearVentanas({
     temporizadores.add(timer);
   };
   let pantallas: Pantallas = { publica: 'ninguna' };
-
   function proteger(ventana: BrowserWindow, vista: Vista) {
     const contenido = ventana.webContents;
     contenido.setWindowOpenHandler(() => ({ action: 'deny' }));
     contenido.on('will-navigate', (evento, destino) => {
       if (destino !== contenido.getURL()) evento.preventDefault();
     });
-    // En desarrollo Vite puede tardar en levantar; en producción cubre cualquier fallo transitorio.
     contenido.on('did-fail-load', (_evento, codigo, descripcion, _url, esPrincipal) => {
-      if (!esPrincipal || codigo === -3) return; // -3: navegación abortada, no es un fallo
+      if (!esPrincipal || codigo === -3) return;
       registrar(`La vista ${vista} no cargó (${descripcion}); se reintenta.`);
       despues(() => {
         if (!ventana.isDestroyed()) void ventana.loadURL(url(vista)).catch(() => {});
@@ -57,9 +50,8 @@ export function crearVentanas({
       registrar(`La vista ${vista} terminó (${detalle.reason}); se recarga.`);
       if (!ventana.isDestroyed()) ventana.reload();
     });
-    void ventana.loadURL(url(vista)).catch(() => {}); // el fallo se atiende en did-fail-load
+    void ventana.loadURL(url(vista)).catch(() => {});
   }
-
   const preferencias = (extra: Electron.WebPreferences = {}): Electron.WebPreferences => ({
     preload,
     contextIsolation: true,
@@ -68,15 +60,12 @@ export function crearVentanas({
     spellcheck: false,
     ...extra,
   });
-
-  /** La pública prefiere un display secundario y usa el primario como fallback. */
   function displayPublico(): Display {
     const primario = screen.getPrimaryDisplay();
     const secundarios = screen.getAllDisplays().filter((display) => display.id !== primario.id);
     const preferido = pantallaPreferida();
     return secundarios.find((display) => display.id === preferido) ?? secundarios[0] ?? primario;
   }
-
   function crearOperador() {
     const { workArea } = screen.getPrimaryDisplay();
     operador = new BrowserWindow({
@@ -100,7 +89,6 @@ export function crearVentanas({
     });
     proteger(operador, 'operador');
   }
-
   function crearPublica(display: Display, pantallaCompleta: boolean) {
     const bounds = pantallaCompleta
       ? display.bounds
@@ -124,7 +112,6 @@ export function crearVentanas({
       icon,
       frame: !pantallaCompleta,
       fullscreen: pantallaCompleta,
-      // La pública nunca tiene el foco: sin estrangulamiento de temporizadores y con audio sin gesto.
       webPreferences: preferencias({
         autoplayPolicy: 'no-user-gesture-required',
         backgroundThrottling: false,
@@ -141,18 +128,15 @@ export function crearVentanas({
     });
     ventana.on('closed', () => {
       if (publica === ventana) publica = null;
-      // Si alguien la cierra por accidente, vuelve mientras exista su pantalla.
       if (!cerrando) despues(sincronizar, 1000);
     });
     proteger(ventana, 'publica');
   }
-
   function sincronizar() {
     if (cerrando) return;
     const display = displayPublico();
     const pantallaCompleta = display.id !== screen.getPrimaryDisplay().id;
     const modo: Pantallas['publica'] = pantallaCompleta ? 'tv' : 'ventana';
-    // Al pasar de TV a ventana (o al revés) se recrea: marco y pantalla completa no se cambian en vivo.
     if (publica && modo !== pantallas.publica) {
       publica.destroy();
       publica = null;
@@ -181,14 +165,11 @@ export function crearVentanas({
       alCambiarPantallas(pantallas);
     }
   }
-
   const alCambiarDisplay = () => despues(sincronizar, 500);
-
   return {
     iniciar() {
       crearOperador();
       sincronizar();
-      // La TV suele encenderse después que la PC: se reacomoda cuando aparece o desaparece.
       screen.on('display-added', alCambiarDisplay);
       screen.on('display-removed', alCambiarDisplay);
       screen.on('display-metrics-changed', alCambiarDisplay);

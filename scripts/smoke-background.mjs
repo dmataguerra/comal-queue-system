@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'test-results');
 mkdirSync(output, { recursive: true });
@@ -52,7 +51,6 @@ async function verify() {
       await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
         features: [{ name: 'prefers-reduced-motion', value }],
       });
-      // Hidden renderers may defer media-query change events until a compositor frame.
       await client.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
       for (let i = 0; i < 100; i++) {
         if (

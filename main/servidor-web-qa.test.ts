@@ -9,7 +9,6 @@ import { test, type TestContext } from 'node:test';
 import { CONFIG_POR_DEFECTO } from './config.js';
 import { crearServidorWeb } from './servidor-web.js';
 import { crearStore } from './store.js';
-
 async function entorno(t: TestContext) {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-http-qa-'));
   const vistas = join(raiz, 'vistas');
@@ -56,7 +55,6 @@ async function entorno(t: TestContext) {
   };
   return { ...servidor, raiz, ruta, store, headers, logs };
 }
-
 test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin cambiar estado', async (t) => {
   const e = await entorno(t);
   const antes = e.store.obtener();
@@ -96,7 +94,6 @@ test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin ca
   });
   assert.deepEqual(e.store.obtener(), antes);
 });
-
 test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados', async (t) => {
   const e = await entorno(t);
   for (const path of [
@@ -118,10 +115,9 @@ test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados
     await res.text();
   }
 });
-
 test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas maliciosas', async (t) => {
   const e = await entorno(t);
-  for (const body of ['{', 'null', '[]', '"' + 'x'.repeat(70_000) + '"']) {
+  for (const body of ['{', 'null', '[]', '"' + 'x'.repeat(70000) + '"']) {
     const res = await fetch(`${e.origen}/api/accion`, {
       method: 'POST',
       headers: e.headers,
@@ -139,7 +135,6 @@ test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas ma
   assert.equal(res.status, 200);
   assert.equal((await res.json()).instantanea.actual, 42);
 });
-
 test('HTTP conserva bytes, CSP y rangos de multimedia incluso con límites extremos', async (t) => {
   const e = await entorno(t);
   const html = await fetch(`${e.origen}/index.html`);
@@ -169,7 +164,6 @@ test('HTTP conserva bytes, CSP y rangos de multimedia incluso con límites extre
   assert.equal(empty.status, 416);
   await empty.text();
 });
-
 test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado confirmado', async (t) => {
   const e = await entorno(t);
   const responses = await Promise.all(
@@ -195,7 +189,6 @@ test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado co
   assert.equal(persistido.actual, ultimo.instantanea.actual);
   assert.deepEqual(persistido.llamados, ultimo.instantanea.llamados);
 });
-
 test('HTTP notifica por SSE y libera la suscripción cuando el cliente desconecta', async (t) => {
   const e = await entorno(t);
   const controller = new AbortController();
@@ -209,7 +202,6 @@ test('HTTP notifica por SSE y libera la suscripción cuando el cliente desconect
   e.store.despachar({ tipo: 'LLAMAR', entrada: '43' });
   assert.equal(e.store.obtener().actual, 43);
 });
-
 test('HTTP contiene errores de lectura de archivos sin terminar el proceso principal', async (t) => {
   const e = await entorno(t);
   const original = fs.createReadStream;

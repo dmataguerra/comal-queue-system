@@ -29,7 +29,7 @@ def inline(text):
     text = escape(clean(text))
     text = re.sub(r'\[([^]]+)\]\([^)]+\)', r'\1', text)
     text = re.sub(r'\*\*([^*]+)\*\*', r'<b>\1</b>', text)
-    # Small monospaced fragments wrap reliably inside the body paragraphs.
+
     text = re.sub(r'`([^`]+)`', r'<font name="Courier" size="9">\1</font>', text)
     return text
 

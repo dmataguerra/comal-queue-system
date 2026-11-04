@@ -10,7 +10,6 @@ import { crearStore } from './store.js';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
 test('dos llamadas del mismo número conservan IDs y acuses independientes, aun fuera de orden', () => {
   const entregas = crearEntregasAudio(() => {});
   entregas.registrar({ id: 1, n: 42 });
@@ -31,7 +30,6 @@ test('dos llamadas del mismo número conservan IDs y acuses independientes, aun 
   entregas.confirmar(1, 42, 'fallo');
   assert.ok(entregas.obtener().every((e) => e.estado === 'reproducido'));
 });
-
 test('saturación rechaza antes de guardar y no consume un ID ni altera el turno', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-saturacion-'));
   const ruta = join(raiz, 'estado.json');
@@ -58,7 +56,6 @@ test('saturación rechaza antes de guardar y no consume un ID ni altera el turno
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('caducidad, retiro y falta de acuses liberan capacidad sin aceptar acuses tardíos', () => {
   let ahora = 0;
   const entregas = crearEntregasAudio(
@@ -77,7 +74,6 @@ test('caducidad, retiro y falta de acuses liberan capacidad sin aceptar acuses t
   assert.equal(entregas.obtener()[0].estado, 'descartado');
   entregas.comprobarCapacidad();
 });
-
 test('el historial es acotado, sin borrar entregas activas', () => {
   const entregas = crearEntregasAudio(() => {});
   entregas.registrar({ id: 1, n: 42 });

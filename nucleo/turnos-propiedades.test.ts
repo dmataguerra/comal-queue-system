@@ -10,14 +10,12 @@ import {
   vencer,
   type Estado,
 } from './turnos.js';
-
 test('todos los tickets de hasta seis dígitos anuncian exactamente su terminación 00–99', () => {
-  for (let ticket = 0; ticket < 1_000_000; ticket++) {
+  for (let ticket = 0; ticket < 1000000; ticket++) {
     assert.equal(normalizar(String(ticket)), ticket % 100);
     assert.equal(normalizar(String(ticket).padStart(6, '0')), ticket % 100);
   }
 });
-
 test('20.000 transiciones reproducibles coinciden con el modelo de seis turnos y corrección', () => {
   for (const initialSeed of [1, 42, 0xc0a1, 0xffffffff]) {
     let seed = initialSeed;
@@ -37,7 +35,7 @@ test('20.000 transiciones reproducibles coinciden con el modelo de seis turnos y
       Object.freeze(estado);
       let siguiente;
       if (accion <= 1) {
-        siguiente = llamar(estado, String(100_000 + n));
+        siguiente = llamar(estado, String(100000 + n));
         if (pantalla[0] !== n) {
           correccion = [...pantalla];
           pantalla = [n, ...pantalla.filter((turno) => turno !== n)].slice(0, 6);

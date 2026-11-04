@@ -15,8 +15,6 @@ import { HelpCenter } from './ayuda/HelpCenter';
 import { GuidedTour } from './ayuda/GuidedTour';
 import type { RecorridoId } from './ayuda/contenido';
 import { guardarCompletado, leerProgreso } from './ayuda/progreso';
-
-/** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
 export function OperadorPage() {
   const { tema, cambiarTema } = useTema();
   const { instantanea, pantallas, entregasAudio = [], despachar, youtubeAdmitido } = useTurnero(),
@@ -49,9 +47,10 @@ export function OperadorPage() {
     [ayuda, setAyuda] = useState(false),
     [recorrido, setRecorrido] = useState<RecorridoId | null>(null),
     [completados, setCompletados] = useState(leerProgreso),
-    [pendiente, setPendiente] = useState<{ numero: number; tipo: 'anunciar' | 'quitar' } | null>(
-      null,
-    ),
+    [pendiente, setPendiente] = useState<{
+      numero: number;
+      tipo: 'anunciar' | 'quitar';
+    } | null>(null),
     [noPreguntar, setNoPreguntar] = useState(false);
   const omitirConfirmacion = useRef(false);
   const input = useRef<HTMLInputElement>(null),
@@ -137,7 +136,6 @@ export function OperadorPage() {
   async function llamar(e: React.FormEvent) {
     e.preventDefault();
     if (ocupado) return;
-    // Validar la captura completa, sin recortarla ni enviarla si excede el formato del ticket.
     if (normalizar(entrada) === null) {
       notificar(
         entrada.trim()
@@ -254,7 +252,6 @@ export function OperadorPage() {
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);
-  // La TV es una sola lista: el actual arriba y detrás los llamados, del más reciente al más viejo.
   const filas = [
     ...(actual === null ? [] : [{ n: actual, destacada: true, nota: '' }]),
     ...llamados.map((n, i) => ({

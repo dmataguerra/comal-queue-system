@@ -1,8 +1,6 @@
 const YOUTUBE_SCRIPT = 'https://www.youtube.com https://s.ytimg.com';
 const YOUTUBE_FRAME = 'https://www.youtube.com https://www.youtube-nocookie.com';
 const CLIMA = 'https://api.open-meteo.com';
-
-/** Cabecera para las dos vistas locales; cada origen nuevo requiere una decisión explícita. */
 export function crearCsp(desarrollo: boolean): string {
   const contenido = desarrollo ? ' turnero://app' : '';
   const script = desarrollo

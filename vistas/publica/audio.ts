@@ -1,12 +1,8 @@
 import type { Inventario } from '../../shared/contract';
-
-// §6 · Todo el audio se decodifica al arrancar: en el camino crítico nunca se lee disco.
 let contexto: AudioContext | null = null;
 const buffers = new Map<string, Promise<AudioBuffer>>();
 let revisionAudio: string | undefined;
 const obtenerContexto = () => (contexto ??= new AudioContext());
-
-/** Al cerrar o recargar la vista se liberan el dispositivo y los buffers decodificados. */
 export function cerrarAudio() {
   const anterior = contexto;
   contexto = null;
@@ -14,7 +10,6 @@ export function cerrarAudio() {
   revisionAudio = undefined;
   if (anterior) void anterior.close();
 }
-
 function cargar(url: string) {
   let buffer = buffers.get(url);
   if (!buffer) {
@@ -44,8 +39,6 @@ function cargar(url: string) {
   }
   return buffer;
 }
-
-/** Precarga el aviso y las 100 voces del inventario; descarta lo que ya no existe. */
 export async function precargar(inventario: Inventario) {
   if (inventario.revisionAudio !== revisionAudio) buffers.clear();
   revisionAudio = inventario.revisionAudio;
@@ -53,7 +46,6 @@ export async function precargar(inventario: Inventario) {
   for (const url of buffers.keys()) if (!urls.includes(url)) buffers.delete(url);
   await Promise.all(urls.map(cargar));
 }
-
 export function pausa(ms: number, signal: AbortSignal) {
   return new Promise<void>((resolve) => {
     if (signal.aborted) return resolve();
@@ -66,7 +58,6 @@ export function pausa(ms: number, signal: AbortSignal) {
     signal.addEventListener('abort', fin, { once: true });
   });
 }
-
 function esperarAudio<T>(operacion: Promise<T>, signal: AbortSignal, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const cancelar = () => terminar(new DOMException('Anuncio cancelado', 'AbortError'));
@@ -90,7 +81,6 @@ function esperarAudio<T>(operacion: Promise<T>, signal: AbortSignal, ms: number)
     else signal.addEventListener('abort', cancelar, { once: true });
   });
 }
-
 export async function reproducir(url: string, volumen: number, signal: AbortSignal) {
   if (signal.aborted) return;
   const buffer = await esperarAudio(cargar(url), signal, 20000);
@@ -116,7 +106,7 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
       try {
         fuente.stop();
       } catch {
-        // El nodo puede haber terminado antes de recibir la cancelación.
+        /* El cierre del audio puede coincidir con su limpieza. */
       }
       fuente.disconnect();
       ganancia.disconnect();
@@ -130,8 +120,6 @@ export async function reproducir(url: string, volumen: number, signal: AbortSign
           new Error('La salida de sonido se interrumpió. Revisa el dispositivo y vuelve a llamar.'),
         );
     };
-    // El dispositivo puede suspenderse sin emitir onended. Liberar la cola y
-    // reportar fallo, en lugar de esperar indefinidamente a ese evento.
     const limite = setTimeout(
       () =>
         finalizar(

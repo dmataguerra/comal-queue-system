@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { crearCsp } from './main/politica-csp';
-// Dos páginas, una por ventana de Electron. No hay servidor: los datos llegan por IPC.
 export default defineConfig({
   plugins: [
     react(),

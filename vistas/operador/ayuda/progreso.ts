@@ -1,5 +1,4 @@
 import { recorridos, type RecorridoId } from './contenido';
-
 export const CLAVE_PROGRESO = 'comal.ayuda.progreso.v1';
 const VERSION = '0.4.0-1';
 export function leerProgreso(): RecorridoId[] {
@@ -30,7 +29,7 @@ export function guardarCompletado(id: RecorridoId, actuales: RecorridoId[] = [])
   try {
     localStorage.setItem(CLAVE_PROGRESO, JSON.stringify({ version: VERSION, completados }));
   } catch {
-    /* La ayuda sigue disponible sin almacenamiento. */
+    /* La ayuda sigue funcionando aunque no se pueda guardar el avance. */
   }
   return completados;
 }

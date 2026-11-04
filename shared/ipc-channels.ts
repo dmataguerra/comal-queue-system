@@ -1,4 +1,3 @@
-/** Named IPC capabilities. Persisted only in code; preload mirrors these literal names. */
 export const IPC_CHANNELS = {
   getInitial: 'turnero:obtener',
   dispatch: 'turnero:despachar',

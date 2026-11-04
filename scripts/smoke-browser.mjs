@@ -4,7 +4,6 @@ import { request } from 'node:http';
 import { mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const raiz = fileURLToPath(new URL('../', import.meta.url));
 const resultados = join(raiz, 'test-results');
 mkdirSync(resultados, { recursive: true });
@@ -23,13 +22,12 @@ async function esperar(comprobar, mensaje) {
     try {
       if (await comprobar()) return;
     } catch {
-      /* Carga en curso. */
+      /* El fallo no impide continuar con el respaldo disponible. */
     }
     await pausa(100);
   }
   throw new Error(mensaje);
 }
-
 async function verificar() {
   try {
     await import('../build/main/main.js');
@@ -50,7 +48,6 @@ async function verificar() {
       (await (await fetch(`${origen}/api/diagnostico`)).json()).carpetaDatos,
       process.env.TURNERO_DATOS,
     );
-    // El acuse debe llegar por HTTP, nunca por la ventana Electron de respaldo.
     ipcMain.removeAllListeners('turnero:anuncio:acuse');
     const operador = new BrowserWindow({
       show: false,
@@ -94,7 +91,6 @@ async function verificar() {
         publica.webContents.executeJavaScript("Boolean(document.querySelector('.public-screen'))"),
       'La vista pública no cargó en navegador.',
     );
-    // Una configuración guardada desde Electron tampoco activa un iframe sin control en navegador.
     const desktopOperator = BrowserWindow.getAllWindows().find((w) =>
       w.webContents.getURL().startsWith('turnero://app/vistas/operador/'),
     );
@@ -114,7 +110,6 @@ async function verificar() {
       ),
       /YouTube no está admitido/,
     );
-    // Preparar un estado conocido: si ya estaba degradado, repetirlo no crea otra transición.
     assert.equal(
       await publica.webContents.executeJavaScript(
         `fetch('/api/salud', {method:'POST', headers:{'Content-Type':'application/json','X-Turnero-Cliente':'navegador'}, body:JSON.stringify(['audio','correcto'])}).then(r=>r.status)`,
@@ -129,8 +124,6 @@ async function verificar() {
     await publica.webContents.executeJavaScript(
       "window.turnero.registrar('prueba de registro HTTP'); window.turnero.informarSalud('audio','degradado')",
     );
-    // La precarga de otras pantallas puede recuperar la salud antes de leer el diagnóstico.
-    // El registro conserva el efecto HTTP aunque el estado ya haya cambiado.
     await esperar(() => {
       const registro = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8');
       return (

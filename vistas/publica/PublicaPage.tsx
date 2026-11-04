@@ -9,8 +9,6 @@ import { AnimatedBackground } from '../comun/components/AnimatedBackground';
 import { Contenido } from './Contenido';
 import { useAnuncios } from './useAnuncios';
 import { DisplayCanvas } from './DisplayCanvas';
-
-/** RF-02, RF-05, RF-08, RF-09 · turno actual destacado, hasta 5 llamados y el área de contenido. */
 export function PublicaPage() {
   const {
     instantanea: { actual, llamados },
@@ -22,12 +20,10 @@ export function PublicaPage() {
   useEffect(() => {
     document.title = 'Troyanos · Turnos';
   }, []);
-  // Una sola lista, del más reciente al más viejo: los turnos salen conforme se llaman.
   const filas = [
     ...(actual === null ? [] : [{ n: actual, ultimo: true }]),
     ...llamados.map((n) => ({ n, ultimo: false })),
   ];
-
   return (
     <DisplayCanvas>
       <div

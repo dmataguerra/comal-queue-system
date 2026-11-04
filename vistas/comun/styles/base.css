@@ -520,7 +520,6 @@ kbd {
   }
 }
 
-/* Local SVG artwork inherits each control color. */
 .icon {
   background-color: currentColor;
   mask-size: contain;

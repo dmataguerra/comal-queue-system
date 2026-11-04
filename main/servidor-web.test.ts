@@ -6,7 +6,6 @@ import { CONFIG_POR_DEFECTO } from './config.js';
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
 test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', async () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-acuses-'));
   mkdirSync(join(raiz, 'manual'));

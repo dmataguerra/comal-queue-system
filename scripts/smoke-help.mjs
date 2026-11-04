@@ -12,8 +12,6 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-// Actual Electron and HTTP renderers, with a separate profile and ephemeral port.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const resultRoot = join(root, 'test-results');
 mkdirSync(resultRoot, { recursive: true });
@@ -29,7 +27,6 @@ app.disableHardwareAcceleration();
 BrowserWindow.prototype.show = function () {};
 BrowserWindow.prototype.showInactive = function () {};
 BrowserWindow.prototype.maximize = function () {};
-
 const openedManuals = [];
 shell.openPath = async (path) => {
   openedManuals.push(path);
@@ -44,14 +41,13 @@ const tours = ['llamar', 'corregir', 'multimedia', 'completo'];
 const report = { status: 'RUNNING', output, evaluations: [], screenshots: [], bugs: [] };
 const save = () => writeFileSync(join(output, 'resultado.json'), JSON.stringify(report, null, 2));
 save();
-
 async function wait(check, message, limit = 15000) {
   const start = Date.now();
   while (Date.now() - start < limit) {
     try {
       if (await check()) return;
     } catch {
-      /* Renderer may be navigating. */
+      /* El fallo no impide continuar con el respaldo disponible. */
     }
     await pause(80);
   }
@@ -118,7 +114,6 @@ async function visible(window, id) {
 async function openHelp(window, keyboard = false) {
   if (keyboard) await key(window, 'F1');
   else {
-    // HTMLElement.click() does not focus like a native pointer interaction.
     await run(window, "document.querySelector('.help-button').focus()");
     await click(window, '.help-button');
   }
@@ -128,7 +123,6 @@ async function openHelp(window, keyboard = false) {
 async function closeHelp(window) {
   await key(window, 'Escape');
   await wait(async () => !(await visible(window, 'help-center')), 'Help center did not close');
-  // Hidden Electron renderers defer rAF until a compositor frame is requested.
   await settleFrame(window);
 }
 async function settleFrame(window) {
@@ -331,7 +325,6 @@ async function assertGeometry(window, tour = false) {
   }
   return result;
 }
-
 async function exerciseRenderer(window, transport, publicWindow) {
   await wait(
     () => run(window, "Boolean(document.querySelector('#turn-number'))"),
@@ -353,7 +346,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
     '({id:document.activeElement?.id,tag:document.activeElement?.tagName,hasFocus:document.hasFocus()})',
   );
   assert.equal(initialFocus.id, 'turn-number', JSON.stringify(initialFocus));
-
   await evaluation(`${transport}: corrupt progress, F1, search, article and keyboard`, async () => {
     await openHelp(window, true);
     for (const id of tours) {
@@ -432,7 +424,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
     assert.equal(await run(window, "document.querySelector('#turn-number').value"), '213298');
     return { searchResults: all, normalizedResults: plain };
   });
-
   const baseline = await invariantSnapshot(window);
   const beforeFiles = fileSnapshot();
   await evaluation(
@@ -525,7 +516,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
       };
     },
   );
-
   await evaluation(
     `${transport}: progress survives reload and help close restores trigger`,
     async () => {
@@ -551,7 +541,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
       );
     },
   );
-
   await evaluation(
     `${transport}: native pointer/keyboard cannot activate operation behind tour`,
     async () => {
@@ -559,7 +548,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
       await openHelp(window);
       await startTour(window, 'llamar');
       const before = await invariantSnapshot(window);
-      // inert must prevent even an explicit focus request to the real ticket input.
       const focusEscaped = await run(
         window,
         `(() => {
@@ -608,9 +596,7 @@ async function exerciseRenderer(window, transport, publicWindow) {
       assert.deepEqual(await invariantSnapshot(window), before);
     },
   );
-
   await diagnosticFocus(window, transport);
-
   await evaluation(
     `${transport}: completed tours accumulate in memory when storage fails`,
     async () => {
@@ -662,7 +648,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
       };
     },
   );
-
   await evaluation(
     `${transport}: a missing tour target offers fallback and still exits`,
     async () => {
@@ -694,7 +679,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
       }
     },
   );
-
   await evaluation(
     `${transport}: responsive help and tours, both themes and seven scales`,
     async () => {
@@ -721,7 +705,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
             const center = await assertGeometry(window);
             await startTour(window, 'completo');
             const tour = await assertGeometry(window, true);
-            // Recalculate the highlighted region when the viewport changes during a tour.
             if (size === 130) {
               window.setContentSize(width + 20, height + 20);
               await settleFrame(window);
@@ -783,7 +766,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
       return { cases: matrix.length, matrix };
     },
   );
-
   await evaluation(
     `${transport}: reduced motion and cancellation preserve originating Multimedia page`,
     async () => {
@@ -854,7 +836,6 @@ async function exerciseRenderer(window, transport, publicWindow) {
     },
   );
 }
-
 async function verify() {
   try {
     await import('../build/main/main.js');
@@ -878,7 +859,6 @@ async function verify() {
       () => run(desktop, "Boolean(document.querySelector('#turn-number'))"),
       'Desktop input unavailable',
     );
-    // Seed one real test ticket, then wait until its test audio has ended before taking baselines.
     await run(desktop, "window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})");
     await wait(
       async () => {
@@ -908,7 +888,6 @@ async function verify() {
       },
     });
     await browser.loadURL(`${origin}/`);
-
     if (focusOnly) {
       await wait(
         () => run(browser, "Boolean(document.querySelector('.help-button'))"),
@@ -922,12 +901,9 @@ async function verify() {
       app.exit(0);
       return;
     }
-
     await exerciseRenderer(desktop, 'desktop', publicWindow);
-    // A separate setup condition exercises absent/disabled correction targets.
     await run(desktop, "window.turnero.despachar({tipo:'QUITAR',n:42})");
     await exerciseRenderer(browser, 'browser', publicWindow);
-
     await evaluation('public display: PDF opening capability is rejected', async () => {
       const error = await run(
         publicWindow,
@@ -937,7 +913,6 @@ async function verify() {
       assert.equal(openedManuals.length, 0);
       return { rejection: error };
     });
-
     await evaluation(
       'desktop: PDF API opens exact packaged bytes through managed local path',
       async () => {
@@ -988,7 +963,6 @@ async function verify() {
         return { downloadPath };
       },
     );
-
     report.status = 'PASS';
     report.limitations = [
       'Physical PDF reader association and a packaged NSIS installer are outside this source smoke run.',
@@ -1004,7 +978,7 @@ async function verify() {
         if (window.webContents.getURL().includes('/operador/'))
           await capture(window, `failure-operator-${index}`);
       } catch {
-        /* Preserve the assertion even if a crashed renderer cannot capture. */
+        /* El fallo no impide continuar con el respaldo disponible. */
       }
     }
     save();

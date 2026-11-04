@@ -6,8 +6,6 @@ import { escribirJsonAtomico } from './escritura-atomica.js';
 import { fechaLocal } from './persistencia.js';
 import type { Registrar } from './log.js';
 import { esYouTube } from '../nucleo/youtube.js';
-
-/** Lee la base SQLite de 0.2.0 sin modificarla y migra una sola vez a los JSON de 0.3.0. */
 export function migrarDesde02(
   baseAnterior: string,
   carpetaDatos: string,
@@ -23,7 +21,10 @@ export function migrarDesde02(
       .prepare(
         "SELECT number, last_announced_at AS fecha FROM turns WHERE status = 'ready' ORDER BY rank DESC",
       )
-      .all() as { number: string; fecha: string }[];
+      .all() as {
+      number: string;
+      fecha: string;
+    }[];
     const hoy = fechaLocal(ahora);
     const vistos = new Set<number>();
     const vigentes = filas
@@ -39,12 +40,24 @@ export function migrarDesde02(
     if (!existsSync(rutaConfig)) {
       const filasConfig = db
         .prepare("SELECT key, value FROM configuration WHERE key IN ('settings', 'multimedia')")
-        .all() as { key: string; value: string }[];
+        .all() as {
+        key: string;
+        value: string;
+      }[];
       const anterior = Object.fromEntries(
         filasConfig.map((fila) => [fila.key, JSON.parse(fila.value)]),
       );
-      const settings = anterior.settings as { footerMessages?: unknown } | undefined;
-      const multimedia = anterior.multimedia as { type?: unknown; url?: unknown } | undefined;
+      const settings = anterior.settings as
+        | {
+            footerMessages?: unknown;
+          }
+        | undefined;
+      const multimedia = anterior.multimedia as
+        | {
+            type?: unknown;
+            url?: unknown;
+          }
+        | undefined;
       const config = validarConfig(
         {
           ...CONFIG_POR_DEFECTO,
@@ -62,7 +75,6 @@ export function migrarDesde02(
       fecha: hoy,
       actual: numeros[0] ?? null,
       llamados: numeros.slice(1),
-      // 0.2.0 no vencía turnos listos: concederles una ventana completa al migrar.
       desde: Object.fromEntries(vigentes.map((fila) => [Number(fila.number), ahora.toISOString()])),
       guardadoEn: ahora.toISOString(),
     };

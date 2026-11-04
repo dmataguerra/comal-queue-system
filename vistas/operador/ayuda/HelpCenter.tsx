@@ -7,13 +7,11 @@ import './ayuda.css';
 import capturaTicket from '../../../docs/user-manual/source/screenshots/0.4.0/captura-ticket.png';
 import capturaCorregir from '../../../docs/user-manual/source/screenshots/0.4.0/corregir-captura.png';
 import capturaMultimedia from '../../../docs/user-manual/source/screenshots/0.4.0/multimedia.png';
-
 const imagenes: Record<string, string> = {
   llamar: capturaTicket,
   corregir: capturaCorregir,
   multimedia: capturaMultimedia,
 };
-
 export function HelpCenter({
   onClose,
   onStartTour,

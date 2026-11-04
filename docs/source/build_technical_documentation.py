@@ -45,7 +45,7 @@ def main():
                     raise ValueError(f'Unsupported LaTeX markup in {name}: {decoded[:100]}')
                 paragraph = p(escape(decoded.replace('\n', ' ')), 'ComalSmall' if decoded.startswith('Evidence:') else 'ComalBody')
                 if decoded.startswith('Evidence:'):
-                    # Keep the source line beside the statement it substantiates.
+
                     previous = story.pop()
                     story.append(KeepTogether([previous, paragraph]))
                 else:

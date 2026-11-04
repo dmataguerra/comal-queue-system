@@ -1,11 +1,8 @@
 import { readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Registrar } from './log.js';
-
 const PATRON = /^(estado|config)\.json\.\d+\.[0-9a-f-]{36}\.tmp$/i;
-const EDAD_MINIMA_MS = 60_000;
-
-/** Retira solo temporales atómicos conocidos de una ejecución anterior. */
+const EDAD_MINIMA_MS = 60000;
 export function limpiarTemporalesJson(
   carpeta: string,
   registrar: Registrar = () => {},

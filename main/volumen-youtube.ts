@@ -1,8 +1,3 @@
-/**
- * RF-11 · el IFrame API habla por postMessage y YouTube no acepta el origen turnero://, así que
- * setVolume se pierde. Desde main se entra al iframe y se mueve el volumen del <video> con la misma
- * rampa que los videos locales. No toca muted ni paused: la pausa o el mute del usuario se respetan.
- */
 export const scriptVolumen = (volumen: number, rampa: number) => `(async () => {
   const destino = ${JSON.stringify(volumen)}, ms = ${JSON.stringify(rampa)};
   const id = (window.__turneroRampa = (window.__turneroRampa || 0) + 1);

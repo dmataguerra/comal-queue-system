@@ -6,8 +6,6 @@ export interface YouTubePlayer {
   mute(): void;
   destroy(): void;
 }
-
-/** Inicio seguro: confirmar el volumen vigente antes de quitar silencio o iniciar playback. */
 export async function iniciarYouTube(
   player: YouTubePlayer,
   volumen: () => number,
@@ -50,7 +48,6 @@ declare global {
   }
 }
 let carga: Promise<YouTubeApi> | undefined;
-
 export function cargarYouTube(): Promise<YouTubeApi> {
   if (window.YT?.Player) return Promise.resolve(window.YT);
   if (carga) return carga;

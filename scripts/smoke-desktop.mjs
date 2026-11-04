@@ -3,8 +3,6 @@ import assert from 'node:assert/strict';
 import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-// Ejecuta la aplicación real con datos de prueba, sin mostrar ventanas ni tocar la jornada.
 const raiz = fileURLToPath(new URL('../', import.meta.url));
 const resultados = join(raiz, 'test-results');
 mkdirSync(resultados, { recursive: true });
@@ -17,10 +15,8 @@ app.setPath('userData', join(process.env.TURNERO_DATOS, 'electron'));
 BrowserWindow.prototype.show = function () {};
 BrowserWindow.prototype.showInactive = function () {};
 BrowserWindow.prototype.maximize = function () {};
-
 const pausa = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function capturar(ventana, nombre) {
-  // Una ventana oculta puede conservar el fotograma anterior hasta la primera captura.
   await ventana.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
   await pausa(300);
   const imagen = await ventana.webContents.capturePage(undefined, {
@@ -37,7 +33,6 @@ async function esperar(comprobar, mensaje, limite = 15000) {
   }
   throw new Error(mensaje);
 }
-
 async function verificar() {
   try {
     await import('../build/main/main.js');
@@ -98,8 +93,6 @@ async function verificar() {
       operador,
       `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Turnos').click()`,
     );
-    // Comprobar animación real y la preferencia de accesibilidad en el renderizador.
-    // Hosted Windows runners can default to reduced motion; control both test states.
     publica.webContents.debugger.attach('1.3');
     await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
@@ -238,7 +231,6 @@ async function verificar() {
     await pausa(800);
     await capturar(publica, 'anuncio-multimedia.png');
     assert.equal(await ejecutar(publica, "document.querySelectorAll('.trojan-mascot').length"), 0);
-
     for (const [ancho, alto] of [
       [1280, 900],
       [900, 650],
@@ -287,7 +279,6 @@ async function verificar() {
     );
     await pausa(800);
     await capturar(publica, 'youtube-anuncio.png');
-
     await ejecutar(operador, 'window.turnero.configurarYouTube(null)');
     await publica.webContents.debugger.sendCommand('Network.enable');
     await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {

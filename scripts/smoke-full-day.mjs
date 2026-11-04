@@ -13,8 +13,6 @@ import {
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renombrarConReintentos } from '../build/main/escritura-atomica.js';
-
-// Jornada de resistencia: 390 minutos reales, sin modificar relojes ni temporizadores.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const results = join(root, 'test-results');
 mkdirSync(results, { recursive: true });
@@ -23,8 +21,8 @@ const reportPath = join(data, 'jornada-completa.json');
 const metricsPath = join(data, 'metricas.csv');
 const actionsPath = join(data, 'acciones.jsonl');
 const realNow = Date.now;
-const durationMs = 390 * 60_000;
-const audioTimeoutMs = 120_000;
+const durationMs = 390 * 60000;
+const audioTimeoutMs = 120000;
 const preflight = process.argv.includes('--preflight');
 let started;
 let operatorWindow;
@@ -37,7 +35,6 @@ process.env.TURNERO_DATOS = data;
 process.env.TURNERO_PUERTO = '0';
 app.setAppPath(root);
 app.setPath('userData', join(data, 'electron'));
-
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const run = async (window, source) => {
   let timeout;
@@ -47,7 +44,7 @@ const run = async (window, source) => {
       new Promise((_, reject) => {
         timeout = setTimeout(
           () => reject(new Error('La vista no respondió en 15 segundos.')),
-          15_000,
+          15000,
         );
       }),
     ]);
@@ -87,9 +84,8 @@ const report = {
     'La carga es sintética y reproducible; no representa afluencia medida en cafetería.',
   ],
 };
-
 function checkpoint() {
-  report.elapsedMinutes = started === undefined ? 0 : (performance.now() - started) / 60_000;
+  report.elapsedMinutes = started === undefined ? 0 : (performance.now() - started) / 60000;
   report.updatedAt = new Date().toISOString();
   report.audioDelivery = { expected: expectedAudio.size, received: receivedAudio.size };
   report.metricsSummary = summarizeMetrics();
@@ -98,7 +94,6 @@ function checkpoint() {
   writeFileSync(reportPath + '.tmp', JSON.stringify(report, null, 2) + '\n');
   renombrarConReintentos(reportPath + '.tmp', reportPath);
 }
-
 async function heartbeat() {
   assert.equal(report.failures.length, 0, 'Se detectó un cierre, suspensión o caída de proceso.');
   for (const [id, expected] of expectedAudio) {
@@ -125,17 +120,15 @@ async function heartbeat() {
     console.log(
       `Progreso: ${report.elapsedMinutes.toFixed(1)}/390 min; anuncios ${receivedAudio.size}/${expectedAudio.size}; informe: ${reportPath}`,
     );
-    nextSample = performance.now() + 60_000;
+    nextSample = performance.now() + 60000;
   }
 }
-
 async function waitUntil(deadline) {
   while (performance.now() < deadline) {
     await heartbeat();
     await pause(Math.min(1000, Math.max(0, deadline - performance.now())));
   }
 }
-
 let temperatureUnavailable = process.platform !== 'win32';
 function readTemperatureC() {
   if (temperatureUnavailable) return null;
@@ -162,7 +155,6 @@ function readTemperatureC() {
     return null;
   }
 }
-
 function sample(stage) {
   const metrics = app.getAppMetrics();
   const own = metrics.find((metric) => metric.pid === process.pid) ?? metrics[0];
@@ -204,7 +196,6 @@ function sample(stage) {
     logBytes,
   });
 }
-
 async function waitForWindows() {
   for (let attempt = 0; attempt < 150; attempt++) {
     const windows = BrowserWindow.getAllWindows();
@@ -225,7 +216,6 @@ async function waitForWindows() {
   }
   throw new Error('Las vistas no iniciaron dentro del tiempo esperado.');
 }
-
 async function dispatch(operator, action) {
   const started = performance.now();
   const deadline = started + audioTimeoutMs;
@@ -268,7 +258,6 @@ async function dispatch(operator, action) {
     expectedAudio.set(result.anuncio.id, { n: result.anuncio.n, at: performance.now() });
   return result;
 }
-
 async function dispatchBatch(operator, actions) {
   const results = [];
   for (const action of actions) {
@@ -278,9 +267,6 @@ async function dispatchBatch(operator, actions) {
   report.batchesOfSix++;
   return results;
 }
-
-// Acuses y fuentes deben terminar antes de una recarga o de alterar los turnos visibles.
-// Así una corrección intencional no se confunde con pérdida de audio durante la resistencia.
 async function drainAudio(stage) {
   const deadline = performance.now() + audioTimeoutMs;
   while ([...expectedAudio.keys()].some((id) => !receivedAudio.has(id))) {
@@ -294,7 +280,6 @@ async function drainAudio(stage) {
   await checkInvariants(operatorWindow, stage);
   checkpoint();
 }
-
 async function reloadDisplay(stage) {
   await drainAudio(`${stage}-antes-de-recarga`);
   report.audioProbeEpochs.push({
@@ -306,7 +291,7 @@ async function reloadDisplay(stage) {
   displayWindow.webContents.reloadIgnoringCache();
   assert.ok(await waitForPublicPage(displayWindow), `La pantalla no volvió en ${stage}.`);
   await verifyAudio(displayWindow);
-  const deadline = performance.now() + 30_000;
+  const deadline = performance.now() + 30000;
   for (;;) {
     const diagnostic = await run(operatorWindow, 'window.turnero.diagnostico()');
     if (diagnostic.audio === 'correcto') break;
@@ -320,13 +305,11 @@ async function reloadDisplay(stage) {
     'La recarga repitió anuncios anteriores.',
   );
 }
-
 function appendAction(entry) {
   writeFileSync(actionsPath, `${JSON.stringify({ at: new Date().toISOString(), ...entry })}\n`, {
     flag: 'a',
   });
 }
-
 async function checkInvariants(operator, stage) {
   const inicial = await run(operator, 'window.turnero.obtener()');
   const instantanea = inicial.instantanea;
@@ -377,11 +360,9 @@ async function checkInvariants(operator, stage) {
     await pause(100);
   }
 }
-
 async function advance(minutes) {
-  await waitUntil(performance.now() + minutes * 60_000);
+  await waitUntil(performance.now() + minutes * 60000);
 }
-
 function stageStats(stage, fromAction) {
   const actions = report.actions.slice(fromAction);
   const queues = actions.map((item) => item.queueLength);
@@ -400,12 +381,10 @@ function stageStats(stage, fromAction) {
   report.byStage[stage] = stats;
   return stats;
 }
-
 function recordHour(hourLabel, fromAction) {
   const stats = stageStats(`hora-${hourLabel}`, fromAction);
   report.byHour[hourLabel] = stats;
 }
-
 async function installAudioProbe(publicWindow) {
   return run(
     publicWindow,
@@ -451,7 +430,6 @@ async function installAudioProbe(publicWindow) {
     })()`,
   );
 }
-
 async function verifyAudio(publicWindow) {
   let state;
   try {
@@ -473,9 +451,8 @@ async function verifyAudio(publicWindow) {
   report.maxAudioSources = Math.max(report.maxAudioSources, state.max);
   assert.ok(state.max <= 1, `Se superpusieron fuentes de audio: máximo ${state.max}.`);
 }
-
 async function waitForPublicPage(publicWindow) {
-  const deadline = performance.now() + 15_000;
+  const deadline = performance.now() + 15000;
   while (performance.now() < deadline) {
     if (publicWindow.isDestroyed() || publicWindow.webContents.isCrashed()) return false;
     try {
@@ -485,13 +462,12 @@ async function waitForPublicPage(publicWindow) {
       )
         return true;
     } catch {
-      // La navegación puede reemplazar el contexto durante la consulta.
+      /* El fallo no impide continuar con el respaldo disponible. */
     }
     await pause(100);
   }
   return false;
 }
-
 function summarizeMetrics() {
   const numeric = (name) => report.samples.map((sample) => sample[name]).filter(Number.isFinite);
   const summary = {};
@@ -511,7 +487,6 @@ function summarizeMetrics() {
   }
   return summary;
 }
-
 function summarizeLatencies() {
   const values = [...report.latencyMs].sort((a, b) => a - b);
   if (!values.length) return { samples: 0, min: null, max: null, average: null, p95: null };
@@ -523,7 +498,6 @@ function summarizeLatencies() {
     p95: values[Math.min(values.length - 1, Math.ceil(values.length * 0.95) - 1)],
   };
 }
-
 function readLogSummary() {
   const files = ['turnero.log', ...Array.from({ length: 5 }, (_, i) => `turnero.log.${i + 1}`)];
   const summary = { files: [], lines: 0, errors: 0, warnings: 0, invalidJsonLines: 0 };
@@ -542,12 +516,11 @@ function readLogSummary() {
         }
       }
     } catch {
-      // A missing rotated file is expected.
+      /* El fallo no impide continuar con el respaldo disponible. */
     }
   }
   return summary;
 }
-
 function writeMetricsCsv() {
   const columns = [
     'stage',
@@ -564,12 +537,9 @@ function writeMetricsCsv() {
     `${columns.join(',')}\n${report.samples.map((sample) => columns.map((column) => JSON.stringify(sample[column] ?? '')).join(',')).join('\n')}\n`,
   );
 }
-
 async function verify() {
   try {
     console.log(`Preparando contenido aislado; evidencia en ${reportPath}`);
-    // La resistencia requiere un inventario listo, no probar la instalación inicial.
-    // Copia directa a una carpeta nueva; si falla, no se inicia Electron.
     cpSync(join(root, 'contenido'), join(data, 'contenido'), {
       recursive: true,
       errorOnExist: true,
@@ -613,7 +583,7 @@ async function verify() {
         initial.inventario.voz.every(Boolean),
       'Preparación incompleta: se requieren aviso y 100 voces. Consulte turnero.log.',
     );
-    const readyDeadline = performance.now() + 30_000;
+    const readyDeadline = performance.now() + 30000;
     do {
       report.environment = await run(operator, 'window.turnero.diagnostico()');
       if (report.environment.audio === 'correcto') break;
@@ -651,7 +621,7 @@ async function verify() {
         'El rechazo por capacidad cambió los turnos.',
       );
       await drainAudio('preflight-audio');
-      const deadline = performance.now() + 120_000;
+      const deadline = performance.now() + 120000;
       while (receivedAudio.size < expectedAudio.size) {
         assert.ok(performance.now() < deadline, 'Faltan acuses en la comprobación previa.');
         await waitUntil(performance.now() + 1000);
@@ -665,7 +635,7 @@ async function verify() {
       await reloadDisplay('preflight');
       const postReload = await dispatch(operator, { tipo: 'LLAMAR', entrada: '31' });
       assert.equal(postReload.efecto, 'ANUNCIAR');
-      const reloadDeadline = performance.now() + 30_000;
+      const reloadDeadline = performance.now() + 30000;
       while (!receivedAudio.has(postReload.anuncio.id)) {
         assert.ok(performance.now() < reloadDeadline, 'El audio no se recuperó tras la recarga.');
         await waitUntil(performance.now() + 500);
@@ -701,8 +671,6 @@ async function verify() {
       app.exit(0);
       return;
     }
-
-    // Etiquetas de referencia; la prueba comienza a la hora real de ejecución.
     const hours = [
       { label: '08:30-09:30', calls: 8, step: 1, peak: false },
       { label: '09:30-10:30', calls: 10, step: 1, peak: false },
@@ -714,7 +682,7 @@ async function verify() {
     ];
     let ticket = 10;
     for (const [hourIndex, hour] of hours.entries()) {
-      const stageEnd = started + Math.min((hourIndex + 1) * 60, 390) * 60_000;
+      const stageEnd = started + Math.min((hourIndex + 1) * 60, 390) * 60000;
       const actionStart = report.actions.length;
       for (let offset = 0; offset < hour.calls; offset++) {
         await advance(hour.step);
@@ -722,15 +690,11 @@ async function verify() {
         const result = await dispatch(operator, { tipo: 'LLAMAR', entrada: String(number) });
         assert.equal(result.efecto, 'ANUNCIAR', 'Un llamado válido no produjo anuncio.');
       }
-
-      // Rellamada de un turno visible y de otro que ya pudo salir de pantalla.
       await drainAudio(`${hour.label}-llamadas`);
       const repeat = (ticket + hourIndex * 11) % 100;
       await dispatch(operator, { tipo: 'LLAMAR', entrada: String(repeat) });
       report.repeats++;
       await drainAudio(`${hour.label}-rellamada`);
-
-      // El pico fuerza la ventana máxima de cinco llamados y comprueba que no haya duplicados.
       if (hour.peak) {
         await dispatchBatch(
           operator,
@@ -741,13 +705,10 @@ async function verify() {
         );
         await drainAudio(`${hour.label}-pico`);
       }
-
       const beforeInvalid = (await run(operator, 'window.turnero.obtener()')).instantanea;
       const invalid = await dispatch(operator, { tipo: 'LLAMAR', entrada: 'no-es-un-turno' });
       assert.equal(invalid.efecto, 'CAPTURA_INVALIDA', 'Una entrada inválida alteró la cola.');
       assert.deepEqual(invalid.instantanea, beforeInvalid, 'La captura inválida cambió el estado.');
-
-      // Corrige el último llamado mediante deshacer y confirma que no genera otro anuncio.
       const beforeUndo = (await run(operator, 'window.turnero.obtener()')).instantanea;
       await dispatch(operator, {
         tipo: 'LLAMAR',
@@ -762,8 +723,6 @@ async function verify() {
         'Deshacer no restauró los números.',
       );
       report.corrections++;
-
-      // La vigencia de cinco minutos se evalúa en el siguiente despacho real.
       await advance(6);
       const expired = (await run(operator, 'window.turnero.obtener()')).instantanea;
       assert.deepEqual(
@@ -790,12 +749,10 @@ async function verify() {
       await waitUntil(stageEnd);
       checkpoint();
     }
-
     assert.ok(performance.now() - started >= durationMs, 'La jornada no duró 390 minutos reales.');
     await drainAudio('cierre');
     assert.equal(receivedAudio.size, expectedAudio.size, 'Faltan confirmaciones de audio.');
     assert.ok(expectedAudio.size > 0, 'No se probaron anuncios.');
-
     const final = await run(operator, 'window.turnero.diagnostico()');
     assert.equal(final.persistencia, 'correcta', 'La persistencia terminó degradada.');
     assert.equal(final.audio, 'correcto', 'El audio terminó degradado.');
@@ -847,5 +804,4 @@ async function verify() {
     app.exit(1);
   }
 }
-
 void verify();

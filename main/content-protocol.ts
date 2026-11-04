@@ -6,15 +6,12 @@ import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import { TIPOS_MIME } from './contenido.js';
 import { fileWithin } from './safe-file.js';
-
 interface ProtocolOptions {
   contentRoot: string;
   viewsRoot: string;
   developmentUrl?: string;
   contentSecurityPolicy: string;
 }
-
-/** Stream media with byte ranges, allowing Chromium to seek without buffering whole files. */
 async function serveMedia(file: string, range: string | null, headers: Record<string, string>) {
   const size = (await stat(file)).size;
   const type = TIPOS_MIME[extname(file).toLowerCase()] ?? 'application/octet-stream';
@@ -49,7 +46,6 @@ async function serveMedia(file: string, range: string | null, headers: Record<st
     },
   });
 }
-
 export function registerContentProtocol({
   contentRoot,
   viewsRoot,
