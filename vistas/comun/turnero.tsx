@@ -18,7 +18,6 @@ import type {
   TurneroApi,
 } from '../../shared/contract';
 import { getQueueTransport } from './transport';
-
 interface Contexto extends Inicial {
   youtubeAdmitido: boolean;
   configurarVolumen: TurneroApi['configurarVolumen'];
@@ -36,15 +35,12 @@ interface Contexto extends Inicial {
   registrar: (mensaje: string) => void;
 }
 const TurneroContext = createContext<Contexto | null>(null);
-
-/** Las vistas nunca tocan el núcleo: reciben estado y despachan acciones por el adaptador (§2). */
 export function TurneroProvider({ children }: { children: ReactNode }) {
   const api = getQueueTransport();
   const [inicial, setInicial] = useState<Inicial | null>(null),
     [error, setError] = useState('');
   const anuncios = useRef(new Set<(anuncio: Anuncio) => void>());
   const acuses = useRef(new Set<(entrega: EntregaAudio) => void>());
-  // Funciones estables: los efectos que se suscriben no deben reiniciarse en cada render.
   const acciones = useMemo(
     () => ({
       youtubeAdmitido: api?.youtubeAdmitido !== false,
@@ -84,7 +80,6 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
   );
   useEffect(() => {
     if (!api) return;
-    // Primero se escucha y luego se pide la instantánea: la respuesta siempre es más nueva que lo que llegó antes.
     const quitar = [
       api.alCambiarEstado((instantanea, anuncio) => {
         setInicial(
@@ -144,7 +139,6 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
     </TurneroContext.Provider>
   );
 }
-
 export function useTurnero() {
   const contexto = useContext(TurneroContext);
   if (!contexto) throw new Error('TurneroProvider es obligatorio');

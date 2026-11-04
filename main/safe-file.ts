@@ -1,12 +1,10 @@
 import { realpath, stat } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
-
 function isInside(root: string, target: string): boolean {
   const path = relative(root, target);
   return Boolean(path) && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path);
 }
-
-/** Resolve both the requested path and symlinks before serving a local file. */
+// Se comprueba la ruta real para que un enlace no permita salir de la carpeta autorizada.
 export async function fileWithin(root: string, requested: string): Promise<string | null> {
   const candidate = resolve(root, requested);
   if (!isInside(root, candidate)) return null;

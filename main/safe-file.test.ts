@@ -5,7 +5,6 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileWithin } from './safe-file.js';
-
 test('only regular files within the content root are served', async () => {
   const base = mkdtempSync(join(tmpdir(), 'comal-safe-file-'));
   const root = join(base, 'content');
@@ -13,8 +12,6 @@ test('only regular files within the content root are served', async () => {
     mkdirSync(join(root, 'videos'), { recursive: true });
     writeFileSync(join(root, 'videos', 'clip.webm'), 'video');
     writeFileSync(join(base, 'private.txt'), 'private');
-
-    // Windows runners can expose TEMP through an 8.3 alias (RUNNER~1).
     assert.equal(
       await fileWithin(root, 'videos/clip.webm'),
       await realpath(resolve(root, 'videos/clip.webm')),

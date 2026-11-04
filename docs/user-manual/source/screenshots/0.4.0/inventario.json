@@ -1,0 +1,133 @@
+{
+  "procedencia": "Once recursos recuperados del PDF visual de octubre y una nueva captura 2x de la barra de ajustes. La procedencia individual prevalece sobre los metadatos generales del PDF original.",
+  "pdf_original": "output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf",
+  "commit_pdf_original": "5bc12ad",
+  "sha256_pdf_original": "9c44afd9ed96f6c8fb80eac0c3bf3ec20f6cdaf5aa2bc5aa3d1a7b055e1f6e13",
+  "recuperado_el": "2026-11-02",
+  "version_aplicacion": "0.4.0",
+  "commit_captura_original": null,
+  "fecha_captura_original": null,
+  "transporte": "Electron, segun las vistas del PDF original",
+  "resolucion_y_escala_originales": "No registradas; los tamanos corresponden a recursos o recortes, no a una resolucion de pantalla certificada.",
+  "criterio": "Se recupera cada imagen sin reescalar; los recortes solo enfocan controles y excluyen las rutas de datos de Diagnosticos.",
+  "imagenes": [
+    {
+      "archivo": "publica-anuncio.png",
+      "pagina_original": 1,
+      "recurso_pdf": "FormXob.ab11fbb88a7fba68b8339801f08f48a8.png",
+      "tamano_original_px": [2400, 1350],
+      "recorte_px": null,
+      "tamano_px": [2400, 1350],
+      "sha256": "6370a5f56a97bb31cf831e65ee98fd7d9bf64bb186a39b81db1f153dd9fb64c0"
+    },
+    {
+      "archivo": "turnos.png",
+      "pagina_original": 2,
+      "recurso_pdf": "FormXob.f7a80387b0085cd96c26f8c581817ad2.png",
+      "tamano_original_px": [1800, 1200],
+      "recorte_px": null,
+      "tamano_px": [1800, 1200],
+      "sha256": "35e68b62ddf8b3278eece0c18b1ad6fde22c558db9c532fa1c044b85c5775091"
+    },
+    {
+      "archivo": "captura-ticket.png",
+      "pagina_original": 3,
+      "recurso_pdf": "FormXob.63e15000d1d02747936758e61f170283.png",
+      "tamano_original_px": [850, 627],
+      "recorte_px": null,
+      "tamano_px": [850, 627],
+      "sha256": "f309670283eca69a267cde86677eeded7463290aecd261a98b273f9d2b74cbb5"
+    },
+    {
+      "archivo": "corregir-captura.png",
+      "pagina_original": 4,
+      "recurso_pdf": "FormXob.8d7dfee1ae1ce98768d67cacbfe00f74.png",
+      "tamano_original_px": [650, 78],
+      "recorte_px": [0, 0, 294, 78],
+      "tamano_px": [294, 78],
+      "sha256": "53ab0170cdfc2d27e28a605a3ad6e751a3527b959df5c9268f0b5756cf62ec0e"
+    },
+    {
+      "archivo": "acciones-turno.png",
+      "pagina_original": 4,
+      "recurso_pdf": "FormXob.ad5c3bd86c09d20b00518319642146e1.png",
+      "tamano_original_px": [563, 117],
+      "recorte_px": [0, 0, 563, 89],
+      "tamano_px": [563, 89],
+      "sha256": "ad4ed9f6890d6b9ed5c220c4b049e2653b30a05c9e163c3e1d172091855f9c7a"
+    },
+    {
+      "archivo": "confirmar-quitar.png",
+      "pagina_original": 4,
+      "recurso_pdf": "FormXob.c32d2c4d921f25c9d048c054a0c4c13a.png",
+      "tamano_original_px": [357, 130],
+      "recorte_px": null,
+      "tamano_px": [357, 130],
+      "sha256": "8f5629c3f4fe432792427ee898791ff599dec81f00ef09c180297540d7e88cf0"
+    },
+    {
+      "archivo": "publica-lista.png",
+      "pagina_original": 5,
+      "recurso_pdf": "FormXob.13c8b973c4fffb10107634ed0b501352.png",
+      "tamano_original_px": [617, 1140],
+      "recorte_px": null,
+      "tamano_px": [617, 1140],
+      "sha256": "a121b29859dc69d049acf6e464f77b723e14ea1e94ab4b2a521810fb2b9addbf"
+    },
+    {
+      "archivo": "barra-ajustes.png",
+      "tamano_px": [818, 104],
+      "sha256": "1feac7bd94ad0bd8b6de3d4e3eb5c45d8ee288f4492c63f229443c17d0f7c715",
+      "procedencia": "Captura nueva de Electron con datos aislados; sustituye el recurso de octubre.",
+      "fecha_captura": "2026-11-02T17:16:58.253Z",
+      "commit_aplicacion": "5bc12ad50bffaea06253f6d2bef9b252df0be63b",
+      "resolucion_css": [1800, 1200],
+      "escala_dispositivo": 2,
+      "zoom": 1,
+      "recorte_css": {
+        "x": 1352,
+        "y": 9,
+        "width": 409,
+        "height": 52
+      },
+      "pagina_pdf_sustituida": 6,
+      "recurso_pdf_sustituido": "FormXob.68c26481915e948382a9b7c0f21dc905.png"
+    },
+    {
+      "archivo": "volumen.png",
+      "pagina_original": 6,
+      "recurso_pdf": "FormXob.bb2244d7dc27931d205129ec28931f25.png",
+      "tamano_original_px": [383, 428],
+      "recorte_px": null,
+      "tamano_px": [383, 428],
+      "sha256": "54f0d75131d8d07ea0877efc5ddf85fe0634e5ce7a7a87b294179bcac057f5a0"
+    },
+    {
+      "archivo": "multimedia.png",
+      "pagina_original": 7,
+      "recurso_pdf": "FormXob.51e4a1d26311efb0e7d04c5c46ae9a12.png",
+      "tamano_original_px": [1434, 568],
+      "recorte_px": null,
+      "tamano_px": [1434, 568],
+      "sha256": "180e697b49676027164b36b6948d5f7f01cd574f006d4c500df4935235dbfe3f"
+    },
+    {
+      "archivo": "youtube.png",
+      "pagina_original": 8,
+      "recurso_pdf": "FormXob.d04acd03ab2f4be4881c42eaf219a603.png",
+      "tamano_original_px": [1437, 380],
+      "recorte_px": null,
+      "tamano_px": [1437, 380],
+      "sha256": "464c998fec55ac36de40cbf2906f48e89147c18e21dba602fbfa7848797ed9e8"
+    },
+    {
+      "archivo": "diagnosticos.png",
+      "pagina_original": 11,
+      "recurso_pdf": "FormXob.7321e6f1a0bc98f3a7eb66ec2fdd948f.png",
+      "tamano_original_px": [1444, 773],
+      "recorte_px": [0, 310, 1444, 725],
+      "tamano_px": [1444, 415],
+      "sha256": "412f5b3d371e08559d4377dc3caf46ea9b487194d72453987ef9cd6d7426aa09"
+    }
+  ]
+}

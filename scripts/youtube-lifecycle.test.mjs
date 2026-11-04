@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { iniciarYouTube } from '../vistas/publica/youtubeApi.ts';
-
 function player(events) {
   return {
     mute: () => events.push('mute'),
@@ -10,7 +9,6 @@ function player(events) {
     playVideo: () => events.push('play'),
   };
 }
-
 test('YouTube no inicia ni quita silencio hasta confirmar volumen', async () => {
   const events = [];
   let confirm;
@@ -31,7 +29,6 @@ test('YouTube no inicia ni quita silencio hasta confirmar volumen', async () => 
   assert.equal(await starting, true);
   assert.deepEqual(events, ['mute', 'loop', 0.15, 'unmute', 'play']);
 });
-
 test('YouTube aplica el ducking nuevo si cambia mientras espera la primera carga', async () => {
   const events = [];
   let volume = 0.6;
@@ -48,7 +45,6 @@ test('YouTube aplica el ducking nuevo si cambia mientras espera la primera carga
   assert.equal(await starting, true);
   assert.deepEqual(events, ['mute', 'loop', 0.6, 0.09, 'unmute', 'play']);
 });
-
 test('YouTube sin video o transporte desconectado rechaza sin iniciar', async () => {
   for (const ajustar of [
     async () => 0,
@@ -69,7 +65,6 @@ test('YouTube sin video o transporte desconectado rechaza sin iniciar', async ()
     assert.deepEqual(events, ['mute', 'loop']);
   }
 });
-
 test('una carga de YouTube retirada no inicia tras llegar su confirmación', async () => {
   const events = [];
   let active = true;

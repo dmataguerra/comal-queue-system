@@ -1,5 +1,6 @@
 .multimedia-workspace {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
 }
 .youtube-form {
@@ -46,6 +47,7 @@
   flex: none;
 }
 .media-library-panel {
+  min-width: 0;
   padding: 24px;
 }
 .media-library-heading p,
@@ -62,6 +64,7 @@
 }
 .media-library-layout {
   display: grid;
+  min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
 }
@@ -83,6 +86,7 @@
 }
 .media-file-grid {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   max-height: 300px;
   overflow-y: auto;
@@ -210,6 +214,6 @@
 }
 @media (max-width: 1100px) {
   .media-library-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

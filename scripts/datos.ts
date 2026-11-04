@@ -1,7 +1,5 @@
 import { crearRespaldo, restaurarRespaldo } from '../main/respaldo.js';
-
 const [accion, origen, destino, confirmacion] = process.argv.slice(2);
-
 try {
   if (accion === 'backup' && origen && destino) {
     console.log(`Respaldo creado: ${crearRespaldo(origen, destino)}`);

@@ -4,15 +4,8 @@ import { crearCola } from '../../nucleo/cola';
 import type { Anuncio } from '../../shared/contract';
 import { useTurnero } from '../comun/turnero';
 import { cerrarAudio, pausa, precargar, reproducir } from './audio';
-
 const PAUSA_REPETICION = 300;
-const TARJETA_MINIMA = 6000; // Mantener visible seis segundos, o hasta terminar la voz.
-
-/**
- * RF-03 y RF-11 · atenuar música → aviso → voz → [pausa → voz] → restaurar.
- * Los llamados se encolan en orden de llegada y terminan antes de iniciar el siguiente.
- * Al montar o recargar no se repite ningún anuncio viejo: solo reacciona a eventos nuevos.
- */
+const TARJETA_MINIMA = 6000;
 export function useAnuncios() {
   const {
     config,
@@ -28,11 +21,13 @@ export function useAnuncios() {
   const ultimos = useRef({ config, inventario });
   ultimos.current = { config, inventario };
   const vozFaltante = useRef(new Set<number>());
-  const atenuacionLista = useRef<{ id: number; resolver: () => void } | null>(null);
+  const atenuacionLista = useRef<{
+    id: number;
+    resolver: () => void;
+  } | null>(null);
   const confirmarAtenuacion = useCallback(() => {
     if (atenuacionLista.current?.id === anuncio?.id) atenuacionLista.current?.resolver();
   }, [anuncio?.id]);
-
   useEffect(() => {
     precargar(inventario)
       .then(() => {
@@ -46,7 +41,6 @@ export function useAnuncios() {
         registrar(`Audio: ${error.message}`);
       });
   }, [inventario, registrar, informarSalud]);
-
   useEffect(() => {
     const cola = crearCola<Anuncio>(
       async (nuevo, signal) => {
@@ -73,7 +67,6 @@ export function useAnuncios() {
           signal.addEventListener('abort', cancelarEspera, { once: true });
         });
         setAtenuado(true);
-        // CU-06 2a · la configuración se toma al inicio: un cambio aplica en el siguiente llamado.
         const {
           config: { repeticiones, volumenVoz },
           inventario: { aviso, voz },

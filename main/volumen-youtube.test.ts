@@ -2,11 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createContext, runInContext } from 'node:vm';
 import { scriptVolumen } from './volumen-youtube.js';
-
 function escenario() {
   let ahora = 0;
   const tareas: (() => void)[] = [];
-  const videos: { volume: number; paused: boolean; muted: boolean }[] = [];
+  const videos: {
+    volume: number;
+    paused: boolean;
+    muted: boolean;
+  }[] = [];
   const contexto = createContext({
     window: {},
     document: { querySelectorAll: () => videos },
@@ -16,7 +19,9 @@ function escenario() {
   return {
     videos,
     aplicar: (volumen: number, rampa = 0) =>
-      runInContext(scriptVolumen(volumen, rampa), contexto) as Promise<{ videos: number }>,
+      runInContext(scriptVolumen(volumen, rampa), contexto) as Promise<{
+        videos: number;
+      }>,
     async avanzar(ms: number) {
       ahora += ms;
       for (const tarea of tareas.splice(0)) tarea();
@@ -24,7 +29,6 @@ function escenario() {
     },
   };
 }
-
 test('una solicitud antigua esperando video no restaura volumen sobre un ducking nuevo', async () => {
   const e = escenario();
   const antigua = e.aplicar(1);
@@ -35,7 +39,6 @@ test('una solicitud antigua esperando video no restaura volumen sobre un ducking
   assert.equal((await nueva).videos, 1);
   assert.equal(e.videos[0].volume, 0.15);
 });
-
 test('confirma solo al terminar la rampa y respeta pausa y silencio', async () => {
   const e = escenario();
   e.videos.push({ volume: 1, paused: true, muted: true });
@@ -52,14 +55,12 @@ test('confirma solo al terminar la rampa y respeta pausa y silencio', async () =
   assert.equal(e.videos[0].paused, true);
   assert.equal(e.videos[0].muted, true);
 });
-
 test('sin video termina sin confirmar atenuación', async () => {
   const e = escenario();
   const resultado = e.aplicar(0.15);
   await e.avanzar(6001);
   assert.equal((await resultado).videos, 0);
 });
-
 test('una rampa reemplazada no confirma éxito ni sobrescribe el volumen nuevo', async () => {
   const e = escenario();
   e.videos.push({ volume: 1, paused: false, muted: false });

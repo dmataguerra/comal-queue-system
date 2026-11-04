@@ -14,7 +14,6 @@ import {
   validarVolumenes,
   validarYouTube,
 } from './seguridad-ipc.js';
-
 const urls = {
   operador: 'turnero://app/vistas/operador/index.html',
   publica: 'turnero://app/vistas/publica/index.html',
@@ -37,11 +36,12 @@ const rolPublica = (remitente: typeof operador) => remitente === publica;
 const urlVista = (vista: 'operador' | 'publica') => urls[vista];
 const autorizar = (
   remitente: typeof operador,
-  frame: { url: string } | null,
+  frame: {
+    url: string;
+  } | null,
   vista: 'operador' | 'publica' | 'cualquiera',
 ) =>
   autorizarIpc({ sender: remitente, senderFrame: frame }, vista, rolOperador, rolPublica, urlVista);
-
 test('IPC admite cada vista solo para su función y el estado para ambas', () => {
   assert.equal(autorizar(operador, operador.mainFrame, 'operador'), 'operador');
   assert.equal(autorizar(publica, publica.mainFrame, 'publica'), 'publica');
@@ -59,7 +59,6 @@ test('IPC admite cada vista solo para su función y el estado para ambas', () =>
   validarSinArgumentos([]);
   validarCantidad(['videos'], 1);
 });
-
 test('IPC rechaza remitente, marco y página ajenos', () => {
   const ajeno = crearRemitente(urls.operador);
   assert.throws(() => autorizar(ajeno, ajeno.mainFrame, 'cualquiera'), /Vista no autorizada/);
@@ -84,7 +83,6 @@ test('IPC rechaza remitente, marco y página ajenos', () => {
   assert.throws(() => validarSinArgumentos(['extra']), /Argumentos no válidos/);
   assert.throws(() => validarCantidad([], 1), /Argumentos no válidos/);
 });
-
 test('IPC rechaza acciones, categorías y enlaces inválidos', () => {
   for (const accion of [null, [], { tipo: 'LLAMAR', entrada: 12 }, { tipo: 'QUITAR', n: 100 }])
     assert.throws(() => validarAccion(accion), /Acción no válida/);
@@ -107,7 +105,6 @@ test('IPC rechaza acciones, categorías y enlaces inválidos', () => {
   ])
     assert.throws(() => validarUrlContenido(url), /Archivo multimedia no válido/);
 });
-
 test('IPC rechaza volumen, rampa y registros fuera de rango', () => {
   for (const volumen of [-0.1, 1.1, Number.NaN, '1'])
     assert.throws(() => validarVolumen(volumen, 0), /Volumen no válido/);

@@ -2,10 +2,22 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { crearCsp } from './main/politica-csp';
-// Dos páginas, una por ventana de Electron. No hay servidor: los datos llegan por IPC.
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: 'comal-manual-pdf',
+      generateBundle() {
+        const pdf = readFileSync(resolve('output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf'));
+        if (pdf.subarray(0, 5).toString() !== '%PDF-')
+          throw new Error('El manual PDF no es válido.');
+        this.emitFile({ type: 'asset', fileName: 'manual/manual-usuario-0.4.0.pdf', source: pdf });
+      },
+    },
+  ],
   server: {
     port: 5173,
     strictPort: true,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatear, normalizar } from '../../nucleo/turnos';
 import { ultimasEntregas } from '../../shared/politica-anuncios';
 import { useTurnero } from '../comun/turnero';
@@ -11,8 +11,10 @@ import { MultimediaPanel } from './MultimediaPanel';
 import { SizeControl } from '../comun/components/SizeControl';
 import { VolumeControl } from '../comun/components/VolumeControl';
 import { DiagnosticoPanel } from './DiagnosticoPanel';
-
-/** Operación diaria: número + Enter, corrección explícita y F1 para ayuda. */
+import { HelpCenter } from './ayuda/HelpCenter';
+import { GuidedTour } from './ayuda/GuidedTour';
+import type { RecorridoId } from './ayuda/contenido';
+import { guardarCompletado, leerProgreso } from './ayuda/progreso';
 export function OperadorPage() {
   const { tema, cambiarTema } = useTema();
   const { instantanea, pantallas, entregasAudio = [], despachar, youtubeAdmitido } = useTurnero(),
@@ -43,13 +45,78 @@ export function OperadorPage() {
     [mensaje, setMensaje] = useState(''),
     [esError, setEsError] = useState(false),
     [ayuda, setAyuda] = useState(false),
-    [pendiente, setPendiente] = useState<{ numero: number; tipo: 'anunciar' | 'quitar' } | null>(
-      null,
-    ),
+    [recorrido, setRecorrido] = useState<RecorridoId | null>(null),
+    [completados, setCompletados] = useState(leerProgreso),
+    [pendiente, setPendiente] = useState<{
+      numero: number;
+      tipo: 'anunciar' | 'quitar';
+    } | null>(null),
     [noPreguntar, setNoPreguntar] = useState(false);
   const omitirConfirmacion = useRef(false);
   const input = useRef<HTMLInputElement>(null),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ayudaActiva = useRef(false);
+  const focoAntesAyuda = useRef<HTMLElement | null>(null);
+  const antesRecorrido = useRef({ pagina, x: 0, y: 0 });
+  const enfocarCaptura = useCallback(() => {
+    if (!ayudaActiva.current && !document.querySelector('dialog[open]')) input.current?.focus();
+  }, []);
+  const abrirAyuda = useCallback(() => {
+    if (pendiente || recorrido) return;
+    if (!ayudaActiva.current)
+      focoAntesAyuda.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    ayudaActiva.current = true;
+    setCompletados((actuales) => [...new Set([...actuales, ...leerProgreso()])]);
+    setAyuda(true);
+  }, [pendiente, recorrido]);
+  function restaurarFoco() {
+    requestAnimationFrame(() => {
+      if (ayudaActiva.current || document.querySelector('dialog[open]')) return;
+      const anterior = focoAntesAyuda.current;
+      const candidatos = [
+        anterior,
+        anterior?.id ? document.getElementById(anterior.id) : null,
+        input.current,
+        document.querySelector<HTMLElement>('.help-button'),
+        document.getElementById('admin-main'),
+      ];
+      for (const candidato of candidatos) {
+        if (
+          !candidato?.isConnected ||
+          candidato === document.body ||
+          candidato === document.documentElement ||
+          candidato.closest('[inert], [hidden]')
+        )
+          continue;
+        candidato.focus();
+        if (document.activeElement === candidato) return;
+      }
+    });
+  }
+  function cerrarAyuda() {
+    ayudaActiva.current = false;
+    setAyuda(false);
+    restaurarFoco();
+  }
+  function iniciarRecorrido(id: RecorridoId) {
+    antesRecorrido.current = { pagina, x: window.scrollX, y: window.scrollY };
+    ayudaActiva.current = true;
+    setAyuda(false);
+    setRecorrido(id);
+  }
+  function salirRecorrido(completado: boolean, volverAyuda = true) {
+    if (completado && recorrido)
+      setCompletados((actuales) => guardarCompletado(recorrido, actuales));
+    setRecorrido(null);
+    setPagina(antesRecorrido.current.pagina);
+    setAyuda(volverAyuda);
+    ayudaActiva.current = volverAyuda;
+    requestAnimationFrame(() => {
+      window.scrollTo(antesRecorrido.current.x, antesRecorrido.current.y);
+      if (!volverAyuda) restaurarFoco();
+    });
+  }
   const previa = normalizar(entrada);
   function notificar(texto: string, error = false) {
     setMensaje(texto);
@@ -69,7 +136,6 @@ export function OperadorPage() {
   async function llamar(e: React.FormEvent) {
     e.preventDefault();
     if (ocupado) return;
-    // Validar la captura completa, sin recortarla ni enviarla si excede el formato del ticket.
     if (normalizar(entrada) === null) {
       notificar(
         entrada.trim()
@@ -77,7 +143,7 @@ export function OperadorPage() {
           : 'Escribe el número del ticket.',
         true,
       );
-      input.current?.focus();
+      enfocarCaptura();
       return;
     }
     setOcupado(true);
@@ -102,7 +168,7 @@ export function OperadorPage() {
       notificarError(error);
     } finally {
       setOcupado(false);
-      input.current?.focus();
+      enfocarCaptura();
     }
   }
   async function deshacerUltimo() {
@@ -119,7 +185,7 @@ export function OperadorPage() {
       notificarError(error);
     } finally {
       setOcupado(false);
-      input.current?.focus();
+      enfocarCaptura();
     }
   }
   async function accionDeFila(hacer: () => Promise<void>) {
@@ -131,7 +197,7 @@ export function OperadorPage() {
       notificarError(error);
     } finally {
       setOcupado(false);
-      input.current?.focus();
+      enfocarCaptura();
     }
   }
   const anunciarDeNuevo = (n: number) =>
@@ -168,12 +234,10 @@ export function OperadorPage() {
     function tecla(e: KeyboardEvent) {
       if (e.key === 'F1') {
         e.preventDefault();
-        setAyuda(true);
+        abrirAyuda();
       }
     }
-    const enfocar = () => {
-      if (!document.querySelector('dialog[open]')) input.current?.focus();
-    };
+    const enfocar = enfocarCaptura;
     enfocar();
     window.addEventListener('keydown', tecla);
     window.addEventListener('focus', enfocar);
@@ -181,14 +245,13 @@ export function OperadorPage() {
       window.removeEventListener('keydown', tecla);
       window.removeEventListener('focus', enfocar);
     };
-  }, []);
+  }, [abrirAyuda, enfocarCaptura]);
   useEffect(() => {
     document.title = 'Troyanos · Operador';
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);
-  // La TV es una sola lista: el actual arriba y detrás los llamados, del más reciente al más viejo.
   const filas = [
     ...(actual === null ? [] : [{ n: actual, destacada: true, nota: '' }]),
     ...llamados.map((n, i) => ({
@@ -224,10 +287,10 @@ export function OperadorPage() {
           };
   return (
     <div className="admin-shell">
-      <a href="#admin-main" className="skip-link">
+      <a href="#admin-main" className="skip-link" inert={recorrido !== null}>
         Ir al contenido
       </a>
-      <aside className="sidebar">
+      <aside className="sidebar" inert={recorrido !== null}>
         <Brand />
         <span className="nav-label">ESPACIO DE TRABAJO</span>
         <nav aria-label="Navegación principal">
@@ -238,7 +301,7 @@ export function OperadorPage() {
             aria-current={pagina === 'turnos' ? 'page' : undefined}
             onClick={() => {
               setPagina('turnos');
-              setTimeout(() => input.current?.focus());
+              setTimeout(enfocarCaptura);
             }}
           >
             <Icon name="receipt" />
@@ -266,7 +329,7 @@ export function OperadorPage() {
           </div>
         </div>
       </aside>
-      <div className="admin-workspace">
+      <div className="admin-workspace" inert={recorrido !== null}>
         <header className="admin-topbar">
           <div className="breadcrumb">
             Turnero
@@ -296,7 +359,7 @@ export function OperadorPage() {
               </span>
               <span>{tema === 'morado' ? 'Morado' : 'Azul'}</span>
             </button>
-            <button className="button secondary help-button" onClick={() => setAyuda(true)}>
+            <button className="button secondary help-button" onClick={abrirAyuda}>
               <Icon name="info" />
               Ayuda<kbd>F1</kbd>
             </button>
@@ -352,6 +415,7 @@ export function OperadorPage() {
                         <input
                           className="turn-number-input"
                           id="turn-number"
+                          data-help="ticket"
                           ref={input}
                           type="text"
                           inputMode="numeric"
@@ -366,7 +430,11 @@ export function OperadorPage() {
                       <p id="call-hint" className="field-hint">
                         {pista}
                       </p>
-                      <button className="button primary register-button" disabled={ocupado}>
+                      <button
+                        className="button primary register-button"
+                        data-help="anunciar"
+                        disabled={ocupado}
+                      >
                         <Icon name="volume" />
                         Anunciar en la TV<kbd>Enter</kbd>
                       </button>
@@ -381,7 +449,7 @@ export function OperadorPage() {
                       <span>{mensaje || 'Cada llamado suena en la TV con aviso y voz.'}</span>
                     </div>
                   </section>
-                  <section className="panel repeat-panel">
+                  <section className="panel repeat-panel" data-help="corregir">
                     <div className="section-heading with-icon">
                       <span className="section-icon quiet">
                         <Icon name="undo" />
@@ -408,7 +476,11 @@ export function OperadorPage() {
                     </div>
                   </section>
                 </div>
-                <section className="panel ready-panel" aria-labelledby="screen-heading">
+                <section
+                  className="panel ready-panel"
+                  data-help="en-pantalla"
+                  aria-labelledby="screen-heading"
+                >
                   <div className="ready-heading">
                     <div>
                       <h2 id="screen-heading">
@@ -508,10 +580,14 @@ export function OperadorPage() {
                 </section>
               </div>
             </>
-          ) : pagina === 'multimedia' ? (
-            <MultimediaPanel notificar={notificar} />
-          ) : (
+          ) : pagina === 'diagnostico' ? (
             <DiagnosticoPanel />
+          ) : null}
+          {(pagina === 'multimedia' ||
+            (recorrido !== null && antesRecorrido.current.pagina === 'multimedia')) && (
+            <div hidden={pagina !== 'multimedia'} data-help="multimedia">
+              <MultimediaPanel notificar={notificar} />
+            </div>
           )}
           <footer className="workspace-footer">
             <span>
@@ -562,119 +638,20 @@ export function OperadorPage() {
         </Modal>
       )}
       {ayuda && (
-        <Modal
-          title="Cómo usar el turnero"
-          onClose={() => {
+        <HelpCenter
+          onClose={cerrarAyuda}
+          onStartTour={iniciarRecorrido}
+          completados={completados}
+          youtubeAdmitido={youtubeAdmitido}
+          onDiagnostics={() => {
+            ayudaActiva.current = false;
             setAyuda(false);
-            input.current?.focus();
+            setPagina('diagnostico');
+            requestAnimationFrame(() => document.getElementById('admin-main')?.focus());
           }}
-        >
-          <dl className="help-list">
-            <dt>
-              <kbd>Enter</kbd> Llamar
-            </dt>
-            <dd>
-              Teclea el número del ticket y presiona Enter. Solo cuentan los dos últimos dígitos:{' '}
-              <strong>213298</strong> se anuncia como <strong>98</strong>. Se aceptan de 1 a 6
-              dígitos, incluidos los tickets que terminan en 00.
-            </dd>
-            <dt>
-              <Icon name="volume" /> Repetir
-            </dt>
-            <dd>
-              Teclea el mismo número. Si ya es el turno actual, solo se repite el anuncio; si está
-              en llamados, vuelve a ser el actual sin duplicarse.
-            </dd>
-            <dt>
-              <Icon name="undo" /> Corregir captura
-            </dt>
-            <dd>
-              El botón <strong>Corregir última captura</strong> revierte el último llamado una sola
-              vez. Ctrl+Z solo edita el texto que estés escribiendo. Los audios ya encolados
-              terminan en orden.
-            </dd>
-            <dt>
-              <Icon name="volume" /> Acciones de un turno
-            </dt>
-            <dd>
-              Cada turno de <strong>En pantalla</strong> tiene dos botones:{' '}
-              <strong>Anunciar</strong> añade su voz a la cola, y <strong>Quitar</strong> lo borra y
-              descarta la corrección pendiente. Se pide confirmación; puedes omitirla para ambas
-              acciones durante esta sesión. Quitar un turno descarta los anuncios que aún esperan;
-              el audio que ya empezó termina antes del siguiente.
-            </dd>
-            <dt>
-              <Icon name="monitor" /> La TV no muestra nada
-            </dt>
-            <dd>
-              Revisa que esté encendida y conectada y que Windows esté configurado para extender las
-              pantallas. La pantalla pública aparece sola cuando se detecta la TV.
-            </dd>
-            <dt>
-              <Icon name="clock" /> Vaciado automático
-            </dt>
-            <dd>Cada turno desaparece de la pantalla 5 minutos después de su último anuncio.</dd>
-            <dt>
-              <Icon name="calendar" /> Cada día
-            </dt>
-            <dd>
-              Al cambiar de jornada se limpia la lista. Tras reiniciar se recuperan los turnos
-              guardados de la jornada que todavía no vencieron; los anuncios antiguos no se
-              reproducen automáticamente.
-            </dd>
-            <dt>
-              <Icon name="volume" /> Volumen y estado del audio
-            </dt>
-            <dd>
-              En la barra superior puedes ajustar por separado voz y multimedia y pulsar Aplicar. La
-              voz cambia en el siguiente anuncio; superar el 100% puede distorsionarla. La
-              multimedia baja durante el anuncio. Cada fila indica En espera, Anunciando, Anunciado
-              o Falló el audio. Anunciado confirma la reproducción por la aplicación: comprueba
-              también las bocinas y la salida HDMI. Si falla, revisa Diagnósticos y repite el turno.
-              Los llamados se reproducen en orden.
-            </dd>
-            <dt>
-              <Icon name="media" /> Videos, imágenes y YouTube
-            </dt>
-            <dd>
-              En Multimedia puedes agregar videos MP4 o WebM e imágenes JPG, PNG o WebP y quitar
-              archivos con confirmación. YouTube tiene prioridad; si no está disponible se usa
-              contenido local. Sin YouTube se reproducen videos y, si no hay videos reproducibles,
-              imágenes. YouTube necesita internet; los turnos y archivos locales funcionan sin él.
-            </dd>
-            <dt>
-              <Icon name="zoomIn" /> Tamaño y tema
-            </dt>
-            <dd>
-              Las lupas de la barra superior ajustan el tamaño entre 70% a 130%. El interruptor
-              Azul/Morado cambia el tema. Ambos ajustes se aplican a las dos pantallas.
-            </dd>
-            <dt>
-              <Icon name="warning" /> Problemas al guardar
-            </dt>
-            <dd>
-              Si aparece un error de guardado, la acción no se aplica ni se anuncia. Revisa el
-              espacio disponible y los permisos de la carpeta indicada en Diagnósticos; después
-              vuelve a intentarlo. Cierra la aplicación antes de respaldar o restaurar sus datos.
-              Puedes abrir esta ayuda con F1 y cerrarla con Escape.
-            </dd>
-            <dt>Diagnósticos</dt>
-            <dd>
-              Si hay un problema con el audio, la TV o los archivos,{' '}
-              <button
-                className="help-diagnostics-link"
-                onClick={() => {
-                  setAyuda(false);
-                  setPagina('diagnostico');
-                }}
-              >
-                Ver estado y detalles técnicos
-              </button>
-              .
-            </dd>
-          </dl>
-        </Modal>
+        />
       )}
+      {recorrido && <GuidedTour id={recorrido} onNavigate={setPagina} onExit={salirRecorrido} />}
     </div>
   );
 }

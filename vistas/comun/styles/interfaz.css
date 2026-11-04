@@ -1,4 +1,3 @@
-/* One operator type scale, based on Llamar turno. Panel grids and outer widths stay intact. */
 .admin-shell {
   --panel-title-size: 23px;
   --panel-description-size: 13px;
@@ -111,7 +110,7 @@
 .turn-action:hover:not(:disabled) {
   filter: brightness(0.95);
 }
-/* Labels stay visible; stack the two actions on narrower operator panels. */
+
 @media (min-width: 761px) and (max-width: 1180px) {
   .turn-actions {
     flex-direction: column;
@@ -258,7 +257,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
 }
-/* Supporting descriptions use the same reading scale in every operator tab. */
+
 .admin-shell .media-empty p,
 .admin-shell .media-note,
 .admin-shell .modal-copy,

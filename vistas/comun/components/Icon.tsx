@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react';
-
 const nombres = new Set([
   'zoomIn',
   'zoomOut',
@@ -65,8 +64,6 @@ const pixel = new Set([
   'plus',
   'minus',
 ]);
-
-/** Comal pixel artwork; masks inherit control colors. Keep legacy icons without a pixel version. */
 export function Icon({
   name,
   className = '',

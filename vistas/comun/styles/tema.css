@@ -1,4 +1,7 @@
-/* La paleta azul permanece en los fallbacks de cada componente. */
+:root {
+  --theme-muted: #4e6980;
+}
+
 :root[data-tema='morado'] {
   --wave-light-start: #eed9f5;
   --wave-light-end: #d9afe6;

@@ -3,7 +3,6 @@ import {
   MAX_DURACION_ANUNCIO_MS,
   MAX_ESPERA_ANUNCIO_MS,
 } from '../shared/politica-anuncios.js';
-
 interface OpcionesCola<T> {
   limite?: number;
   esperaMs?: number;
@@ -12,17 +11,21 @@ interface OpcionesCola<T> {
   vigente?: (valor: T) => boolean;
   alDescartar?: (valor: T) => void;
 }
-
-/** FIFO acotada: los descartes son explícitos y una tarea termina antes de iniciar otra. */
 export function crearCola<T>(
   procesar: (valor: T, signal: AbortSignal) => Promise<void>,
   alFallar: (error: unknown) => void,
   opciones: OpcionesCola<T> = {},
 ) {
-  const pendientes: { valor: T; desde: number }[] = [];
+  const pendientes: {
+    valor: T;
+    desde: number;
+  }[] = [];
   const ahora = opciones.ahora ?? Date.now;
   const control = new AbortController();
-  let actual: { valor: T; control: AbortController } | null = null;
+  let actual: {
+    valor: T;
+    control: AbortController;
+  } | null = null;
   let trabajando = false;
   async function consumir() {
     if (trabajando || control.signal.aborted) return;

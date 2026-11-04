@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Config } from '../../shared/contract';
 import { useTurnero } from '../comun/turnero';
 import { YouTubeVideo } from './YouTubeVideo';
-
 interface Props {
   videos: string[];
   banner: string[];
@@ -11,10 +10,7 @@ interface Props {
   confirmarAtenuacion: () => void;
   registrar: (mensaje: string) => void;
 }
-
 const nombre = (url: string) => decodeURIComponent(url.split('/').pop() ?? url);
-
-/** Fisher–Yates. Al rebarajar, el primero nunca es el que acaba de sonar. */
 function barajar(lista: string[], evitar?: string) {
   const bolsa = [...lista];
   for (let i = bolsa.length - 1; i > 0; i--) {
@@ -24,8 +20,6 @@ function barajar(lista: string[], evitar?: string) {
   if (bolsa.length > 1 && bolsa[0] === evitar) [bolsa[0], bolsa[1]] = [bolsa[1], bolsa[0]];
   return bolsa;
 }
-
-/** CU-04 · videos locales en bolsa aleatoria; sin videos (o si todos fallan), modo banner (RF-12). */
 export function Contenido({
   videos,
   banner,
@@ -98,12 +92,10 @@ export function Contenido({
     );
   return <Banner imagenes={banner} segundos={config.segundosBanner} />;
 }
-
 interface Pieza {
   id: number;
   url: string;
 }
-
 function Videos({
   videos,
   volumen,
@@ -127,9 +119,7 @@ function Videos({
     },
     [videos],
   );
-  // [0] es el clip en pantalla; [1], si existe, el siguiente precargado en oculto (§8 medida 2).
   const [piezas, setPiezas] = useState<Pieza[]>(() => [tomar()]);
-  // Si el administrador borra el video en curso, o un clip falla, se pasa al siguiente sin reiniciar la app.
   useEffect(() => {
     setPiezas((actuales) => {
       const vigentes = actuales.filter((pieza) => videos.includes(pieza.url));
@@ -163,7 +153,6 @@ function Videos({
     </div>
   );
 }
-
 interface ClipProps {
   alAjustar?: () => void;
   url: string;
@@ -174,8 +163,6 @@ interface ClipProps {
   alCasiTerminar: () => void;
   alFallar: () => void;
 }
-
-/** Un <video> nuevo por clip; al salir se libera su decodificador (§8 medida 1). */
 function Clip({
   url,
   activo,
@@ -193,7 +180,6 @@ function Clip({
   falloActual.current = alFallar;
   useEffect(() => {
     const video = ref.current!;
-    // StrictMode repite montaje/limpieza en desarrollo: cada montaje debe restaurar la fuente.
     video.src = url;
     return () => {
       video.pause();
@@ -215,8 +201,7 @@ function Clip({
     return () => {
       vigente = false;
     };
-  }, [activo]); // el volumen al activarse; los cambios posteriores los lleva la rampa
-  // RF-11 · el volumen se interpola: 150 ms al atenuar, 400 ms al restaurar.
+  }, [activo]);
   useEffect(() => {
     const video = ref.current!;
     if (!activo) return;
@@ -233,7 +218,7 @@ function Clip({
     return () => cancelAnimationFrame(cuadro);
   }, [volumen, rampa, activo, alAjustar]);
   return (
-    // El video lo aporta el operador; no existe un archivo de subtítulos asociado.
+    // El archivo local no incluye una pista de subtítulos separada.
     // eslint-disable-next-line jsx-a11y/media-has-caption
     <video
       ref={ref}
@@ -254,7 +239,6 @@ function Clip({
     />
   );
 }
-
 function Banner({ imagenes, segundos }: { imagenes: string[]; segundos: number }) {
   const [indice, setIndice] = useState(0);
   useEffect(() => {

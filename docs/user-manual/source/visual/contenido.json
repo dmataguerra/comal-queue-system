@@ -1,0 +1,296 @@
+{
+  "version": "0.4.0",
+  "edicion": "2 de noviembre de 2026",
+  "navegacion": [
+    { "titulo": "Empezar", "rango": "2 a 3", "destino": "preparar" },
+    { "titulo": "Operar", "rango": "4 a 6", "destino": "acciones" },
+    { "titulo": "Multimedia", "rango": "7 a 8", "destino": "archivos" },
+    { "titulo": "Resolver", "rango": "9 a 12", "destino": "jornada" }
+  ],
+  "paginas": [
+    {
+      "id": "portada",
+      "layout": "portada",
+      "titulo": "Manual de\nusuario",
+      "intro": "Pedidos listos, llamados claros.\nUna guía para cada jornada.",
+      "imagen": "publica-anuncio",
+      "temas": [
+        "Equipo y primer llamado",
+        "Turnos, audio y ajustes",
+        "Archivos y YouTube",
+        "Rutina y ayuda"
+      ]
+    },
+    {
+      "id": "preparar",
+      "layout": "panorama",
+      "seccion": "Empezar",
+      "titulo": "Prepara el equipo",
+      "intro": "Enciende PC, TV y bocinas. En Windows, pulsa Windows + P y elige Extender.",
+      "imagen": "turnos",
+      "pie_imagen": "Operador en la PC. Pantalla pública en la TV.",
+      "claves": [
+        ["Turnos", "Llama y revisa los pedidos."],
+        ["Multimedia", "Agrega archivos para la TV."],
+        ["Ayuda o F1", "Consulta el estado del equipo."]
+      ],
+      "nota": "Antes de atender, llama un número de prueba: debe verse y oírse. Después, quítalo."
+    },
+    {
+      "id": "llamar",
+      "layout": "llamada",
+      "seccion": "Empezar",
+      "titulo": "Llama un pedido listo",
+      "intro": "Comprueba el ticket antes de anunciar.",
+      "imagen": "captura-ticket",
+      "pasos": [
+        ["Escribe", "Captura de 1 a 6 dígitos."],
+        ["Anuncia", "Pulsa Enter o Anunciar en la TV."],
+        ["Comprueba", "Mira la TV y escucha la voz."]
+      ],
+      "ejemplos": [
+        ["213298", "98"],
+        ["7", "07"],
+        ["1200", "00"]
+      ],
+      "nota": "Se usan las dos últimas cifras. Letras o más de 6 dígitos se rechazan sin cambiar el turno."
+    },
+    {
+      "id": "acciones",
+      "layout": "acciones",
+      "seccion": "Operar",
+      "titulo": "Repite, corrige o quita",
+      "intro": "Elige la acción según lo que necesitas cambiar.",
+      "tarjetas": [
+        {
+          "titulo": "Repetir",
+          "imagen": "acciones-turno",
+          "icono": "repetir",
+          "texto": "Pulsa la bocina de la fila y **Confirmar anuncio**.\nTambién puedes escribir el número y pulsar Enter.",
+          "resultado": "Vuelve arriba sin duplicarse."
+        },
+        {
+          "titulo": "Corregir",
+          "imagen": "corregir-captura",
+          "icono": "deshacer",
+          "texto": "Pulsa **Corregir última captura**.\nRevierte el último llamado una sola vez, sin anunciar.",
+          "resultado": "Después, captura el número correcto."
+        },
+        {
+          "titulo": "Quitar",
+          "imagen": "confirmar-quitar",
+          "icono": "papelera",
+          "texto": "Pulsa la papelera y **Confirmar quitar**.\nRetira ese número de la TV.",
+          "resultado": "No registra una entrega ni una venta."
+        }
+      ],
+      "nota": "Quitar descarta los anuncios pendientes de ese turno; el audio que ya empezó puede terminar.",
+      "detalle": "Omitir confirmaciones dura solo esa sesión. Ctrl + Z edita el texto; no corrige el llamado."
+    },
+    {
+      "id": "pantalla",
+      "layout": "pantalla",
+      "seccion": "Operar",
+      "titulo": "Lee la TV y el estado del audio",
+      "intro": "El pedido más reciente queda arriba.",
+      "imagen": "publica-lista",
+      "cifras": [
+        ["6", "turnos visibles", "El siguiente distinto desplaza al más antiguo."],
+        ["5", "minutos por turno", "Repetir renueva el tiempo."]
+      ],
+      "etiqueta": "En la fila del operador",
+      "estados": [
+        ["En espera", "Aún no empieza.", "neutro"],
+        ["Anunciando", "Se reproduce el aviso y la voz.", "azul"],
+        ["Anunciado", "Terminó. Confirma también el sonido.", "verde"],
+        ["Falló el audio", "Revisa el sonido y vuelve a llamar.", "rojo"],
+        ["No anunciado", "Revisa si todavía debes repetirlo.", "ambar"]
+      ],
+      "nota": "Audio: máximo 6 anuncios, incluido el activo. Si se llena, espera y reintenta; el rechazo no cambió el turno."
+    },
+    {
+      "id": "ajustes",
+      "layout": "ajustes",
+      "seccion": "Operar",
+      "titulo": "Ajusta sonido y lectura",
+      "intro": "Los controles están en el encabezado.",
+      "imagen_barra": "barra-ajustes",
+      "imagen_volumen": "volumen",
+      "volumen": {
+        "titulo": "Voz y multimedia",
+        "texto": "Abre la bocina, ajusta y pulsa **Aplicar**.",
+        "rangos": [
+          "Voz: 0 a 300%. Cambia en el siguiente anuncio.",
+          "Multimedia: 0 a 100%. Baja durante el llamado."
+        ],
+        "nota": "Voz en 0% impide anunciar; más de 100% puede distorsionar."
+      },
+      "preferencias": [
+        ["Tamaño", "Usa las lupas: de **70% a 130%**."],
+        ["Azul o Morado", "Pulsa el interruptor para cambiar el tema."]
+      ],
+      "nota": "Tema y tamaño se comparten entre ventanas de escritorio. El navegador guarda sus propios ajustes."
+    },
+    {
+      "id": "archivos",
+      "layout": "archivos",
+      "seccion": "Multimedia",
+      "titulo": "Agrega videos e imágenes",
+      "intro": "Abre Multimedia. Los archivos locales funcionan sin internet.",
+      "imagen": "multimedia",
+      "pasos": [
+        ["Agrega", "Pulsa Agregar videos o Agregar imágenes."],
+        ["Comprueba", "Espera la confirmación y revisa la TV."],
+        ["Quita", "Usa la papelera y confirma el archivo."]
+      ],
+      "formatos": [
+        ["Video", "MP4 H.264 o WebM", "Máximo 2 GB. 1080p recomendado."],
+        ["Imagen", "JPG, PNG o WebP", "Máximo 25 MB. 1920 × 1080 recomendado."]
+      ],
+      "nota": "Espera a que termine la descarga antes de agregar un archivo. Un nombre repetido crea otra copia."
+    },
+    {
+      "id": "youtube",
+      "layout": "youtube",
+      "seccion": "Multimedia",
+      "titulo": "Elige qué se reproduce",
+      "intro": "YouTube necesita internet. Los turnos y las voces locales siguen funcionando sin conexión.",
+      "imagen": "youtube",
+      "acciones": [
+        ["YouTube", "Pega el enlace y pulsa **Reproducir YouTube**."],
+        ["Archivos locales", "Pulsa **Usar contenido local** para dejar el enlace."]
+      ],
+      "flujo_titulo": "Si una fuente falla, se usa la siguiente",
+      "flujo": ["YouTube", "Videos", "Imágenes", "Bienvenida"],
+      "nota": "En Chrome o Edge, YouTube no está admitido. Usa contenido local."
+    },
+    {
+      "id": "jornada",
+      "layout": "jornada",
+      "seccion": "Resolver",
+      "titulo": "Una rutina para cada jornada",
+      "intro": "Una prueba breve antes de atender evita dudas durante el servicio.",
+      "tarjetas": [
+        {
+          "titulo": "Al abrir",
+          "icono": "encender",
+          "pasos": [
+            "Enciende TV y bocinas; verifica Extender.",
+            "Abre Comal++ y prueba un turno.",
+            "Confirma imagen y voz; quita la prueba."
+          ]
+        },
+        {
+          "titulo": "Al atender",
+          "icono": "reloj",
+          "pasos": [
+            "Llama solo pedidos listos.",
+            "Revisa el número y su audio.",
+            "Comprueba el ticket completo al entregar."
+          ]
+        },
+        {
+          "titulo": "Al cerrar",
+          "icono": "guardar",
+          "pasos": [
+            "Deja terminar los anuncios.",
+            "Cierra la ventana del operador.",
+            "Respalda con la aplicación cerrada."
+          ]
+        }
+      ],
+      "nota": "Al reabrir vuelven los turnos del día que no vencieron, sin repetir audios antiguos. Al cambiar de día, la lista se limpia."
+    },
+    {
+      "id": "problemas",
+      "layout": "problemas",
+      "seccion": "Resolver",
+      "titulo": "Resuelve lo más frecuente",
+      "intro": "Corrige la causa y haz una prueba antes de seguir.",
+      "casos": [
+        [
+          "La TV no muestra turnos",
+          "Revisa energía, HDMI y Windows + P: **Extender**.",
+          "pantalla"
+        ],
+        [
+          "No se escucha la voz",
+          "Revisa Windows, bocinas y volumen de voz. **Aplica y prueba**.",
+          "sonido"
+        ],
+        [
+          "Captura inválida",
+          "Usa solo **1 a 6 dígitos**. El rechazo no cambió la pantalla.",
+          "teclado"
+        ],
+        [
+          "Cola de audio llena",
+          "**Espera y reintenta**. La llamada rechazada no se aplicó.",
+          "reloj"
+        ],
+        [
+          "Un número desapareció",
+          "Venció o entró un séptimo distinto. **Repite** si hace falta.",
+          "repetir"
+        ],
+        [
+          "No se guardaron los turnos",
+          "La acción no se aplicó. Pide revisar **espacio y permisos**; luego reintenta.",
+          "guardar"
+        ]
+      ],
+      "nota": "Si el problema continúa, abre Ayuda y consulta Diagnósticos en la página siguiente."
+    },
+    {
+      "id": "ayuda",
+      "layout": "ayuda",
+      "seccion": "Resolver",
+      "titulo": "Consulta el estado y cuida tus datos",
+      "intro": "F1 o Ayuda: al final, pulsa Ver estado y detalles técnicos.",
+      "imagen": "diagnosticos",
+      "pie_imagen": "Detalle de Diagnósticos: revisa pantalla, guardado y audio.",
+      "tarjetas": [
+        [
+          "Para pedir apoyo",
+          "Pulsa **Actualizar**. Anota el mensaje, hora, ticket y versión; guarda una captura."
+        ],
+        [
+          "Para respaldar",
+          "Ubica la **Carpeta de datos** en Diagnósticos. Cierra Comal++ y copia esa carpeta completa a otra unidad."
+        ]
+      ],
+      "nota": "Para restaurar, pide apoyo al responsable. Conserva primero los datos actuales y prueba TV, voz y contenido al terminar."
+    },
+    {
+      "id": "acceso",
+      "layout": "acceso",
+      "seccion": "Resolver",
+      "titulo": "Instalación y acceso en la misma PC",
+      "intro": "Referencia para la persona responsable del equipo.",
+      "instalar": {
+        "titulo": "Instalar o actualizar",
+        "pasos": [
+          "Cierra Comal++ y respalda los datos.",
+          "Ejecuta el Setup entregado por el responsable.",
+          "Abre Comal++ desde Inicio.",
+          "Verifica 0.4.0 y prueba TV, voz y contenido."
+        ],
+        "nota": "El instalador no crea un acceso directo automático en el Escritorio."
+      },
+      "navegador": {
+        "titulo": "Chrome o Edge",
+        "texto": "Mantén Comal++ abierto en esa PC.",
+        "enlaces": [
+          ["Operador", "http://127.0.0.1:4317/"],
+          ["Pantalla pública", "http://127.0.0.1:4317/publica"]
+        ],
+        "nota": "Solo en esta computadora. Usa contenido local; YouTube no está admitido."
+      },
+      "atajos": [
+        ["Enter", "Anuncia el ticket"],
+        ["F1", "Abre Ayuda"],
+        ["Escape", "Cierra Ayuda"]
+      ]
+    }
+  ]
+}

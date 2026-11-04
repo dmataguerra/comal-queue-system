@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { crearCola } from './cola.js';
-
 test('limita activo y pendientes y descarta por espera o pérdida de vigencia', async () => {
   const vistos: number[] = [],
     descartados: number[] = [];
@@ -41,7 +40,6 @@ test('limita activo y pendientes y descarta por espera o pérdida de vigencia', 
     cola.detener();
   }
 });
-
 test('el watchdog aborta audio atascado y continúa con el siguiente anuncio', async () => {
   const vistos: number[] = [],
     descartados: number[] = [];
@@ -76,7 +74,6 @@ test('el watchdog aborta audio atascado y continúa con el siguiente anuncio', a
     cola.detener();
   }
 });
-
 test('55 termina antes de 66 y los repetidos mantienen su lugar', async () => {
   const eventos: string[] = [];
   let terminar!: () => void;
@@ -108,7 +105,6 @@ test('55 termina antes de 66 y los repetidos mantienen su lugar', async () => {
   assert.deepEqual(eventos, ['inicio 55', 'fin 55', 'inicio 66', 'fin 66', 'inicio 66', 'fin 66']);
   cola.detener();
 });
-
 test('un fallo permite continuar y detener rechaza nuevos anuncios', async () => {
   const errores: unknown[] = [];
   const vistos: number[] = [];

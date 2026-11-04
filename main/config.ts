@@ -4,7 +4,6 @@ import type { Config } from '../shared/contract.js';
 import type { Registrar } from './log.js';
 import { esYouTube } from '../nucleo/youtube.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
-
 export const CONFIG_POR_DEFECTO: Config = {
   youtubeUrl: null,
   repeticiones: 1,
@@ -16,13 +15,13 @@ export const CONFIG_POR_DEFECTO: Config = {
   recargaDiaria: '04:00',
   mensajes: ['Presenta tu ticket al recoger tu pedido.', 'Gracias por tu preferencia.'],
 };
-
 type Validador = (valor: unknown) => boolean;
 const fraccion: Validador = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
-const validadores: { [K in keyof Config]: Validador } = {
+const validadores: {
+  [K in keyof Config]: Validador;
+} = {
   youtubeUrl: (v) => v === null || esYouTube(v),
   repeticiones: (v) => v === 1 || v === 2,
-  // Más de 1 amplifica la voz (ganancia de Web Audio); por encima de ~2 puede distorsionar.
   volumenVoz: (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 3,
   volumenMusica: fraccion,
   atenuacionMusica: fraccion,
@@ -34,8 +33,6 @@ const validadores: { [K in keyof Config]: Validador } = {
     v.length <= 10 &&
     v.every((m) => typeof m === 'string' && m.trim() && m.length <= 160),
 };
-
-/** Mezcla con los valores por defecto. Un valor inválido usa el default y se registra. */
 export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): Config {
   const entrada =
     bruto && typeof bruto === 'object' && !Array.isArray(bruto)
@@ -55,8 +52,6 @@ export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): 
   }
   return config as unknown as Config;
 }
-
-/** Si config.json falta, se crea con los valores por defecto para que el administrador lo edite. */
 export function leerConfig(ruta: string, registrar: Registrar = () => {}): Config {
   if (!existsSync(ruta)) {
     try {
@@ -76,8 +71,6 @@ export function leerConfig(ruta: string, registrar: Registrar = () => {}): Confi
     return structuredClone(CONFIG_POR_DEFECTO);
   }
 }
-
-/** Vigila config.json. Mientras el archivo es JSON inválido (a media edición) se conserva el anterior. */
 export function vigilarConfig(
   ruta: string,
   alCambiar: (config: Config) => void,
@@ -112,8 +105,6 @@ export function vigilarConfig(
     vigilante.close();
   };
 }
-
-/** Milisegundos hasta la próxima ocurrencia de "HH:MM" en hora local. */
 export function msHastaHora(hhmm: string, ahora = new Date()): number {
   const [horas, minutos] = hhmm.split(':').map(Number);
   const objetivo = new Date(ahora);

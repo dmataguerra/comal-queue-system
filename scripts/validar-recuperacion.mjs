@@ -4,8 +4,6 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-// Ejecuta el CLI real en datos aislados y conserva los archivos y salidas para reproducir fallos.
 const root = fileURLToPath(new URL('../', import.meta.url));
 mkdirSync(join(root, 'test-results'), { recursive: true });
 const data = mkdtempSync(join(root, 'test-results', 'recovery-cli-'));

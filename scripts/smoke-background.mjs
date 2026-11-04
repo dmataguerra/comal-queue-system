@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'test-results');
 mkdirSync(output, { recursive: true });
@@ -48,10 +47,22 @@ async function verify() {
       return image.toDataURL();
     };
     await client.webContents.debugger.attach('1.3');
-    await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-    });
-    await pause(200);
+    const setMotion = async (value, expectedAnimations) => {
+      await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+        features: [{ name: 'prefers-reduced-motion', value }],
+      });
+      await client.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
+      for (let i = 0; i < 100; i++) {
+        if (
+          await run(`matchMedia('(prefers-reduced-motion: reduce)').matches === ${value === 'reduce'} &&
+            document.querySelectorAll('.public-animated-background animate').length === ${expectedAnimations}`)
+        )
+          return;
+        await pause(100);
+      }
+      throw new Error(`Reduced motion did not settle: ${value}`);
+    };
+    await setMotion('reduce', 0);
     assert.equal(
       await run("document.querySelectorAll('.public-animated-background animate').length"),
       0,
@@ -80,10 +91,7 @@ async function verify() {
     );
     delete comparison.overlay;
     console.log('Comparison', comparison);
-    await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
-    });
-    await pause(200);
+    await setMotion('no-preference', 7);
     assert.equal(
       await run("document.querySelectorAll('.public-animated-background animate').length"),
       7,
@@ -112,10 +120,7 @@ async function verify() {
     await capture('waves-purple');
     await run("document.getElementById('background-only').remove()");
     await capture('waves-full-purple');
-    await client.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-    });
-    await pause(200);
+    await setMotion('reduce', 0);
     assert.equal(
       await run("document.querySelectorAll('.public-animated-background animate').length"),
       0,

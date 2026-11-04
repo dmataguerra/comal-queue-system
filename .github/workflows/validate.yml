@@ -54,6 +54,16 @@ jobs:
         run: npx electron scripts/smoke-interface.mjs
       - name: Theme smoke test
         run: npx electron scripts/smoke-theme.mjs
+      - name: Help center and guided tours smoke test
+        run: npx electron scripts/smoke-help.mjs
+      - name: Automated accessibility audit
+        run: npx electron scripts/smoke-accessibility.mjs
+      - name: Destructive input and media regressions
+        run: node scripts/smoke-destructive-regressions.mjs
+      - name: Public display scaling regression
+        run: npx electron scripts/smoke-display-scale.mjs
+      - name: Background animation and reduced motion regression
+        run: npx electron scripts/smoke-background.mjs
       - name: Build unsigned installer
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-
 export function StatusBadge({
   children,
   tone = 'neutral',

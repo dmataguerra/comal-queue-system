@@ -14,7 +14,6 @@ import {
 import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 if (process.platform !== 'win32') throw new Error('La prueba de actualización requiere Windows.');
 const raiz = fileURLToPath(new URL('../', import.meta.url));
 const anterior = resolve(
@@ -50,7 +49,7 @@ async function esperar(comprobar, mensaje, ms = 30000) {
       const valor = await comprobar();
       if (valor) return valor;
     } catch {
-      /* Arranque en curso. */
+      /* La aplicación puede seguir arrancando. */
     }
     await pausa(250);
   }
@@ -199,7 +198,7 @@ try {
     await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) });
     puertoAnteriorOcupado = true;
   } catch {
-    // El puerto está libre.
+    /* Sin respuesta, el puerto anterior no está ocupado. */
   }
   if (puertoAnteriorOcupado)
     throw new Error('El puerto 3001 ya está ocupado; cierre la versión 0.2.0 antes de la prueba.');
@@ -213,7 +212,6 @@ try {
   await pausa(500);
   cpSync(perfil, respaldo, { recursive: true });
   reporte.pasos.push('0.2.0 instalada, turno 42 guardado en SQLite y respaldo del perfil creado');
-
   instalar(actual);
   let app = await abrir(datos);
   assert.equal((await app.evaluar('window.turnero.obtener()')).instantanea.actual, 42);
@@ -226,7 +224,6 @@ try {
   detener();
   await pausa(500);
   reporte.pasos.push(`actualización a ${version} conservó 42 y guardó 43`);
-
   instalar(anterior);
   cpSync(respaldo, restaurado, { recursive: true });
   const revertida = await abrirAnterior(restaurado);

@@ -25,9 +25,9 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--length-scale", type=float, default=1.0)
     parser.add_argument("--noise-scale", type=float, default=0.667)
-    # The voice ships noise_w 0.8, which jitters phoneme widths: the same phrase comes
-    # out 3-4% longer or shorter on every run. At 0 the durations are exact and a
-    # rebuild is reproducible, so the 100 clips pace like one session, not 100 takes.
+
+
+
     parser.add_argument("--noise-w-scale", type=float, default=0.0)
     parser.add_argument("--volume", type=float, default=1.0)
     args = parser.parse_args()
@@ -41,9 +41,9 @@ def main() -> int:
         length_scale=args.length_scale,
         noise_scale=args.noise_scale,
         noise_w_scale=args.noise_w_scale,
-        # Piper's normalizer rescales every clip to full scale: it clips on cheap
-        # speakers and ties loudness to each clip's loudest phoneme. The raw output is
-        # already level-matched across the catalogue, and leaves headroom.
+
+
+
         normalize_audio=False,
         volume=args.volume,
     )

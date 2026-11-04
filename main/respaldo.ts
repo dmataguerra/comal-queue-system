@@ -3,7 +3,6 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { esEstadoPersistido } from './persistencia.js';
 import { validarConfig } from './config.js';
 import { renombrarConReintentos } from './escritura-atomica.js';
-
 const elementos = [
   'config.json',
   'estado.json',
@@ -11,7 +10,6 @@ const elementos = [
   'turnero.log',
   ...Array.from({ length: 5 }, (_, indice) => `turnero.log.${indice + 1}`),
 ];
-
 const dentroDe = (raiz: string, ruta: string) => {
   const diferencia = relative(raiz, ruta);
   return (
@@ -22,8 +20,6 @@ const dentroDe = (raiz: string, ruta: string) => {
       !diferencia.startsWith('../'))
   );
 };
-
-/** La carpeta final aparece únicamente cuando todos los archivos se han copiado. */
 export function crearRespaldo(datos: string, destino: string, ahora = new Date()): string {
   const origen = resolve(datos),
     raiz = resolve(destino);
@@ -58,8 +54,6 @@ export function crearRespaldo(datos: string, destino: string, ahora = new Date()
     throw new Error(`No se pudo crear el respaldo: ${(error as Error).message}`, { cause: error });
   }
 }
-
-/** Solo para uso con la aplicación detenida; conserva los datos anteriores para deshacer. */
 export function restaurarRespaldo(
   respaldo: string,
   datos: string,
@@ -85,7 +79,6 @@ export function restaurarRespaldo(
   const nombres = incluidos as string[];
   for (const nombre of nombres)
     if (!existsSync(join(origen, nombre))) throw new Error(`Falta ${nombre} en el respaldo.`);
-  // Validar antes de preparar/reemplazar el destino: nunca convertir corrupción en jornada vacía.
   for (const nombre of ['estado.json', 'config.json']) {
     if (!nombres.includes(nombre)) continue;
     let dato: unknown;
@@ -113,7 +106,6 @@ export function restaurarRespaldo(
         recursive: true,
         preserveTimestamps: true,
       });
-    // No se reemplaza el directorio en uso: el llamador debe haber cerrado Electron.
     const teniaDatos = existsSync(destino);
     if (teniaDatos) renombrarConReintentos(destino, anterior);
     try {

@@ -12,14 +12,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { crearRespaldo, restaurarRespaldo } from './respaldo.js';
-
 const estadoValido = JSON.stringify({
   fecha: '2026-09-25',
   actual: 42,
   llamados: [],
   guardadoEn: '2026-09-25T12:00:00.000Z',
 });
-
 test('respaldo atómico conserva estructura, crea nombres únicos y restaura solo con app cerrada', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-respaldo-'));
   const datos = join(raiz, 'datos');
@@ -53,7 +51,6 @@ test('respaldo atómico conserva estructura, crea nombres únicos y restaura sol
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('restauración limpia preserva datos válidos y rechaza corrupción antes de tocar el destino', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-restaurar-'));
   try {
@@ -91,7 +88,6 @@ test('restauración limpia preserva datos válidos y rechaza corrupción antes d
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('respaldo fallido no publica una carpeta incompleta', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-respaldo-'));
   try {

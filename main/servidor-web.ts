@@ -1,6 +1,7 @@
 import { createReadStream } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { stat } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
 import { extname } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type {
@@ -26,7 +27,6 @@ import {
   validarSalud,
 } from './seguridad-ipc.js';
 import type { Store } from './store.js';
-
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -36,6 +36,7 @@ const MIME: Record<string, string> = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
+  '.pdf': 'application/pdf',
   ...TIPOS_MIME,
 };
 const origenContenido = 'turnero://app/contenido';
@@ -49,7 +50,6 @@ function inventarioNavegador(inventario: Inventario): Inventario {
     aviso: paraNavegador(inventario.aviso),
   };
 }
-
 interface OpcionesServidor {
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
   configurarVolumen: (voz: number, multimedia: number) => void;
@@ -70,7 +70,6 @@ interface OpcionesServidor {
   ) => void;
   registrar: (mensaje: string) => void;
 }
-
 export async function crearServidorWeb(opciones: OpcionesServidor) {
   const clientes = new Set<ServerResponse>();
   let origen = '';
@@ -120,11 +119,12 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
         'Content-Range': `bytes ${inicio}-${fin}/${size}`,
         'Content-Length': fin - inicio + 1,
       });
-      createReadStream(archivo, { start: inicio, end: fin }).pipe(res);
+      // Si el archivo desaparece durante la lectura, se cierra la respuesta sin tumbar la app.
+      await pipeline(createReadStream(archivo, { start: inicio, end: fin }), res);
       return;
     }
     res.writeHead(200, { ...cabeceras, 'Content-Length': size, 'Accept-Ranges': 'bytes' });
-    createReadStream(archivo).pipe(res);
+    await pipeline(createReadStream(archivo), res);
   }
   const atender = async (req: IncomingMessage, res: ServerResponse) => {
     try {
@@ -236,7 +236,8 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
       await servirArchivo(req, res, archivo);
     } catch (error) {
       opciones.registrar(`Servidor navegador: ${(error as Error).message}`);
-      if (!res.headersSent) respuestaJson(res, { error: (error as Error).message }, 400);
+      if (!res.headersSent && !res.destroyed)
+        respuestaJson(res, { error: (error as Error).message }, 400);
       else res.destroy();
     }
   };

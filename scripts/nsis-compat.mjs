@@ -1,7 +1,5 @@
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-/** Keep legacy uninstallers away from Desktop even when moving the install directory. */
 export function prepararCompatibilidadNsis(raiz, temporal) {
   const plantillas = join(raiz, 'node_modules', 'app-builder-lib', 'templates', 'nsis');
   const original = readFileSync(join(plantillas, 'include', 'installUtil.nsh'), 'utf8').replaceAll(
@@ -31,8 +29,6 @@ export function prepararCompatibilidadNsis(raiz, temporal) {
   const recursos = join(temporal, 'nsis-compat');
   cpSync(plantillas, recursos, { recursive: true });
   writeFileSync(join(recursos, 'installUtil.nsh'), original.replace(anterior, nuevo));
-  // NSIS resolves includes in the compiler working directory first. Override only
-  // this include in staging, keeping electron-builder's standard signed uninstaller.
   const escapar = (ruta) => ruta.replaceAll('$', '$$').replaceAll('"', '$\\"');
   const inclusion = join(recursos, 'comal.nsh');
   writeFileSync(inclusion, `!cd "${escapar(recursos)}"\n`);

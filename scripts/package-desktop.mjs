@@ -4,7 +4,6 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { prepararCompatibilidadNsis } from './nsis-compat.mjs';
-
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pruebas = join(raiz, 'test-results');
 const temporal = join(pruebas, `package-stage-${randomUUID()}`);
@@ -69,13 +68,11 @@ if (firmaLocal) {
       'No se encontró una clave privada RSA de Comal protegida por el TPM en el almacén del usuario actual.',
     );
 }
-
 const paquete = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8'));
 const electron = JSON.parse(
   readFileSync(join(raiz, 'node_modules', 'electron', 'package.json'), 'utf8'),
 );
 const electronDist = join(raiz, 'node_modules', 'electron', 'dist');
-// Electron 44 downloads its binary on first launch. Packaging needs the directory first.
 if (!existsSync(electronDist)) {
   const install = spawnSync(
     process.execPath,
@@ -107,7 +104,6 @@ if (firmaLocal) {
     },
   };
 }
-
 try {
   mkdirSync(temporal, { recursive: true });
   mkdirSync(cacheBuilder, { recursive: true });

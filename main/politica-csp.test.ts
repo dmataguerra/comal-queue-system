@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { crearCsp } from './politica-csp.js';
-
 test('la CSP de producción bloquea páginas remotas y permisos amplios', () => {
   const csp = crearCsp(false);
   assert.match(csp, /default-src 'self'/);
@@ -14,7 +13,6 @@ test('la CSP de producción bloquea páginas remotas y permisos amplios', () => 
   assert.doesNotMatch(csp, /unsafe-eval|script-src[^;]*unsafe-inline|\*/);
   assert.doesNotMatch(csp, /example\.org/);
 });
-
 test('la CSP de desarrollo limita la recarga a Vite local', () => {
   const csp = crearCsp(true);
   assert.match(csp, /ws:\/\/127\.0\.0\.1:5173/);

@@ -4,7 +4,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { CONFIG_POR_DEFECTO, leerConfig, msHastaHora, validarConfig } from './config.js';
-
 test('config.json ausente: se crea con los valores por defecto', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   try {
@@ -17,7 +16,6 @@ test('config.json ausente: se crea con los valores por defecto', () => {
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('un fallo al crear config.json se informa y no simula guardado correcto', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   const mensajes: string[] = [];
@@ -30,7 +28,6 @@ test('un fallo al crear config.json se informa y no simula guardado correcto', (
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('valores parciales se mezclan; inválidos y claves desconocidas usan el default y se registran', () => {
   const registro: string[] = [];
   const config = validarConfig(
@@ -49,7 +46,6 @@ test('valores parciales se mezclan; inválidos y claves desconocidas usan el def
   assert.deepEqual(config.mensajes, ['Hola']);
   assert.equal(registro.length, 3);
 });
-
 test('una clave heredada desconocida no rompe la validación de configuración', () => {
   const mensajes: string[] = [];
   const config = validarConfig(JSON.parse('{"__proto__":{"youtubeUrl":"malicioso"}}'), (m) =>
@@ -58,7 +54,6 @@ test('una clave heredada desconocida no rompe la validación de configuración',
   assert.deepEqual(config, CONFIG_POR_DEFECTO);
   assert.match(mensajes[0], /clave desconocida/);
 });
-
 test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo del administrador', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   try {
@@ -73,7 +68,6 @@ test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo 
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('msHastaHora apunta a la próxima ocurrencia local', () => {
   const ahora = new Date(2026, 8, 11, 3, 30);
   assert.equal(msHastaHora('04:00', ahora), 30 * 60 * 1000);

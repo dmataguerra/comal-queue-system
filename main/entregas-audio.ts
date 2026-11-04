@@ -5,8 +5,6 @@ import {
   MAX_ESPERA_ANUNCIO_MS,
   MAX_HISTORIAL_ANUNCIOS,
 } from '../shared/politica-anuncios.js';
-
-/** Estado por evento: repetir un número nunca reemplaza el acuse de otro anuncio. */
 export function crearEntregasAudio(difundir: (entrega: EntregaAudio) => void, ahora = Date.now) {
   const entregas = new Map<number, EntregaAudio>();
   const limites = new Map<number, number>();

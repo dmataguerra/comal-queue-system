@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { cerrarAudio, precargar, reproducir } from '../vistas/publica/audio.ts';
-
 test('audio: una nueva revisión recarga bytes bajo la misma URL; una revisión estable usa cache', async (t) => {
   const originalFetch = globalThis.fetch,
     originalContext = globalThis.AudioContext;
@@ -34,7 +33,6 @@ test('audio: una nueva revisión recarga bytes bajo la misma URL; una revisión 
   await precargar({ ...inventario, revisionAudio: 'v2' });
   assert.equal(descargas, 2);
 });
-
 for (const caso of [
   'termina',
   'cancela',

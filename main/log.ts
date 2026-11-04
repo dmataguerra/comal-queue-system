@@ -1,5 +1,4 @@
 import { appendFileSync, existsSync, renameSync, statSync, unlinkSync } from 'node:fs';
-
 export type Registrar = (mensaje: string) => void;
 export type NivelLog = 'info' | 'warning' | 'error';
 export interface OpcionesRegistro {
@@ -10,22 +9,18 @@ export interface OpcionesRegistro {
   repeticionMs?: number;
   ahora?: () => Date;
 }
-
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_ARCHIVOS = 5;
 const MAX_MENSAJE = 500;
-
-/** JSON por línea; conserva la interfaz anterior y nunca interrumpe la operación. */
 export function crearRegistro(ruta: string, opciones: OpcionesRegistro = {}): Registrar {
   const ahora = opciones.ahora ?? (() => new Date());
   const maxBytes = opciones.maxBytes ?? MAX_BYTES;
   const maxArchivos = opciones.maxArchivos ?? MAX_ARCHIVOS;
-  const repeticionMs = opciones.repeticionMs ?? 30_000;
+  const repeticionMs = opciones.repeticionMs ?? 30000;
   const sesion = `${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
   let anterior = '';
   let ultimaVez = 0;
   let omitidos = 0;
-
   function escribir(mensaje: string, fecha: Date) {
     const nivel: NivelLog = /error|fall|no se pudo|falta|rechazad|terminó/i.test(mensaje)
       ? 'error'
@@ -62,11 +57,10 @@ export function crearRegistro(ruta: string, opciones: OpcionesRegistro = {}): Re
       try {
         console.warn(linea.trimEnd());
       } catch {
-        // Incluso stderr puede fallar durante el apagado.
+        /* Un fallo del registro no debe detener los turnos. */
       }
     }
   }
-
   return (mensaje) => {
     const fecha = ahora();
     const limpio = String(mensaje)

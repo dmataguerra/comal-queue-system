@@ -1,9 +1,12 @@
 # Documentación de Comal++
 
-Base vigente: **0.4.0**, revisión del **1 de octubre de 2026**. Las guías se contrastan con el código; los informes de pruebas conservan la fecha y el artefacto al que corresponden.
+Versión preparada: **0.4.1**, sin publicar. Consulte [las notas de versión](publicacion-0.4.1.md) para cambios y compatibilidad de las guías 0.4.0. Las guías se contrastan con el código; los informes de pruebas conservan la fecha y el artefacto al que corresponden.
 
 ## Guías vigentes
 
+- [Informe QA del 3 de noviembre de 2026](qa-2026-11-03.md): pruebas del último commit de ayuda, correcciones, evidencia y límites para publicación.
+- [Centro de ayuda interactivo](centro-ayuda-interactivo.md) y [evaluación de la feature](evaluacion-centro-ayuda.md): tareas, recorridos informativos y acceso local al PDF.
+- [Continuar el manual de usuario](user-manual/README.md): edición visual del 2 de noviembre, fuente editable y generación del PDF.
 - [Manual del operador](user-manual/operador.md) y [requisitos multimedia](user-manual/multimedia-requisitos.md).
 - [Instalación desde USB](../README-INSTALACION-USB.md).
 - [Arquitectura](current-architecture.md), [anuncios e importación](anuncios-e-importacion.md) y [escala pública](escalado-pantalla-publica.md).

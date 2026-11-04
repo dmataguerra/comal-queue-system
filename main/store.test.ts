@@ -6,7 +6,6 @@ import { test } from 'node:test';
 import type { Anuncio, Instantanea } from '../shared/contract.js';
 import { guardarEstado } from './persistencia.js';
 import { crearStore } from './store.js';
-
 function fixture(fecha = { valor: '2026-09-11' }) {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-store-'));
   const ruta = join(raiz, 'estado.json');
@@ -21,7 +20,6 @@ function fixture(fecha = { valor: '2026-09-11' }) {
     limpiar: () => rmSync(raiz, { recursive: true, force: true }),
   };
 }
-
 test('llamar difunde el estado con un anuncio de id creciente, también al repetir el actual', () => {
   const f = fixture();
   try {
@@ -39,7 +37,6 @@ test('llamar difunde el estado con un anuncio de id creciente, también al repet
     f.limpiar();
   }
 });
-
 test('captura inválida: se responde solo al operador, sin difundir ni escribir disco', () => {
   const f = fixture();
   try {
@@ -51,7 +48,6 @@ test('captura inválida: se responde solo al operador, sin difundir ni escribir 
     f.limpiar();
   }
 });
-
 test('deshacer difunde sin anuncio y persiste; sin nada que deshacer no difunde', () => {
   const f = fixture();
   try {
@@ -72,7 +68,6 @@ test('deshacer difunde sin anuncio y persiste; sin nada que deshacer no difunde'
     f.limpiar();
   }
 });
-
 test('quitar difunde sin anuncio y persiste; un número fuera de pantalla no difunde', () => {
   const f = fixture();
   try {
@@ -95,7 +90,6 @@ test('quitar difunde sin anuncio y persiste; un número fuera de pantalla no dif
     f.limpiar();
   }
 });
-
 test('el estado sobrevive a reabrir el store el mismo día, pero sin deshacer', () => {
   const f = fixture();
   try {
@@ -107,7 +101,6 @@ test('el estado sobrevive a reabrir el store el mismo día, pero sin deshacer', 
     f.limpiar();
   }
 });
-
 test('cambio de día sin reiniciar la app: el siguiente despacho arranca de cero', () => {
   const f = fixture();
   try {
@@ -126,7 +119,6 @@ test('cambio de día sin reiniciar la app: el siguiente despacho arranca de cero
     f.limpiar();
   }
 });
-
 test('un fallo persistente rechaza llamadas sin anunciar ni alterar estado y permite reintentar', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-salud-'));
   const mensajes: string[] = [];
@@ -166,7 +158,6 @@ test('un fallo persistente rechaza llamadas sin anunciar ni alterar estado y per
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('un fallo al guardar el cambio de jornada conserva la jornada anterior', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-cambio-fallido-'));
   const ruta = join(raiz, 'estado.json');
@@ -192,7 +183,6 @@ test('un fallo al guardar el cambio de jornada conserva la jornada anterior', ()
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('el operador recibe aviso si el estado inicial estaba corrupto', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-recuperacion-'));
   try {

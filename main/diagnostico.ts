@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import type { Config, Diagnostico, Inventario, Pantallas } from '../shared/contract.js';
 import type { Store } from './store.js';
 import { RESERVA_DISCO } from './contenido.js';
-
 export function espacioDisponible(carpeta: string): number | null {
   try {
     const datos = statfsSync(carpeta);
@@ -12,7 +11,6 @@ export function espacioDisponible(carpeta: string): number | null {
     return null;
   }
 }
-
 function ultimoGuardadoArchivo(ruta: string): string | null {
   try {
     if (statSync(ruta).size > 1024 * 1024) return null;
@@ -24,7 +22,6 @@ function ultimoGuardadoArchivo(ruta: string): string | null {
     return null;
   }
 }
-
 interface FuentesDiagnostico {
   carpetaDatos: string;
   version: string;
@@ -32,7 +29,10 @@ interface FuentesDiagnostico {
   config: () => Config;
   inventario: () => Inventario;
   pantallas: () => Pantallas;
-  ventanas: () => { operador: boolean; publica: boolean };
+  ventanas: () => {
+    operador: boolean;
+    publica: boolean;
+  };
   salud: () => {
     audio: Diagnostico['audio'];
     youtube: Diagnostico['youtube'];
@@ -40,8 +40,6 @@ interface FuentesDiagnostico {
   };
   espacio?: (carpeta: string) => number | null;
 }
-
-/** Cada fuente se lee por separado: un inventario o comprobación de disco fallidos no ocultan el resto. */
 export function crearProveedorDiagnostico(fuentes: FuentesDiagnostico): () => Diagnostico {
   const seguro = <T>(obtener: () => T, respaldo: T): T => {
     try {

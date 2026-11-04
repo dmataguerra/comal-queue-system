@@ -4,7 +4,6 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'nod
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { IPC_CHANNELS } from '../build/shared/ipc-channels.js';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 mkdirSync(join(root, 'test-results'), { recursive: true });
 const data = mkdtempSync(join(root, 'test-results', 'audio-controls-'));
@@ -20,7 +19,7 @@ BrowserWindow.prototype.maximize = function () {};
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const run = (window, source) => window.webContents.executeJavaScript(source, true);
 async function wait(check) {
-  const deadline = performance.now() + 30_000;
+  const deadline = performance.now() + 30000;
   while (performance.now() < deadline) {
     if (await check()) return;
     await pause(100);

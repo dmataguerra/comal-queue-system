@@ -13,7 +13,6 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { migrarDatosDocumentos, resolverCarpetaDatos } from './carpeta-datos.js';
-
 test('producción usa el perfil de la aplicación; desarrollo y ruta explícita se conservan', () => {
   const opciones = {
     empaquetada: true,
@@ -27,7 +26,6 @@ test('producción usa el perfil de la aplicación; desarrollo y ruta explícita 
     resolve('./datos-prueba'),
   );
 });
-
 test('migra configuración, turnos y multimedia sin alterar el original ni repetir la copia', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   const origen = join(raiz, 'OneDrive', 'Documentos', 'Turnero Comal');
@@ -50,7 +48,6 @@ test('migra configuración, turnos y multimedia sin alterar el original ni repet
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('una instalación nueva no crea ni escribe en Documentos', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   try {
@@ -61,7 +58,6 @@ test('una instalación nueva no crea ni escribe en Documentos', () => {
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('un fallo de lectura de la ubicación anterior no se interpreta como datos ausentes', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   try {
@@ -75,7 +71,6 @@ test('un fallo de lectura de la ubicación anterior no se interpreta como datos 
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-
 test('una copia interrumpida no publica datos parciales y permite reintentar', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   const origen = join(raiz, 'origen');

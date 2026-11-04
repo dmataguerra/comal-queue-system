@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Diagnostico } from '../../shared/contract';
 import { useTurnero } from '../comun/turnero';
-
 const fecha = (valor: string | null) =>
   valor ? new Date(valor).toLocaleString() : 'No disponible';
 const siNo = (valor: boolean) => (valor ? 'Sí' : 'No');
-
 export function DiagnosticoPanel() {
   const { diagnostico } = useTurnero();
   const [datos, setDatos] = useState<Diagnostico | null>(null);
@@ -20,10 +18,9 @@ export function DiagnosticoPanel() {
   }, [diagnostico]);
   useEffect(() => {
     actualizar();
-    const id = setInterval(actualizar, 10_000);
+    const id = setInterval(actualizar, 10000);
     return () => clearInterval(id);
   }, [actualizar]);
-
   if (!datos && !error)
     return <section className="panel diagnostics-panel">Cargando diagnósticos…</section>;
   if (!datos)

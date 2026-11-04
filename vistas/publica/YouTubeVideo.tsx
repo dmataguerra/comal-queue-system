@@ -2,10 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { parseYouTube } from '../../nucleo/youtube';
 import { useTurnero } from '../comun/turnero';
 import { cargarYouTube, iniciarYouTube, type YouTubePlayer } from './youtubeApi';
-
-// Se reaplica el volumen: el iframe tarda en aparecer y cada video nuevo de la playlist lo reinicia.
 const REAPLICAR_MS = 2000;
-
 export function YouTubeVideo({
   url,
   volumen,
@@ -26,7 +23,6 @@ export function YouTubeVideo({
   const [error, setError] = useState('');
   const [intento, setIntento] = useState(0);
   const [listo, setListo] = useState(false);
-
   useEffect(() => {
     let cerrado = false;
     let volumenConfirmado = false;
@@ -36,7 +32,7 @@ export function YouTubeVideo({
         informarSalud('youtube', 'degradado');
         alFallar();
       }
-    }, 20_000);
+    }, 20000);
     setError('');
     setListo(false);
     async function iniciar() {
@@ -46,7 +42,6 @@ export function YouTubeVideo({
         if (cerrado || !host.current) return;
         const nodo = document.createElement('div');
         host.current.replaceChildren(nodo);
-        // Sin `origin`: YouTube no acepta turnero://. El volumen se ajusta desde main (RF-11).
         instancia = new api.Player(nodo, {
           width: '100%',
           height: '100%',
@@ -122,11 +117,9 @@ export function YouTubeVideo({
       cerrado = true;
       clearTimeout(timeout);
       instancia?.destroy();
-      // Si la API nunca enlazó, destroy() no quita el iframe y seguiría sonando.
       nodoHost?.replaceChildren();
     };
   }, [url, intento, alFallar, informarSalud, ajustarVolumenYouTube, registrar]);
-
   useEffect(() => {
     if (!listo) return;
     let vigente = true;
@@ -163,7 +156,6 @@ export function YouTubeVideo({
     alFallar,
     listo,
   ]);
-
   return (
     <div className="youtube-stage">
       <div ref={host} className="youtube-host" aria-label="Video de YouTube" />

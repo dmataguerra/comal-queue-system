@@ -1,11 +1,11 @@
 param(
     [string]$Python,
     [string]$Voice = 'es_MX-claude-high',
-    # Piper's neural pacing is already conversational; raise it to stretch the phrase if
-    # the room is noisy. It is sub-linear: 1.2 buys about 7% more length, not 20%.
+
+
     [double]$LengthScale = 1.0,
-    # Matches the loudness of the eSpeak-era catalogue (mean RMS 0.107) so an installed
-    # turnero keeps its volume setting, while the raw output still leaves ~3 dB headroom.
+
+
     [double]$Volume = 1.2
 )
 
@@ -17,10 +17,10 @@ $comalVenvPython = Join-Path $comalVenv 'Scripts\python.exe'
 $comalVoices = Join-Path $comalWork 'piper-voices'
 $comalOutput = Join-Path $comalProject 'contenido\voz'
 
-# Generation is a build-time task. The application only plays the committed WAVs, so
-# neither Piper nor Python reach the installer (RNF-01). Everything below lives inside
-# .tmp-audio/, which is git-ignored: Windows is never modified. Only the first run
-# needs internet, and each step is skipped once its artifact is in place.
+
+
+
+
 if (-not (Test-Path -LiteralPath $comalVenvPython)) {
     if (-not $Python) {
         $comalInterpreter = Get-Command 'python' -ErrorAction SilentlyContinue
@@ -53,7 +53,7 @@ function Get-ComalSpanishNumber([int]$number) {
     return $comalText
 }
 
-# Con dos dígitos el catálogo completo son 100 frases (arquitectura §7): 00 a 99, sin concatenar.
+
 $comalRequests = @(0..99 | ForEach-Object {
         [pscustomobject]@{ file = $_.ToString('00') + '.wav'; text = 'Turno ' + (Get-ComalSpanishNumber $_) + '.' }
     })

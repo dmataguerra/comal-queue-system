@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'test-results');
 mkdirSync(output, { recursive: true });
@@ -23,7 +22,6 @@ async function wait(check) {
   throw new Error('Theme check timed out');
 }
 async function capture(window, name) {
-  // Hidden windows can defer compositor frames; finish only finite UI transitions.
   await run(
     window,
     `document.getAnimations().filter(a => a.effect.getTiming().iterations !== Infinity).forEach(a => a.finish())`,
@@ -36,7 +34,6 @@ async function capture(window, name) {
   });
   writeFileSync(join(output, name + '.png'), image.toPNG());
 }
-
 async function verify() {
   try {
     await import('../build/main/main.js');

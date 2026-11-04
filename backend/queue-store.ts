@@ -9,9 +9,7 @@ import {
   type Estado,
 } from '../nucleo/turnos.js';
 import type { Accion, Anuncio, Instantanea, ResultadoDespacho } from '../shared/contract.js';
-
 export type Suscriptor = (instantanea: Instantanea, anuncio: Anuncio | null) => void;
-
 export interface Store {
   obtener(): Instantanea;
   despachar(accion: Accion): ResultadoDespacho;
@@ -23,11 +21,13 @@ export interface Store {
     restauradaEn: string | null;
     ultimoGuardado: string | null;
     ultimoError: string | null;
-    ultimoAnuncio: { n: number; fecha: string } | null;
+    ultimoAnuncio: {
+      n: number;
+      fecha: string;
+    } | null;
   };
   cerrar(): void;
 }
-
 interface QueueStorePorts {
   antesDeAnunciar?: () => void;
   esperaAnuncioMs?: number;
@@ -43,8 +43,6 @@ interface QueueStorePorts {
   ahora?: () => number;
   vigenciaMs?: number;
 }
-
-/** Sole owner of queue state; file operations are supplied by the composition root. */
 export function createQueueStore({
   antesDeAnunciar,
   esperaAnuncioMs,
@@ -57,8 +55,6 @@ export function createQueueStore({
   registrar = () => {},
 }: QueueStorePorts): Store {
   let fecha = today();
-  // `desde`: hora del último anuncio de cada número en pantalla. `desdePrevio` es la de antes del
-  // último llamado y acompaña a `estado.deshacer`: se toma, se conserva y se descarta con él.
   let { estado, desde, advertencia: advertenciaRecuperacion } = load(fecha);
   let desdePrevio: Map<number, number> | null = null;
   let temporizador: ReturnType<typeof setTimeout> | undefined;
@@ -67,9 +63,11 @@ export function createQueueStore({
   let restauradaEn: string | null = null;
   let ultimoGuardado: string | null = null;
   let ultimoError: string | null = null;
-  let ultimoAnuncio: { n: number; fecha: string } | null = null;
+  let ultimoAnuncio: {
+    n: number;
+    fecha: string;
+  } | null = null;
   const suscriptores = new Set<Suscriptor>();
-
   const obtener = (): Instantanea => ({
     actual: estado.actual,
     llamados: estado.llamados,
@@ -77,7 +75,6 @@ export function createQueueStore({
     ...(primerFallo ? { persistencia: { estado: 'error' as const, desde: primerFallo } } : {}),
     ...(advertenciaRecuperacion ? { advertenciaRecuperacion } : {}),
   });
-
   function persistir(): boolean {
     try {
       ensureCapacity();
@@ -100,7 +97,6 @@ export function createQueueStore({
       return false;
     }
   }
-
   const respaldo = () => ({
     fecha,
     estado,
@@ -122,7 +118,6 @@ export function createQueueStore({
     } = anterior);
     notificar(null);
   }
-
   function notificar(anuncio: Anuncio | null) {
     const instantanea = obtener();
     for (const fn of suscriptores) {
@@ -133,11 +128,8 @@ export function createQueueStore({
       }
     }
   }
-
-  /** Saca los números que ya cumplieron su vigencia; deja en `desde` solo lo que sigue en pantalla. */
   function aplicarVencidos(): boolean {
     const limite = ahora() - vigenciaMs;
-    // Un número sin hora registrada empieza a contar ahora.
     desde = new Map(enPantalla(estado).map((n) => [n, desde.get(n) ?? ahora()]));
     const vencidos = [...desde].filter(([, t]) => t <= limite).map(([n]) => n);
     if (!vencidos.length) return false;
@@ -146,8 +138,6 @@ export function createQueueStore({
     if (!estado.deshacer) desdePrevio = null;
     return true;
   }
-
-  /** Un solo temporizador, para el número que vence primero. */
   function programar(reintentoMs = 0) {
     clearTimeout(temporizador);
     if (!desde.size) return;
@@ -164,10 +154,8 @@ export function createQueueStore({
       }
       programar();
     }, espera);
-    // No retiene el proceso: un store con turnos no debe impedir que Node termine en las pruebas.
     temporizador.unref?.();
   }
-
   function reiniciarSiCambioDia(): boolean {
     const nueva = today();
     if (nueva === fecha) return false;
@@ -186,7 +174,6 @@ export function createQueueStore({
     notificar(null);
     return true;
   }
-
   function despachar(accion: Accion): ResultadoDespacho {
     reiniciarSiCambioDia();
     const anteriorOperacion = respaldo();
@@ -212,12 +199,10 @@ export function createQueueStore({
     const cambio = siguiente !== estado;
     const anterior = desde;
     if (accion.tipo === 'DESHACER' && cambio && desdePrevio) desde = desdePrevio;
-    // Cada anuncio, también el repetido (RN-05), reinicia el tiempo en pantalla de ese número.
     if (anuncio) desde = new Map(desde).set(anuncio.n, ahora());
     if (!siguiente.deshacer) desdePrevio = null;
     else if (siguiente.deshacer !== estado.deshacer) desdePrevio = anterior;
     estado = siguiente;
-    // Deshacer puede traer de vuelta un número que ya había vencido: se retira en el mismo paso.
     const vencio = aplicarVencidos();
     if (cambio || anuncio || vencio) {
       if (!persistir()) {
@@ -231,12 +216,9 @@ export function createQueueStore({
     programar();
     return { instantanea: obtener(), efecto: anuncio ? 'ANUNCIAR' : null, anuncio };
   }
-
-  // Al arrancar se descuenta el tiempo que la app estuvo cerrada.
   const anteriorInicial = respaldo();
   if (aplicarVencidos() && !persistir()) restaurar(anteriorInicial);
   programar(primerFallo ? 5000 : 0);
-
   return {
     obtener,
     despachar,

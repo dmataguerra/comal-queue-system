@@ -2,10 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { parseYouTube } from '../../nucleo/youtube';
 import { useTurnero } from '../comun/turnero';
 import { Icon } from '../comun/components/Icon';
-
 const CLAVE_RECIENTES = 'comal.youtube.recientes';
 const MAX_RECIENTES = 3;
-
 function leerRecientes(): string[] {
   try {
     const valor: unknown = JSON.parse(localStorage.getItem(CLAVE_RECIENTES) ?? '[]');
@@ -16,7 +14,6 @@ function leerRecientes(): string[] {
     return [];
   }
 }
-
 export function YouTubePanel({
   notificar,
 }: {
@@ -29,7 +26,6 @@ export function YouTubePanel({
   useEffect(() => {
     setUrl(config.youtubeUrl ?? '');
   }, [config.youtubeUrl]);
-
   async function guardar(valor: string | null) {
     setOcupado(true);
     try {
@@ -44,7 +40,7 @@ export function YouTubePanel({
         try {
           localStorage.setItem(CLAVE_RECIENTES, JSON.stringify(nuevos));
         } catch {
-          // La selección de YouTube sigue siendo válida aunque el navegador no permita guardar preferencias.
+          /* La operación continúa aunque no se pueda avisar al transporte. */
         }
       }
       notificar(
@@ -62,7 +58,6 @@ export function YouTubePanel({
     event.preventDefault();
     void guardar(url.trim());
   }
-
   return (
     <section className="panel media-library-panel">
       <div className="media-library-heading">

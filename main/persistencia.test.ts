@@ -13,7 +13,6 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { ESTADO_INICIAL, llamar } from '../nucleo/turnos.js';
 import { fechaLocal, guardarEstado, leerEstado } from './persistencia.js';
-
 function carpeta() {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-persistencia-'));
   return {
@@ -21,7 +20,6 @@ function carpeta() {
     limpiar: () => rmSync(raiz, { recursive: true, force: true }),
   };
 }
-
 test('guarda y lee actual y llamados; deshacer no se persiste', () => {
   const { ruta, limpiar } = carpeta();
   try {
@@ -43,7 +41,6 @@ test('guarda y lee actual y llamados; deshacer no se persiste', () => {
     limpiar();
   }
 });
-
 test('guarda y lee la hora del último anuncio de cada número en pantalla', () => {
   const { ruta, limpiar } = carpeta();
   try {
@@ -62,7 +59,6 @@ test('guarda y lee la hora del último anuncio de cada número en pantalla', () 
     limpiar();
   }
 });
-
 test('formato anterior sin `desde`: los números cuentan desde el último guardado', () => {
   const { ruta, limpiar } = carpeta();
   try {
@@ -82,7 +78,6 @@ test('formato anterior sin `desde`: los números cuentan desde el último guarda
     limpiar();
   }
 });
-
 test('reinicio diario: un estado de otro día arranca vacío (CU-05 paso 4)', () => {
   const { ruta, limpiar } = carpeta();
   try {
@@ -92,7 +87,6 @@ test('reinicio diario: un estado de otro día arranca vacío (CU-05 paso 4)', ()
     limpiar();
   }
 });
-
 test('archivo ausente, dañado o con forma inválida: arranca vacío y lo registra', () => {
   const { ruta, limpiar } = carpeta();
   const registro: string[] = [];
@@ -113,7 +107,6 @@ test('archivo ausente, dañado o con forma inválida: arranca vacío y lo regist
     limpiar();
   }
 });
-
 test('reescribir sobre un estado existente lo reemplaza completo', () => {
   const { ruta, limpiar } = carpeta();
   try {
@@ -128,13 +121,10 @@ test('reescribir sobre un estado existente lo reemplaza completo', () => {
     limpiar();
   }
 });
-
 test('la fecha de la jornada es la local, no la UTC', () => {
-  // 23:30 local sigue siendo el mismo día aunque en UTC ya sea el siguiente.
   assert.equal(fechaLocal(new Date(2026, 8, 11, 23, 30)), '2026-09-11');
   assert.equal(fechaLocal(new Date(2026, 0, 5, 0, 5)), '2026-01-05');
 });
-
 test('JSON corrupto y timestamps inválidos conservan copias diagnósticas distintas', () => {
   const { ruta, limpiar } = carpeta();
   const mensajes: string[] = [];
@@ -153,7 +143,6 @@ test('JSON corrupto y timestamps inválidos conservan copias diagnósticas disti
     limpiar();
   }
 });
-
 test('un error de E/S al leer el estado no se confunde con un archivo ausente', () => {
   const { ruta, limpiar } = carpeta();
   const mensajes: string[] = [];

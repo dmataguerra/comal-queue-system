@@ -27,11 +27,8 @@ import {
   validarVolumenes,
   validarYouTube,
 } from './seguridad-ipc.js';
-
 const ORIGENES_YOUTUBE = ['https://www.youtube.com', 'https://www.youtube-nocookie.com'];
-
 import { scriptVolumen } from './volumen-youtube.js';
-
 interface OpcionesIpc {
   configurarVolumen: (voz: number, multimedia: number) => void;
   configurarYouTube: (url: string | null) => void;
@@ -44,6 +41,7 @@ interface OpcionesIpc {
   importarContenido: (categoria: CategoriaContenido) => Promise<ResultadoImportacion>;
   quitarContenido: (url: string) => boolean;
   abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
+  abrirManual: () => Promise<void>;
   registrar: Registrar;
   diagnostico: () => Diagnostico;
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
@@ -53,8 +51,6 @@ interface OpcionesIpc {
     estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
   ) => void;
 }
-
-/** Adaptador de la topología A: las dos ventanas hablan con el store por IPC, sin red. */
 export function conectarIpc({
   store,
   inicial,
@@ -65,6 +61,7 @@ export function conectarIpc({
   importarContenido,
   quitarContenido,
   abrirCarpetaContenido,
+  abrirManual,
   configurarYouTube,
   configurarVolumen,
   registrar,
@@ -75,12 +72,10 @@ export function conectarIpc({
   const difundir = (canal: string, ...datos: unknown[]) => {
     for (const destino of destinos()) if (!destino.isDestroyed()) destino.send(canal, ...datos);
   };
-
   const autorizar = (
     evento: Parameters<typeof autorizarIpc<WebContents>>[0],
     vista: 'operador' | 'publica' | 'cualquiera',
   ) => autorizarIpc(evento, vista, esOperador, esPublica, urlVista);
-
   ipcMain.handle(IPC_CHANNELS.getInitial, (evento, ...argumentos: unknown[]) => {
     autorizar(evento, 'cualquiera');
     validarSinArgumentos(argumentos);
@@ -91,6 +86,11 @@ export function conectarIpc({
     validarSinArgumentos(argumentos);
     return diagnostico();
   });
+  ipcMain.handle(IPC_CHANNELS.openManual, (evento, ...argumentos: unknown[]) => {
+    autorizar(evento, 'operador');
+    validarSinArgumentos(argumentos);
+    return abrirManual();
+  });
   ipcMain.on(IPC_CHANNELS.health, (evento, ...argumentos: unknown[]) => {
     try {
       autorizar(evento, 'publica');
@@ -98,7 +98,7 @@ export function conectarIpc({
       const [tipo, estado] = validarSalud(argumentos[0], argumentos[1]);
       informarSalud(tipo, estado);
     } catch {
-      // Solo la vista pública principal puede comunicar salud multimedia.
+      /* Se ignora el mensaje si no supera la validación. */
     }
   });
   ipcMain.on(IPC_CHANNELS.audioReceipt, (evento, ...argumentos: unknown[]) => {
@@ -106,7 +106,7 @@ export function conectarIpc({
       autorizar(evento, 'publica');
       confirmarAnuncio(...validarAcuseAudio(argumentos));
     } catch {
-      // Solo la vista pública registrada puede confirmar su reproducción.
+      /* Se ignora el mensaje si no supera la validación. */
     }
   });
   ipcMain.handle(IPC_CHANNELS.dispatch, (evento, ...argumentos: unknown[]) => {
@@ -147,7 +147,7 @@ export function conectarIpc({
         `[${vista === 'operador' ? 'operador' : 'pública'}] ${validarMensaje(argumentos[0])}`,
       );
     } catch {
-      // `send` no tiene respuesta; no se debe lanzar desde este oyente del proceso principal.
+      /* Se ignora el mensaje si no supera la validación. */
     }
   });
   let avisoYouTube = '';
@@ -162,13 +162,18 @@ export function conectarIpc({
       frames.map((frame) =>
         frame
           .executeJavaScript(scriptVolumen(volumen, rampa))
-          .then((r) => r as { videos: number; sonando: number })
+          .then(
+            (r) =>
+              r as {
+                videos: number;
+                sonando: number;
+              },
+          )
           .catch(() => ({ videos: 0, sonando: 0 })),
       ),
     );
     const videos = resultados.reduce((total, r) => total + r.videos, 0);
     const sonando = resultados.reduce((total, r) => total + r.sonando, 0);
-    // Más de un reproductor explica audio que sigue sonando tras pausar el visible.
     const aviso =
       frames.length > 1 || sonando > 1
         ? `YouTube duplicado: ${frames.length} iframes, ${videos} videos, ${sonando} sonando.`
@@ -180,7 +185,6 @@ export function conectarIpc({
   store.suscribir((instantanea, anuncio) =>
     difundir(IPC_CHANNELS.stateChanged, instantanea, anuncio),
   );
-
   return {
     difundirEntregaAudio: (entrega: EntregaAudio) =>
       difundir(IPC_CHANNELS.audioReceiptChanged, entrega),
