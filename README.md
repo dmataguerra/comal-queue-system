@@ -119,6 +119,7 @@ npm start
 | `npm run test:full-day` | Ejecuta una jornada de 390 minutos reales (6 h 30 min). |
 | `npm run test:browser` | Valida las vistas en Chromium con transporte de navegador. |
 | `npm run test:help` | Compila y valida ayuda, recorridos, progreso, PDF y responsividad en escritorio y navegador local. |
+| `npm run test:accessibility` | Audita automáticamente contraste y reglas WCAG A/AA en ambos temas, escritorio, navegador, ayuda y pantalla pública. No sustituye la aceptación manual de accesibilidad. |
 | `npm run test:installed` | Prueba un instalador ya generado en datos aislados. |
 | `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
 | `npm run test:full-day:preflight` | Valida el flujo de jornada sin ejecutar las 390 minutos reales. |
