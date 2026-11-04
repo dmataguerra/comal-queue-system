@@ -1474,6 +1474,7 @@
 }
 .admin-shell .help-button kbd {
   margin-left: 4px;
+  opacity: 1;
 }
 .help-list {
   display: grid;

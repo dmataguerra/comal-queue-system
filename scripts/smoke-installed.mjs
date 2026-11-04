@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { extractFile } from '@electron/asar';
 import { createHash } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import {
@@ -180,6 +181,18 @@ try {
   assert.ok(existsSync(ejecutable), 'El instalador no creó Comal++.exe.');
   assert.ok(existsSync(join(instalacion, 'contenido', 'voz', '40.wav')));
   reporte.pasos.push('instalación aislada y contenido de fábrica');
+  const manualEmpaquetado = extractFile(
+    join(instalacion, 'resources', 'app.asar'),
+    join('dist', 'manual', 'manual-usuario-0.4.0.pdf'),
+  );
+  const manualFuente = readFileSync(join(raiz, 'output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf'));
+  assert.deepEqual(
+    manualEmpaquetado,
+    manualFuente,
+    'El instalador debe incluir el manual vigente.',
+  );
+  reporte.manualSha256 = createHash('sha256').update(manualEmpaquetado).digest('hex');
+  reporte.pasos.push('manual PDF empaquetado idéntico al documento fuente');
 
   async function abrir(usarRutaPredeterminada = false) {
     const puerto = await puertoLibre();
@@ -210,6 +223,40 @@ try {
   let cliente = await abrir();
   const inicial = await cliente.evaluar('window.turnero.obtener()');
   assert.equal(inicial.instantanea.actual, null);
+  await cliente.evaluar(`(() => {
+    const input = document.querySelector('#turn-number');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '42');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  await esperar(
+    () => cliente.evaluar("document.querySelector('#turn-number').value === '42'"),
+    'No se pudo preparar una captura válida para comprobar el bloqueo del recorrido.',
+  );
+  await cliente.evaluar("document.querySelector('.help-button').click()");
+  await esperar(
+    () => cliente.evaluar('Boolean(document.querySelector(\'[data-testid="help-center"]\'))'),
+    'El centro de ayuda no abrió en la aplicación instalada.',
+  );
+  await cliente.evaluar(
+    'document.querySelector(\'[data-testid="help-tour-start-llamar"]\').click()',
+  );
+  await esperar(
+    () => cliente.evaluar('Boolean(document.querySelector(\'[data-testid="help-tour"]\'))'),
+    'El recorrido no abrió en la aplicación instalada.',
+  );
+  await cliente.evaluar("document.querySelector('.register-button').click()");
+  assert.deepEqual(
+    (await cliente.evaluar('window.turnero.obtener()')).instantanea,
+    inicial.instantanea,
+    'El recorrido instalado no debe modificar la cola.',
+  );
+  await cliente.evaluar('document.querySelector(\'[data-testid="help-tour-close"]\').click()');
+  await esperar(
+    () => cliente.evaluar('Boolean(document.querySelector(\'[data-testid="help-center"]\'))'),
+    'Cerrar el recorrido no devolvió al centro de ayuda.',
+  );
+  await cliente.evaluar("document.querySelector('.help-center .modal-heading button').click()");
+  reporte.pasos.push('ayuda y recorrido instalados abren, bloquean operaciones y cierran');
   const llamada = await cliente.evaluar("window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})");
   assert.equal(llamada.instantanea.actual, 42);
   assert.ok(existsSync(join(datos, 'estado.json')));
