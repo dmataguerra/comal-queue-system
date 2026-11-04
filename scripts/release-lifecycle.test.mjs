@@ -19,6 +19,29 @@ test('release preflight accepts matching tags with all signing configuration', (
   assert.equal(verificarPublicacion('1.0.0', configured).status, 'PASS');
 });
 
+test('unsigned publication accepts missing credentials but still enforces the version tag', () => {
+  const unsigned = {
+    GITHUB_REF: configured.GITHUB_REF,
+    GITHUB_REF_NAME: configured.GITHUB_REF_NAME,
+    COMAL_RELEASE_SIGNING: 'unsigned',
+  };
+  const report = verificarPublicacion('1.0.0', unsigned);
+  assert.equal(report.status, 'PASS');
+  assert.equal(report.signingMode, 'unsigned');
+  assert.equal(report.checks.certificateConfigured, false);
+  assert.equal(verificarPublicacion('1.0.1', unsigned).status, 'FAIL');
+  assert.equal(
+    verificarPublicacion('1.0.0', { ...unsigned, GITHUB_REF: 'refs/heads/main' }).status,
+    'FAIL',
+  );
+});
+
+test('a misspelled signing mode cannot bypass signing requirements', () => {
+  const report = verificarPublicacion('1.0.0', { ...configured, COMAL_RELEASE_SIGNING: 'unsignd' });
+  assert.equal(report.status, 'FAIL');
+  assert.ok(report.errors.includes('Unknown release signing mode.'));
+});
+
 test('release preflight reports every missing signing setting together', () => {
   const report = verificarPublicacion('1.0.0', {
     GITHUB_REF: configured.GITHUB_REF,

@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 export function verificarPublicacion(version, entorno) {
   const tag = entorno.GITHUB_REF_NAME ?? '';
+  const signingMode = entorno.COMAL_RELEASE_SIGNING ?? 'signed';
+  const signingRequired = signingMode !== 'unsigned';
   const checks = {
     tagMatches: entorno.GITHUB_REF === `refs/tags/v${version}` && tag === `v${version}`,
     certificateConfigured: Boolean(entorno.WIN_CSC_LINK?.trim()),
@@ -11,16 +13,17 @@ export function verificarPublicacion(version, entorno) {
     signerConfigured: /^[A-Fa-f0-9]{40}$/.test(entorno.COMAL_SIGNER_SHA1 ?? ''),
   };
   const errors = [];
+  if (!['signed', 'unsigned'].includes(signingMode)) errors.push('Unknown release signing mode.');
   if (!checks.tagMatches) errors.push('Release tag must match package.json version.');
-  if (!checks.certificateConfigured)
+  if (signingRequired && !checks.certificateConfigured)
     errors.push('Configure the WIN_CSC_LINK secret in the production environment.');
-  if (!checks.passwordConfigured)
+  if (signingRequired && !checks.passwordConfigured)
     errors.push('Configure the WIN_CSC_KEY_PASSWORD secret in the production environment.');
-  if (!checks.signerConfigured)
+  if (signingRequired && !checks.signerConfigured)
     errors.push(
       'Configure the COMAL_SIGNER_SHA1 variable with the approved 40-digit hexadecimal thumbprint.',
     );
-  return { status: errors.length ? 'FAIL' : 'PASS', version, tag, checks, errors };
+  return { status: errors.length ? 'FAIL' : 'PASS', version, tag, signingMode, checks, errors };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
