@@ -27,17 +27,13 @@ jobs:
       COMAL_SIGNER_SHA1: ${{ vars.COMAL_SIGNER_SHA1 }}
     steps:
       - uses: actions/checkout@v6
-      - name: Verify release version
-        shell: pwsh
-        run: |
-          $version = (Get-Content package.json | ConvertFrom-Json).version
-          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Release tag must match package.json version.' }
-          if (!$env:WIN_CSC_LINK -or !$env:WIN_CSC_KEY_PASSWORD) { throw 'Public release requires both signing secrets.' }
-          if ($env:COMAL_SIGNER_SHA1 -notmatch '^[A-Fa-f0-9]{40}$') { throw 'Approved signer thumbprint COMAL_SIGNER_SHA1 is required.' }
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
+      - name: Verify release version and signing configuration
+        id: preflight
+        run: node scripts/verify-release.mjs
       - run: npm ci
       - name: Record dependency inventory
         shell: pwsh
@@ -74,7 +70,7 @@ jobs:
           if ($actual -ne $expected) { throw 'Upgrade baseline SHA256 mismatch.' }
       - run: npm run test:upgrade
       - name: Preserve release validation evidence
-        if: always()
+        if: ${{ always() && (steps.preflight.outcome == 'success' || steps.preflight.outcome == 'failure') }}
         uses: actions/upload-artifact@v6
         with:
           name: release-evidence-${{ github.sha }}

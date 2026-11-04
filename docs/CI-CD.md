@@ -1,6 +1,6 @@
-# CI/CD vigente · Comal++ 0.4.0
+# CI/CD vigente · Comal++ 1.0.0
 
-Revisado contra los workflows el 1 de octubre de 2026. CI corre en pull requests, pushes a main/master/development y ejecución manual. Configure protección de rama para exigir **Formatting, lint, tests and security** y **Windows application and installer**.
+Revisado contra los workflows el 4 de noviembre de 2026. CI corre en pull requests, pushes a main/master/development y ejecución manual. Configure protección de rama para exigir **Formatting, lint, tests and security** y **Windows application and installer**.
 
 ## Validación
 
@@ -24,6 +24,20 @@ La publicación **falla si falta identidad**; no hay salida unsigned. Se constru
 Se publican instalador, blockmap cuando existe, **SHA256.txt** y **SBOM.cdx.json**. El SBOM es de dependencias instaladas de construcción y no acredita derechos de voces/imágenes/marcas. GitHub Release se prepara como borrador y se publica después de subir archivos; se rechaza reemplazar una release existente.
 
 Una ejecución manual en rama valida sin publicar. Un tag existente puede publicar si coincide y no existe release. Declarar `production` en YAML no prueba revisores o restricciones: el responsable debe comprobarlos en GitHub.
+
+### Configuración inicial y diagnóstico
+
+En **Settings → Environments → production**, configura:
+
+- **Secret `WIN_CSC_LINK`**: certificado de firma de código y clave privada en un PFX, mediante un valor admitido por electron-builder para `WIN_CSC_LINK`, por ejemplo su contenido en base64. Una ruta de tu PC no estará disponible en un runner hospedado.
+- **Secret `WIN_CSC_KEY_PASSWORD`**: contraseña del PFX.
+- **Variable `COMAL_SIGNER_SHA1`**: huella SHA-1 aprobada del certificado, exactamente 40 caracteres hexadecimales sin espacios.
+
+No incluyas el certificado ni su contraseña en commits, issues o mensajes. Estos datos requieren un certificado existente; el workflow no emite certificados ni integra automáticamente SignPath. Consulta la [guía de firma](firma-publica-gratuita.md) para distinguir las alternativas.
+
+Antes de instalar dependencias o empaquetar, `scripts/verify-release.mjs` comprueba la etiqueta y las tres configuraciones. Reporta todos los faltantes juntos y escribe `test-results/release-preflight.json`, incluso al fallar. La evidencia contiene indicadores de presencia/validez, nunca los valores secretos. El paso de conservación solo se ejecuta después de que se haya intentado el preflight, evitando un error secundario por falta de evidencias cuando la preparación del runner falla antes.
+
+En CD **41881505949**, la validación completa aprobó, pero la publicación recibió vacíos los tres ajustes de firma. La comprobación posterior confirmó que no había secretos de repositorio ni secretos/variables de `production`. Corregir esa configuración es necesario para publicar; reintentar sin ella volverá a fallar. La etiqueta `v1.0.0` no tenía una release publicada al realizar este diagnóstico.
 
 ## Jornada operacional
 
