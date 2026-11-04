@@ -49,7 +49,7 @@ async function esperar(comprobar, mensaje, ms = 30000) {
       const valor = await comprobar();
       if (valor) return valor;
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* La aplicación puede seguir arrancando. */
     }
     await pausa(250);
   }
@@ -198,7 +198,7 @@ try {
     await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) });
     puertoAnteriorOcupado = true;
   } catch {
-    /* El fallo no impide continuar con el respaldo disponible. */
+    /* Sin respuesta, el puerto anterior no está ocupado. */
   }
   if (puertoAnteriorOcupado)
     throw new Error('El puerto 3001 ya está ocupado; cierre la versión 0.2.0 antes de la prueba.');

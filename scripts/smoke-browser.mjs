@@ -22,7 +22,7 @@ async function esperar(comprobar, mensaje) {
     try {
       if (await comprobar()) return;
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* La página puede seguir cargando durante el primer intento. */
     }
     await pausa(100);
   }

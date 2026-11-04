@@ -54,7 +54,7 @@ async function esperar(comprobar, mensaje, limite = 30000) {
       const resultado = await comprobar();
       if (resultado) return resultado;
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* El ejecutable puede seguir arrancando. */
     }
     await pausa(250);
   }

@@ -41,7 +41,7 @@ if (!window.turnero) {
       if (entregaAudio) avisar('entregaAudio', entregaAudio);
       for (const entrega of entregasAudio ?? []) avisar('entregaAudio', entrega);
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* La conexión se recupera con el siguiente intento de EventSource. */
     }
   };
   window.turnero = {

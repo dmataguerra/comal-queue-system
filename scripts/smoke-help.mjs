@@ -47,7 +47,7 @@ async function wait(check, message, limit = 15000) {
     try {
       if (await check()) return;
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* La vista puede seguir cargando. */
     }
     await pause(80);
   }
@@ -978,7 +978,7 @@ async function verify() {
         if (window.webContents.getURL().includes('/operador/'))
           await capture(window, `failure-operator-${index}`);
       } catch {
-        /* El fallo no impide continuar con el respaldo disponible. */
+        /* Si tampoco se puede capturar la ventana, se conserva el error original. */
       }
     }
     save();

@@ -462,7 +462,7 @@ async function waitForPublicPage(publicWindow) {
       )
         return true;
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* La ventana puede estar recargando. */
     }
     await pause(100);
   }
@@ -516,7 +516,7 @@ function readLogSummary() {
         }
       }
     } catch {
-      /* El fallo no impide continuar con el respaldo disponible. */
+      /* Puede no haberse creado todavía este archivo del registro. */
     }
   }
   return summary;
