@@ -1,6 +1,7 @@
 import { createReadStream } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { stat } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
 import { extname } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type {
@@ -121,11 +122,11 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
         'Content-Range': `bytes ${inicio}-${fin}/${size}`,
         'Content-Length': fin - inicio + 1,
       });
-      createReadStream(archivo, { start: inicio, end: fin }).pipe(res);
+      await pipeline(createReadStream(archivo, { start: inicio, end: fin }), res);
       return;
     }
     res.writeHead(200, { ...cabeceras, 'Content-Length': size, 'Accept-Ranges': 'bytes' });
-    createReadStream(archivo).pipe(res);
+    await pipeline(createReadStream(archivo), res);
   }
   const atender = async (req: IncomingMessage, res: ServerResponse) => {
     try {
@@ -237,7 +238,8 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
       await servirArchivo(req, res, archivo);
     } catch (error) {
       opciones.registrar(`Servidor navegador: ${(error as Error).message}`);
-      if (!res.headersSent) respuestaJson(res, { error: (error as Error).message }, 400);
+      if (!res.headersSent && !res.destroyed)
+        respuestaJson(res, { error: (error as Error).message }, 400);
       else res.destroy();
     }
   };
