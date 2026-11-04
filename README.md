@@ -1,94 +1,122 @@
+<div align="center">
+
+<img src="docs/readme/media/trojano.png" width="128" height="128" alt="Casco troyano de Comal++ en pixel art">
+
 # Comal++
 
-[![CI](https://github.com/dmataguerra/comal-queue-system/actions/workflows/ci.yml/badge.svg)](https://github.com/dmataguerra/comal-queue-system/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D6.svg)](https://www.microsoft.com/windows)
+### El siguiente pedido, en pantalla.
 
-> Sistema local de turnos para anunciar pedidos listos en el restaurante, con pantalla pública, audio y operación sin depender de una red.
+Sistema de turnos de **El Comal** para la **Facultad de Informática (FIF), Universidad Autónoma de Querétaro**.
 
-Comal++ es una aplicación de escritorio para Windows orientada a operaciones de mostrador. La persona operadora escribe de uno a seis dígitos del ticket; se anuncian los dos últimos (`00`-`99`); la pantalla pública muestra el turno y reproduce el aviso y la voz correspondientes. No registra ventas ni imprime tickets.
+Dos pantallas. Avisos por voz. Operación local.
 
-## Estado del proyecto
+[Demostración](#demostración) · [Comenzar](#primeros-pasos) · [Documentación](#documentación) · [Reportar un problema](https://github.com/dmataguerra/comal-queue-system/issues)
 
-| Campo | Estado |
-| --- | --- |
-| Versión preparada | `0.4.1` (sin publicar) |
-| Plataforma soportada | Windows x64 |
-| Operación normal | Local, sin internet |
-| Persistencia | Archivos JSON locales |
-| Distribución | Instalador NSIS para Windows |
-| Licencia | [MIT](LICENSE) |
+[Integración continua](https://github.com/dmataguerra/comal-queue-system/actions/workflows/ci.yml) · [Publicaciones](https://github.com/dmataguerra/comal-queue-system/releases) · Windows x64 · [MIT](LICENSE)
 
-La versión preparada 0.4.1 usa datos del perfil de la aplicación, recuperación validada, audio con acuses y capacidad acotada, y una puerta de publicación firmada. La interfaz incorpora ayuda en encabezado/F1, zoom de 70% a 130%, reloj de 12 horas y avisos compactos. La identidad aprobada y aceptación operacional deben comprobarse antes de publicar; las notas de compilaciones anteriores no certifican el artefacto actual.
+</div>
 
-Notas de la versión preparada: [Comal++ 0.4.1](docs/publicacion-0.4.1.md) · [Historial de cambios](CHANGELOG.md) · [Informe QA](docs/qa-2026-11-03.md). La aprobación del PR, el instalador firmado y la publicación quedan a cargo del responsable. Los resultados anteriores no certifican un nuevo instalador.
+![Separador pixel art](docs/readme/media/separador.svg)
 
-## Contenido
+## Demostración
 
-- [Capacidades](#capacidades)
-- [Arquitectura](#arquitectura)
-- [Requisitos](#requisitos)
-- [Inicio rápido](#inicio-rápido)
-- [Comandos](#comandos)
-- [Datos y operación](#datos-y-operación)
-- [Seguridad](#seguridad)
-- [Estructura del repositorio](#estructura-del-repositorio)
+![Comal++ funcionando: operador a la izquierda y pantalla pública a la derecha](docs/readme/media/comal-dos-pantallas.gif)
+
+**Una llamada, dos vistas sincronizadas.** La persona operadora captura el ticket; la pantalla pública presenta el pedido listo y el sistema reproduce su aviso por voz.
+
+[Ver o descargar el video MP4](docs/readme/media/comal-dos-pantallas.mp4) · [Abrir la captura completa](docs/readme/media/dos-pantallas.png)
+
+La vista previa muestra las dos ventanas reales con datos de demostración. El GIF y el video no incluyen audio; la reproducción por voz forma parte de la aplicación.
+
+<details>
+<summary>Explorar el proyecto</summary>
+
+- [Acerca del proyecto](#acerca-del-proyecto)
+- [Capturas del sistema](#capturas-del-sistema)
+- [Construido con](#construido-con)
+- [Primeros pasos](#primeros-pasos)
+- [Configuración de pantallas](#configuración-de-pantallas)
+- [Datos y recuperación](#datos-y-recuperación)
 - [Documentación](#documentación)
-- [Limitaciones conocidas](#limitaciones-conocidas)
+- [Calidad y publicación](#calidad-y-publicación)
 - [Contribuir](#contribuir)
+- [Principales colaboradores](#principales-colaboradores)
+- [Contacto](#contacto)
 - [Licencia](#licencia)
 
-## Capacidades
+</details>
 
-- Cola de pedidos de `00` a `99` con llamadas, repetición, corrección y eliminación.
-- Ventana de operador y pantalla pública independientes.
-- Avisos y voces locales para operar sin internet.
-- Multimedia local y respaldo local cuando YouTube no está disponible.
-- Servidor HTTP de bucle local para abrir las vistas en un navegador de la misma PC.
-- Diagnósticos de versión, persistencia, ventanas, audio, contenido, espacio y errores recientes.
-- Centro de ayuda por tareas con búsqueda, recorridos informativos y manual PDF local, desde Ayuda o F1.
-- Actualización que conserva los datos existentes y migración controlada desde perfiles compatibles de `0.2.0`.
-- Instalador Windows NSIS sin acceso directo automático en el Escritorio.
+## Acerca del proyecto
 
-## Arquitectura
+Comal++ acompaña la entrega de pedidos en el mostrador de El Comal. Permite anunciar un pedido desde la computadora de operación y mostrarlo en una TV, junto con contenido multimedia e información para la comunidad de la FIF.
 
-Electron ejecuta el proceso principal y dos ventanas React construidas con Vite: **operador** y **pública**. Las ventanas se comunican mediante IPC validado y la lógica de turnos permanece en `nucleo/`, sin dependencia de Electron.
+La persona operadora escribe entre uno y seis dígitos del ticket. El sistema utiliza los **dos últimos dígitos**, del `00` al `99`, para el llamado. Por ejemplo, el ticket `213298` se anuncia como **98**. El programa no registra ventas ni imprime tickets.
 
-```text
-React -> transporte de renderer -> preload aislado -> IPC validado
-                                                   -> aplicación de cola
-                                                        -> núcleo puro
-                                                   -> persistencia JSON
-Electron -> ventanas, contenido local, HTTP loopback y ciclo de vida
-```
+| En el mostrador                               | En la pantalla pública                       |
+| --------------------------------------------- | -------------------------------------------- |
+| Captura, repetición y corrección de llamados. | Pedido actual y hasta seis turnos recientes. |
+| Controles de volumen y multimedia.            | Aviso sonoro y voz del número anunciado.     |
+| Ayuda por tareas y acceso con **F1**.         | Imágenes y videos locales, reloj y mensajes. |
+| Diagnósticos y recuperación de datos.         | Ventana independiente para la TV.            |
 
-El servidor local escucha únicamente en `127.0.0.1`. Sirve las dos vistas en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica` y una API local de acciones; exige Host local y el mismo Origin para escrituras, y no admite acceso desde otros equipos. La [arquitectura vigente](docs/current-architecture.md) contiene el detalle técnico y los límites de este diseño.
+Los turnos, las voces y el contenido local funcionan **sin internet**. YouTube y el clima dependen de servicios externos. YouTube está disponible en escritorio; la vista de navegador utiliza contenido local.
 
-En Windows, la pantalla pública se coloca en una pantalla secundaria configurada como **pantalla extendida** cuando está disponible. Sin una pantalla secundaria, la aplicación empaquetada abre la vista pública como una ventana normal en el display primario, junto con la ventana del operador.
+## Capturas del sistema
 
-## Preparación de 0.4.1
+### Estación de operación
 
-Esta revisión añade manejo de errores HTTP, contraste corregido, dependencias actualizadas y más verificaciones automáticas. El código propio usa comentarios breves para explicar reglas y casos especiales. Los documentos fechados y los recursos del manual conservan sus versiones originales; consulta las notas de versión para su aplicabilidad.
+![Interfaz real para capturar y administrar llamados](docs/readme/media/operador.png)
 
-Para dos TV con la misma cola, conecta una salida secundaria del equipo a un splitter HDMI de una entrada y dos salidas. Mantén el monitor del operador en una salida independiente y selecciona **Windows + P → Extender**. La aplicación abre una ventana pública; el splitter duplica esa señal.
+### Pantalla pública
 
-## Requisitos
+![Interfaz real de pedidos listos y contenido multimedia](docs/readme/media/publica.png)
 
-### Para desarrollo y empaquetado
+Las capturas conservan la apariencia original del programa. El casco troyano, los iconos y los bordes decorativos utilizan pixel art; los títulos y el contenido del README son texto Markdown.
 
-- Windows.
-- Node.js `22.13.0` o posterior.
-- npm incluido con Node.js.
-- Una cuenta con permisos para instalar dependencias y generar el instalador.
+![Separador pixel art](docs/readme/media/separador.svg)
 
-### Para operación en el local
+## Construido con
 
-- Una PC Windows x64.
-- Una TV o pantalla secundaria en modo extendido.
-- Salida de audio y bocinas configuradas.
-- Instalador generado y probado en el hardware real.
+<p align="center">
+  <img src="docs/readme/media/tecnologias/electron.svg" width="64" height="64" alt="Electron">
+  <img src="docs/readme/media/tecnologias/react.svg" width="64" height="64" alt="React">
+  <img src="docs/readme/media/tecnologias/typescript.svg" width="64" height="64" alt="TypeScript">
+  <img src="docs/readme/media/tecnologias/vitejs.svg" width="64" height="64" alt="Vite">
+  <img src="docs/readme/media/tecnologias/tailwindcss.svg" width="64" height="64" alt="Tailwind CSS">
+  <img src="docs/readme/media/tecnologias/nodejs.svg" width="64" height="64" alt="Node.js">
+  <img src="docs/readme/media/tecnologias/githubactions.svg" width="64" height="64" alt="GitHub Actions">
+</p>
 
-## Inicio rápido
+Iconos de [Devicon](https://github.com/devicons/devicon/tree/v2.17.0), adaptados a pixel art. [Créditos y licencia](docs/readme/README.md#iconos-de-tecnologías).
+
+| Tecnología              | Uso en Comal++                                         |
+| ----------------------- | ------------------------------------------------------ |
+| Electron 44             | Aplicación de escritorio y administración de ventanas. |
+| React 19                | Interfaces del operador y del público.                 |
+| TypeScript 5            | Reglas de negocio y contratos entre componentes.       |
+| Vite 7 y Tailwind CSS 4 | Compilación y estilos de las vistas.                   |
+| Archivos JSON locales   | Configuración y estado persistente.                    |
+| electron-builder y NSIS | Instalador para Windows x64.                           |
+| GitHub Actions          | Integración continua y publicación.                    |
+
+El núcleo de turnos vive en `nucleo/`; Electron coordina ventanas, persistencia, audio y comunicación validada con las vistas. La [arquitectura vigente](docs/current-architecture.md) describe sus responsabilidades y límites.
+
+## Primeros pasos
+
+### Para instalar y operar
+
+Necesitas una **PC con Windows x64**, una TV o pantalla secundaria y una salida de audio con bocinas. Configura Windows en modo extendido y comprueba el sonido que escuchará el público.
+
+1. Consulta las [publicaciones disponibles](https://github.com/dmataguerra/comal-queue-system/releases) y las instrucciones de la versión elegida.
+2. Instala el paquete Windows correspondiente siguiendo la [guía de instalación](README-INSTALACION-USB.md).
+3. Abre Comal++, comprueba la pantalla pública y realiza un llamado de prueba.
+4. Usa **Ayuda** o **F1** para consultar los procedimientos dentro del programa.
+
+**Versión estable: `v1.0.0`.** Consulta las [notas de esta entrega](docs/publicacion-1.0.0.md). El instalador estará disponible en Publicaciones cuando finalice el proceso automático de validación y firma.
+
+### Para desarrollar
+
+Requisitos: Windows, **Node.js 22.13.0 o posterior**, npm y Git.
 
 ```powershell
 git clone https://github.com/dmataguerra/comal-queue-system.git
@@ -97,137 +125,117 @@ npm ci
 npm run dev
 ```
 
-`npm run dev` inicia Vite y Electron para desarrollo. Para ejecutar el código compilado:
+Para compilar y ejecutar:
 
 ```powershell
 npm run build
 npm start
 ```
 
-## Comandos
+Para generar el instalador local en `release/`:
 
-| Comando | Propósito |
-| --- | --- |
-| `npm run dev` | Inicia el entorno de desarrollo. |
-| `npm run build` | Compila vistas, proceso principal y tipos. |
-| `npm start` | Ejecuta la aplicación compilada. |
-| `npm run desktop:build` | Genera el instalador Windows NSIS en `release/`. |
-| `npm run desktop:dir` | Genera una carpeta de aplicación sin instalador. |
-| `npm test` | Ejecuta validación de audio y pruebas unitarias. |
-| `npm run lint` | Ejecuta ESLint. |
-| `npm run format:check` | Comprueba el formato con Prettier. |
-| `npm run test:desktop` | Ejecuta build y smoke tests de Electron. |
-| `npm run test:hardening` | Valida capacidad/IDs de anuncios e importación asíncrona. |
-| `npm run test:interface` | Valida captura, ayuda y controles de interfaz. |
-| `npm run test:theme` | Valida tema, escala y sincronización entre vistas. |
-| `npm run test:destructive` | Ejecuta regresiones destructivas con datos aislados. |
-| `npm run test:media` | Valida multimedia local en desarrollo y build. |
-| `npm run test:full-day` | Ejecuta una jornada de 390 minutos reales (6 h 30 min). |
-| `npm run test:browser` | Valida las vistas en Chromium con transporte de navegador. |
-| `npm run test:help` | Compila y valida ayuda, recorridos, progreso, PDF y responsividad en escritorio y navegador local. |
-| `npm run test:accessibility` | Audita automáticamente contraste y reglas WCAG A/AA en ambos temas, escritorio, navegador, ayuda y pantalla pública. No sustituye la aceptación manual de accesibilidad. |
-| `npm run test:installed` | Prueba un instalador ya generado en datos aislados. |
-| `npm run test:upgrade` | Valida migración y recuperación entre versiones. |
-| `npm run test:full-day:preflight` | Valida el flujo de jornada sin ejecutar las 390 minutos reales. |
-| `npm run verify:audio` | Comprueba las voces `00`-`99` y el aviso. |
-| `npm run test:recovery` | Valida el CLI real de respaldo/restauración y conserva hashes y resultados. |
+```powershell
+npm run desktop:build
+```
 
-Para una publicación firmada se utilizan `npm run desktop:build:signed` y el certificado del responsable. La firma local protegida por TPM se prepara con `npm run desktop:build:local-signed` y `COMAL_SIGNING_CERT_SHA1`; no reemplaza una firma pública ni elimina por sí sola los avisos de SmartScreen.
+La publicación firmada tiene requisitos adicionales descritos en la [guía de seguridad y publicación](docs/seguridad-y-publicacion.md).
 
-## Datos y operación
+## Configuración de pantallas
 
-En producción, los datos se guardan fuera de Documentos/OneDrive, normalmente en:
+Selecciona **Windows + P → Extender** para mantener el panel de operación en la computadora y la ventana pública en la TV. Con una pantalla secundaria, la aplicación utiliza pantalla completa; sin ella, abre la vista pública como una ventana en la pantalla principal.
+
+Para mostrar **la misma cola en dos TV**, conecta una salida secundaria del equipo a un **splitter HDMI de una entrada y dos salidas**. Conserva la pantalla del operador en una salida independiente. La compatibilidad de resolución y audio depende del equipo y del adaptador utilizados.
+
+Las vistas de navegador están disponibles únicamente en la misma PC, normalmente en `http://127.0.0.1:4317/` y `http://127.0.0.1:4317/publica`. El servidor no admite conexiones desde teléfonos u otras computadoras.
+
+## Datos y recuperación
+
+Los datos de producción se guardan normalmente en:
 
 ```text
 %APPDATA%/comal-local/datos
 ```
 
-La aplicación mantiene `config.json`, `estado.json`, `turnero.log` y `contenido/`. La ruta efectiva aparece en **Ayuda -> Diagnósticos**. Para pruebas aisladas puede establecerse `TURNERO_DATOS`.
+La ruta efectiva aparece en **Ayuda → Diagnósticos**. Allí se mantienen configuración, estado de turnos, registro y contenido local. Para pruebas aisladas puede establecerse `TURNERO_DATOS`.
 
-El instalador incluye contenido de fábrica que se copia durante el primer arranque. Los archivos locales de `contenido/videos`, `contenido/banner`, `contenido/voz` y `contenido/aviso.wav` funcionan sin red; para cada voz y para el aviso se prefiere un MP3 no vacío cuando existe y, en caso contrario, WAV.
+Consulta la [guía de operación y recuperación](docs/operacion-recuperacion.md) antes de respaldar, restaurar o trasladar una instalación.
 
-Al actualizar se conservan los datos anteriores y se copian una sola vez. Si la copia falla, el arranque informa del problema. El registro usa líneas JSON, rota al alcanzar 5 MB y conserva hasta cinco archivos anteriores (`turnero.log.1` a `turnero.log.5`). La [guía de operación y recuperación](docs/operacion-recuperacion.md) explica respaldos, restauración y salud de persistencia.
+## Documentación
 
-## Seguridad
+| Quiero…                                 | Documento                                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Aprender a utilizar el programa         | [Manual del operador](docs/user-manual/operador.md)                                                       |
+| Consultar el manual visual              | [Manual PDF ilustrado, edición 0.4.0](output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf)                     |
+| Tener una referencia breve en mostrador | [Guía rápida del cajero](docs/user-manual/Guia-Rapida-Cajero.pdf)                                         |
+| Instalar desde una memoria USB          | [Instalación y puesta en marcha](README-INSTALACION-USB.md)                                               |
+| Consultar requisitos funcionales        | [Casos de uso](docs/casos-de-uso.md)                                                                      |
+| Entender el diseño del sistema          | [Arquitectura vigente](docs/current-architecture.md)                                                      |
+| Respaldar o recuperar datos             | [Operación y recuperación](docs/operacion-recuperacion.md)                                                |
+| Conocer la ayuda integrada              | [Centro de ayuda interactivo](docs/centro-ayuda-interactivo.md)                                           |
+| Revisar seguridad y distribución        | [Seguridad y publicación](docs/seguridad-y-publicacion.md)                                                |
+| Preparar una entrega                    | [Lista de publicación](docs/lista-publicacion.md)                                                         |
+| Revisar cambios y evidencias            | [Historial](CHANGELOG.md) · [Informe QA](docs/qa-2026-11-03.md)                                           |
+| Explorar todos los documentos           | [Índice de documentación](docs/README.md) · [Documentación técnica PDF](docs/technical-documentation.pdf) |
 
-- El servidor web se limita a loopback y no ofrece administración por red.
-- Las ventanas usan aislamiento de contexto y sandbox.
-- IPC valida el canal, el origen de la ventana, el frame principal y los payloads.
-- El contenido local se sirve con raíces permitidas, validación asíncrona y rechazo de rutas o enlaces simbólicos fuera de esas raíces.
-- La CI ejecuta formato, lint, pruebas, build, auditoría de vulnerabilidades de severidad alta o crítica y smoke tests de escritorio.
+Los documentos fechados y los manuales con número de versión conservan su contexto original. El manual del operador y la arquitectura vigente son las referencias para el funcionamiento actual.
 
-Para reportar una vulnerabilidad, evita publicar detalles sensibles en un issue. Contacta al propietario del repositorio mediante los canales disponibles en GitHub y proporciona pasos reproducibles, impacto y versión afectada. La [guía de seguridad y publicación](docs/seguridad-y-publicacion.md) describe los controles implementados.
+## Calidad y publicación
 
-## Estructura del repositorio
-
-| Directorio | Responsabilidad |
-| --- | --- |
-| `main/` | Proceso principal de Electron, ventanas, IPC, configuración y persistencia. |
-| `nucleo/` | Reglas puras de turnos y cola. |
-| `vistas/` | Interfaces React del operador y la pantalla pública. |
-| `shared/` | Contratos y canales compartidos entre procesos. |
-| `contenido/` | Recursos de fábrica para instalaciones nuevas. |
-| `tooling/audio/` | Generación y validación del catálogo de voz. |
-| `scripts/` | Automatización de desarrollo, empaquetado y pruebas. |
-| `docs/` | Arquitectura, operación, seguridad y documentación histórica. |
-
-## Validación
-
-La validación local recomendada antes de abrir un pull request es:
+La validación base antes de integrar cambios es:
 
 ```powershell
-npm ci
 npm run format:check
 npm run lint
 npm test
 npm run build
 ```
 
-El catálogo de audio exige una voz para cada número `00`-`99`, rechaza archivos vacíos y revisa el aviso. Las pruebas de escritorio usan datos aislados bajo `test-results/`, comprueban ambas vistas, llamadas y multimedia, y decodifican las voces seleccionadas en Chromium. La reproducción real de YouTube requiere una aceptación adicional con internet.
+El repositorio incluye pruebas de escritorio, navegador, multimedia, accesibilidad, ayuda, recuperación e instalación. Consulta los scripts de [package.json](package.json) y las [ejecuciones de CI](https://github.com/dmataguerra/comal-queue-system/actions/workflows/ci.yml) para conocer los controles aplicados a cada cambio.
 
-Las pruebas de instalación, actualización, reversión y escala de pantalla requieren artefactos o hardware específicos. Consulta los scripts y la [lista de publicación](docs/lista-publicacion.md) antes de declarar una entrega operativa.
+El preflight de jornada se ejecuta con `npm run test:full-day:preflight` después de compilar. La prueba `npm run test:full-day` dura **390 minutos reales**; el preflight no sustituye esa jornada. La [jornada del 2 de octubre de 2026](docs/resultado-jornada-2026-10-02.md) conserva su propia evidencia y alcance.
 
-GitHub Actions ejecuta en pull requests los smoke tests de escritorio, navegador y multimedia, el preflight de jornada, la construcción del instalador Windows unsigned, la prueba instalada y la actualización/reversión. La jornada real de 390 minutos se ejecuta manualmente en un runner Windows protegido mediante `.github/workflows/release.yml`. CD exige el entorno `production`, secretos de firma y la huella aprobada `COMAL_SIGNER_SHA1`; verifica firma y timestamp de Setup, aplicación instalada y desinstalador antes de publicar. Sin identidad configurada, la publicación se bloquea.
+La aceptación de cada entrega incluye comprobar el instalador final, la PC, las TV y las bocinas del local. Los acuses de audio del software no comprueban la salida física de sonido. CD exige la identidad y firma configuradas para publicar; aprobar CI no publica por sí solo una versión.
 
-## Documentación
+La cola de audio admite seis anuncios, incluido el activo, y rechaza llamadas cuando está llena. Si falla el guardado de un turno, la acción se rechaza y la cola no cambia. Estas reglas se detallan en la guía operativa.
 
-- [Centro de ayuda interactivo](docs/centro-ayuda-interactivo.md): alcance, funcionamiento y límites; [evaluación y correcciones](docs/evaluacion-centro-ayuda.md).
-
-- [Arquitectura vigente](docs/current-architecture.md): diseño instalado y límites técnicos.
-- [Operación y recuperación](docs/operacion-recuperacion.md): guardado atómico, respaldos y restauración.
-- [Seguridad y publicación](docs/seguridad-y-publicacion.md): CSP, IPC, CI, auditoría y firma.
-- [Lista de publicación](docs/lista-publicacion.md): comprobaciones para cada instalador.
-- [Instalación desde USB](README-INSTALACION-USB.md): procedimiento para la PC del restaurante.
-- [Firma local](docs/firma-local.md): requisitos y límites de la firma protegida por TPM.
-- [Firma pública gratuita](docs/firma-publica-gratuita.md): preparación de la publicación firmada.
-
-El [índice completo](docs/README.md) enlaza guías, manuales y evidencias. Los 57 capítulos LaTeX y los tres PDF fueron actualizados a la arquitectura vigente; el [manual del operador](docs/user-manual/operador.md) contiene las instrucciones actuales. Los informes fechados y la [arquitectura histórica](docs/arquitectura.md) conservan explícitamente su contexto anterior. Consulte [la revisión documental](docs/actualizacion-documentacion-2026-10-01.md) para base y validación.
-
-## Limitaciones conocidas
-
-- Con una pantalla secundaria la vista pública se muestra en fullscreen como `tv`; sin ella se muestra como una ventana normal en el display primario.
-- El operador y la pantalla pública pueden abrirse en Chrome o Edge de la misma PC, pero el acceso desde teléfonos u otros equipos no está habilitado.
-- YouTube no está admitido en el transporte navegador: se rechaza su configuración con aviso visible y la pantalla web usa contenido local, incluso si el escritorio tiene YouTube configurado. El escritorio conserva ese modo opcional, pendiente de aceptación con YouTube real.
-- La cola de audio admite seis anuncios, incluido el activo; avisa desde cinco y rechaza nuevas llamadas antes de modificar el estado cuando está llena. La pantalla muestra seis turnos recientes y advierte cuál saldrá al llamar otro número. Consulte la política en la guía operativa.
-- El acuse de audio confirma el flujo de software, no la salida física por HDMI o bocinas.
-- Si falla el guardado de un turno, la acción se rechaza y la cola no cambia.
-- YouTube y el clima dependen de servicios externos; el contenido local se utiliza como respaldo.
-- La aceptación final requiere pruebas en la PC, TV, bocinas y red reales del local.
-
-La [verificación del 1 de octubre](docs/verificacion-produccion-2026-10-01.md) registra cambios, comandos, evidencias y bloqueos de publicación para los puntos 4, 5, 8, 9 y 10.
+![Separador pixel art](docs/readme/media/separador.svg)
 
 ## Contribuir
 
-1. Crea una rama desde la base actual.
-2. Instala las dependencias con `npm ci`.
-3. Mantén los cambios enfocados y actualiza la documentación cuando cambie el comportamiento.
-4. Ejecuta formato, lint, pruebas y build antes de abrir el pull request.
-5. Describe el contexto, el comportamiento esperado, la validación realizada y cualquier limitación pendiente.
+Las mejoras, correcciones y propuestas de documentación son bienvenidas.
 
-Los cambios que afecten IPC, persistencia, seguridad, audio o empaquetado deben incluir pruebas o una justificación explícita de por qué no son aplicables.
+1. Revisa los [issues](https://github.com/dmataguerra/comal-queue-system/issues) y crea una rama desde la base actual.
+2. Mantén el cambio enfocado y actualiza la documentación cuando cambie el comportamiento.
+3. Ejecuta formato, lint, pruebas y compilación; añade las verificaciones del área afectada.
+4. Crea commits atómicos con mensajes que describan el cambio.
+5. Abre un pull request con el problema, el resultado esperado y la evidencia de validación.
+
+Los cambios de persistencia, comunicación entre procesos, seguridad, audio y empaquetado requieren atención a las regresiones y la recuperación de datos.
+
+## Principales colaboradores
+
+Gracias a quienes han contribuido al código y a la evolución del proyecto.
+
+| Colaborador | Perfil                                         |
+| ----------- | ---------------------------------------------- |
+| dmataguerra | [@dmataguerra](https://github.com/dmataguerra) |
+| Alexiiis21  | [@Alexiiis21](https://github.com/Alexiiis21)   |
+
+[Consultar todas las contribuciones](https://github.com/dmataguerra/comal-queue-system/graphs/contributors)
+
+## Contacto
+
+- [dmataguerra@outlook.com](mailto:dmataguerra@outlook.com)
+- [acardenas22@alumnos.uaq.mx](mailto:acardenas22@alumnos.uaq.mx)
 
 ## Licencia
 
-El código propio se distribuye bajo [MIT](LICENSE). Los recursos y dependencias de terceros conservan sus respectivas licencias. Comal++ no distribuye ni imprime tickets y no requiere una base de datos o servicio de red para su operación normal.
+El código propio se distribuye bajo la [licencia MIT](LICENSE). Los recursos institucionales, el contenido multimedia y las dependencias de terceros conservan sus derechos y licencias correspondientes.
 
-La jornada local del **2 de octubre de 2026 aprobó los 390 minutos reales**, con 124/124 anuncios y cero errores en el registro. Consulte [la evidencia y el alcance](docs/resultado-jornada-2026-10-02.md). La aceptación del hardware destino y del instalador final sigue siendo independiente.
+<div align="center">
+
+**Comal++ · Facultad de Informática · UAQ**
+
+[Volver al inicio](#comal)
+
+</div>
