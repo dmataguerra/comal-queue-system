@@ -16,6 +16,8 @@ Las guías de arquitectura, operación, seguridad e instalación conservan el co
 
 Los informes fechados, hashes, resultados y publicaciones anteriores son históricos. El [informe QA](qa-2026-11-03.md) corresponde al candidato 0.4.0 que allí se identifica; no certifica por sí mismo los bytes de un futuro instalador 0.4.1. Los cambios de comentarios y versión requieren sus propias comprobaciones antes de generar ese instalador.
 
+Las comprobaciones de esta revisión se registran en [la validación de fuentes 0.4.1](verificacion-0.4.1.md).
+
 ## Antes de publicar
 
 Seguir la [lista de publicación](lista-publicacion.md), generar y probar el instalador 0.4.1, verificar su SHA-256 y las firmas aprobadas. Permanecen pendientes la aceptación del hardware y audio físicos, servicios externos y revisión de 28 hallazgos moderados de herramientas de desarrollo. La jornada de 390 minutos se omitió por decisión del responsable; el preflight aprobado no la sustituye.
