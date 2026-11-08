@@ -1,0 +1,13 @@
+import { app, BrowserWindow } from 'electron';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = fileURLToPath(new URL('../../', import.meta.url));
+app.commandLine.appendSwitch('disable-gpu');
+app.disableHardwareAcceleration();
+app.setAppPath(root);
+app.setPath('userData', join(process.env.TURNERO_DATOS, 'electron'));
+BrowserWindow.prototype.show = function () {};
+BrowserWindow.prototype.showInactive = function () {};
+BrowserWindow.prototype.maximize = function () {};
+await import('../../build/main/main.js');
+process.on('SIGTERM', () => app.quit());

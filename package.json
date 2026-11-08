@@ -36,7 +36,9 @@
     "test:interface": "npm run build && electron scripts/smoke-interface.mjs",
     "test:help": "npm run build && electron scripts/smoke-help.mjs",
     "test:accessibility": "npm run build && electron scripts/smoke-accessibility.mjs",
-    "test:destructive": "npm run build && node scripts/smoke-destructive-regressions.mjs"
+    "test:destructive": "npm run build && node scripts/smoke-destructive-regressions.mjs",
+    "qa:integration": "npm run build && node qa/automation/integration.mjs",
+    "qa:ui": "npm run build && node qa/automation/ui.mjs && node qa/automation/report-ui.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -58,11 +60,13 @@
     "prettier": "^3.9.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "selenium-webdriver": "^4.51.0",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.70.1",
-    "vite": "^7.3.7"
+    "vite": "^7.3.7",
+    "xmlrpc": "^1.3.2"
   },
   "build": {
     "appId": "mx.uaq.comal.local",

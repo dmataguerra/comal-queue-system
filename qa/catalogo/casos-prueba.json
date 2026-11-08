@@ -1,0 +1,695 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "1.0.0",
+  "scope": "Fases 1–4; solo smoke de integración; regresión pendiente",
+  "cases": [
+    {
+      "id": "COMAL-QA-001",
+      "caseId": "COMAL-QA-001",
+      "useCase": "CU-01",
+      "title": "Llamar 42 y sincronizar pública",
+      "type": "Selenium",
+      "priority": "P 0",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Capturar 42 y Enter en operador; observar ambas vistas."
+      ],
+      "expected": "Actual 42 en operador y pública; captura limpia.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "qa/automation (ruta final por agente Selenium)"
+    },
+    {
+      "id": "COMAL-QA-002",
+      "caseId": "COMAL-QA-002",
+      "useCase": "CU-01",
+      "title": "Normalización y extremos",
+      "type": "Unit/API/Selenium",
+      "priority": "P 0",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Probar 213298, 8, 00, 99, 000000."
+      ],
+      "expected": "98, 08, 00, 99, 00.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-003",
+      "caseId": "COMAL-QA-003",
+      "useCase": "CU-01",
+      "title": "Captura inválida",
+      "type": "Unit/API/Selenium",
+      "priority": "P 0",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Probar vacío, letras, signos, decimales y 7 dígitos."
+      ],
+      "expected": "Sin mutación ni anuncio.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-004",
+      "caseId": "COMAL-QA-004",
+      "useCase": "CU-01",
+      "title": "Capacidad visual",
+      "type": "Unit/Selenium",
+      "priority": "P 0",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Llamar 7 números distintos esperando disponibilidad."
+      ],
+      "expected": "Actual+5 anteriores únicos; sale más antiguo.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-005",
+      "caseId": "COMAL-QA-005",
+      "useCase": "CU-01",
+      "title": "Vencimiento",
+      "type": "Unit/integración",
+      "priority": "P 0",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Avanzar reloj antes/en 5 min; repetir antes de vencer."
+      ],
+      "expected": "Solo vencidos salen; repetir renueva vigencia.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-006",
+      "caseId": "COMAL-QA-006",
+      "useCase": "CU-01",
+      "title": "Saturación audio",
+      "type": "Unit/integración",
+      "priority": "P 0",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Retener procesamiento y acumular 5, 6, 7 tareas."
+      ],
+      "expected": "Aviso desde 5; séptima rechazada sin mutar ni limpiar captura.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-007",
+      "caseId": "COMAL-QA-007",
+      "useCase": "CU-01",
+      "title": "Latencia",
+      "type": "Rendimiento",
+      "priority": "P 1",
+      "preconditions": "Instancia QA aislada vacía para alta; estado conocido para límites, reloj controlado para vencimiento y cola retenida para saturación.",
+      "steps": [
+        "Medir Enter → estado visible/sonido con hardware identificado."
+      ],
+      "expected": "Comparar requisito histórico<1 s y registrar distribución real.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-008",
+      "caseId": "COMAL-QA-008",
+      "useCase": "CU-02",
+      "title": "Repetir actual",
+      "type": "Unit/Selenium",
+      "priority": "P 0",
+      "preconditions": "Estado aislado con actual 42, anterior 98 y un número desplazado; capacidad de audio disponible.",
+      "steps": [
+        "Llamar actual de nuevo."
+      ],
+      "expected": "Lista idéntica y nuevo anuncio.",
+      "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-009",
+      "caseId": "COMAL-QA-009",
+      "useCase": "CU-02",
+      "title": "Rellamar anterior",
+      "type": "Unit/Selenium",
+      "priority": "P 0",
+      "preconditions": "Estado aislado con actual 42, anterior 98 y un número desplazado; capacidad de audio disponible.",
+      "steps": [
+        "Con 42 actual y 98 anterior llamar 98."
+      ],
+      "expected": "98 actual, 42 anterior y sin duplicados.",
+      "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-010",
+      "caseId": "COMAL-QA-010",
+      "useCase": "CU-02",
+      "title": "Rellamar desplazado",
+      "type": "Unit/Selenium",
+      "priority": "P 1",
+      "preconditions": "Estado aislado con actual 42, anterior 98 y un número desplazado; capacidad de audio disponible.",
+      "steps": [
+        "Llamar número fuera de pantalla."
+      ],
+      "expected": "Entra como nuevo.",
+      "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-011",
+      "caseId": "COMAL-QA-011",
+      "useCase": "CU-03",
+      "title": "Corregir una vez",
+      "type": "Unit/Selenium",
+      "priority": "P 0",
+      "preconditions": "Llamadas 42 y 98 aceptadas; guardar instantánea anterior y controlar vencimiento o reinicio según escenario.",
+      "steps": [
+        "Llamar 42 y 98; corregir dos veces."
+      ],
+      "expected": "Restaura 42 sin anunciar; segundo intento no cambia.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-012",
+      "caseId": "COMAL-QA-012",
+      "useCase": "CU-03",
+      "title": "Corrección y vencimiento/reinicio",
+      "type": "Unit/integración",
+      "priority": "P 1",
+      "preconditions": "Llamadas 42 y 98 aceptadas; guardar instantánea anterior y controlar vencimiento o reinicio según escenario.",
+      "steps": [
+        "Vencer previo o reiniciar; intentar corregir."
+      ],
+      "expected": "No revive vencidos; reinicio pierde deshacer.",
+      "source": "nucleo/turnos.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-013",
+      "caseId": "COMAL-QA-013",
+      "useCase": "CU-04",
+      "title": "Audio FIFO y acuse",
+      "type": "Integración/audio",
+      "priority": "P 0",
+      "preconditions": "Vista pública activa; fixtures locales válidos y corruptos; audio y tiempos controlados cuando aplique.",
+      "steps": [
+        "Llamar varios y observar acuses ID/número."
+      ],
+      "expected": "Orden FIFO y correlación correcta.",
+      "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-014",
+      "caseId": "COMAL-QA-014",
+      "useCase": "CU-04",
+      "title": "Límites temporales audio",
+      "type": "Unit/integración",
+      "priority": "P 1",
+      "preconditions": "Vista pública activa; fixtures locales válidos y corruptos; audio y tiempos controlados cuando aplique.",
+      "steps": [
+        "Superar 45 s espera/30 s ejecución; quitar pendiente."
+      ],
+      "expected": "Descartar/cancelar sin bloquear siguientes.",
+      "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-015",
+      "caseId": "COMAL-QA-015",
+      "useCase": "CU-04",
+      "title": "Fallo audio y voz cero",
+      "type": "Integración/manual",
+      "priority": "P 0",
+      "preconditions": "Vista pública activa; fixtures locales válidos y corruptos; audio y tiempos controlados cuando aplique.",
+      "steps": [
+        "Usar voz ausente o volumen 0; llamar."
+      ],
+      "expected": "Turno guardado permanece; error sin falso acuse correcto.",
+      "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-016",
+      "caseId": "COMAL-QA-016",
+      "useCase": "CU-04",
+      "title": "Atenuación multimedia",
+      "type": "Integración/manual",
+      "priority": "P 1",
+      "preconditions": "Vista pública activa; fixtures locales válidos y corruptos; audio y tiempos controlados cuando aplique.",
+      "steps": [
+        "Llamar durante video."
+      ],
+      "expected": "Video continúa; volumen baja y recupera.",
+      "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-017",
+      "caseId": "COMAL-QA-017",
+      "useCase": "CU-04",
+      "title": "Prioridad y bienvenida",
+      "type": "Integración/Selenium",
+      "priority": "P 1",
+      "preconditions": "Vista pública activa; fixtures locales válidos y corruptos; audio y tiempos controlados cuando aplique.",
+      "steps": [
+        "Inventarios vacío, imágenes, videos y YouTube de escritorio."
+      ],
+      "expected": "Prioridad y respaldo correctos.",
+      "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-018",
+      "caseId": "COMAL-QA-018",
+      "useCase": "CU-04",
+      "title": "Video termina o falla",
+      "type": "Integración/manual",
+      "priority": "P 1",
+      "preconditions": "Vista pública activa; fixtures locales válidos y corruptos; audio y tiempos controlados cuando aplique.",
+      "steps": [
+        "Usar 2 videos y provocar error/fin."
+      ],
+      "expected": "Siguiente evita repetir si hay alternativa; turnos siguen.",
+      "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-019",
+      "caseId": "COMAL-QA-019",
+      "useCase": "CU-05",
+      "title": "Persistir antes de anunciar",
+      "type": "Unit/integración",
+      "priority": "P 0",
+      "preconditions": "Carpeta de datos QA aislada; copias vigentes/corruptas preparadas; reloj o monitores físicos según escenario.",
+      "steps": [
+        "Forzar error escritura/espacio; resolver y reintentar."
+      ],
+      "expected": "Fallo no cambia estado ni anuncia; reintento guarda.",
+      "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-020",
+      "caseId": "COMAL-QA-020",
+      "useCase": "CU-05",
+      "title": "Recuperación diaria",
+      "type": "Unit/integración",
+      "priority": "P 0",
+      "preconditions": "Carpeta de datos QA aislada; copias vigentes/corruptas preparadas; reloj o monitores físicos según escenario.",
+      "steps": [
+        "Guardar vigente; reiniciar; cambiar día."
+      ],
+      "expected": "Recupera vigentes sin audio/deshacer; nuevo día vacío.",
+      "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-021",
+      "caseId": "COMAL-QA-021",
+      "useCase": "CU-05",
+      "title": "Corrupción y migración legacy",
+      "type": "Unit/integración",
+      "priority": "P 1",
+      "preconditions": "Carpeta de datos QA aislada; copias vigentes/corruptas preparadas; reloj o monitores físicos según escenario.",
+      "steps": [
+        "Arrancar con JSON corrupto y datos legacy aislados."
+      ],
+      "expected": "Advertencia/copias; conserva originales legacy.",
+      "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-022",
+      "caseId": "COMAL-QA-022",
+      "useCase": "CU-05",
+      "title": "Pantallas y reconexión",
+      "type": "Integración/manual",
+      "priority": "P 1",
+      "preconditions": "Carpeta de datos QA aislada; copias vigentes/corruptas preparadas; reloj o monitores físicos según escenario.",
+      "steps": [
+        "Abrir con 1/2 monitores; desconectar/reconectar TV."
+      ],
+      "expected": "Ventana primaria/fullscreen secundario; captura fuera de TV.",
+      "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-023",
+      "caseId": "COMAL-QA-023",
+      "useCase": "CU-05",
+      "title": "Jornada larga offline",
+      "type": "Rendimiento/manual",
+      "priority": "P 1",
+      "preconditions": "Carpeta de datos QA aislada; copias vigentes/corruptas preparadas; reloj o monitores físicos según escenario.",
+      "steps": [
+        "Desconectar internet; simular jornada monitorizada."
+      ],
+      "expected": "Turnos/voz local siguen sin degradación sostenida.",
+      "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-024",
+      "caseId": "COMAL-QA-024",
+      "useCase": "CU-06",
+      "title": "Volúmenes",
+      "type": "API/Selenium",
+      "priority": "P 1",
+      "preconditions": "Directorio multimedia QA aislado, archivos de prueba y configuración conocida; espacio controlable para límites.",
+      "steps": [
+        "Aplicar extremos válidos y enviar fuera de rango por API."
+      ],
+      "expected": "Válidos persisten; inválidos rechazados según contrato.",
+      "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-025",
+      "caseId": "COMAL-QA-025",
+      "useCase": "CU-06",
+      "title": "Repeticiones/configuración inválida",
+      "type": "Unit/integración",
+      "priority": "P 1",
+      "preconditions": "Directorio multimedia QA aislado, archivos de prueba y configuración conocida; espacio controlable para límites.",
+      "steps": [
+        "Cargar 1/2 repeticiones y configuración corrupta."
+      ],
+      "expected": "Respeta válidos y recupera inválidos sin bloqueo.",
+      "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-026",
+      "caseId": "COMAL-QA-026",
+      "useCase": "CU-06",
+      "title": "Formatos válidos",
+      "type": "API/integración",
+      "priority": "P 1",
+      "preconditions": "Directorio multimedia QA aislado, archivos de prueba y configuración conocida; espacio controlable para límites.",
+      "steps": [
+        "Importar MP4/WebM/JPG/JPEG/PNG/WebP."
+      ],
+      "expected": "Inventario se actualiza sin recompilar.",
+      "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-027",
+      "caseId": "COMAL-QA-027",
+      "useCase": "CU-06",
+      "title": "Límites importación",
+      "type": "Unit/integración",
+      "priority": "P 0",
+      "preconditions": "Directorio multimedia QA aislado, archivos de prueba y configuración conocida; espacio controlable para límites.",
+      "steps": [
+        "Superar 2 GB por video/25 MB por imagen/reserva 512 MB y formato inválido."
+      ],
+      "expected": "Rechazo con motivo; sin parcial aceptado.",
+      "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-028",
+      "caseId": "COMAL-QA-028",
+      "useCase": "CU-06",
+      "title": "Duplicados/cancelar/quitar",
+      "type": "Integración/Selenium",
+      "priority": "P 1",
+      "preconditions": "Directorio multimedia QA aislado, archivos de prueba y configuración conocida; espacio controlable para límites.",
+      "steps": [
+        "Importar mismo nombre; cancelar; quitar con confirmación."
+      ],
+      "expected": "Copias numeradas; cancelar conserva; quitar actualiza.",
+      "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-029",
+      "caseId": "COMAL-QA-029",
+      "useCase": "CU-06",
+      "title": "YouTube y navegador",
+      "type": "Integración/manual",
+      "priority": "P 1",
+      "preconditions": "Directorio multimedia QA aislado, archivos de prueba y configuración conocida; espacio controlable para límites.",
+      "steps": [
+        "Configurar enlace; fallar la red; abrir navegador."
+      ],
+      "expected": "Respaldo local; YouTube no admitido navegador.",
+      "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-030",
+      "caseId": "COMAL-QA-030",
+      "useCase": "CU-07",
+      "title": "Quitar/cancelar",
+      "type": "Unit/Selenium",
+      "priority": "P 0",
+      "preconditions": "Actual 42 y anterior 98 presentes; corrección pendiente; confirmaciones activas al iniciar sesión.",
+      "steps": [
+        "Cancelar y confirmar eliminación de actual o anterior."
+      ],
+      "expected": "Cancelar conserva; eliminar promueve siguiente e invalida deshacer.",
+      "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-031",
+      "caseId": "COMAL-QA-031",
+      "useCase": "CU-07",
+      "title": "Confirmaciones por sesión",
+      "type": "Selenium",
+      "priority": "P 1",
+      "preconditions": "Actual 42 y anterior 98 presentes; corrección pendiente; confirmaciones activas al iniciar sesión.",
+      "steps": [
+        "No volver a mostrar; anunciar/quitar; reiniciar."
+      ],
+      "expected": "Afecta ambas acciones; reinicio restablece confirmación.",
+      "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-032",
+      "caseId": "COMAL-QA-032",
+      "useCase": "CU-08",
+      "title": "Ayuda teclado",
+      "type": "Selenium",
+      "priority": "P 1",
+      "preconditions": "Operador abierto con foco en captura, perfil de preferencias limpio y PDF del build disponible.",
+      "steps": [
+        "Pulsar F1, navegar y Escape."
+      ],
+      "expected": "Abre/cierra y devuelve foco a captura.",
+      "source": "vistas/operador/ayuda/HelpCenter.tsx; vistas/operador/ayuda/GuidedTour.tsx; main/manual-usuario.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-033",
+      "caseId": "COMAL-QA-033",
+      "useCase": "CU-08",
+      "title": "Recorrido/progreso",
+      "type": "Selenium",
+      "priority": "P 2",
+      "preconditions": "Operador abierto con foco en captura, perfil de preferencias limpio y PDF del build disponible.",
+      "steps": [
+        "Avanzar/cerrar recorrido y recargar."
+      ],
+      "expected": "Progreso local por origen según implementación.",
+      "source": "vistas/operador/ayuda/HelpCenter.tsx; vistas/operador/ayuda/GuidedTour.tsx; main/manual-usuario.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-034",
+      "caseId": "COMAL-QA-034",
+      "useCase": "CU-08",
+      "title": "Manual offline",
+      "type": "Integración/Selenium",
+      "priority": "P 1",
+      "preconditions": "Operador abierto con foco en captura, perfil de preferencias limpio y PDF del build disponible.",
+      "steps": [
+        "Abrir PDF sin internet; probar una ruta arbitraria."
+      ],
+      "expected": "PDF local válido y rutas arbitrarias denegadas.",
+      "source": "vistas/operador/ayuda/HelpCenter.tsx; vistas/operador/ayuda/GuidedTour.tsx; main/manual-usuario.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-035",
+      "caseId": "COMAL-QA-035",
+      "useCase": "CU-09",
+      "title": "Diagnósticos y avisos",
+      "type": "API/Selenium",
+      "priority": "P 1",
+      "preconditions": "Operador abierto y datos de diagnóstico conocidos; error controlado para comprobar avisos.",
+      "steps": [
+        "Abrir desde ayuda; esperar 10 s; provocar error controlado."
+      ],
+      "expected": "Datos actualizados; detalles fuera de pública.",
+      "source": "main/diagnostico.ts; vistas/operador/DiagnosticoPanel.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-036",
+      "caseId": "COMAL-QA-036",
+      "useCase": "CU-10",
+      "title": "Tema/escala",
+      "type": "Selenium",
+      "priority": "P 2",
+      "preconditions": "Perfiles QA aislados, resoluciones y preferencia de movimiento reducido configurables.",
+      "steps": [
+        "Cambiar tema y 70–130%; recargar."
+      ],
+      "expected": "Persistencia por origen; escritorio y navegador independientes.",
+      "source": "vistas/comun/tema.ts; vistas/comun/tamanio.ts; vistas/comun/components/AnimatedBackground.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-037",
+      "caseId": "COMAL-QA-037",
+      "useCase": "CU-10",
+      "title": "Legibilidad/accesibilidad/reloj",
+      "type": "Selenium/manual",
+      "priority": "P 1",
+      "preconditions": "Perfiles QA aislados, resoluciones y preferencia de movimiento reducido configurables.",
+      "steps": [
+        "Probar 1080p/1440p/4K, teclado, movimiento reducido y distancia física."
+      ],
+      "expected": "12 h am/pm; sin desbordamiento; movimiento reducido y legibilidad manual.",
+      "source": "vistas/comun/tema.ts; vistas/comun/tamanio.ts; vistas/comun/components/AnimatedBackground.tsx",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-038",
+      "caseId": "COMAL-QA-038",
+      "useCase": "CU-11",
+      "title": "HTTP/SSE y recarga",
+      "type": "API/Selenium",
+      "priority": "P 0",
+      "preconditions": "Comal aislado escuchando en loopback; dos vistas abiertas; para integración, API TestLink operativa y credenciales privadas.",
+      "steps": [
+        "Abrir 2 vistas; llamar; reconectar/recargar."
+      ],
+      "expected": "Estado e inventario convergen.",
+      "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-039",
+      "caseId": "COMAL-QA-039",
+      "useCase": "CU-11",
+      "title": "Seguridad HTTP",
+      "type": "API/integración",
+      "priority": "P 0",
+      "preconditions": "Comal aislado escuchando en loopback; dos vistas abiertas; para integración, API TestLink operativa y credenciales privadas.",
+      "steps": [
+        "Host/Origin inválido, recorrido de rutas y cuerpos inválidos/excesivos."
+      ],
+      "expected": "Rechazo sin mutación ni fuga.",
+      "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-040",
+      "caseId": "COMAL-QA-040",
+      "useCase": "CU-11",
+      "title": "Seguridad IPC",
+      "type": "Unit/integración",
+      "priority": "P 0",
+      "preconditions": "Comal aislado escuchando en loopback; dos vistas abiertas; para integración, API TestLink operativa y credenciales privadas.",
+      "steps": [
+        "Mutar desde pública/remitente no autorizado."
+      ],
+      "expected": "IPC pública restringido; sin exponer administración.",
+      "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-041",
+      "caseId": "COMAL-QA-041",
+      "useCase": "CU-11",
+      "title": "Integración TestLink",
+      "type": "Integración",
+      "priority": "P 0",
+      "preconditions": "Comal aislado escuchando en loopback; dos vistas abiertas; para integración, API TestLink operativa y credenciales privadas.",
+      "steps": [
+        "Ejecutar COMAL-QA-001; reportar y consultar resultado API."
+      ],
+      "expected": "ID documental/script/TestLink mapeados; build y evidencia reales.",
+      "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-042",
+      "caseId": "COMAL-QA-042",
+      "useCase": "CU-12",
+      "title": "Respaldo/restauración",
+      "type": "Unit/integración/manual",
+      "priority": "P 1",
+      "preconditions": "Aplicación cerrada, respaldo QA disponible y artefacto Windows identificado; nunca usar datos operativos.",
+      "steps": [
+        "Respaldar/restaurar; probar copia de otro día."
+      ],
+      "expected": "Datos válidos; no revive turnos de otro día.",
+      "source": "scripts/datos.ts; main/respaldo.ts; main/migracion-02.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    },
+    {
+      "id": "COMAL-QA-043",
+      "caseId": "COMAL-QA-043",
+      "useCase": "CU-12",
+      "title": "Instalador/actualización",
+      "type": "Integración/manual",
+      "priority": "P 1",
+      "preconditions": "Aplicación cerrada, respaldo QA disponible y artefacto Windows identificado; nunca usar datos operativos.",
+      "steps": [
+        "Instalar y actualizar Windows estándar con artefacto identificado."
+      ],
+      "expected": "Versión/archivos/datos según política; evidencia del instalador concreto.",
+      "source": "scripts/datos.ts; main/respaldo.ts; main/migracion-02.ts",
+      "status": "planned",
+      "automation": "planned; supporting repository tests are not execution evidence"
+    }
+  ]
+}

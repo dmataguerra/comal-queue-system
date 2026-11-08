@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.3.0@sha256:9de9d54fecee6253130e65154b930978b1fcc336bcc86dfd06e89b72a2588ebe
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${TESTLINK_DB_ROOT_PASSWORD:?Define TESTLINK_DB_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: testlink
+      MYSQL_USER: testlink
+      MYSQL_PASSWORD: ${TESTLINK_DB_PASSWORD:?Define TESTLINK_DB_PASSWORD in .env}
+    command: --log-bin-trust-function-creators=1
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+  testlink:
+    image: ghcr.io/neiesc/testlink-code:testlink_1_9_20_fixed@sha256:eafcd27e90650143ec511eabde3556615fdd56e9abc2ed3b526c74305c6b370a
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TESTLINK_DB_PASSWORD: ${TESTLINK_DB_PASSWORD}
+      TESTLINK_ADMIN_PASSWORD: ${TESTLINK_ADMIN_PASSWORD:?Define TESTLINK_ADMIN_PASSWORD}
+      TESTLINK_API_KEY: ${TESTLINK_API_KEY:?Define TESTLINK_API_KEY}
+    ports:
+      - "127.0.0.1:8090:80"
+    volumes:
+      - application:/var/www/html
+      - ./bootstrap.php:/opt/comal-qa/bootstrap.php:ro
+      - logs:/var/testlink/logs
+      - uploads:/var/testlink/upload_area
+volumes:
+  database:
+  application:
+  logs:
+  uploads:
+
