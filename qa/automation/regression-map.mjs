@@ -227,6 +227,14 @@ export const CASES = {
   },
   'COMAL-QA-041': { integration: true },
   'COMAL-QA-042': { unit: [['main/respaldo.test.ts', '.']], smoke: ['recovery'] },
+  'COMAL-QA-044': { unit: [['main/servidor-web-contenido.test.ts', 'abrir carpeta']] },
+  'COMAL-QA-045': { selenium: ['COMAL-QA-045'] },
+  'COMAL-QA-046': {
+    unit: [
+      ['main/log.test.ts', '.'],
+      ['main/temporales.test.ts', '.'],
+    ],
+  },
   'COMAL-QA-043': {
     manual:
       'Solo existe el instalador 0.3.0; se necesita el instalador 1.0.0 identificado y un Windows estándar para npm run test:installed / test:upgrade.',

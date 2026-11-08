@@ -1,12 +1,12 @@
 {
   "productVersion": "1.0.0",
-  "startedAt": "2026-11-08T04:02:55.700Z",
-  "finishedAt": "2026-11-08T04:12:28.589Z",
-  "testlinkBuild": 23,
+  "startedAt": "2026-11-08T04:35:42.336Z",
+  "finishedAt": "2026-11-08T04:45:18.985Z",
+  "testlinkBuild": 26,
   "allReadbackConfirmed": true,
   "summary": {
-    "total": 43,
-    "pass": 34,
+    "total": 46,
+    "pass": 37,
     "fail": 0,
     "blocked": 9
   },
@@ -15,7 +15,7 @@
       "id": "COMAL-QA-001",
       "status": "PASS",
       "testlinkCase": "COMAL-52",
-      "executionId": 77,
+      "executionId": 122,
       "attachment": "COMAL-QA-001.png",
       "checks": [
         {
@@ -28,7 +28,7 @@
           "kind": "integration",
           "ref": "qa/automation/integration.mjs",
           "status": "PASS",
-          "detail": "TestLink COMAL-3 build 21: PASS and controlled FAIL read back"
+          "detail": "TestLink COMAL-3 build 24: PASS and controlled FAIL read back"
         }
       ],
       "pendingManual": null
@@ -37,7 +37,7 @@
       "id": "COMAL-QA-002",
       "status": "PASS",
       "testlinkCase": "COMAL-4",
-      "executionId": 78,
+      "executionId": 123,
       "attachment": "COMAL-QA-002.png",
       "checks": [
         {
@@ -65,7 +65,7 @@
       "id": "COMAL-QA-003",
       "status": "PASS",
       "testlinkCase": "COMAL-5",
-      "executionId": 79,
+      "executionId": 124,
       "attachment": "COMAL-QA-003.png",
       "checks": [
         {
@@ -93,7 +93,7 @@
       "id": "COMAL-QA-004",
       "status": "PASS",
       "testlinkCase": "COMAL-6",
-      "executionId": 80,
+      "executionId": 125,
       "attachment": "COMAL-QA-004.png",
       "checks": [
         {
@@ -121,7 +121,7 @@
       "id": "COMAL-QA-005",
       "status": "PASS",
       "testlinkCase": "COMAL-7",
-      "executionId": 81,
+      "executionId": 126,
       "attachment": null,
       "checks": [
         {
@@ -143,7 +143,7 @@
       "id": "COMAL-QA-006",
       "status": "PASS",
       "testlinkCase": "COMAL-8",
-      "executionId": 82,
+      "executionId": 127,
       "attachment": null,
       "checks": [
         {
@@ -171,7 +171,7 @@
       "id": "COMAL-QA-007",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-9",
-      "executionId": 83,
+      "executionId": 128,
       "attachment": null,
       "checks": [
         {
@@ -187,7 +187,7 @@
       "id": "COMAL-QA-008",
       "status": "PASS",
       "testlinkCase": "COMAL-10",
-      "executionId": 84,
+      "executionId": 129,
       "attachment": "COMAL-QA-008.png",
       "checks": [
         {
@@ -215,7 +215,7 @@
       "id": "COMAL-QA-009",
       "status": "PASS",
       "testlinkCase": "COMAL-11",
-      "executionId": 85,
+      "executionId": 130,
       "attachment": "COMAL-QA-009.png",
       "checks": [
         {
@@ -237,7 +237,7 @@
       "id": "COMAL-QA-010",
       "status": "PASS",
       "testlinkCase": "COMAL-12",
-      "executionId": 86,
+      "executionId": 131,
       "attachment": "COMAL-QA-010.png",
       "checks": [
         {
@@ -259,7 +259,7 @@
       "id": "COMAL-QA-011",
       "status": "PASS",
       "testlinkCase": "COMAL-13",
-      "executionId": 87,
+      "executionId": 132,
       "attachment": "COMAL-QA-011.png",
       "checks": [
         {
@@ -287,7 +287,7 @@
       "id": "COMAL-QA-012",
       "status": "PASS",
       "testlinkCase": "COMAL-14",
-      "executionId": 88,
+      "executionId": 133,
       "attachment": null,
       "checks": [
         {
@@ -321,7 +321,7 @@
       "id": "COMAL-QA-013",
       "status": "PASS",
       "testlinkCase": "COMAL-53",
-      "executionId": 89,
+      "executionId": 134,
       "attachment": null,
       "checks": [
         {
@@ -340,7 +340,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-media.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 53 s"
+          "detail": "exit 0 in 54 s"
         }
       ],
       "pendingManual": null
@@ -349,7 +349,7 @@
       "id": "COMAL-QA-014",
       "status": "PASS",
       "testlinkCase": "COMAL-16",
-      "executionId": 90,
+      "executionId": 135,
       "attachment": null,
       "checks": [
         {
@@ -377,7 +377,7 @@
       "id": "COMAL-QA-015",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-17",
-      "executionId": 91,
+      "executionId": 136,
       "attachment": null,
       "checks": [
         {
@@ -399,7 +399,7 @@
       "id": "COMAL-QA-016",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-18",
-      "executionId": 92,
+      "executionId": 137,
       "attachment": null,
       "checks": [
         {
@@ -418,7 +418,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-media.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 53 s"
+          "detail": "exit 0 in 54 s"
         }
       ],
       "pendingManual": "Comprobar de oído la atenuación y recuperación del video en la TV/altavoces reales."
@@ -427,7 +427,7 @@
       "id": "COMAL-QA-017",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-19",
-      "executionId": 93,
+      "executionId": 138,
       "attachment": null,
       "checks": [
         {
@@ -440,7 +440,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-destructive-regressions.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 1 s"
+          "detail": "exit 0 in 2 s"
         },
         {
           "kind": "smoke",
@@ -455,7 +455,7 @@
       "id": "COMAL-QA-018",
       "status": "PASS",
       "testlinkCase": "COMAL-20",
-      "executionId": 94,
+      "executionId": 139,
       "attachment": null,
       "checks": [
         {
@@ -468,13 +468,13 @@
           "kind": "smoke",
           "ref": "scripts/smoke-destructive-regressions.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 1 s"
+          "detail": "exit 0 in 2 s"
         },
         {
           "kind": "smoke",
           "ref": "scripts/smoke-media.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 53 s"
+          "detail": "exit 0 in 54 s"
         }
       ],
       "pendingManual": null
@@ -483,7 +483,7 @@
       "id": "COMAL-QA-019",
       "status": "PASS",
       "testlinkCase": "COMAL-21",
-      "executionId": 95,
+      "executionId": 140,
       "attachment": null,
       "checks": [
         {
@@ -517,7 +517,7 @@
       "id": "COMAL-QA-020",
       "status": "PASS",
       "testlinkCase": "COMAL-22",
-      "executionId": 96,
+      "executionId": 141,
       "attachment": null,
       "checks": [
         {
@@ -551,7 +551,7 @@
       "id": "COMAL-QA-021",
       "status": "PASS",
       "testlinkCase": "COMAL-54",
-      "executionId": 97,
+      "executionId": 142,
       "attachment": null,
       "checks": [
         {
@@ -591,14 +591,14 @@
       "id": "COMAL-QA-022",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-24",
-      "executionId": 98,
+      "executionId": 143,
       "attachment": null,
       "checks": [
         {
           "kind": "smoke",
           "ref": "scripts/smoke-desktop.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 90 s"
+          "detail": "exit 0 in 89 s"
         }
       ],
       "pendingManual": "Requiere 1 y 2 monitores físicos y desconectar/reconectar la TV."
@@ -607,7 +607,7 @@
       "id": "COMAL-QA-023",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-25",
-      "executionId": 99,
+      "executionId": 144,
       "attachment": null,
       "checks": [
         {
@@ -620,7 +620,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-desktop.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 90 s"
+          "detail": "exit 0 in 89 s"
         }
       ],
       "pendingManual": "La jornada monitorizada completa (npm run test:full-day, 6.5 h) y sin Internet debe ejecutarse en el equipo objetivo."
@@ -629,7 +629,7 @@
       "id": "COMAL-QA-024",
       "status": "PASS",
       "testlinkCase": "COMAL-26",
-      "executionId": 100,
+      "executionId": 145,
       "attachment": null,
       "checks": [
         {
@@ -657,7 +657,7 @@
       "id": "COMAL-QA-025",
       "status": "PASS",
       "testlinkCase": "COMAL-55",
-      "executionId": 101,
+      "executionId": 146,
       "attachment": null,
       "checks": [
         {
@@ -670,7 +670,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-media.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 53 s"
+          "detail": "exit 0 in 54 s"
         }
       ],
       "pendingManual": null
@@ -679,7 +679,7 @@
       "id": "COMAL-QA-026",
       "status": "PASS",
       "testlinkCase": "COMAL-28",
-      "executionId": 102,
+      "executionId": 147,
       "attachment": null,
       "checks": [
         {
@@ -692,7 +692,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-media.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 53 s"
+          "detail": "exit 0 in 54 s"
         }
       ],
       "pendingManual": null
@@ -701,7 +701,7 @@
       "id": "COMAL-QA-027",
       "status": "PASS",
       "testlinkCase": "COMAL-29",
-      "executionId": 103,
+      "executionId": 148,
       "attachment": null,
       "checks": [
         {
@@ -723,7 +723,7 @@
       "id": "COMAL-QA-028",
       "status": "PASS",
       "testlinkCase": "COMAL-30",
-      "executionId": 104,
+      "executionId": 149,
       "attachment": null,
       "checks": [
         {
@@ -736,7 +736,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-destructive-regressions.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 1 s"
+          "detail": "exit 0 in 2 s"
         }
       ],
       "pendingManual": null
@@ -745,7 +745,7 @@
       "id": "COMAL-QA-029",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-31",
-      "executionId": 105,
+      "executionId": 150,
       "attachment": null,
       "checks": [
         {
@@ -773,7 +773,7 @@
       "id": "COMAL-QA-030",
       "status": "PASS",
       "testlinkCase": "COMAL-32",
-      "executionId": 106,
+      "executionId": 151,
       "attachment": "COMAL-QA-030.png",
       "checks": [
         {
@@ -792,7 +792,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-interface.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 13 s"
+          "detail": "exit 0 in 14 s"
         },
         {
           "kind": "selenium",
@@ -807,14 +807,14 @@
       "id": "COMAL-QA-031",
       "status": "PASS",
       "testlinkCase": "COMAL-33",
-      "executionId": 107,
+      "executionId": 152,
       "attachment": "COMAL-QA-031.png",
       "checks": [
         {
           "kind": "smoke",
           "ref": "scripts/smoke-interface.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 13 s"
+          "detail": "exit 0 in 14 s"
         },
         {
           "kind": "selenium",
@@ -829,14 +829,14 @@
       "id": "COMAL-QA-032",
       "status": "PASS",
       "testlinkCase": "COMAL-34",
-      "executionId": 108,
+      "executionId": 153,
       "attachment": "COMAL-QA-032.png",
       "checks": [
         {
           "kind": "smoke",
           "ref": "scripts/smoke-help.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 169 s"
+          "detail": "exit 0 in 170 s"
         },
         {
           "kind": "smoke",
@@ -857,14 +857,14 @@
       "id": "COMAL-QA-033",
       "status": "PASS",
       "testlinkCase": "COMAL-35",
-      "executionId": 109,
+      "executionId": 154,
       "attachment": null,
       "checks": [
         {
           "kind": "smoke",
           "ref": "scripts/smoke-help.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 169 s"
+          "detail": "exit 0 in 170 s"
         }
       ],
       "pendingManual": null
@@ -873,7 +873,7 @@
       "id": "COMAL-QA-034",
       "status": "PASS",
       "testlinkCase": "COMAL-56",
-      "executionId": 110,
+      "executionId": 155,
       "attachment": null,
       "checks": [
         {
@@ -892,7 +892,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-help.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 169 s"
+          "detail": "exit 0 in 170 s"
         }
       ],
       "pendingManual": null
@@ -901,7 +901,7 @@
       "id": "COMAL-QA-035",
       "status": "PASS",
       "testlinkCase": "COMAL-57",
-      "executionId": 111,
+      "executionId": 156,
       "attachment": null,
       "checks": [
         {
@@ -914,7 +914,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-desktop.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 90 s"
+          "detail": "exit 0 in 89 s"
         }
       ],
       "pendingManual": null
@@ -923,7 +923,7 @@
       "id": "COMAL-QA-036",
       "status": "PASS",
       "testlinkCase": "COMAL-38",
-      "executionId": 112,
+      "executionId": 157,
       "attachment": "COMAL-QA-036.png",
       "checks": [
         {
@@ -942,7 +942,7 @@
           "kind": "smoke",
           "ref": "scripts/smoke-interface.mjs",
           "status": "PASS",
-          "detail": "exit 0 in 13 s"
+          "detail": "exit 0 in 14 s"
         },
         {
           "kind": "selenium",
@@ -957,7 +957,7 @@
       "id": "COMAL-QA-037",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-39",
-      "executionId": 113,
+      "executionId": 158,
       "attachment": null,
       "checks": [
         {
@@ -985,7 +985,7 @@
       "id": "COMAL-QA-038",
       "status": "PASS",
       "testlinkCase": "COMAL-58",
-      "executionId": 114,
+      "executionId": 159,
       "attachment": "COMAL-QA-038.png",
       "checks": [
         {
@@ -1013,7 +1013,7 @@
       "id": "COMAL-QA-039",
       "status": "PASS",
       "testlinkCase": "COMAL-59",
-      "executionId": 115,
+      "executionId": 160,
       "attachment": null,
       "checks": [
         {
@@ -1041,7 +1041,7 @@
       "id": "COMAL-QA-040",
       "status": "PASS",
       "testlinkCase": "COMAL-60",
-      "executionId": 116,
+      "executionId": 161,
       "attachment": null,
       "checks": [
         {
@@ -1063,14 +1063,14 @@
       "id": "COMAL-QA-041",
       "status": "PASS",
       "testlinkCase": "COMAL-61",
-      "executionId": 117,
+      "executionId": 162,
       "attachment": null,
       "checks": [
         {
           "kind": "integration",
           "ref": "qa/automation/integration.mjs",
           "status": "PASS",
-          "detail": "TestLink COMAL-3 build 21: PASS and controlled FAIL read back"
+          "detail": "TestLink COMAL-3 build 24: PASS and controlled FAIL read back"
         }
       ],
       "pendingManual": null
@@ -1079,7 +1079,7 @@
       "id": "COMAL-QA-042",
       "status": "PASS",
       "testlinkCase": "COMAL-44",
-      "executionId": 118,
+      "executionId": 163,
       "attachment": null,
       "checks": [
         {
@@ -1101,10 +1101,64 @@
       "id": "COMAL-QA-043",
       "status": "BLOCKED",
       "testlinkCase": "COMAL-45",
-      "executionId": 119,
+      "executionId": 164,
       "attachment": null,
       "checks": [],
       "pendingManual": "Solo existe el instalador 0.3.0; se necesita el instalador 1.0.0 identificado y un Windows estándar para npm run test:installed / test:upgrade."
+    },
+    {
+      "id": "COMAL-QA-044",
+      "status": "PASS",
+      "testlinkCase": "COMAL-63",
+      "executionId": 165,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/servidor-web-contenido.test.ts /abrir carpeta/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-045",
+      "status": "PASS",
+      "testlinkCase": "COMAL-64",
+      "executionId": 166,
+      "attachment": "COMAL-QA-045.png",
+      "checks": [
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-045",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-046",
+      "status": "PASS",
+      "testlinkCase": "COMAL-65",
+      "executionId": 167,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/log.test.ts /./",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/temporales.test.ts /./",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
     }
   ]
 }

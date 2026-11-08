@@ -55,22 +55,22 @@ Automation & \Code{qa:integration} and \Code{qa:ui}; UI report targets the three
 
 \subsection{Final regression (phases 5 and 6)}
 
-All 43 catalog scenarios were executed on 8 November 2026 (04:02--04:12 UTC)
+All 46 catalog scenarios were executed on 8 November 2026 (04:35--04:45 UTC)
 with \Code{npm run qa:regression} against Comal 1.0.0 and reported to TestLink
-build 23. Every result was read back from TestLink and matched.
+build 26. Every result was read back from TestLink and matched.
 
 \begin{center}
 \begin{tabular}{lrl}
 \textbf{Status} & \textbf{Cases} & \textbf{Meaning}\\\hline
-\textcolor{comalgreen}{PASS} & 34 & every automated check passed\\
+\textcolor{comalgreen}{PASS} & 37 & every automated check passed\\
 \textcolor{comalred}{FAIL} & 0 & ---\\
 \textcolor{comalamber}{BLOCKED} & 9 & automated checks passed; physical or human part pending\\
 \end{tabular}
 \end{center}
 
 Each case is mapped in \Code{qa/automation/regression-map.mjs} to unit and
-integration tests (\Code{node:test}, 62 file/pattern mappings, each required to
-match at least one test), existing Electron smoke suites, 13 Selenium
+integration tests (\Code{node:test}, 65 file/pattern mappings, each required to
+match at least one test), existing Electron smoke suites, 14 Selenium
 end-to-end scenarios and the TestLink integration smoke. A case with a manual
 component is never reported as passed. BLOCKED cases: 007 (latency on target
 hardware), 015 and 016 (audible checks), 017 and 029 (real Internet for desktop
@@ -80,7 +80,7 @@ built). Per-case evidence: \Code{docs/qa/regression-summary.json}.
 
 \subsection{Attachments and local screenshots}
 
-The 13 Selenium screenshots were attached to their TestLink executions as
+The 14 Selenium screenshots were attached to their TestLink executions as
 \Code{<case>.png}. The earlier attachment error \Code{6002} was caused by
 TestLink's 20-character file-name limit and is resolved (see Known
 limitations). Representative screenshots are kept in the documentation

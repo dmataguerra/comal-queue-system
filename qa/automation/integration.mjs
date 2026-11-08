@@ -193,7 +193,7 @@ try {
   );
   report.comalOrigin = origin;
   const options = new chrome.Options().addArguments(
-    '--headless=new',
+    ...(process.env.QA_HEADED === '1' ? [] : ['--headless=new']),
     '--window-size=1440,1000',
     '--autoplay-policy=no-user-gesture-required',
   );

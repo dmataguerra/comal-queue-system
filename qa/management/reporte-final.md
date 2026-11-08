@@ -6,20 +6,20 @@ Para el alcance y la relación entre Selenium y TestLink, consultar
 ## Alcance
 
 Fases 1–6 sobre Comal `1.0.0`. La regresión final (fase 6) se ejecutó el
-2026-11-08 de 04:02 a 04:12 UTC con `npm run qa:regression` y se registró en TestLink,
-build `23` del plan `Integración fase 4`, proyecto `Comal QA integración`.
+2026-11-08 de 04:35 a 04:45 UTC con `npm run qa:regression` y se registró en TestLink,
+build `26` del plan `Integración fase 4`, proyecto `Comal QA integración`.
 
 ## Resultado de la regresión final
 
 | Estado  | Casos | Significado                                                                          |
 | ------- | ----: | ------------------------------------------------------------------------------------ |
-| PASS    |    34 | Todas las comprobaciones automatizadas del caso pasaron                              |
+| PASS    |    37 | Todas las comprobaciones automatizadas del caso pasaron                              |
 | FAIL    |     0 | —                                                                                    |
 | BLOCKED |     9 | Lo automatizado pasó, pero el resultado esperado exige hardware físico o una persona |
 
-- Los 43 resultados se publicaron en TestLink y se confirmaron por lectura
+- Los 46 resultados se publicaron en TestLink y se confirmaron por lectura
   (`getLastExecutionResult`): `allReadbackConfirmed: true`.
-- Los 13 escenarios Selenium adjuntaron su captura en TestLink (`<caso>.png`).
+- Los 14 escenarios Selenium adjuntaron su captura en TestLink (`<caso>.png`).
 - Detalle por caso, con las comprobaciones de cada uno: [docs/qa/regression-summary.json](../../docs/qa/regression-summary.json).
 - Trazabilidad caso → script → TestLink: [matriz-trazabilidad.csv](../catalogo/matriz-trazabilidad.csv).
 
@@ -27,11 +27,11 @@ build `23` del plan `Integración fase 4`, proyecto `Comal QA integración`.
 
 `qa/automation/regression-map.mjs` asigna a cada caso las herramientas adecuadas:
 
-- **Unitarias/integración** (`node:test` vía `tsx`, salida JUnit): 62 asignaciones
+- **Unitarias/integración** (`node:test` vía `tsx`, salida JUnit): 65 asignaciones
   archivo + patrón; cada patrón debe coincidir con al menos una prueba.
 - **Smoke Electron/Node** existentes (`scripts/smoke-*.mjs`, `validar-recuperacion.mjs`).
-- **Selenium UI** (`qa/automation/ui.mjs`): 13 escenarios end-to-end sobre la UI real
-  (001, 002, 003, 004, 008, 009, 010, 011, 030, 031, 032, 036, 038). Cada uno prepara
+- **Selenium UI** (`qa/automation/ui.mjs`): 14 escenarios end-to-end sobre la UI real
+  (001, 002, 003, 004, 008, 009, 010, 011, 030, 031, 032, 036, 038, 045). Cada uno prepara
   su propio estado; un fallo no detiene el resto.
 - **Integración TestLink** (`qa/automation/integration.mjs`): COMAL-QA-001 y 041.
 

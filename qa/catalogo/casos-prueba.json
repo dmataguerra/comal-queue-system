@@ -19,9 +19,9 @@
       "status": "pass",
       "automation": "selenium:qa/automation/ui.mjs COMAL-QA-001; integration:qa/automation/integration.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-52",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -40,9 +40,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /6 dígitos|un dígito/; unit:nucleo/turnos-propiedades.test.ts /seis dígitos/; selenium:qa/automation/ui.mjs COMAL-QA-002",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-4",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -61,9 +61,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /vacío, letras/; unit:main/store.test.ts /captura inválida/; selenium:qa/automation/ui.mjs COMAL-QA-003",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-5",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -82,9 +82,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /número nuevo/; unit:nucleo/turnos-propiedades.test.ts /modelo de seis turnos/; selenium:qa/automation/ui.mjs COMAL-QA-004",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-6",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -103,9 +103,9 @@
       "status": "pass",
       "automation": "unit:main/vigencia.test.ts /5 minutos exactos|cada número cuenta|reinicia los 5 minutos/; unit:nucleo/turnos.test.ts /vencidos|vence el actual|ningún vencido/",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-7",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -124,9 +124,9 @@
       "status": "pass",
       "automation": "unit:main/entregas-audio.test.ts /saturación/; unit:nucleo/cola.test.ts /limita activo/; smoke:scripts/smoke-hardening.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-8",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -146,9 +146,9 @@
       "automation": "unit:main/servidor-web-qa.test.ts /ráfaga de 100/",
       "pendingManual": "La latencia Enter→pantalla/sonido (<1 s) debe medirse en el equipo físico identificado; el automatizado solo cubre una ráfaga HTTP.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-9",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -167,9 +167,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /ya es el actual/; unit:main/store.test.ts /también al repetir/; selenium:qa/automation/ui.mjs COMAL-QA-008",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-10",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -188,9 +188,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /número en la lista/; selenium:qa/automation/ui.mjs COMAL-QA-009",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-11",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -209,9 +209,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /ya salió de la lista/; selenium:qa/automation/ui.mjs COMAL-QA-010",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-12",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -230,9 +230,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /restaura el estado previo|sin llamado previo|dos veces seguidas/; unit:main/store.test.ts /deshacer difunde/; selenium:qa/automation/ui.mjs COMAL-QA-011",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-13",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -251,9 +251,9 @@
       "status": "pass",
       "automation": "unit:main/vigencia.test.ts /deshacer después de un vencimiento/; unit:main/store.test.ts /sobrevive a reabrir/; unit:main/persistencia.test.ts /deshacer no se persiste/; unit:nucleo/turnos.test.ts /conserva deshacer|ya no hay qué deshacer/",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-14",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -272,9 +272,9 @@
       "status": "pass",
       "automation": "unit:main/entregas-audio.test.ts /dos llamadas del mismo número/; unit:nucleo/cola.test.ts /55 termina antes de 66/; smoke:scripts/smoke-media.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-53",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -293,9 +293,9 @@
       "status": "pass",
       "automation": "unit:nucleo/cola.test.ts /watchdog|descarta por espera/; unit:main/entregas-audio.test.ts /caducidad/; unit:scripts/audio-lifecycle.test.mjs /audio:/",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-16",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -315,9 +315,9 @@
       "automation": "unit:nucleo/cola.test.ts /un fallo permite continuar/; smoke:scripts/smoke-audio-controls.mjs",
       "pendingManual": "Confirmar en el equipo físico que la voz ausente/volumen 0 no produce sonido.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-17",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -337,9 +337,9 @@
       "automation": "unit:main/volumen-youtube.test.ts /./; unit:scripts/youtube-lifecycle.test.mjs /ducking/; smoke:scripts/smoke-media.mjs",
       "pendingManual": "Comprobar de oído la atenuación y recuperación del video en la TV/altavoces reales.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-18",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -359,9 +359,9 @@
       "automation": "unit:main/contenido.test.ts /inventario/; smoke:scripts/smoke-destructive-regressions.mjs; smoke:scripts/smoke-background.mjs",
       "pendingManual": "YouTube de escritorio requiere Internet real y aceptación en la instalación objetivo.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-19",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -380,9 +380,9 @@
       "status": "pass",
       "automation": "unit:main/contenido.test.ts /inventario/; smoke:scripts/smoke-destructive-regressions.mjs; smoke:scripts/smoke-media.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-20",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -401,9 +401,9 @@
       "status": "pass",
       "automation": "unit:main/store.test.ts /un fallo persistente/; unit:main/espacio-estado.test.ts /./; unit:main/escritura-atomica.test.ts /./; smoke:scripts/smoke-hardening.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-21",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -422,9 +422,9 @@
       "status": "pass",
       "automation": "unit:main/persistencia.test.ts /reinicio diario|la fecha de la jornada/; unit:main/reinicio-diario.test.ts /./; unit:main/store.test.ts /cambio de día|sobrevive a reabrir/; unit:main/vigencia.test.ts /al reabrir/",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-22",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -443,9 +443,9 @@
       "status": "pass",
       "automation": "unit:main/persistencia.test.ts /dañado|corrupto|E/S/; unit:main/config.test.ts /JSON dañado/; unit:main/migracion-02.test.ts /./; unit:main/carpeta-datos.test.ts /./; unit:main/store.test.ts /estado inicial estaba corrupto/",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-54",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -465,9 +465,9 @@
       "automation": "smoke:scripts/smoke-desktop.mjs",
       "pendingManual": "Requiere 1 y 2 monitores físicos y desconectar/reconectar la TV.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-24",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -487,9 +487,9 @@
       "automation": "smoke:scripts/smoke-full-day.mjs --preflight; smoke:scripts/smoke-desktop.mjs",
       "pendingManual": "La jornada monitorizada completa (npm run test:full-day, 6.5 h) y sin Internet debe ejecutarse en el equipo objetivo.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-25",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -508,9 +508,9 @@
       "status": "pass",
       "automation": "unit:main/seguridad-ipc.test.ts /volúmenes|volumen/; unit:main/servidor-web.test.ts /./; smoke:scripts/smoke-audio-controls.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-26",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -529,9 +529,9 @@
       "status": "pass",
       "automation": "unit:main/config.test.ts /valores parciales|clave heredada|JSON dañado|config.json ausente/; smoke:scripts/smoke-media.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-55",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -550,9 +550,9 @@
       "status": "pass",
       "automation": "unit:main/contenido.test.ts /administración: importa|inventario|protocolo sirve MP3/; smoke:scripts/smoke-media.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-28",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -571,9 +571,9 @@
       "status": "pass",
       "automation": "unit:main/contenido.test.ts /importación rechaza|archivo vacío|copia truncada|copia lenta/; smoke:scripts/smoke-hardening.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-29",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -592,9 +592,9 @@
       "status": "pass",
       "automation": "unit:main/contenido.test.ts /importa sin sobrescribir|reemplazar una voz|concurrentes/; smoke:scripts/smoke-destructive-regressions.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-30",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -614,9 +614,9 @@
       "automation": "unit:nucleo/youtube.test.ts /./; unit:scripts/youtube-lifecycle.test.mjs /sin video o transporte/; smoke:scripts/smoke-browser.mjs",
       "pendingManual": "La pérdida de red real con YouTube de escritorio requiere Internet en el equipo objetivo.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-31",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -635,9 +635,9 @@
       "status": "pass",
       "automation": "unit:nucleo/turnos.test.ts /quitar\\(\\)/; unit:main/store.test.ts /quitar difunde/; smoke:scripts/smoke-interface.mjs; selenium:qa/automation/ui.mjs COMAL-QA-030",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-32",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -656,9 +656,9 @@
       "status": "pass",
       "automation": "smoke:scripts/smoke-interface.mjs; selenium:qa/automation/ui.mjs COMAL-QA-031",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-33",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -677,9 +677,9 @@
       "status": "pass",
       "automation": "smoke:scripts/smoke-help.mjs; smoke:scripts/smoke-accessibility.mjs; selenium:qa/automation/ui.mjs COMAL-QA-032",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-34",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -698,9 +698,9 @@
       "status": "pass",
       "automation": "smoke:scripts/smoke-help.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-35",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -719,9 +719,9 @@
       "status": "pass",
       "automation": "unit:main/manual-usuario.test.ts /./; unit:main/safe-file.test.ts /./; smoke:scripts/smoke-help.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-56",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -740,9 +740,9 @@
       "status": "pass",
       "automation": "unit:main/diagnostico.test.ts /./; smoke:scripts/smoke-desktop.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-57",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -761,9 +761,9 @@
       "status": "pass",
       "automation": "smoke:scripts/smoke-theme.mjs; smoke:scripts/smoke-display-scale.mjs; smoke:scripts/smoke-interface.mjs; selenium:qa/automation/ui.mjs COMAL-QA-036",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-38",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -783,9 +783,9 @@
       "automation": "smoke:scripts/smoke-accessibility.mjs; smoke:scripts/smoke-display-scale.mjs; smoke:scripts/smoke-background.mjs",
       "pendingManual": "La legibilidad a distancia en la TV física es una verificación humana.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-39",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -804,9 +804,9 @@
       "status": "pass",
       "automation": "unit:main/servidor-web-qa.test.ts /SSE/; smoke:scripts/smoke-browser.mjs; selenium:qa/automation/ui.mjs COMAL-QA-038",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-58",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -825,9 +825,9 @@
       "status": "pass",
       "automation": "unit:main/servidor-web-qa.test.ts /rechaza|limita cuerpos|conserva bytes|contiene errores/; unit:main/politica-csp.test.ts /./; smoke:scripts/smoke-browser.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-59",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -846,9 +846,9 @@
       "status": "pass",
       "automation": "unit:main/seguridad-ipc.test.ts /IPC/; unit:main/ipc-channels.test.ts /./",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-60",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -867,9 +867,9 @@
       "status": "pass",
       "automation": "integration:qa/automation/integration.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-61",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -888,9 +888,9 @@
       "status": "pass",
       "automation": "unit:main/respaldo.test.ts /./; smoke:scripts/validar-recuperacion.mjs",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-44",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
       }
     },
     {
@@ -910,9 +910,72 @@
       "automation": "manual",
       "pendingManual": "Solo existe el instalador 0.3.0; se necesita el instalador 1.0.0 identificado y un Windows estándar para npm run test:installed / test:upgrade.",
       "lastExecution": {
-        "build": 23,
+        "build": 26,
         "testlinkCase": "COMAL-45",
-        "at": "2026-11-08T04:02:55.700Z"
+        "at": "2026-11-08T04:35:42.336Z"
+      }
+    },
+    {
+      "id": "COMAL-QA-044",
+      "useCase": "CU-06",
+      "title": "Abrir carpeta de multimedia",
+      "type": "API/integración",
+      "priority": "P 2",
+      "preconditions": "Servidor HTTP aislado; apertura del sistema operativo sustituida por un registro.",
+      "steps": [
+        "Solicitar abrir la carpeta general, videos y banner; enviar categorías inválidas, rutas y un origen ajeno; simular fallo del sistema operativo."
+      ],
+      "expected": "Solo categorías válidas llegan al proceso principal; inválidas y origen ajeno se rechazan; el fallo se informa y el servidor sigue operativo.",
+      "source": "main/main.ts; main/servidor-web.ts; main/adaptador-ipc.ts; vistas/operador/MultimediaPanel.tsx",
+      "caseId": "COMAL-QA-044",
+      "status": "pass",
+      "automation": "unit:main/servidor-web-contenido.test.ts /abrir carpeta/",
+      "lastExecution": {
+        "build": 26,
+        "testlinkCase": "COMAL-63",
+        "at": "2026-11-08T04:35:42.336Z"
+      }
+    },
+    {
+      "id": "COMAL-QA-045",
+      "useCase": "CU-10",
+      "title": "Clima en pantalla pública",
+      "type": "Selenium",
+      "priority": "P 2",
+      "preconditions": "Vista pública en Chrome; respuesta de open-meteo simulada en la página.",
+      "steps": [
+        "Responder 23.4 °C y código 0; recargar con la red caída."
+      ],
+      "expected": "Muestra \"23°C Despejado en Querétaro\"; sin red no inventa clima y el pie (reloj) sigue funcionando.",
+      "source": "vistas/comun/hooks/useClima.ts; vistas/comun/components/PublicFooter.tsx; main/politica-csp.ts",
+      "caseId": "COMAL-QA-045",
+      "status": "pass",
+      "automation": "selenium:qa/automation/ui.mjs COMAL-QA-045",
+      "lastExecution": {
+        "build": 26,
+        "testlinkCase": "COMAL-64",
+        "at": "2026-11-08T04:35:42.336Z"
+      }
+    },
+    {
+      "id": "COMAL-QA-046",
+      "useCase": "CU-09",
+      "title": "Registro rotativo y limpieza de temporales",
+      "type": "Unit",
+      "priority": "P 2",
+      "preconditions": "Carpeta de datos temporal aislada.",
+      "steps": [
+        "Escribir errores repetidos; superar tamaño de log; ruta no disponible; arrancar con temporales antiguos y ajenos."
+      ],
+      "expected": "JSON por línea sin duplicados, rotación acotada, sin excepción por ruta inválida; solo se borran temporales propios antiguos.",
+      "source": "main/log.ts; main/temporales.ts",
+      "caseId": "COMAL-QA-046",
+      "status": "pass",
+      "automation": "unit:main/log.test.ts /./; unit:main/temporales.test.ts /./",
+      "lastExecution": {
+        "build": 26,
+        "testlinkCase": "COMAL-65",
+        "at": "2026-11-08T04:35:42.336Z"
       }
     }
   ]

@@ -259,7 +259,7 @@ try {
   if (!origin) throw new Error(`No se encontró el origen HTTP de Comal; revisar ${hostLogPath}`);
 
   const options = new chrome.Options().addArguments(
-    '--headless=new',
+    ...(process.env.QA_HEADED === '1' ? [] : ['--headless=new']),
     '--window-size=1440,1000',
     '--autoplay-policy=no-user-gesture-required',
   );
@@ -690,6 +690,70 @@ try {
       return { screenshot: shot, publicReloadScreenshot: publicShot, state: ['77', '64', '31'] };
     },
   );
+
+  // COMAL-QA-045: the public footer shows Querétaro weather from open-meteo. The request is
+  // answered inside the page (CDP script injected before any app code), so the test needs
+  // no Internet and controls the data: valid reading, then a network failure.
+  await scenario('COMAL-QA-045', 'Clima en la pantalla pública (respuesta simulada)', async () => {
+    const fakeWeather = (mode) => `(() => {
+      const realFetch = window.fetch.bind(window);
+      window.fetch = (input, init) => {
+        const url = String(input?.url ?? input);
+        if (!url.startsWith('https://api.open-meteo.com/')) return realFetch(input, init);
+        window.__qaWeatherRequests = (window.__qaWeatherRequests ?? 0) + 1;
+        if (${JSON.stringify(mode)} === 'fail') return Promise.reject(new TypeError('offline'));
+        return Promise.resolve(new Response(JSON.stringify({
+          current: { temperature_2m: 23.4, weather_code: 0 },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      };
+    })();`;
+    const weatherText = async () => {
+      const items = await driver.findElements(By.css('.footer-ticker-item'));
+      for (const item of items) {
+        const text = await item.getAttribute('textContent');
+        if (text.includes('°C')) return text.replace(/\s+/g, ' ').trim();
+      }
+      return null;
+    };
+    await driver.switchTo().newWindow('tab');
+    let injected = await driver.sendAndGetDevToolsCommand('Page.addScriptToEvaluateOnNewDocument', {
+      source: fakeWeather('ok'),
+    });
+    await driver.get(`${origin}/publica`);
+    await waitFor(() => driver.findElement(By.css('.public-screen')));
+    // 23.4 must be rounded to 23 and weather_code 0 described as "Despejado".
+    const { observed: shown } = await expectEventually(async () => {
+      const text = await weatherText();
+      return { ok: /23°C\s*Despejado en Querétaro/.test(text ?? ''), observed: text };
+    }, 'El clima simulado (23.4 °C, código 0) no apareció como "23°C Despejado en Querétaro"');
+    const requests = await driver.executeScript('return window.__qaWeatherRequests ?? 0');
+    if (requests < 1) throw new Error('La vista pública no consultó open-meteo');
+    const shot = await screenshot('COMAL-QA-045-weather');
+
+    await driver.sendDevToolsCommand('Page.removeScriptToEvaluateOnNewDocument', {
+      identifier: injected.identifier,
+    });
+    injected = await driver.sendAndGetDevToolsCommand('Page.addScriptToEvaluateOnNewDocument', {
+      source: fakeWeather('fail'),
+    });
+    await driver.navigate().refresh();
+    await waitFor(() => driver.findElement(By.css('.public-screen')));
+    await expectEventually(async () => {
+      const count = await driver.executeScript('return window.__qaWeatherRequests ?? 0');
+      return { ok: count >= 1, observed: count };
+    }, 'La vista pública no intentó consultar el clima tras recargar');
+    await driver.sleep(500);
+    if (await weatherText()) throw new Error('Con la red caída se mostró un clima inventado');
+    const clock = await driver.findElement(By.css('.footer-time strong')).getText();
+    if (!/\d{1,2}:\d{2}\s?(AM|PM)/i.test(clock))
+      throw new Error(`El pie dejó de funcionar sin clima; reloj: "${clock}"`);
+    await driver.sendDevToolsCommand('Page.removeScriptToEvaluateOnNewDocument', {
+      identifier: injected.identifier,
+    });
+    await driver.close();
+    await toOperator();
+    return { screenshot: shot, shown, offlineClock: clock, weatherRequests: requests };
+  });
 
   const failed = report.scenarios.filter((s) => s.status !== 'PASS');
   report.status = failed.length ? 'FAIL' : 'PASS';
