@@ -206,10 +206,12 @@ try {
   const input = await driver.wait(until.elementLocated(By.id('turn-number')), 20000);
   await input.sendKeys('42', Key.ENTER);
   await driver.switchTo().window(publicHandle);
-  await driver.wait(
-    async () => (await driver.findElement(By.css('.public-turn strong')).getText()).trim() === '42',
-    20000,
-  );
+  // findElements (plural) returns [] while the public view is still rendering, so the wait
+  // keeps polling instead of aborting on NoSuchElementError (flaky under regression load).
+  await driver.wait(async () => {
+    const [turn] = await driver.findElements(By.css('.public-turn strong'));
+    return turn ? (await turn.getText()).trim() === '42' : false;
+  }, 20000);
   await writeFile(join(output, 'publica-42.png'), await driver.takeScreenshot(), 'base64');
   const execution = await api('reportTCResult', {
     testcaseid: caseId,

@@ -16,8 +16,13 @@
       ],
       "expected": "Actual 42 en operador y pública; captura limpia.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "qa/automation (ruta final por agente Selenium)"
+      "status": "pass",
+      "automation": "selenium:qa/automation/ui.mjs COMAL-QA-001; integration:qa/automation/integration.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-52",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-002",
@@ -32,8 +37,13 @@
       ],
       "expected": "98, 08, 00, 99, 00.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /6 dígitos|un dígito/; unit:nucleo/turnos-propiedades.test.ts /seis dígitos/; selenium:qa/automation/ui.mjs COMAL-QA-002",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-4",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-003",
@@ -48,8 +58,13 @@
       ],
       "expected": "Sin mutación ni anuncio.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /vacío, letras/; unit:main/store.test.ts /captura inválida/; selenium:qa/automation/ui.mjs COMAL-QA-003",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-5",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-004",
@@ -64,8 +79,13 @@
       ],
       "expected": "Actual+5 anteriores únicos; sale más antiguo.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /número nuevo/; unit:nucleo/turnos-propiedades.test.ts /modelo de seis turnos/; selenium:qa/automation/ui.mjs COMAL-QA-004",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-6",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-005",
@@ -80,8 +100,13 @@
       ],
       "expected": "Solo vencidos salen; repetir renueva vigencia.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/vigencia.test.ts /5 minutos exactos|cada número cuenta|reinicia los 5 minutos/; unit:nucleo/turnos.test.ts /vencidos|vence el actual|ningún vencido/",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-7",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-006",
@@ -96,8 +121,13 @@
       ],
       "expected": "Aviso desde 5; séptima rechazada sin mutar ni limpiar captura.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/entregas-audio.test.ts /saturación/; unit:nucleo/cola.test.ts /limita activo/; smoke:scripts/smoke-hardening.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-8",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-007",
@@ -112,8 +142,14 @@
       ],
       "expected": "Comparar requisito histórico<1 s y registrar distribución real.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "unit:main/servidor-web-qa.test.ts /ráfaga de 100/",
+      "pendingManual": "La latencia Enter→pantalla/sonido (<1 s) debe medirse en el equipo físico identificado; el automatizado solo cubre una ráfaga HTTP.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-9",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-008",
@@ -128,8 +164,13 @@
       ],
       "expected": "Lista idéntica y nuevo anuncio.",
       "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /ya es el actual/; unit:main/store.test.ts /también al repetir/; selenium:qa/automation/ui.mjs COMAL-QA-008",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-10",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-009",
@@ -144,8 +185,13 @@
       ],
       "expected": "98 actual, 42 anterior y sin duplicados.",
       "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /número en la lista/; selenium:qa/automation/ui.mjs COMAL-QA-009",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-11",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-010",
@@ -160,8 +206,13 @@
       ],
       "expected": "Entra como nuevo.",
       "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /ya salió de la lista/; selenium:qa/automation/ui.mjs COMAL-QA-010",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-12",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-011",
@@ -176,8 +227,13 @@
       ],
       "expected": "Restaura 42 sin anunciar; segundo intento no cambia.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /restaura el estado previo|sin llamado previo|dos veces seguidas/; unit:main/store.test.ts /deshacer difunde/; selenium:qa/automation/ui.mjs COMAL-QA-011",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-13",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-012",
@@ -192,8 +248,13 @@
       ],
       "expected": "No revive vencidos; reinicio pierde deshacer.",
       "source": "nucleo/turnos.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/vigencia.test.ts /deshacer después de un vencimiento/; unit:main/store.test.ts /sobrevive a reabrir/; unit:main/persistencia.test.ts /deshacer no se persiste/; unit:nucleo/turnos.test.ts /conserva deshacer|ya no hay qué deshacer/",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-14",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-013",
@@ -208,8 +269,13 @@
       ],
       "expected": "Orden FIFO y correlación correcta.",
       "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/entregas-audio.test.ts /dos llamadas del mismo número/; unit:nucleo/cola.test.ts /55 termina antes de 66/; smoke:scripts/smoke-media.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-53",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-014",
@@ -224,8 +290,13 @@
       ],
       "expected": "Descartar/cancelar sin bloquear siguientes.",
       "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/cola.test.ts /watchdog|descarta por espera/; unit:main/entregas-audio.test.ts /caducidad/; unit:scripts/audio-lifecycle.test.mjs /audio:/",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-16",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-015",
@@ -240,8 +311,14 @@
       ],
       "expected": "Turno guardado permanece; error sin falso acuse correcto.",
       "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "unit:nucleo/cola.test.ts /un fallo permite continuar/; smoke:scripts/smoke-audio-controls.mjs",
+      "pendingManual": "Confirmar en el equipo físico que la voz ausente/volumen 0 no produce sonido.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-17",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-016",
@@ -256,8 +333,14 @@
       ],
       "expected": "Video continúa; volumen baja y recupera.",
       "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "unit:main/volumen-youtube.test.ts /./; unit:scripts/youtube-lifecycle.test.mjs /ducking/; smoke:scripts/smoke-media.mjs",
+      "pendingManual": "Comprobar de oído la atenuación y recuperación del video en la TV/altavoces reales.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-18",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-017",
@@ -272,8 +355,14 @@
       ],
       "expected": "Prioridad y respaldo correctos.",
       "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "unit:main/contenido.test.ts /inventario/; smoke:scripts/smoke-destructive-regressions.mjs; smoke:scripts/smoke-background.mjs",
+      "pendingManual": "YouTube de escritorio requiere Internet real y aceptación en la instalación objetivo.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-19",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-018",
@@ -288,8 +377,13 @@
       ],
       "expected": "Siguiente evita repetir si hay alternativa; turnos siguen.",
       "source": "vistas/publica/Contenido.tsx; vistas/publica/useAnuncios.ts; vistas/publica/audio.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/contenido.test.ts /inventario/; smoke:scripts/smoke-destructive-regressions.mjs; smoke:scripts/smoke-media.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-20",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-019",
@@ -304,8 +398,13 @@
       ],
       "expected": "Fallo no cambia estado ni anuncia; reintento guarda.",
       "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/store.test.ts /un fallo persistente/; unit:main/espacio-estado.test.ts /./; unit:main/escritura-atomica.test.ts /./; smoke:scripts/smoke-hardening.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-21",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-020",
@@ -320,8 +419,13 @@
       ],
       "expected": "Recupera vigentes sin audio/deshacer; nuevo día vacío.",
       "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/persistencia.test.ts /reinicio diario|la fecha de la jornada/; unit:main/reinicio-diario.test.ts /./; unit:main/store.test.ts /cambio de día|sobrevive a reabrir/; unit:main/vigencia.test.ts /al reabrir/",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-22",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-021",
@@ -336,8 +440,13 @@
       ],
       "expected": "Advertencia/copias; conserva originales legacy.",
       "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/persistencia.test.ts /dañado|corrupto|E/S/; unit:main/config.test.ts /JSON dañado/; unit:main/migracion-02.test.ts /./; unit:main/carpeta-datos.test.ts /./; unit:main/store.test.ts /estado inicial estaba corrupto/",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-54",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-022",
@@ -352,8 +461,14 @@
       ],
       "expected": "Ventana primaria/fullscreen secundario; captura fuera de TV.",
       "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "smoke:scripts/smoke-desktop.mjs",
+      "pendingManual": "Requiere 1 y 2 monitores físicos y desconectar/reconectar la TV.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-24",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-023",
@@ -368,8 +483,14 @@
       ],
       "expected": "Turnos/voz local siguen sin degradación sostenida.",
       "source": "main/main.ts; main/ventanas.ts; main/persistencia.ts; backend/queue-store.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "smoke:scripts/smoke-full-day.mjs --preflight; smoke:scripts/smoke-desktop.mjs",
+      "pendingManual": "La jornada monitorizada completa (npm run test:full-day, 6.5 h) y sin Internet debe ejecutarse en el equipo objetivo.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-25",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-024",
@@ -384,8 +505,13 @@
       ],
       "expected": "Válidos persisten; inválidos rechazados según contrato.",
       "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/seguridad-ipc.test.ts /volúmenes|volumen/; unit:main/servidor-web.test.ts /./; smoke:scripts/smoke-audio-controls.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-26",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-025",
@@ -400,8 +526,13 @@
       ],
       "expected": "Respeta válidos y recupera inválidos sin bloqueo.",
       "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/config.test.ts /valores parciales|clave heredada|JSON dañado|config.json ausente/; smoke:scripts/smoke-media.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-55",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-026",
@@ -416,8 +547,13 @@
       ],
       "expected": "Inventario se actualiza sin recompilar.",
       "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/contenido.test.ts /administración: importa|inventario|protocolo sirve MP3/; smoke:scripts/smoke-media.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-28",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-027",
@@ -432,8 +568,13 @@
       ],
       "expected": "Rechazo con motivo; sin parcial aceptado.",
       "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/contenido.test.ts /importación rechaza|archivo vacío|copia truncada|copia lenta/; smoke:scripts/smoke-hardening.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-29",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-028",
@@ -448,8 +589,13 @@
       ],
       "expected": "Copias numeradas; cancelar conserva; quitar actualiza.",
       "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/contenido.test.ts /importa sin sobrescribir|reemplazar una voz|concurrentes/; smoke:scripts/smoke-destructive-regressions.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-30",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-029",
@@ -464,8 +610,14 @@
       ],
       "expected": "Respaldo local; YouTube no admitido navegador.",
       "source": "main/contenido.ts; main/config.ts; vistas/operador/MultimediaPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "unit:nucleo/youtube.test.ts /./; unit:scripts/youtube-lifecycle.test.mjs /sin video o transporte/; smoke:scripts/smoke-browser.mjs",
+      "pendingManual": "La pérdida de red real con YouTube de escritorio requiere Internet en el equipo objetivo.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-31",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-030",
@@ -480,8 +632,13 @@
       ],
       "expected": "Cancelar conserva; eliminar promueve siguiente e invalida deshacer.",
       "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:nucleo/turnos.test.ts /quitar\\(\\)/; unit:main/store.test.ts /quitar difunde/; smoke:scripts/smoke-interface.mjs; selenium:qa/automation/ui.mjs COMAL-QA-030",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-32",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-031",
@@ -496,8 +653,13 @@
       ],
       "expected": "Afecta ambas acciones; reinicio restablece confirmación.",
       "source": "nucleo/turnos.ts; vistas/operador/OperadorPage.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "smoke:scripts/smoke-interface.mjs; selenium:qa/automation/ui.mjs COMAL-QA-031",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-33",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-032",
@@ -512,8 +674,13 @@
       ],
       "expected": "Abre/cierra y devuelve foco a captura.",
       "source": "vistas/operador/ayuda/HelpCenter.tsx; vistas/operador/ayuda/GuidedTour.tsx; main/manual-usuario.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "smoke:scripts/smoke-help.mjs; smoke:scripts/smoke-accessibility.mjs; selenium:qa/automation/ui.mjs COMAL-QA-032",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-34",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-033",
@@ -528,8 +695,13 @@
       ],
       "expected": "Progreso local por origen según implementación.",
       "source": "vistas/operador/ayuda/HelpCenter.tsx; vistas/operador/ayuda/GuidedTour.tsx; main/manual-usuario.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "smoke:scripts/smoke-help.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-35",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-034",
@@ -544,8 +716,13 @@
       ],
       "expected": "PDF local válido y rutas arbitrarias denegadas.",
       "source": "vistas/operador/ayuda/HelpCenter.tsx; vistas/operador/ayuda/GuidedTour.tsx; main/manual-usuario.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/manual-usuario.test.ts /./; unit:main/safe-file.test.ts /./; smoke:scripts/smoke-help.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-56",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-035",
@@ -560,8 +737,13 @@
       ],
       "expected": "Datos actualizados; detalles fuera de pública.",
       "source": "main/diagnostico.ts; vistas/operador/DiagnosticoPanel.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/diagnostico.test.ts /./; smoke:scripts/smoke-desktop.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-57",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-036",
@@ -576,8 +758,13 @@
       ],
       "expected": "Persistencia por origen; escritorio y navegador independientes.",
       "source": "vistas/comun/tema.ts; vistas/comun/tamanio.ts; vistas/comun/components/AnimatedBackground.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "smoke:scripts/smoke-theme.mjs; smoke:scripts/smoke-display-scale.mjs; smoke:scripts/smoke-interface.mjs; selenium:qa/automation/ui.mjs COMAL-QA-036",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-38",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-037",
@@ -592,8 +779,14 @@
       ],
       "expected": "12 h am/pm; sin desbordamiento; movimiento reducido y legibilidad manual.",
       "source": "vistas/comun/tema.ts; vistas/comun/tamanio.ts; vistas/comun/components/AnimatedBackground.tsx",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "smoke:scripts/smoke-accessibility.mjs; smoke:scripts/smoke-display-scale.mjs; smoke:scripts/smoke-background.mjs",
+      "pendingManual": "La legibilidad a distancia en la TV física es una verificación humana.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-39",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-038",
@@ -608,8 +801,13 @@
       ],
       "expected": "Estado e inventario convergen.",
       "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/servidor-web-qa.test.ts /SSE/; smoke:scripts/smoke-browser.mjs; selenium:qa/automation/ui.mjs COMAL-QA-038",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-58",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-039",
@@ -624,8 +822,13 @@
       ],
       "expected": "Rechazo sin mutación ni fuga.",
       "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/servidor-web-qa.test.ts /rechaza|limita cuerpos|conserva bytes|contiene errores/; unit:main/politica-csp.test.ts /./; smoke:scripts/smoke-browser.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-59",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-040",
@@ -640,8 +843,13 @@
       ],
       "expected": "IPC pública restringido; sin exponer administración.",
       "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/seguridad-ipc.test.ts /IPC/; unit:main/ipc-channels.test.ts /./",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-60",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-041",
@@ -656,8 +864,13 @@
       ],
       "expected": "ID documental/script/TestLink mapeados; build y evidencia reales.",
       "source": "main/servidor-web.ts; public/browser-transport.js; vistas/comun/transport.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "integration:qa/automation/integration.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-61",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-042",
@@ -672,8 +885,13 @@
       ],
       "expected": "Datos válidos; no revive turnos de otro día.",
       "source": "scripts/datos.ts; main/respaldo.ts; main/migracion-02.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "pass",
+      "automation": "unit:main/respaldo.test.ts /./; smoke:scripts/validar-recuperacion.mjs",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-44",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     },
     {
       "id": "COMAL-QA-043",
@@ -688,8 +906,14 @@
       ],
       "expected": "Versión/archivos/datos según política; evidencia del instalador concreto.",
       "source": "scripts/datos.ts; main/respaldo.ts; main/migracion-02.ts",
-      "status": "planned",
-      "automation": "planned; supporting repository tests are not execution evidence"
+      "status": "blocked",
+      "automation": "manual",
+      "pendingManual": "Solo existe el instalador 0.3.0; se necesita el instalador 1.0.0 identificado y un Windows estándar para npm run test:installed / test:upgrade.",
+      "lastExecution": {
+        "build": 23,
+        "testlinkCase": "COMAL-45",
+        "at": "2026-11-08T04:02:55.700Z"
+      }
     }
   ]
 }

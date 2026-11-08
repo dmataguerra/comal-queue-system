@@ -1,54 +1,77 @@
-# Reporte de validación QA
+# Reporte final de validación QA
 
-Para la explicación del alcance, la relación entre Selenium y TestLink y el
-entregable esperado, consultar [alcance-y-entregable-final.md](./alcance-y-entregable-final.md).
+Para el alcance y la relación entre Selenium y TestLink, consultar
+[alcance-y-entregable-final.md](./alcance-y-entregable-final.md).
 
 ## Alcance
 
-Validación de la infraestructura de QA y de la integración mínima obligatoria sobre
-Comal `1.0.0` (revisión `028a964`). La regresión completa del producto, las
-pruebas físicas de audio/TV y las pruebas de instalación no forman parte de esta
-ejecución.
+Fases 1–6 sobre Comal `1.0.0`. La regresión final (fase 6) se ejecutó el
+2026-11-08 de 04:02 a 04:12 UTC con `npm run qa:regression` y se registró en TestLink,
+build `23` del plan `Integración fase 4`, proyecto `Comal QA integración`.
 
-## Evidencia reproducible
+## Resultado de la regresión final
 
-| Componente               | Resultado                                                                                                      |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `npm run build`          | PASS                                                                                                           |
-| `qa/testlink/verify.ps1` | PASS: login, índice autenticado, XML-RPC y bloqueo de `/install` y `/docs`                                     |
-| `npm run qa:integration` | PASS                                                                                                           |
-| Caso de producto         | `COMAL-QA-001` → TestLink `COMAL-50`, build `7`, ejecución `9`                                                 |
-| Flujo Selenium           | PASS: captura real de `42` y lectura de `42` en la vista pública                                               |
-| Evidencia                | Adjunta en TestLink: `publica-42.png`, 650302 bytes                                                            |
-| Control negativo         | PASS: `INFRA-ADAPTER-001` conservó estado `f` en ejecución `10`                                                |
-| Catálogo                 | 43 casos registrados en el proyecto `Comal QA integración`, plan `Integración fase 4`                          |
-| Persistencia             | PASS: contenedores recreados sin volúmenes; esquema, catálogo, ejecuciones y adjunto permanecieron disponibles |
+| Estado  | Casos | Significado                                                                          |
+| ------- | ----: | ------------------------------------------------------------------------------------ |
+| PASS    |    34 | Todas las comprobaciones automatizadas del caso pasaron                              |
+| FAIL    |     0 | —                                                                                    |
+| BLOCKED |     9 | Lo automatizado pasó, pero el resultado esperado exige hardware físico o una persona |
 
-El reporte detallado de la ejecución se genera en
-`test-results/qa-integration/report.json` y el mapa documental en
-`test-results/qa-integration/catalog-map.json`. Esos archivos son artefactos
-locales ignorados por Git para no incluir capturas ni datos de entorno.
+- Los 43 resultados se publicaron en TestLink y se confirmaron por lectura
+  (`getLastExecutionResult`): `allReadbackConfirmed: true`.
+- Los 13 escenarios Selenium adjuntaron su captura en TestLink (`<caso>.png`).
+- Detalle por caso, con las comprobaciones de cada uno: [docs/qa/regression-summary.json](../../docs/qa/regression-summary.json).
+- Trazabilidad caso → script → TestLink: [matriz-trazabilidad.csv](../catalogo/matriz-trazabilidad.csv).
 
-## Cobertura alcanzada
+## Cómo se ejecuta cada caso
 
-El catálogo contiene 43 escenarios trazables a los casos de uso y rutas de
-implementación. Incluye smoke, funcionales, negativos, límites, integración,
-API/unitarias, permisos por transporte y escenarios no funcionales cuando la
-implementación permite verificarlos. La suite Selenium UI ejecutó y reportó
-`COMAL-QA-001`, `COMAL-QA-003` y `COMAL-QA-011`, con capturas locales. El
-control del adaptador también tiene ejecución documentada y una evidencia
-adjunta en TestLink. Las ejecuciones UI quedan registradas en TestLink; en la
-última corrida TestLink conservó los resultados, pero devolvió un error de
-inserción para los tres adjuntos, por lo que se conservan como evidencia local
-y no se declaran falsamente como adjuntos remotos. Los demás casos permanecen
-`planned` y no se reportan como aprobados.
+`qa/automation/regression-map.mjs` asigna a cada caso las herramientas adecuadas:
 
-## Limitaciones y trabajo pendiente
+- **Unitarias/integración** (`node:test` vía `tsx`, salida JUnit): 62 asignaciones
+  archivo + patrón; cada patrón debe coincidir con al menos una prueba.
+- **Smoke Electron/Node** existentes (`scripts/smoke-*.mjs`, `validar-recuperacion.mjs`).
+- **Selenium UI** (`qa/automation/ui.mjs`): 13 escenarios end-to-end sobre la UI real
+  (001, 002, 003, 004, 008, 009, 010, 011, 030, 031, 032, 036, 038). Cada uno prepara
+  su propio estado; un fallo no detiene el resto.
+- **Integración TestLink** (`qa/automation/integration.mjs`): COMAL-QA-001 y 041.
 
-- Ejecutar la regresión de los 43 escenarios y publicar sus resultados.
-- Añadir automatización para los escenarios Selenium restantes cuando existan
-  criterios de datos y aislamiento definidos.
-- Validar audio, monitores, legibilidad a distancia y el instalador en el equipo
-  físico objetivo.
-- Revisar periódicamente la imagen fijada de TestLink y migrar fuera de PHP 7.4
-  cuando exista una ruta compatible y validada.
+Un caso con parte manual nunca se reporta PASS: queda BLOCKED, con las notas de lo
+automatizado y lo pendiente.
+
+## Casos BLOCKED (pendientes en el equipo físico)
+
+| Caso         | Pendiente                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| COMAL-QA-007 | Latencia Enter→pantalla/sonido (<1 s) en el hardware identificado                           |
+| COMAL-QA-015 | Confirmar de oído que la voz ausente o volumen 0 no suena                                   |
+| COMAL-QA-016 | Atenuación y recuperación del video en la TV/altavoces reales                               |
+| COMAL-QA-017 | YouTube de escritorio con Internet real                                                     |
+| COMAL-QA-022 | 1 y 2 monitores; desconectar/reconectar la TV                                               |
+| COMAL-QA-023 | Jornada completa `npm run test:full-day` (6.5 h) sin Internet; solo se ejecutó el preflight |
+| COMAL-QA-029 | Pérdida de red real con YouTube de escritorio                                               |
+| COMAL-QA-037 | Legibilidad a distancia en la TV física                                                     |
+| COMAL-QA-043 | Instalador 1.0.0 identificado (solo existe 0.3.0) + `test:installed`/`test:upgrade`         |
+
+## Incidencias de infraestructura QA resueltas
+
+- **TestLink 6002 al adjuntar capturas UI**: `allowed_filenames_regexp` de TestLink
+  limita la base del nombre a 20 caracteres. Las capturas se suben ahora como `<caso>.png`.
+  Reproducido y verificado contra la instancia real.
+- **Espera inestable en `integration.mjs`**: `driver.wait` abortaba con
+  `NoSuchElementError` si la vista pública aún no se había pintado; ahora sigue sondeando.
+- **`smoke-help.mjs` inestable**: un fallo aislado `Reload unavailable` en la línea base
+  pasó al repetir y en la regresión final. Se recomienda vigilarlo; no se modificó.
+
+## Defectos de producto
+
+Ninguno detectado en la regresión.
+
+## Comandos reproducibles
+
+```powershell
+.\qa\testlink\setup.ps1          # levantar TestLink (Docker)
+.\qa\testlink\verify.ps1         # login, XML-RPC y bloqueos
+node qa/automation/import-catalog.mjs   # registrar/actualizar los 43 casos
+npm run qa:regression            # regresión completa + reporte a TestLink
+npm run qa:regression -- --no-testlink  # solo ejecución local
+```

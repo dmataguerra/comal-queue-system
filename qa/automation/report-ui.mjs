@@ -55,7 +55,9 @@ for (const scenario of report.scenarios) {
       attachment = await api('uploadExecutionAttachment', {
         executionid: Number(result[0]?.id ?? result.id),
         title: `Selenium evidence ${scenario.id}`,
-        filename: screenshot.split(/[\\/]/).pop(),
+        // TestLink's allowed_filenames_regexp only accepts stems of 1-20 chars
+        // ([a-zA-Z0-9_-]); longer names fail with error 6002. The case ID fits.
+        filename: `${scenario.id}.png`,
         filetype: 'image/png',
         content: await readFile(screenshot),
       });

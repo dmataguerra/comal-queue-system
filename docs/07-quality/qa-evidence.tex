@@ -53,24 +53,38 @@ Automation & \Code{qa:integration} and \Code{qa:ui}; UI report targets the three
 \end{tabular}
 \end{center}
 
-\subsection{Designed coverage versus executed coverage}
+\subsection{Final regression (phases 5 and 6)}
 
-The catalog contains 43 scenarios. Three product scenarios were actually
-executed by the reported UI suite. The remaining 40 are still
-\textcolor{comalamber}{planned}; this document deliberately does not describe
-them as passed or executed. The catalog import also states that importing
-cases creates no executions.
+All 43 catalog scenarios were executed on 8 November 2026 (04:02--04:12 UTC)
+with \Code{npm run qa:regression} against Comal 1.0.0 and reported to TestLink
+build 23. Every result was read back from TestLink and matched.
+
+\begin{center}
+\begin{tabular}{lrl}
+\textbf{Status} & \textbf{Cases} & \textbf{Meaning}\\\hline
+\textcolor{comalgreen}{PASS} & 34 & every automated check passed\\
+\textcolor{comalred}{FAIL} & 0 & ---\\
+\textcolor{comalamber}{BLOCKED} & 9 & automated checks passed; physical or human part pending\\
+\end{tabular}
+\end{center}
+
+Each case is mapped in \Code{qa/automation/regression-map.mjs} to unit and
+integration tests (\Code{node:test}, 62 file/pattern mappings, each required to
+match at least one test), existing Electron smoke suites, 13 Selenium
+end-to-end scenarios and the TestLink integration smoke. A case with a manual
+component is never reported as passed. BLOCKED cases: 007 (latency on target
+hardware), 015 and 016 (audible checks), 017 and 029 (real Internet for desktop
+YouTube), 022 (one/two physical monitors), 023 (6.5-hour full-day run; only the
+preflight ran), 037 (legibility at distance) and 043 (1.0.0 installer not yet
+built). Per-case evidence: \Code{docs/qa/regression-summary.json}.
 
 \subsection{Attachments and local screenshots}
 
-The UI run preserved screenshots locally under
-\Code{test-results/qa-ui/evidence/} according to the QA report. The same report
-records that TestLink returned the attachment insertion error \Code{6002} for
-the three UI attachments. Consequently, this document does not claim that
-those files are remote TestLink attachments: the result and notes are
-auditable in TestLink, while the screenshots remain local evidence. The three execution screenshots were
-promoted to the documentation artifact directory so that this report remains
-reproducible outside the ignored \Code{test-results} directory:
+The 13 Selenium screenshots were attached to their TestLink executions as
+\Code{<case>.png}. The earlier attachment error \Code{6002} was caused by
+TestLink's 20-character file-name limit and is resolved (see Known
+limitations). Representative screenshots are kept in the documentation
+directory:
 
 \begin{center}
 \IfFileExists{qa/evidence/COMAL-QA-001-publica-42.jpg}{%
@@ -92,12 +106,9 @@ reproducible outside the ignored \Code{test-results} directory:
 \subsection{Pending validation and limitations}
 
 \begin{itemize}
-\item Execute and analyze the remaining 40 catalog scenarios; no result is
-  inferred from their design or import.
-\item Repeat the UI attachment flow after resolving or documenting TestLink
-  error \Code{6002}; retain the local copies and upload notes meanwhile.
-\item Validate physical audio, TV/monitor legibility, prolonged jornada
-  performance, Windows installation/startup, and signing on target hardware.
+\item Execute the nine BLOCKED cases on the target hardware, including the
+  6.5-hour \Code{npm run test:full-day}, and build the 1.0.0 installer for
+  \Code{test:installed}/\Code{test:upgrade}.
 \item Keep the TestLink image and PHP 7.4 compatibility limitation under
   review; the repository does not claim current upstream support.
 \end{itemize}
@@ -113,7 +124,7 @@ workflow. Credentials remain in the ignored local \Code{qa/testlink/.env}.
 npm run qa:integration
 npm run qa:ui
 node qa\automation\import-catalog.mjs
+npm run qa:regression
 \end{CodeBlock}
 
-The commands above are a reproduction procedure, not a claim that every
-command was rerun while composing this document.
+The final regression above was produced by the last command.

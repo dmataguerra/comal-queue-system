@@ -19,8 +19,9 @@ PM: integra, revisa evidencia y decide avance. DevOps: qa/testlink. Selenium: qa
 
 - Fase 1: auditoría inicial validada (README, package.json, arquitectura vigente, casos originales, Docker ps).
 - Fase 2: plan y separación de responsabilidades definidos; prueba integradora COMAL-QA-001 acordada.
-- Fases 3 y 4: completadas y validadas con ejecución real; TestLink, Selenium y Comal comunicaron correctamente.
-- Fases 5 y 6: el catálogo quedó registrado, pero la regresión completa sigue pendiente.
+- Fases 3 y 4: completadas (TestLink en Docker, Selenium, catálogo de 43 casos, integración verificada).
+- Fase 5 (2026-11-07/08): catálogo completo ejecutado con `npm run qa:regression`; 2 fallos de automatización (espera inestable en integration.mjs) corregidos; error TestLink 6002 diagnosticado y resuelto.
+- Fase 6 (2026-11-08): regresión final 34 PASS / 0 FAIL / 9 BLOCKED, TestLink build 23, lectura confirmada. Ver reporte-final.md.
 
 ## Decisiones
 

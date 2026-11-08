@@ -38,7 +38,8 @@
     "test:accessibility": "npm run build && electron scripts/smoke-accessibility.mjs",
     "test:destructive": "npm run build && node scripts/smoke-destructive-regressions.mjs",
     "qa:integration": "npm run build && node qa/automation/integration.mjs",
-    "qa:ui": "npm run build && node qa/automation/ui.mjs && node qa/automation/report-ui.mjs"
+    "qa:ui": "npm run build && node qa/automation/ui.mjs && node qa/automation/report-ui.mjs",
+    "qa:regression": "npm run build && node qa/automation/regression.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
