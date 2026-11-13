@@ -57,10 +57,10 @@ if (!process.versions.electron) {
       let operator, client;
       await wait(async () => {
         operator = BrowserWindow.getAllWindows().find((w) =>
-          w.webContents.getURL().includes('/operador/'),
+          w.webContents.getURL().includes('/operator/'),
         );
         client = BrowserWindow.getAllWindows().find((w) =>
-          w.webContents.getURL().includes('/publica/'),
+          w.webContents.getURL().includes('/display/'),
         );
         return (
           operator &&
@@ -124,7 +124,7 @@ if (!process.versions.electron) {
           'Boolean(document.querySelector(\'[aria-label="Imágenes de la Facultad de Informática"]\'))',
         ),
       );
-      const multimedia = () =>
+      const media = () =>
         run(
           operator,
           "Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent.includes('Multimedia')).click()",
@@ -135,7 +135,7 @@ if (!process.versions.electron) {
           client.reload();
           await wait(() => run(operator, "Boolean(document.querySelector('#turn-number'))"));
         }
-        await multimedia();
+        await media();
         await wait(() => run(operator, "Boolean(document.querySelector('.media-file.broken'))"));
         const notice = await run(
           operator,

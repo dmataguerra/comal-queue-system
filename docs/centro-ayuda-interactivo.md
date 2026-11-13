@@ -47,17 +47,17 @@ La búsqueda es una función pura: normaliza espacios, mayúsculas y diacrítico
 
 El catálogo no recibe el transporte de turnos ni callbacks de mutación. Su función es explicar y navegar dentro de la ayuda.
 
-La implementación se organiza en `vistas/operador/ayuda/`: `contenido.ts`, `HelpCenter.tsx`, `GuidedTour.tsx`, `progreso.ts` y `ayuda.css`. Los recorridos usan los identificadores `completo`, `llamar`, `corregir` y `multimedia`. Los pasos contienen identificador, página, ancla, título y descripción. No se añade una biblioteca externa para esta primera versión.
+La implementación se organiza en `views/operator/help/`: `content.ts`, `HelpCenter.tsx`, `GuidedTour.tsx`, `progress.ts` y `help.css`. Los recorridos usan los identificadores `completo`, `llamar`, `corregir` y `multimedia`. Los pasos contienen identificador, página, ancla, título y descripción. No se añade una biblioteca externa para esta primera versión.
 
 ### Integración con el operador
 
-`OperadorPage` conserva la propiedad de la página activa, el texto del ticket y las acciones de operación. El centro recibe callbacks limitados para cerrar, iniciar un recorrido, consultar Diagnósticos o abrir el PDF.
+`OperatorPage` conserva la propiedad de la página activa, el texto del ticket y las acciones de operación. El centro recibe callbacks limitados para cerrar, iniciar un recorrido, consultar Diagnósticos o abrir el PDF.
 
 El motor de recorridos recibe identificadores de pasos, la página donde se encuentra cada control y anclas estables, por ejemplo atributos `data-help`. No se apoya en el texto traducido de un botón ni en su posición entre los hijos de un contenedor.
 
 Al iniciar, conserva la página y el foco de origen. Al salir o completar, restaura la página y un foco adecuado, sin borrar la entrada del ticket. Abrir ayuda sobre una confirmación pendiente no debe confirmar ni cancelar implícitamente la acción operativa.
 
-El foco automático de captura existente en `OperadorPage` debe respetar tanto el centro como el recorrido. No debe enviar el foco al ticket durante una búsqueda, al pulsar Tab o al devolver el foco a la ventana.
+El foco automático de captura existente en `OperatorPage` debe respetar tanto el centro como el recorrido. No debe enviar el foco al ticket durante una búsqueda, al pulsar Tab o al devolver el foco a la ventana.
 
 ### Presentación del recorrido
 

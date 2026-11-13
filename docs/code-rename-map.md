@@ -1,0 +1,133 @@
+# Mapa de renombrado del código (español → inglés)
+
+Rutas del código antes y después del renombrado de `chore/cleanup-architecture`. Sirve para
+actualizar documentación que todavía cita las rutas anteriores. Los documentos con fecha
+(auditorías, reportes de QA, resultados de jornada) conservan las rutas de su momento.
+
+| Carpeta anterior | Carpeta nueva |
+| --- | --- |
+| `vistas/operador/ayuda/` | `views/operator/help/` |
+| `vistas/operador/` | `views/operator/` |
+| `vistas/publica/` | `views/display/` |
+| `vistas/comun/` | `views/common/` |
+| `vistas/` | `views/` |
+| `nucleo/` | `core/` |
+
+Sin cambio: `backend/`, `shared/` (salvo `politica-anuncios.ts`), `public/`, `contenido/`, nombres de
+archivos persistidos (`config.json`, `estado.json`, `turnero.log`), la URL `/publica` y la API `window.turnero`.
+
+| Archivo anterior | Archivo nuevo |
+| --- | --- |
+| `main/adaptador-ipc.ts` | `main/ipc-adapter.ts` |
+| `main/carpeta-datos.test.ts` | `main/data-folder.test.ts` |
+| `main/carpeta-datos.ts` | `main/data-folder.ts` |
+| `main/contenido.test.ts` | `main/content.test.ts` |
+| `main/contenido.ts` | `main/content.ts` |
+| `main/diagnostico.test.ts` | `main/diagnostics.test.ts` |
+| `main/diagnostico.ts` | `main/diagnostics.ts` |
+| `main/entregas-audio.test.ts` | `main/audio-deliveries.test.ts` |
+| `main/entregas-audio.ts` | `main/audio-deliveries.ts` |
+| `main/escritura-atomica.test.ts` | `main/atomic-write.test.ts` |
+| `main/escritura-atomica.ts` | `main/atomic-write.ts` |
+| `main/espacio-estado.test.ts` | `main/state-disk-space.test.ts` |
+| `main/manual-usuario.test.ts` | `main/user-manual.test.ts` |
+| `main/manual-usuario.ts` | `main/user-manual.ts` |
+| `main/migracion-02.test.ts` | `main/legacy-migration.test.ts` |
+| `main/migracion-02.ts` | `main/legacy-migration.ts` |
+| `main/persistencia.test.ts` | `main/persistence.test.ts` |
+| `main/persistencia.ts` | `main/persistence.ts` |
+| `main/politica-csp.test.ts` | `main/csp-policy.test.ts` |
+| `main/politica-csp.ts` | `main/csp-policy.ts` |
+| `main/reinicio-diario.test.ts` | `main/daily-reset.test.ts` |
+| `main/respaldo.test.ts` | `main/backup.test.ts` |
+| `main/respaldo.ts` | `main/backup.ts` |
+| `main/seguridad-ipc.test.ts` | `main/ipc-validation.test.ts` |
+| `main/seguridad-ipc.ts` | `main/ipc-validation.ts` |
+| `main/servidor-web-qa.test.ts` | `main/web-server-qa.test.ts` |
+| `main/servidor-web.test.ts` | `main/web-server.test.ts` |
+| `main/servidor-web.ts` | `main/web-server.ts` |
+| `main/temporales.test.ts` | `main/temp-files.test.ts` |
+| `main/temporales.ts` | `main/temp-files.ts` |
+| `main/ventanas.ts` | `main/windows.ts` |
+| `main/vigencia.test.ts` | `main/expiry.test.ts` |
+| `main/volumen-youtube.test.ts` | `main/youtube-volume.test.ts` |
+| `main/volumen-youtube.ts` | `main/youtube-volume.ts` |
+| `nucleo/cola.test.ts` | `core/playback-queue.test.ts` |
+| `nucleo/cola.ts` | `core/playback-queue.ts` |
+| `nucleo/turnos-propiedades.test.ts` | `core/turns-properties.test.ts` |
+| `nucleo/turnos.test.ts` | `core/turns.test.ts` |
+| `nucleo/turnos.ts` | `core/turns.ts` |
+| `nucleo/youtube.test.ts` | `core/youtube.test.ts` |
+| `nucleo/youtube.ts` | `core/youtube.ts` |
+| `scripts/datos.ts` | `scripts/data-cli.ts` |
+| `scripts/validar-certificado-local.ps1` | `scripts/verify-local-certificate.ps1` |
+| `scripts/validar-recuperacion.mjs` | `scripts/verify-recovery.mjs` |
+| `scripts/verificar-firmas.ps1` | `scripts/verify-signatures.ps1` |
+| `shared/politica-anuncios.ts` | `shared/announcement-policy.ts` |
+| `tooling/audio/generate-aviso.mjs` | `tooling/audio/generate-chime.mjs` |
+| `vistas/comun/components/AnimatedBackground.tsx` | `views/common/components/AnimatedBackground.tsx` |
+| `vistas/comun/components/Brand.tsx` | `views/common/components/Brand.tsx` |
+| `vistas/comun/components/Icon.tsx` | `views/common/components/Icon.tsx` |
+| `vistas/comun/components/Modal.tsx` | `views/common/components/Modal.tsx` |
+| `vistas/comun/components/PublicFooter.tsx` | `views/common/components/PublicFooter.tsx` |
+| `vistas/comun/components/SizeControl.tsx` | `views/common/components/SizeControl.tsx` |
+| `vistas/comun/components/StatusBadge.tsx` | `views/common/components/StatusBadge.tsx` |
+| `vistas/comun/components/TrojanMascot.tsx` | `views/common/components/TrojanMascot.tsx` |
+| `vistas/comun/components/VolumeControl.tsx` | `views/common/components/VolumeControl.tsx` |
+| `vistas/comun/hooks/useClima.ts` | `views/common/hooks/useWeather.ts` |
+| `vistas/comun/hooks/useClock.ts` | `views/common/hooks/useClock.ts` |
+| `vistas/comun/styles/admin.css` | `views/common/styles/admin.css` |
+| `vistas/comun/styles/base.css` | `views/common/styles/base.css` |
+| `vistas/comun/styles/interfaz.css` | `views/common/styles/interface.css` |
+| `vistas/comun/styles/public.css` | `views/common/styles/public.css` |
+| `vistas/comun/styles/tema.css` | `views/common/styles/theme.css` |
+| `vistas/comun/tamanio.ts` | `views/common/size.ts` |
+| `vistas/comun/tema.ts` | `views/common/theme.ts` |
+| `vistas/comun/transport.ts` | `views/common/transport.ts` |
+| `vistas/comun/turnero.tsx` | `views/common/queue-context.tsx` |
+| `vistas/operador/ayuda/ayuda.css` | `views/operator/help/help.css` |
+| `vistas/operador/ayuda/contenido.ts` | `views/operator/help/content.ts` |
+| `vistas/operador/ayuda/GuidedTour.tsx` | `views/operator/help/GuidedTour.tsx` |
+| `vistas/operador/ayuda/HelpCenter.tsx` | `views/operator/help/HelpCenter.tsx` |
+| `vistas/operador/ayuda/progreso.ts` | `views/operator/help/progress.ts` |
+| `vistas/operador/components/CallTurnPanel.tsx` | `views/operator/components/CallTurnPanel.tsx` |
+| `vistas/operador/components/ConfirmActionDialog.tsx` | `views/operator/components/ConfirmActionDialog.tsx` |
+| `vistas/operador/components/NoticesBanner.tsx` | `views/operator/components/NoticesBanner.tsx` |
+| `vistas/operador/components/OnScreenPanel.tsx` | `views/operator/components/OnScreenPanel.tsx` |
+| `vistas/operador/components/PageHeading.tsx` | `views/operator/components/PageHeading.tsx` |
+| `vistas/operador/components/Sidebar.tsx` | `views/operator/components/Sidebar.tsx` |
+| `vistas/operador/components/Topbar.tsx` | `views/operator/components/Topbar.tsx` |
+| `vistas/operador/components/UndoPanel.tsx` | `views/operator/components/UndoPanel.tsx` |
+| `vistas/operador/DiagnosticoPanel.tsx` | `views/operator/DiagnosticsPanel.tsx` |
+| `vistas/operador/hooks/useCaptureFocus.ts` | `views/operator/hooks/useCaptureFocus.ts` |
+| `vistas/operador/hooks/useHelpAndTours.ts` | `views/operator/hooks/useHelpAndTours.ts` |
+| `vistas/operador/hooks/useNotifications.ts` | `views/operator/hooks/useNotifications.ts` |
+| `vistas/operador/hooks/useOperatorNotices.ts` | `views/operator/hooks/useOperatorNotices.ts` |
+| `vistas/operador/hooks/useQueueActions.ts` | `views/operator/hooks/useQueueActions.ts` |
+| `vistas/operador/hooks/useTurnConfirmation.ts` | `views/operator/hooks/useTurnConfirmation.ts` |
+| `vistas/operador/index.html` | `views/operator/index.html` |
+| `vistas/operador/main.tsx` | `views/operator/main.tsx` |
+| `vistas/operador/multimedia.css` | `views/operator/multimedia.css` |
+| `vistas/operador/MultimediaPanel.tsx` | `views/operator/MultimediaPanel.tsx` |
+| `vistas/operador/OperadorPage.tsx` | `views/operator/OperatorPage.tsx` |
+| `vistas/operador/turns/entryHint.ts` | `views/operator/turns/entryHint.ts` |
+| `vistas/operador/turns/pageTitle.ts` | `views/operator/turns/pageTitle.ts` |
+| `vistas/operador/YouTubePanel.tsx` | `views/operator/YouTubePanel.tsx` |
+| `vistas/publica/audio.ts` | `views/display/audio.ts` |
+| `vistas/publica/Contenido.tsx` | `views/display/MediaContent.tsx` |
+| `vistas/publica/content/Banner.tsx` | `views/display/content/Banner.tsx` |
+| `vistas/publica/content/Clip.tsx` | `views/display/content/Clip.tsx` |
+| `vistas/publica/content/playlist.ts` | `views/display/content/playlist.ts` |
+| `vistas/publica/content/useFailedVideos.ts` | `views/display/content/useFailedVideos.ts` |
+| `vistas/publica/content/useMediaRotation.ts` | `views/display/content/useMediaRotation.ts` |
+| `vistas/publica/content/useYoutubeAvailability.ts` | `views/display/content/useYoutubeAvailability.ts` |
+| `vistas/publica/content/Videos.tsx` | `views/display/content/Videos.tsx` |
+| `vistas/publica/DisplayCanvas.tsx` | `views/display/DisplayCanvas.tsx` |
+| `vistas/publica/index.html` | `views/display/index.html` |
+| `vistas/publica/main.tsx` | `views/display/main.tsx` |
+| `vistas/publica/PublicaPage.tsx` | `views/display/DisplayPage.tsx` |
+| `vistas/publica/TarjetaAnuncio.tsx` | `views/display/AnnouncementCard.tsx` |
+| `vistas/publica/useAnuncios.ts` | `views/display/useAnnouncements.ts` |
+| `vistas/publica/youtube.css` | `views/display/youtube.css` |
+| `vistas/publica/youtubeApi.ts` | `views/display/youtubeApi.ts` |
+| `vistas/publica/YouTubeVideo.tsx` | `views/display/YouTubeVideo.tsx` |

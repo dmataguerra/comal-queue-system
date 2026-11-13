@@ -2,15 +2,15 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export function verificarPublicacion(version, entorno) {
-  const tag = entorno.GITHUB_REF_NAME ?? '';
-  const signingMode = entorno.COMAL_RELEASE_SIGNING ?? 'signed';
+export function verifyRelease(version, env) {
+  const tag = env.GITHUB_REF_NAME ?? '';
+  const signingMode = env.COMAL_RELEASE_SIGNING ?? 'signed';
   const signingRequired = signingMode !== 'unsigned';
   const checks = {
-    tagMatches: entorno.GITHUB_REF === `refs/tags/v${version}` && tag === `v${version}`,
-    certificateConfigured: Boolean(entorno.WIN_CSC_LINK?.trim()),
-    passwordConfigured: Boolean(entorno.WIN_CSC_KEY_PASSWORD),
-    signerConfigured: /^[A-Fa-f0-9]{40}$/.test(entorno.COMAL_SIGNER_SHA1 ?? ''),
+    tagMatches: env.GITHUB_REF === `refs/tags/v${version}` && tag === `v${version}`,
+    certificateConfigured: Boolean(env.WIN_CSC_LINK?.trim()),
+    passwordConfigured: Boolean(env.WIN_CSC_KEY_PASSWORD),
+    signerConfigured: /^[A-Fa-f0-9]{40}$/.test(env.COMAL_SIGNER_SHA1 ?? ''),
   };
   const errors = [];
   if (!['signed', 'unsigned'].includes(signingMode)) errors.push('Unknown release signing mode.');
@@ -28,10 +28,10 @@ export function verificarPublicacion(version, entorno) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
-  const report = verificarPublicacion(version, process.env);
+  const report = verifyRelease(version, process.env);
   const target = join('test-results', 'release-preflight.json');
   mkdirSync('test-results', { recursive: true });
-  // El informe registra presencia y validez, nunca el certificado ni sus credenciales.
+  // The report records presence and validity, never the certificate or its credentials.
   writeFileSync(target, `${JSON.stringify(report, null, 2)}\n`);
   console.log(`Release preflight: ${report.status}. Evidence: ${target}`);
   for (const error of report.errors) console.error(error);

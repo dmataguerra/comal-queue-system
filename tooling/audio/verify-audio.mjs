@@ -1,11 +1,11 @@
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 function inspectWav(relative) {
   const file = resolve(root, relative);
-  assert(existsSync(file), `Missing audio: ${relative}`);
+  assert(existsSync(file) && statSync(file).size > 0, `Missing or empty audio: ${relative}`);
   const wav = readFileSync(file);
   assert.equal(wav.toString('ascii', 0, 4), 'RIFF', relative);
   assert.equal(wav.toString('ascii', 8, 12), 'WAVE', relative);
@@ -43,62 +43,48 @@ function inspectWav(relative) {
   );
   return { path: relative, duration, peak, rms, sampleRate, channels };
 }
-function inspectMp3(relative) {
-  const mp3 = readFileSync(resolve(root, relative));
-  assert(mp3.length > 4, `Empty or truncated MP3: ${relative}`);
-  let offset = 0;
-  if (mp3.toString('ascii', 0, 3) === 'ID3') {
-    assert(mp3.length >= 10, `Truncated ID3: ${relative}`);
-    offset =
-      10 +
-      ((mp3[6] & 0x7f) << 21) +
-      ((mp3[7] & 0x7f) << 14) +
-      ((mp3[8] & 0x7f) << 7) +
-      (mp3[9] & 0x7f);
-  }
-  assert(offset + 4 < mp3.length, `Missing MP3 frames: ${relative}`);
-  assert(
-    mp3[offset] === 0xff && (mp3[offset + 1] & 0xe0) === 0xe0,
-    `Invalid MP3 frame: ${relative}`,
-  );
-  return { path: relative };
-}
 const voiceDir = resolve(root, 'contenido/voz');
-for (const name of readdirSync(voiceDir)) {
-  if (!/\.mp3$|\.wav$/i.test(name)) continue;
-  const relative = `contenido/voz/${name}`;
-  assert(statSync(resolve(voiceDir, name)).size > 0, `Empty audio: ${relative}`);
-  if (/\.wav$/i.test(name)) inspectWav(relative);
-  else inspectMp3(relative);
+const mp3s = readdirSync(voiceDir).filter((name) => /.mp3$/i.test(name));
+assert.equal(mp3s.length, 0, `El catálogo es solo WAV; elimina los MP3: ${mp3s.join(', ')}`);
+const rows = [];
+function check(relative) {
+  try {
+    const info = inspectWav(relative);
+    rows.push({ ...info, status: 'OK' });
+    return info;
+  } catch (error) {
+    rows.push({ path: relative, status: error.message });
+    return undefined;
+  }
 }
-const announcements = [];
-for (let turn = 0; turn <= 99; turn++) {
-  const stem = `contenido/voz/${String(turn).padStart(2, '0')}`;
-  const relative = ['.mp3', '.wav']
-    .map((ext) => `${stem}${ext}`)
-    .find((file) => existsSync(resolve(root, file)) && statSync(resolve(root, file)).size > 0);
-  assert(relative, `Missing voice: ${stem} (MP3 or WAV)`);
-  announcements.push(relative.endsWith('.wav') ? inspectWav(relative) : inspectMp3(relative));
+for (let turn = 0; turn <= 99; turn++) check(`contenido/voz/${String(turn).padStart(2, '0')}.wav`);
+check('contenido/aviso.wav');
+const table = [
+  '# Inventario de audio',
+  '',
+  'Generado por `node tooling/audio/verify-audio.mjs --table`.',
+  '',
+  '| Archivo | Duración (s) | Frecuencia (Hz) | Pico | RMS | Estado |',
+  '| --- | ---: | ---: | ---: | ---: | --- |',
+  ...rows.map((r) =>
+    r.duration === undefined
+      ? `| ${r.path} | - | - | - | - | ${r.status} |`
+      : `| ${r.path.replace('contenido/', '')} | ${r.duration.toFixed(2)} | ${r.sampleRate} | ${r.peak.toFixed(3)} | ${r.rms.toFixed(3)} | ${r.status} |`,
+  ),
+  '',
+].join('\n');
+if (process.argv.includes('--table')) {
+  mkdirSync(resolve(root, 'docs/audio'), { recursive: true });
+  writeFileSync(resolve(root, 'docs/audio/audio-inventory.md'), table);
+  console.log(table);
 }
-for (const ext of ['.mp3', '.wav']) {
-  const file = resolve(root, `contenido/aviso${ext}`);
-  if (existsSync(file)) assert(statSync(file).size > 0, `Empty audio: contenido/aviso${ext}`);
-}
-const chimePath = ['contenido/aviso.mp3', 'contenido/aviso.wav'].find(
-  (file) => existsSync(resolve(root, file)) && statSync(resolve(root, file)).size > 0,
-);
-assert(chimePath, 'Missing audio: contenido/aviso.mp3 or aviso.wav');
-const chime = chimePath.endsWith('.wav') ? inspectWav(chimePath) : inspectMp3(chimePath);
+const failed = rows.filter((r) => r.status !== 'OK');
+for (const r of failed) console.error(`${r.path}: ${r.status}`);
 console.log(
   JSON.stringify(
-    {
-      success: true,
-      voices: announcements.length,
-      selectedMp3: announcements.filter((item) => item.path.endsWith('.mp3')).length,
-      selectedWav: announcements.filter((item) => item.path.endsWith('.wav')).length,
-      chime: chime.path,
-    },
+    { success: failed.length === 0, voices: rows.length - 1, failed: failed.length },
     null,
     2,
   ),
 );
+process.exit(failed.length ? 1 : 0);

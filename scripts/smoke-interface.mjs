@@ -41,15 +41,15 @@ async function verify() {
       () =>
         BrowserWindow.getAllWindows().filter(
           (w) =>
-            /\/vistas\/(operador|publica)\//.test(w.webContents.getURL()) &&
+            /\/views\/(operator|display)\//.test(w.webContents.getURL()) &&
             !w.webContents.isLoading(),
         ).length === 2,
     );
     const operator = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/operador/'),
+      w.webContents.getURL().includes('/operator/'),
     );
     const client = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/publica/'),
+      w.webContents.getURL().includes('/display/'),
     );
     for (const w of [operator, client]) w.webContents.setBackgroundThrottling(false);
     operator.setContentSize(1366, 900);
@@ -107,10 +107,17 @@ async function verify() {
     for (const n of [10, 20, 30, 40, 50, 60]) {
       for (;;) {
         try {
-          await run(operator, 'window.turnero.despachar({tipo:"LLAMAR",entrada:"' + n + '"})');
+          const code = await run(
+            operator,
+            'window.turnero.despachar({tipo:"LLAMAR",entrada:"' +
+              n +
+              '"}).then(()=>null,(e)=>e.code||"INTERNAL")',
+          );
+          if (code && code !== 'AUDIO_QUEUE_FULL') throw new Error(`Dispatch failed: ${code}`);
+          if (code) throw Object.assign(new Error(code), { code });
           break;
         } catch (error) {
-          if (!String(error).includes('cola de audio está llena')) throw error;
+          if (error.code !== 'AUDIO_QUEUE_FULL') throw error;
           await pause(1000);
         }
       }

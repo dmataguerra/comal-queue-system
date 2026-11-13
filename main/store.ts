@@ -1,57 +1,58 @@
 import { statfsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createQueueStore } from '../backend/queue-store.js';
+import { AppError, errorCodeOf } from '../shared/errors.js';
 import type { Store } from '../backend/queue-store.js';
-import type { Registrar } from './log.js';
-import { fechaLocal, guardarEstado, leerEstado } from './persistencia.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
+import { localDate, saveState, readState } from './persistence.js';
 export type { Store } from '../backend/queue-store.js';
-export const RESERVA_ESTADO = 16 * 1024 * 1024;
-export function comprobarEspacioEstado(
-  ruta: string,
-  espacio = (carpeta: string) => {
-    const info = statfsSync(carpeta);
+export const STATE_RESERVE = 16 * 1024 * 1024;
+export function checkStateSpace(
+  filePath: string,
+  space = (folder: string) => {
+    const info = statfsSync(folder);
     return info.bavail * info.bsize;
   },
 ): void {
   try {
-    if (espacio(dirname(ruta)) < RESERVA_ESTADO)
-      throw new Error('Espacio insuficiente para guardar estado.json.');
+    if (space(dirname(filePath)) < STATE_RESERVE)
+      throw new AppError('DISK_FULL', 'Espacio insuficiente para guardar estado.json.');
   } catch (error) {
-    if ((error as Error).message.startsWith('Espacio insuficiente')) throw error;
-    const codigo = (error as NodeJS.ErrnoException).code;
-    if (codigo === 'ENOSYS' || codigo === 'ENOTSUP') return;
+    if (errorCodeOf(error) === 'DISK_FULL') throw error;
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOSYS' || code === 'ENOTSUP') return;
     throw error;
   }
 }
 interface StoreOptions {
-  antesDeAnunciar?: () => void;
-  esperaAnuncioMs?: number;
-  ruta: string;
-  hoy?: () => string;
-  ahora?: () => number;
-  vigenciaMs?: number;
-  registrar?: Registrar;
-  guardar?: typeof guardarEstado;
+  beforeAnnounce?: () => void;
+  announcementWaitMs?: number;
+  filePath: string;
+  today?: () => string;
+  now?: () => number;
+  expiryMs?: number;
+  logger?: Logger;
+  save?: typeof saveState;
 }
-export function crearStore({
-  antesDeAnunciar,
-  esperaAnuncioMs,
-  ruta,
-  hoy = () => fechaLocal(),
-  ahora,
-  vigenciaMs,
-  registrar = () => {},
-  guardar = guardarEstado,
+export function createStore({
+  beforeAnnounce: beforeAnnounce,
+  announcementWaitMs: announcementWaitMs,
+  filePath: filePath,
+  today: getToday = () => localDate(),
+  now: now,
+  expiryMs: expiryMs,
+  logger = silentLogger,
+  save: save = saveState,
 }: StoreOptions): Store {
   return createQueueStore({
-    antesDeAnunciar,
-    esperaAnuncioMs,
-    load: (today) => leerEstado(ruta, today, registrar),
-    save: (state, date, since) => guardar(ruta, state, date, since),
-    ensureCapacity: () => comprobarEspacioEstado(ruta),
-    today: hoy,
-    ahora,
-    vigenciaMs,
-    registrar,
+    beforeAnnounce: beforeAnnounce,
+    announcementWaitMs: announcementWaitMs,
+    load: (today) => readState(filePath, today, logger),
+    save: (state, date, since) => save(filePath, state, date, since),
+    ensureCapacity: () => checkStateSpace(filePath),
+    today: getToday,
+    now: now,
+    expiryMs: expiryMs,
+    logger,
   });
 }

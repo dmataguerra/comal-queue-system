@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, watch } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import type { Config } from '../shared/contract.js';
-import type { Registrar } from './log.js';
-import { esYouTube } from '../nucleo/youtube.js';
-import { escribirJsonAtomico } from './escritura-atomica.js';
-export const CONFIG_POR_DEFECTO: Config = {
+import { silentLogger, type Logger } from '../shared/logging.js';
+import { isYouTube } from '../core/youtube.js';
+import { writeJsonAtomic } from './atomic-write.js';
+export const DEFAULT_CONFIG: Config = {
   youtubeUrl: null,
   repeticiones: 1,
   volumenVoz: 1,
@@ -15,16 +15,16 @@ export const CONFIG_POR_DEFECTO: Config = {
   recargaDiaria: '04:00',
   mensajes: ['Presenta tu ticket al recoger tu pedido.', 'Gracias por tu preferencia.'],
 };
-type Validador = (valor: unknown) => boolean;
-const fraccion: Validador = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
-const validadores: {
-  [K in keyof Config]: Validador;
+type Validator = (value: unknown) => boolean;
+const fraction: Validator = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
+const validators: {
+  [K in keyof Config]: Validator;
 } = {
-  youtubeUrl: (v) => v === null || esYouTube(v),
+  youtubeUrl: (v) => v === null || isYouTube(v),
   repeticiones: (v) => v === 1 || v === 2,
   volumenVoz: (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 3,
-  volumenMusica: fraccion,
-  atenuacionMusica: fraccion,
+  volumenMusica: fraction,
+  atenuacionMusica: fraction,
   segundosBanner: (v) => Number.isInteger(v) && (v as number) >= 3 && (v as number) <= 120,
   pantallaPublica: (v) => v === null || Number.isInteger(v),
   recargaDiaria: (v) => typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v),
@@ -33,82 +33,80 @@ const validadores: {
     v.length <= 10 &&
     v.every((m) => typeof m === 'string' && m.trim() && m.length <= 160),
 };
-export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): Config {
-  const entrada =
-    bruto && typeof bruto === 'object' && !Array.isArray(bruto)
-      ? (bruto as Record<string, unknown>)
-      : {};
-  const config = structuredClone(CONFIG_POR_DEFECTO) as unknown as Record<string, unknown>;
-  for (const clave of Object.keys(entrada)) {
-    if (!Object.hasOwn(validadores, clave)) {
-      registrar(`config.json: se ignora la clave desconocida "${clave}".`);
+export function validateConfig(raw: unknown, logger: Logger = silentLogger): Config {
+  const input =
+    raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const config = structuredClone(DEFAULT_CONFIG) as unknown as Record<string, unknown>;
+  for (const key of Object.keys(input)) {
+    if (!Object.hasOwn(validators, key)) {
+      logger.warn(`config.json: se ignora la clave desconocida "${key}".`);
       continue;
     }
-    if (validadores[clave as keyof Config](entrada[clave])) config[clave] = entrada[clave];
+    if (validators[key as keyof Config](input[key])) config[key] = input[key];
     else
-      registrar(
-        `config.json: valor inválido en "${clave}"; se usa ${JSON.stringify(config[clave])}.`,
+      logger.warn(
+        `config.json: valor inválido en "${key}"; se usa ${JSON.stringify(config[key])}.`,
       );
   }
   return config as unknown as Config;
 }
-export function leerConfig(ruta: string, registrar: Registrar = () => {}): Config {
-  if (!existsSync(ruta)) {
+export function readConfig(filePath: string, logger: Logger = silentLogger): Config {
+  if (!existsSync(filePath)) {
     try {
-      escribirJsonAtomico(ruta, CONFIG_POR_DEFECTO, 2);
+      writeJsonAtomic(filePath, DEFAULT_CONFIG, 2);
     } catch (error) {
-      registrar(`No se pudo crear config.json: ${(error as Error).message}`);
+      logger.error(`No se pudo crear config.json: ${(error as Error).message}`);
       throw new Error('No se pudo crear config.json en la carpeta de datos.', { cause: error });
     }
-    return structuredClone(CONFIG_POR_DEFECTO);
+    return structuredClone(DEFAULT_CONFIG);
   }
   try {
-    return validarConfig(JSON.parse(readFileSync(ruta, 'utf8')), registrar);
+    return validateConfig(JSON.parse(readFileSync(filePath, 'utf8')), logger);
   } catch (error) {
-    registrar(
+    logger.warn(
       `config.json no se pudo leer (${(error as Error).message}); se usan los valores por defecto.`,
     );
-    return structuredClone(CONFIG_POR_DEFECTO);
+    return structuredClone(DEFAULT_CONFIG);
   }
 }
-export function vigilarConfig(
-  ruta: string,
-  alCambiar: (config: Config) => void,
-  registrar: Registrar = () => {},
+export function watchConfig(
+  filePath: string,
+  onChange: (config: Config) => void,
+  logger: Logger = silentLogger,
 ): () => void {
-  let temporizador: ReturnType<typeof setTimeout> | undefined;
-  let anterior = existsSync(ruta) ? readFileSync(ruta, 'utf8') : '';
-  const vigilante = watch(dirname(ruta), (_evento, archivo) => {
-    if (archivo !== basename(ruta)) return;
-    clearTimeout(temporizador);
-    temporizador = setTimeout(() => {
-      let texto: string;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let previous = existsSync(filePath) ? readFileSync(filePath, 'utf8') : '';
+  const watcher = watch(dirname(filePath), (_event, file) => {
+    if (file !== basename(filePath)) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      let text: string;
       try {
-        texto = readFileSync(ruta, 'utf8');
+        text = readFileSync(filePath, 'utf8');
       } catch {
         return;
       }
-      if (texto === anterior) return;
-      let dato: unknown;
+      if (text === previous) return;
+      let data: unknown;
       try {
-        dato = JSON.parse(texto);
+        data = JSON.parse(text);
       } catch {
-        registrar('config.json tiene JSON inválido; se conserva la configuración anterior.');
+        logger.warn('config.json tiene JSON inválido; se conserva la configuración anterior.');
         return;
       }
-      anterior = texto;
-      alCambiar(validarConfig(dato, registrar));
+      previous = text;
+      onChange(validateConfig(data, logger));
     }, 300);
   });
   return () => {
-    clearTimeout(temporizador);
-    vigilante.close();
+    clearTimeout(timer);
+    watcher.close();
   };
 }
-export function msHastaHora(hhmm: string, ahora = new Date()): number {
-  const [horas, minutos] = hhmm.split(':').map(Number);
-  const objetivo = new Date(ahora);
-  objetivo.setHours(horas, minutos, 0, 0);
-  if (objetivo <= ahora) objetivo.setDate(objetivo.getDate() + 1);
-  return objetivo.getTime() - ahora.getTime();
+export function msUntilTime(hhmm: string, now = new Date()): number {
+  const [hours, minutes] = hhmm.split(':').map(Number);
+  const target = new Date(now);
+  target.setHours(hours, minutes, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  return target.getTime() - now.getTime();
 }

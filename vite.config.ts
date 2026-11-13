@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { crearCsp } from './main/politica-csp';
+import { createCsp } from './main/csp-policy';
+import { APP_CONFIG } from './shared/app-config';
 export default defineConfig({
   plugins: [
     react(),
@@ -11,25 +12,26 @@ export default defineConfig({
     {
       name: 'comal-manual-pdf',
       generateBundle() {
-        const pdf = readFileSync(resolve('output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf'));
+        const pdf = readFileSync(resolve(APP_CONFIG.manual.source));
         if (pdf.subarray(0, 5).toString() !== '%PDF-')
           throw new Error('El manual PDF no es válido.');
-        this.emitFile({ type: 'asset', fileName: 'manual/manual-usuario-0.4.0.pdf', source: pdf });
+        this.emitFile({ type: 'asset', fileName: APP_CONFIG.manual.served, source: pdf });
       },
     },
   ],
   server: {
-    port: 5173,
+    host: APP_CONFIG.devServer.host,
+    port: APP_CONFIG.devServer.port,
     strictPort: true,
-    headers: { 'Content-Security-Policy': crearCsp(true), 'Cache-Control': 'no-store' },
+    headers: { 'Content-Security-Policy': createCsp(true), 'Cache-Control': 'no-store' },
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        operador: resolve('vistas/operador/index.html'),
-        publica: resolve('vistas/publica/index.html'),
+        operator: resolve('views/operator/index.html'),
+        display: resolve('views/display/index.html'),
       },
     },
   },

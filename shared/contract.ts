@@ -1,4 +1,4 @@
-export type Accion =
+export type Action =
   | {
       tipo: 'LLAMAR';
       entrada: string;
@@ -10,7 +10,7 @@ export type Accion =
       tipo: 'QUITAR';
       n: number;
     };
-export interface Instantanea {
+export interface Snapshot {
   actual: number | null;
   llamados: number[];
   puedeDeshacer: boolean;
@@ -20,22 +20,22 @@ export interface Instantanea {
   };
   advertenciaRecuperacion?: string;
 }
-export interface Anuncio {
+export interface Announcement {
   id: number;
   n: number;
   limiteInicio?: number;
 }
-export interface EntregaAudio {
+export interface AudioDelivery {
   id: number;
   n: number;
   estado: 'pendiente' | 'reproduciendo' | 'reproducido' | 'fallo' | 'descartado';
   fecha: string;
   motivo?: string;
 }
-export interface ResultadoDespacho {
-  instantanea: Instantanea;
+export interface DispatchResult {
+  instantanea: Snapshot;
   efecto: 'ANUNCIAR' | 'CAPTURA_INVALIDA' | null;
-  anuncio: Anuncio | null;
+  anuncio: Announcement | null;
 }
 export interface Config {
   youtubeUrl: string | null;
@@ -48,32 +48,34 @@ export interface Config {
   recargaDiaria: string;
   mensajes: string[];
 }
-export interface Inventario {
+export interface Inventory {
   revisionAudio?: string;
   videos: string[];
   banner: string[];
   voz: (string | null)[];
   aviso: string | null;
 }
-export type CategoriaContenido = 'videos' | 'banner';
-export interface ResultadoImportacion {
+export type ContentCategory = 'videos' | 'banner';
+export interface ImportResult {
   agregados: string[];
   omitidos: string[];
   cancelado: boolean;
   motivos?: Record<string, string>;
 }
-export interface Pantallas {
+export interface Screens {
   publica: 'tv' | 'ventana' | 'ninguna';
 }
-export interface Inicial {
-  instantanea: Instantanea;
+export interface InitialState {
+  instantanea: Snapshot;
+  /** Revision of `instantanea`; state events with a lower or equal revision are stale. */
+  revision?: number;
   config: Config;
-  inventario: Inventario;
-  pantallas: Pantallas;
-  entregaAudio?: EntregaAudio | null;
-  entregasAudio?: EntregaAudio[];
+  inventario: Inventory;
+  pantallas: Screens;
+  entregaAudio?: AudioDelivery | null;
+  entregasAudio?: AudioDelivery[];
 }
-export interface Diagnostico {
+export interface Diagnostics {
   version: string;
   electron: string;
   node: string;
@@ -83,7 +85,7 @@ export interface Diagnostico {
   rutaConfig: string;
   rutaEstado: string;
   rutaLog: string;
-  pantalla: Pantallas['publica'];
+  pantalla: Screens['publica'];
   operadorActivo: boolean;
   publicaActiva: boolean;
   persistencia: 'correcta' | 'error';
@@ -104,28 +106,31 @@ export interface Diagnostico {
   espacioBajo: boolean;
   accionPendiente: boolean;
 }
-export interface TurneroApi {
+export interface QueueApi {
   youtubeAdmitido?: boolean;
-  diagnostico(): Promise<Diagnostico>;
-  informarSalud(tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado'): void;
+  diagnostico(): Promise<Diagnostics>;
+  informarSalud(type: 'audio' | 'youtube', state: 'correcto' | 'degradado'): void;
   confirmarAnuncio(
     id: number,
     n: number,
-    estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
+    state: Exclude<AudioDelivery['estado'], 'pendiente'>,
   ): void;
-  configurarVolumen(voz: number, multimedia: number): Promise<void>;
+  configurarVolumen(voice: number, media: number): Promise<void>;
   configurarYouTube(url: string | null): Promise<void>;
-  ajustarVolumenYouTube(volumen: number, rampa: number): Promise<number>;
-  obtener(): Promise<Inicial>;
-  despachar(accion: Accion): Promise<ResultadoDespacho>;
-  importarContenido(categoria: CategoriaContenido): Promise<ResultadoImportacion>;
+  ajustarVolumenYouTube(volume: number, ramp: number): Promise<number>;
+  obtener(): Promise<InitialState>;
+  despachar(action: Action): Promise<DispatchResult>;
+  importarContenido(category: ContentCategory): Promise<ImportResult>;
   quitarContenido(url: string): Promise<boolean>;
-  abrirCarpetaContenido(categoria?: CategoriaContenido): Promise<void>;
+  abrirCarpetaContenido(category?: ContentCategory): Promise<void>;
   abrirManual(): Promise<void>;
-  alCambiarEstado(fn: (instantanea: Instantanea, anuncio: Anuncio | null) => void): () => void;
+  alCambiarEstado(
+    fn: (snapshot: Snapshot, announcement: Announcement | null, revision?: number) => void,
+  ): () => void;
   alCambiarConfig(fn: (config: Config) => void): () => void;
-  alCambiarContenido(fn: (inventario: Inventario) => void): () => void;
-  alCambiarPantallas(fn: (pantallas: Pantallas) => void): () => void;
-  alCambiarEntregaAudio(fn: (entrega: EntregaAudio) => void): () => void;
-  registrar(mensaje: string): void;
+  alCambiarContenido(fn: (inventory: Inventory) => void): () => void;
+  alCambiarPantallas(fn: (screens: Screens) => void): () => void;
+  alCambiarEntregaAudio(fn: (delivery: AudioDelivery) => void): () => void;
+  /** Sends a renderer log entry to the main-process log. Level defaults to `warn`. */
+  registrar(message: string, level?: 'info' | 'warn' | 'error'): void;
 }

@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # Última implementación 0.2.0, con SQLite y su instalador original.
+          # Last implementation, 0.2.0, with SQLite and its original installer.
           ref: 7b10bb992fe43413262e56fd0ad3a67e6ebdf489
       - uses: actions/setup-node@v6
         with:

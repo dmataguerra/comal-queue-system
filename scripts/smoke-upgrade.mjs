@@ -15,84 +15,88 @@ import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 if (process.platform !== 'win32') throw new Error('La prueba de actualización requiere Windows.');
-const raiz = fileURLToPath(new URL('../', import.meta.url));
-const anterior = resolve(
-  process.argv[2] ?? join(raiz, 'release', 'archive-0.2.0', 'Comal++ Setup 0.2.0.exe'),
+const root = fileURLToPath(new URL('../', import.meta.url));
+const previousInstaller = resolve(
+  process.argv[2] ?? join(root, 'release', 'archive-0.2.0', 'Comal++ Setup 0.2.0.exe'),
 );
-const version = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8')).version;
-const actual = resolve(process.argv[3] ?? join(raiz, 'release', `Comal++ Setup ${version}.exe`));
-for (const ruta of [anterior, actual]) assert.ok(existsSync(ruta), `Falta el instalador: ${ruta}`);
-const hash = (ruta) => createHash('sha256').update(readFileSync(ruta)).digest('hex').toUpperCase();
-const resultados = join(raiz, 'test-results');
-mkdirSync(resultados, { recursive: true });
-const prueba = mkdtempSync(join(resultados, 'upgrade-'));
-const instalacion = join(prueba, 'app');
-const datos = join(prueba, 'datos');
-const perfil = join(prueba, 'perfil');
-const respaldo = join(prueba, 'respaldo-0.2.0');
-const restaurado = join(prueba, 'perfil-restaurado');
-const ejecutable = join(instalacion, 'Comal++.exe');
-const reporte = {
-  anterior,
-  hashAnterior: hash(anterior),
-  actual,
-  hashActual: hash(actual),
-  prueba,
+const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+const currentInstaller = resolve(
+  process.argv[3] ?? join(root, 'release', `Comal++ Setup ${version}.exe`),
+);
+for (const filePath of [previousInstaller, currentInstaller])
+  assert.ok(existsSync(filePath), `Falta el instalador: ${filePath}`);
+const hash = (filePath) =>
+  createHash('sha256').update(readFileSync(filePath)).digest('hex').toUpperCase();
+const resultsDir = join(root, 'test-results');
+mkdirSync(resultsDir, { recursive: true });
+const testDir = mkdtempSync(join(resultsDir, 'upgrade-'));
+const installDir = join(testDir, 'app');
+const dataDir = join(testDir, 'datos');
+const profileDir = join(testDir, 'perfil');
+const backupDir = join(testDir, 'respaldo-0.2.0');
+const restoredProfileDir = join(testDir, 'perfil-restaurado');
+const executable = join(installDir, 'Comal++.exe');
+const report = {
+  anterior: previousInstaller,
+  hashAnterior: hash(previousInstaller),
+  actual: currentInstaller,
+  hashActual: hash(currentInstaller),
+  prueba: testDir,
   pasos: [],
 };
-let proceso;
-const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
-async function esperar(comprobar, mensaje, ms = 30000) {
-  const fin = Date.now() + ms;
-  while (Date.now() < fin) {
+let appProcess;
+const pause = (ms) => new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
+async function waitFor(check, message, ms = 30000) {
+  const deadline = Date.now() + ms;
+  while (Date.now() < deadline) {
     try {
-      const valor = await comprobar();
-      if (valor) return valor;
+      const value = await check();
+      if (value) return value;
     } catch {
-      /* La aplicación puede seguir arrancando. */
+      /* The application may still be starting. */
     }
-    await pausa(250);
+    await pause(250);
   }
-  throw new Error(mensaje);
+  throw new Error(message);
 }
-async function puertoLibre() {
-  const servidor = createServer();
-  await new Promise((resolver) => servidor.listen(0, '127.0.0.1', resolver));
-  const puerto = servidor.address().port;
-  await new Promise((resolver) => servidor.close(resolver));
-  return puerto;
+async function findFreePort() {
+  const server = createServer();
+  await new Promise((resolvePromise) => server.listen(0, '127.0.0.1', resolvePromise));
+  const port = server.address().port;
+  await new Promise((resolvePromise) => server.close(resolvePromise));
+  return port;
 }
-function instalar(ruta) {
-  const resultado = spawnSync(ruta, ['/S', `/D=${instalacion}`], {
+function install(filePath) {
+  const result = spawnSync(filePath, ['/S', `/D=${installDir}`], {
     timeout: 180000,
     windowsHide: true,
     stdio: 'ignore',
   });
-  if (resultado.error) throw resultado.error;
-  assert.equal(resultado.status, 0, `Falló la instalación de ${ruta}`);
-  assert.ok(existsSync(ejecutable), 'Falta el ejecutable instalado.');
+  if (result.error) throw result.error;
+  assert.equal(result.status, 0, `Falló la instalación de ${filePath}`);
+  assert.ok(existsSync(executable), 'Falta el ejecutable instalado.');
 }
-function detener() {
-  if (!proceso || proceso.exitCode !== null) return;
-  spawnSync('taskkill', ['/PID', String(proceso.pid), '/T', '/F'], { stdio: 'ignore' });
-  proceso = undefined;
+function stopProcess() {
+  if (!appProcess || appProcess.exitCode !== null) return;
+  spawnSync('taskkill', ['/PID', String(appProcess.pid), '/T', '/F'], { stdio: 'ignore' });
+  appProcess = undefined;
 }
-function iniciarProceso(puerto, carpetaDatos, carpetaPerfil) {
-  const salida = openSync(join(prueba, 'aplicacion.log'), 'a');
-  proceso = spawn(
-    ejecutable,
-    [`--remote-debugging-port=${puerto}`, `--user-data-dir=${carpetaPerfil}`],
+function startProcess(port, dataFolder, profileFolder) {
+  const logFd = openSync(join(testDir, 'aplicacion.log'), 'a');
+  appProcess = spawn(
+    executable,
+    [`--remote-debugging-port=${port}`, `--user-data-dir=${profileFolder}`],
     {
-      env: { ...process.env, TURNERO_DATOS: carpetaDatos },
+      env: { ...process.env, TURNERO_DATOS: dataFolder },
       windowsHide: true,
-      stdio: ['ignore', salida, salida],
+      stdio: ['ignore', logFd, logFd],
     },
   );
-  closeSync(salida);
+  closeSync(logFd);
 }
-async function abrirAnterior(carpetaPerfil) {
-  iniciarProceso(await puertoLibre(), datos, carpetaPerfil);
-  await esperar(
+async function openPrevious(profileFolder) {
+  startProcess(await findFreePort(), dataDir, profileFolder);
+  await waitFor(
     async () =>
       (await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) })).ok,
     'El servidor local de 0.2.0 no inició.',
@@ -102,118 +106,120 @@ async function abrirAnterior(carpetaPerfil) {
       await (
         await fetch('http://127.0.0.1:3001/api/state', { signal: AbortSignal.timeout(5000) })
       ).json(),
-    crear: async (numero) => {
-      const respuesta = await fetch('http://127.0.0.1:3001/api/turns', {
+    crear: async (num) => {
+      const response = await fetch('http://127.0.0.1:3001/api/turns', {
         signal: AbortSignal.timeout(5000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          number: numero,
+          number: num,
           counter: 0,
-          requestId: `upgrade-${Date.now()}-${numero}`,
+          requestId: `upgrade-${Date.now()}-${num}`,
         }),
       });
-      assert.equal(respuesta.status, 201);
-      return respuesta.json();
+      assert.equal(response.status, 201);
+      return response.json();
     },
   };
 }
-async function abrir(carpetaDatos) {
-  const puerto = await puertoLibre();
-  iniciarProceso(puerto, carpetaDatos, perfil);
-  const pagina = await esperar(async () => {
-    const paginas = await (
-      await fetch(`http://127.0.0.1:${puerto}/json/list`, { signal: AbortSignal.timeout(5000) })
+async function openCurrent(dataFolder) {
+  const port = await findFreePort();
+  startProcess(port, dataFolder, profileDir);
+  const page = await waitFor(async () => {
+    const pages = await (
+      await fetch(`http://127.0.0.1:${port}/json/list`, { signal: AbortSignal.timeout(5000) })
     ).json();
-    return paginas.find((p) => p.type === 'page' && p.url.includes('/vistas/operador/'));
+    return pages.find(
+      (p) => p.type === 'page' && /\/(vistas\/operador|views\/operator)\//.test(p.url),
+    );
   }, 'No abrió el operador instalado.');
-  const socket = new WebSocket(pagina.webSocketDebuggerUrl);
-  await new Promise((resolver, rechazar) => {
-    const limite = setTimeout(() => {
+  const socket = new WebSocket(page.webSocketDebuggerUrl);
+  await new Promise((resolvePromise, rejectPromise) => {
+    const timeout = setTimeout(() => {
       socket.close();
-      rechazar(new Error('DevTools no conectó en 10 segundos.'));
+      rejectPromise(new Error('DevTools no conectó en 10 segundos.'));
     }, 10000);
     socket.addEventListener(
       'open',
       () => {
-        clearTimeout(limite);
-        resolver();
+        clearTimeout(timeout);
+        resolvePromise();
       },
       { once: true },
     );
-    const fallo = () => {
-      clearTimeout(limite);
-      rechazar(new Error('DevTools cerró durante conexión.'));
+    const onFailure = () => {
+      clearTimeout(timeout);
+      rejectPromise(new Error('DevTools cerró durante conexión.'));
     };
-    socket.addEventListener('error', fallo, { once: true });
-    socket.addEventListener('close', fallo, { once: true });
+    socket.addEventListener('error', onFailure, { once: true });
+    socket.addEventListener('close', onFailure, { once: true });
   });
   let id = 0;
-  const pendientes = new Map();
-  const fallarPendientes = () => {
-    for (const pendiente of pendientes.values()) {
-      clearTimeout(pendiente.limite);
-      pendiente.rechazar(new Error('Se perdió la conexión con el ejecutable instalado.'));
+  const pending = new Map();
+  const failPending = () => {
+    for (const pendingRequest of pending.values()) {
+      clearTimeout(pendingRequest.limite);
+      pendingRequest.rechazar(new Error('Se perdió la conexión con el ejecutable instalado.'));
     }
-    pendientes.clear();
+    pending.clear();
   };
-  socket.addEventListener('close', fallarPendientes);
-  socket.addEventListener('error', fallarPendientes);
-  socket.addEventListener('message', (evento) => {
-    const mensaje = JSON.parse(evento.data);
-    const pendiente = pendientes.get(mensaje.id);
-    if (!pendiente) return;
-    clearTimeout(pendiente.limite);
-    pendientes.delete(mensaje.id);
-    if (mensaje.error) pendiente.rechazar(new Error(mensaje.error.message));
-    else pendiente.resolver(mensaje.result);
+  socket.addEventListener('close', failPending);
+  socket.addEventListener('error', failPending);
+  socket.addEventListener('message', (messageEvent) => {
+    const message = JSON.parse(messageEvent.data);
+    const pendingRequest = pending.get(message.id);
+    if (!pendingRequest) return;
+    clearTimeout(pendingRequest.limite);
+    pending.delete(message.id);
+    if (message.error) pendingRequest.rechazar(new Error(message.error.message));
+    else pendingRequest.resolver(message.result);
   });
-  const evaluar = async (expression) => {
+  const evaluate = async (expression) => {
     if (socket.readyState !== WebSocket.OPEN) throw new Error('DevTools no está conectado.');
-    const numero = ++id;
-    const promesa = new Promise((resolver, rechazar) => {
-      const limite = setTimeout(() => {
-        pendientes.delete(numero);
-        rechazar(new Error('El ejecutable no respondió a DevTools en 15 segundos.'));
+    const num = ++id;
+    const promise = new Promise((resolvePromise, rejectPromise) => {
+      const timeout = setTimeout(() => {
+        pending.delete(num);
+        rejectPromise(new Error('El ejecutable no respondió a DevTools en 15 segundos.'));
       }, 15000);
-      pendientes.set(numero, { resolver, rechazar, limite });
+      pending.set(num, { resolver: resolvePromise, rechazar: rejectPromise, limite: timeout });
     });
     socket.send(
       JSON.stringify({
-        id: numero,
+        id: num,
         method: 'Runtime.evaluate',
         params: { expression, awaitPromise: true, returnByValue: true },
       }),
     );
-    const resultado = await promesa;
-    if (resultado.exceptionDetails) throw new Error(resultado.exceptionDetails.text);
-    return resultado.result.value;
+    const result = await promise;
+    if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+    return result.result.value;
   };
-  await esperar(() => evaluar('Boolean(window.turnero)'), 'El operador no cargó su API.');
-  return { evaluar, cerrar: () => socket.close() };
+  await waitFor(() => evaluate('Boolean(window.turnero)'), 'El operador no cargó su API.');
+  return { evaluar: evaluate, cerrar: () => socket.close() };
 }
 try {
-  let puertoAnteriorOcupado = false;
+  let previousPortBusy = false;
   try {
     await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) });
-    puertoAnteriorOcupado = true;
+    previousPortBusy = true;
   } catch {
-    /* Sin respuesta, el puerto anterior no está ocupado. */
+    /* With no response, the previous port is not in use. */
   }
-  if (puertoAnteriorOcupado)
+  if (previousPortBusy)
     throw new Error('El puerto 3001 ya está ocupado; cierre la versión 0.2.0 antes de la prueba.');
-  mkdirSync(datos);
-  instalar(anterior);
-  const antigua = await abrirAnterior(perfil);
-  assert.deepEqual((await antigua.estado()).turns, []);
-  await antigua.crear('42');
-  assert.equal((await antigua.estado()).turns[0].number, '42');
-  detener();
-  await pausa(500);
-  cpSync(perfil, respaldo, { recursive: true });
-  reporte.pasos.push('0.2.0 instalada, turno 42 guardado en SQLite y respaldo del perfil creado');
-  instalar(actual);
-  let app = await abrir(datos);
+  mkdirSync(dataDir);
+  install(previousInstaller);
+  const legacyApp = await openPrevious(profileDir);
+  assert.deepEqual((await legacyApp.estado()).turns, []);
+  await legacyApp.crear('42');
+  assert.equal((await legacyApp.estado()).turns[0].number, '42');
+  stopProcess();
+  await pause(500);
+  cpSync(profileDir, backupDir, { recursive: true });
+  report.pasos.push('0.2.0 instalada, turno 42 guardado en SQLite y respaldo del perfil creado');
+  install(currentInstaller);
+  let app = await openCurrent(dataDir);
   assert.equal((await app.evaluar('window.turnero.obtener()')).instantanea.actual, 42);
   assert.equal(
     (await app.evaluar("window.turnero.despachar({tipo:'LLAMAR',entrada:'43'})")).instantanea
@@ -221,22 +227,22 @@ try {
     43,
   );
   app.cerrar();
-  detener();
-  await pausa(500);
-  reporte.pasos.push(`actualización a ${version} conservó 42 y guardó 43`);
-  instalar(anterior);
-  cpSync(respaldo, restaurado, { recursive: true });
-  const revertida = await abrirAnterior(restaurado);
-  assert.equal((await revertida.estado()).turns[0].number, '42');
-  detener();
-  reporte.pasos.push('reversión a 0.2.0 con respaldo SQLite restaurado recuperó 42');
-  console.log(`PASS: actualización y reversión aisladas; evidencia en ${prueba}`);
+  stopProcess();
+  await pause(500);
+  report.pasos.push(`actualización a ${version} conservó 42 y guardó 43`);
+  install(previousInstaller);
+  cpSync(backupDir, restoredProfileDir, { recursive: true });
+  const rolledBack = await openPrevious(restoredProfileDir);
+  assert.equal((await rolledBack.estado()).turns[0].number, '42');
+  stopProcess();
+  report.pasos.push('reversión a 0.2.0 con respaldo SQLite restaurado recuperó 42');
+  console.log(`PASS: actualización y reversión aisladas; evidencia en ${testDir}`);
 } catch (error) {
-  reporte.error = String(error);
+  report.error = String(error);
   console.error(error);
   process.exitCode = 1;
 } finally {
-  detener();
-  reporte.fecha = new Date().toISOString();
-  writeFileSync(join(prueba, 'resultado.json'), `${JSON.stringify(reporte, null, 2)}\n`);
+  stopProcess();
+  report.fecha = new Date().toISOString();
+  writeFileSync(join(testDir, 'resultado.json'), `${JSON.stringify(report, null, 2)}\n`);
 }

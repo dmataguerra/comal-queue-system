@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { iniciarYouTube } from '../vistas/publica/youtubeApi.ts';
+import { startYouTube } from '../views/display/youtubeApi.js';
 function player(events) {
   return {
     mute: () => events.push('mute'),
@@ -9,13 +9,13 @@ function player(events) {
     playVideo: () => events.push('play'),
   };
 }
-test('YouTube no inicia ni quita silencio hasta confirmar volumen', async () => {
+test('YouTube neither starts nor unmutes until volume is confirmed', async () => {
   const events = [];
   let confirm;
   const ack = new Promise((resolve) => {
     confirm = resolve;
   });
-  const starting = iniciarYouTube(
+  const starting = startYouTube(
     player(events),
     () => 0.15,
     async (v) => {
@@ -29,10 +29,10 @@ test('YouTube no inicia ni quita silencio hasta confirmar volumen', async () => 
   assert.equal(await starting, true);
   assert.deepEqual(events, ['mute', 'loop', 0.15, 'unmute', 'play']);
 });
-test('YouTube aplica el ducking nuevo si cambia mientras espera la primera carga', async () => {
+test('YouTube applies the new ducking if it changes while waiting for the first load', async () => {
   const events = [];
   let volume = 0.6;
-  const starting = iniciarYouTube(
+  const starting = startYouTube(
     player(events),
     () => volume,
     async (v) => {
@@ -45,8 +45,8 @@ test('YouTube aplica el ducking nuevo si cambia mientras espera la primera carga
   assert.equal(await starting, true);
   assert.deepEqual(events, ['mute', 'loop', 0.6, 0.09, 'unmute', 'play']);
 });
-test('YouTube sin video o transporte desconectado rechaza sin iniciar', async () => {
-  for (const ajustar of [
+test('YouTube with no video or a disconnected transport rejects without starting', async () => {
+  for (const adjustVolume of [
     async () => 0,
     async () => {
       throw new Error('desconectado');
@@ -54,10 +54,10 @@ test('YouTube sin video o transporte desconectado rechaza sin iniciar', async ()
   ]) {
     const events = [];
     await assert.rejects(
-      iniciarYouTube(
+      startYouTube(
         player(events),
         () => 0.6,
-        ajustar,
+        adjustVolume,
         () => true,
       ),
       /confirmó|desconectado/,
@@ -65,10 +65,10 @@ test('YouTube sin video o transporte desconectado rechaza sin iniciar', async ()
     assert.deepEqual(events, ['mute', 'loop']);
   }
 });
-test('una carga de YouTube retirada no inicia tras llegar su confirmación', async () => {
+test('a withdrawn YouTube load does not start after its confirmation arrives', async () => {
   const events = [];
   let active = true;
-  const started = await iniciarYouTube(
+  const started = await startYouTube(
     player(events),
     () => 0.6,
     async () => {

@@ -47,7 +47,7 @@ async function wait(check, message, limit = 15000) {
     try {
       if (await check()) return;
     } catch {
-      /* La vista puede seguir cargando. */
+      /* The view may still be loading. */
     }
     await pause(80);
   }
@@ -843,16 +843,16 @@ async function verify() {
       () =>
         BrowserWindow.getAllWindows().filter(
           (w) =>
-            /\/vistas\/(operador|publica)\//.test(w.webContents.getURL()) &&
+            /\/views\/(operator|display)\//.test(w.webContents.getURL()) &&
             !w.webContents.isLoading(),
         ).length === 2,
       'Desktop views unavailable',
     );
     const desktop = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/operador/'),
+      w.webContents.getURL().includes('/operator/'),
     );
     const publicWindow = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/publica/'),
+      w.webContents.getURL().includes('/display/'),
     );
     publicWindow.webContents.setAudioMuted(true);
     await wait(
@@ -975,10 +975,10 @@ async function verify() {
     report.error = String(error?.stack ?? error);
     for (const [index, window] of BrowserWindow.getAllWindows().entries()) {
       try {
-        if (window.webContents.getURL().includes('/operador/'))
+        if (window.webContents.getURL().includes('/operator/'))
           await capture(window, `failure-operator-${index}`);
       } catch {
-        /* Si tampoco se puede capturar la ventana, se conserva el error original. */
+        /* If the window cannot be captured either, the original error is kept. */
       }
     }
     save();

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { verificarPublicacion } from './verify-release.mjs';
+import { verifyRelease } from './verify-release.mjs';
 
 const configured = {
   GITHUB_REF: 'refs/tags/v1.0.0',
@@ -16,7 +16,7 @@ const configured = {
 };
 
 test('release preflight accepts matching tags with all signing configuration', () => {
-  assert.equal(verificarPublicacion('1.0.0', configured).status, 'PASS');
+  assert.equal(verifyRelease('1.0.0', configured).status, 'PASS');
 });
 
 test('unsigned publication accepts missing credentials but still enforces the version tag', () => {
@@ -25,25 +25,25 @@ test('unsigned publication accepts missing credentials but still enforces the ve
     GITHUB_REF_NAME: configured.GITHUB_REF_NAME,
     COMAL_RELEASE_SIGNING: 'unsigned',
   };
-  const report = verificarPublicacion('1.0.0', unsigned);
+  const report = verifyRelease('1.0.0', unsigned);
   assert.equal(report.status, 'PASS');
   assert.equal(report.signingMode, 'unsigned');
   assert.equal(report.checks.certificateConfigured, false);
-  assert.equal(verificarPublicacion('1.0.1', unsigned).status, 'FAIL');
+  assert.equal(verifyRelease('1.0.1', unsigned).status, 'FAIL');
   assert.equal(
-    verificarPublicacion('1.0.0', { ...unsigned, GITHUB_REF: 'refs/heads/main' }).status,
+    verifyRelease('1.0.0', { ...unsigned, GITHUB_REF: 'refs/heads/main' }).status,
     'FAIL',
   );
 });
 
 test('a misspelled signing mode cannot bypass signing requirements', () => {
-  const report = verificarPublicacion('1.0.0', { ...configured, COMAL_RELEASE_SIGNING: 'unsignd' });
+  const report = verifyRelease('1.0.0', { ...configured, COMAL_RELEASE_SIGNING: 'unsignd' });
   assert.equal(report.status, 'FAIL');
   assert.ok(report.errors.includes('Unknown release signing mode.'));
 });
 
 test('release preflight reports every missing signing setting together', () => {
-  const report = verificarPublicacion('1.0.0', {
+  const report = verifyRelease('1.0.0', {
     GITHUB_REF: configured.GITHUB_REF,
     GITHUB_REF_NAME: configured.GITHUB_REF_NAME,
   });
@@ -62,9 +62,9 @@ test('release preflight rejects branch refs, version mismatches and malformed si
     { WIN_CSC_LINK: '  ' },
     { WIN_CSC_KEY_PASSWORD: '' },
   ]) {
-    assert.equal(verificarPublicacion('1.0.0', { ...configured, ...change }).status, 'FAIL');
+    assert.equal(verifyRelease('1.0.0', { ...configured, ...change }).status, 'FAIL');
   }
-  assert.equal(verificarPublicacion('1.0.1', configured).status, 'FAIL');
+  assert.equal(verifyRelease('1.0.1', configured).status, 'FAIL');
 });
 
 test('failed release preflight preserves evidence without exposing credentials', () => {

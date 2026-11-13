@@ -4,52 +4,50 @@ import { request } from 'node:http';
 import { mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const raiz = fileURLToPath(new URL('../', import.meta.url));
-const resultados = join(raiz, 'test-results');
-mkdirSync(resultados, { recursive: true });
-process.env.TURNERO_DATOS = mkdtempSync(join(resultados, 'browser-'));
+const root = fileURLToPath(new URL('../', import.meta.url));
+const resultsDir = join(root, 'test-results');
+mkdirSync(resultsDir, { recursive: true });
+process.env.TURNERO_DATOS = mkdtempSync(join(resultsDir, 'browser-'));
 process.env.TURNERO_PUERTO = '0';
 app.commandLine.appendSwitch('disable-gpu');
 app.disableHardwareAcceleration();
-app.setAppPath(raiz);
+app.setAppPath(root);
 app.setPath('userData', join(process.env.TURNERO_DATOS, 'electron'));
 BrowserWindow.prototype.show = function () {};
 BrowserWindow.prototype.showInactive = function () {};
 BrowserWindow.prototype.maximize = function () {};
-const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
-async function esperar(comprobar, mensaje) {
-  for (let intento = 0; intento < 150; intento++) {
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+async function waitFor(check, message) {
+  for (let attempt = 0; attempt < 150; attempt++) {
     try {
-      if (await comprobar()) return;
+      if (await check()) return;
     } catch {
-      /* La página puede seguir cargando durante el primer intento. */
+      /* The page may still be loading during the first attempt. */
     }
-    await pausa(100);
+    await pause(100);
   }
-  throw new Error(mensaje);
+  throw new Error(message);
 }
-async function verificar() {
+async function verify() {
   try {
     await import('../build/main/main.js');
-    let origen;
-    await esperar(() => {
-      const entradas = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8')
+    let serverOrigin;
+    await waitFor(() => {
+      const entries = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8')
         .trim()
         .split(/\r?\n/)
-        .map((linea) => JSON.parse(linea));
-      origen = entradas
-        .map(
-          (entrada) => entrada.mensaje.match(/^Navegador local: (http:\/\/127\.0\.0\.1:\d+)/)?.[1],
-        )
+        .map((line) => JSON.parse(line));
+      serverOrigin = entries
+        .map((entry) => entry.message.match(/^Navegador local: (http:\/\/127\.0\.0\.1:\d+)/)?.[1])
         .find(Boolean);
-      return Boolean(origen);
+      return Boolean(serverOrigin);
     }, 'El servidor de navegador no inició.');
     assert.equal(
-      (await (await fetch(`${origen}/api/diagnostico`)).json()).carpetaDatos,
+      (await (await fetch(`${serverOrigin}/api/diagnostico`)).json()).carpetaDatos,
       process.env.TURNERO_DATOS,
     );
     ipcMain.removeAllListeners('turnero:anuncio:acuse');
-    const operador = new BrowserWindow({
+    const operatorWindow = new BrowserWindow({
       show: false,
       webPreferences: {
         nodeIntegration: false,
@@ -57,26 +55,31 @@ async function verificar() {
         backgroundThrottling: false,
       },
     });
-    await operador.loadURL(`${origen}/`);
-    await esperar(
+    await operatorWindow.loadURL(`${serverOrigin}/`);
+    await waitFor(
       () =>
-        operador.webContents.executeJavaScript("Boolean(document.querySelector('#turn-number'))"),
+        operatorWindow.webContents.executeJavaScript(
+          "Boolean(document.querySelector('#turn-number'))",
+        ),
       'El operador no cargó en navegador.',
     );
-    assert.equal(await operador.webContents.executeJavaScript('typeof window.turnero'), 'object');
     assert.equal(
-      await operador.webContents.executeJavaScript('window.turnero.youtubeAdmitido'),
+      await operatorWindow.webContents.executeJavaScript('typeof window.turnero'),
+      'object',
+    );
+    assert.equal(
+      await operatorWindow.webContents.executeJavaScript('window.turnero.youtubeAdmitido'),
       false,
     );
     assert.match(
-      await operador.webContents.executeJavaScript('document.body.textContent'),
+      await operatorWindow.webContents.executeJavaScript('document.body.textContent'),
       /YouTube no está admitido en navegador/,
     );
-    const unsupported = await operador.webContents.executeJavaScript(
+    const unsupported = await operatorWindow.webContents.executeJavaScript(
       "window.turnero.configurarYouTube('https://www.youtube.com/watch?v=dQw4w9WgXcQ').then(()=>null,e=>e.message)",
     );
     assert.match(unsupported, /YouTube no está admitido/);
-    const publica = new BrowserWindow({
+    const displayWindow = new BrowserWindow({
       show: false,
       webPreferences: {
         nodeIntegration: false,
@@ -85,95 +88,108 @@ async function verificar() {
         autoplayPolicy: 'no-user-gesture-required',
       },
     });
-    await publica.loadURL(`${origen}/publica`);
-    await esperar(
+    await displayWindow.loadURL(`${serverOrigin}/publica`);
+    await waitFor(
       () =>
-        publica.webContents.executeJavaScript("Boolean(document.querySelector('.public-screen'))"),
+        displayWindow.webContents.executeJavaScript(
+          "Boolean(document.querySelector('.public-screen'))",
+        ),
       'La vista pública no cargó en navegador.',
     );
     const desktopOperator = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().startsWith('turnero://app/vistas/operador/'),
+      w.webContents.getURL().startsWith('turnero://app/views/operator/'),
     );
     await desktopOperator.webContents.executeJavaScript(
       "window.turnero.configurarYouTube('https://www.youtube.com/watch?v=dQw4w9WgXcQ')",
     );
-    await pausa(300);
+    await pause(300);
     assert.equal(
-      await publica.webContents.executeJavaScript(
+      await displayWindow.webContents.executeJavaScript(
         "document.querySelectorAll('.youtube-host, iframe').length",
       ),
       0,
     );
     assert.match(
-      await publica.webContents.executeJavaScript(
+      await displayWindow.webContents.executeJavaScript(
         'window.turnero.ajustarVolumenYouTube(0.1,150).then(()=>null,e=>e.message)',
       ),
       /YouTube no está admitido/,
     );
     assert.equal(
-      await publica.webContents.executeJavaScript(
+      await displayWindow.webContents.executeJavaScript(
         `fetch('/api/salud', {method:'POST', headers:{'Content-Type':'application/json','X-Turnero-Cliente':'navegador'}, body:JSON.stringify(['audio','correcto'])}).then(r=>r.status)`,
       ),
       200,
     );
-    const degradacionesPrevias = (
+    const previousDegradations = (
       readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8').match(
         /Audio degradado\./g,
       ) ?? []
     ).length;
-    await publica.webContents.executeJavaScript(
+    await displayWindow.webContents.executeJavaScript(
       "window.turnero.registrar('prueba de registro HTTP'); window.turnero.informarSalud('audio','degradado')",
     );
-    await esperar(() => {
-      const registro = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8');
+    await waitFor(() => {
+      const logText = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8');
       return (
-        registro.includes('[navegador] prueba de registro HTTP') &&
-        (registro.match(/Audio degradado\./g) ?? []).length > degradacionesPrevias
+        logText
+          .trim()
+          .split('\n')
+          .map((line) => JSON.parse(line))
+          .some(
+            (entry) =>
+              entry.component === 'renderer:browser' && entry.message === 'prueba de registro HTTP',
+          ) && (logText.match(/Audio degradado\./g) ?? []).length > previousDegradations
       );
     }, 'La salud o el mensaje HTTP no se registraron.');
-    await operador.webContents.executeJavaScript('window.turnero.configurarYouTube(null)');
-    const llamada = await operador.webContents.executeJavaScript(
+    await operatorWindow.webContents.executeJavaScript('window.turnero.configurarYouTube(null)');
+    const callResult = await operatorWindow.webContents.executeJavaScript(
       "window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})",
     );
-    assert.equal(llamada.instantanea.actual, 42);
-    await esperar(
+    assert.equal(callResult.instantanea.actual, 42);
+    await waitFor(
       () =>
-        publica.webContents.executeJavaScript(
+        displayWindow.webContents.executeJavaScript(
           "document.querySelector('.public-turn strong')?.textContent?.trim()==='42'",
         ),
       'La vista pública del navegador no recibió el turno.',
     );
-    await esperar(async () => {
-      const dato = await (await fetch(`${origen}/api/inicial`)).json();
-      return dato.entregaAudio?.id === 1 && dato.entregaAudio.estado === 'reproducido';
+    await waitFor(async () => {
+      const initialData = await (await fetch(`${serverOrigin}/api/inicial`)).json();
+      return (
+        initialData.entregaAudio?.id === 1 && initialData.entregaAudio.estado === 'reproducido'
+      );
     }, 'La vista pública del navegador no confirmó la reproducción por HTTP.');
-    await esperar(
+    await waitFor(
       () =>
-        operador.webContents.executeJavaScript(
+        operatorWindow.webContents.executeJavaScript(
           "document.querySelector('.turn-audio-reproducido[data-anuncio-id=\"1\"]')?.textContent === 'Anunciado'",
         ),
       'El operador no mostró el acuse de audio.',
     );
-    const sinOrigen = await fetch(`${origen}/api/accion`, {
+    const noOriginResponse = await fetch(`${serverOrigin}/api/accion`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Turnero-Cliente': 'navegador' },
       body: JSON.stringify({ tipo: 'LLAMAR', entrada: '43' }),
     });
-    assert.equal(sinOrigen.status, 403);
-    const fuera = await new Promise((resolver, rechazar) => {
-      const peticion = request(
-        `${origen}/api/inicial`,
+    assert.equal(noOriginResponse.status, 403);
+    const outsideHostStatus = await new Promise((resolve, reject) => {
+      const outboundRequest = request(
+        `${serverOrigin}/api/inicial`,
         { headers: { Host: 'otro.local:4317' } },
-        (respuesta) => {
-          respuesta.resume();
-          resolver(respuesta.statusCode);
+        (response) => {
+          response.resume();
+          resolve(response.statusCode);
         },
       );
-      peticion.on('error', rechazar);
-      peticion.end();
+      outboundRequest.on('error', reject);
+      outboundRequest.end();
     });
-    assert.equal(fuera, 403);
-    assert.equal((await (await fetch(`${origen}/api/inicial`)).json()).instantanea.actual, 42);
+    assert.equal(outsideHostStatus, 403);
+    assert.equal(
+      (await (await fetch(`${serverOrigin}/api/inicial`)).json()).instantanea.actual,
+      42,
+    );
     console.log(
       'PASS: navegador local, acuse HTTP, YouTube rechazado sin iframe (incluyendo config de escritorio), salud/registro HTTP y bloqueo de solicitudes externas.',
     );
@@ -183,4 +199,4 @@ async function verificar() {
     app.exit(1);
   }
 }
-void verificar();
+void verify();

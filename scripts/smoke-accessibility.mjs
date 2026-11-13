@@ -68,10 +68,10 @@ async function verify() {
       'Desktop views did not load.',
     );
     const desktop = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/operador/'),
+      w.webContents.getURL().includes('/operator/'),
     );
     const display = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/publica/'),
+      w.webContents.getURL().includes('/display/'),
     );
     assert.ok(desktop && display);
     const origin = readFileSync(join(output, 'turnero.log'), 'utf8').match(
@@ -84,7 +84,7 @@ async function verify() {
       height: 900,
       webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
     });
-    await browser.loadURL(`${origin}/vistas/operador/index.html`);
+    await browser.loadURL(`${origin}/views/operator/index.html`);
     for (const window of [desktop, display, browser]) {
       window.webContents.setBackgroundThrottling(false);
       await run(window, `${axe.source}; void 0;`);

@@ -4,7 +4,7 @@ function isInside(root: string, target: string): boolean {
   const path = relative(root, target);
   return Boolean(path) && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path);
 }
-// Se comprueba la ruta real para que un enlace no permita salir de la carpeta autorizada.
+// The real path is checked so a link cannot escape the authorized folder.
 export async function fileWithin(root: string, requested: string): Promise<string | null> {
   const candidate = resolve(root, requested);
   if (!isInside(root, candidate)) return null;

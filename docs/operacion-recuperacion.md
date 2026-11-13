@@ -15,7 +15,7 @@ Si falta `estado.json`, se inicia una jornada vacía. Si pertenece a otro día, 
 Haga copias con la aplicación cerrada. Desde el repositorio y con las dependencias instaladas, ejecute:
 
 ```powershell
-npx tsx scripts/datos.ts backup "$env:APPDATA\comal-local\datos" "D:\Respaldos Comal"
+npx tsx scripts/data-cli.ts backup "$env:APPDATA\comal-local\datos" "D:\Respaldos Comal"
 ```
 
 La utilidad copia `config.json`, `estado.json`, `contenido/` y `turnero.log` cuando existen. Crea una carpeta nueva con fecha, hora e identificador único; el nombre final aparece solo cuando termina la copia. Compruebe que contiene los archivos esperados antes de moverla a otro disco. El registro puede contener rutas locales; protéjalo como dato de operación.
@@ -23,14 +23,14 @@ La utilidad copia `config.json`, `estado.json`, `contenido/` y `turnero.log` cua
 Para restaurar, cierre la aplicación y compruebe en el Administrador de tareas que `Comal++` no sigue ejecutándose. Cree primero una copia de la carpeta de datos actual. Después ejecute:
 
 ```powershell
-npx tsx scripts/datos.ts restore "D:\Respaldos Comal\turnero-..." "$env:APPDATA\comal-local\datos" --app-cerrada
+npx tsx scripts/data-cli.ts restore "D:\Respaldos Comal\turnero-..." "$env:APPDATA\comal-local\datos" --app-cerrada
 ```
 
 La opción `--app-cerrada` es una confirmación explícita de que verificó el cierre; la utilidad no puede detectar de forma fiable todas las instancias remotas o renombradas. La restauración prepara una carpeta nueva y luego la coloca en la ruta de datos. Conserva los datos anteriores en una carpeta `datos.antes-de-restaurar-*` junto a la ruta de datos. Inicie la aplicación y compruebe en la ventana del operador la pantalla pública, el audio y los turnos. Un `estado.json` de otra fecha no reabre turnos de una jornada anterior.
 
 La restauración valida JSON, estructura del estado y fechas reales antes de cambiar el destino. Rechaza configuración inválida o con claves desconocidas, archivos declarados ausentes y rutas superpuestas entre respaldo y datos. Un rechazo conserva el destino intacto; un respaldo corrupto puede conservarse para diagnóstico pero no restaurarse como estado válido. Los campos de configuración omitidos siguen usando sus valores predeterminados. Un estado válido de otra jornada puede restaurarse, pero al arrancar no reabre turnos anteriores. Se reintentan únicamente bloqueos transitorios de Windows al renombrar, con el mismo límite que el guardado atómico.
 
-`npm run test:recovery` ejecuta los comandos reales de `scripts/datos.ts`: respaldo, restauración limpia con hashes idénticos, rechazo de corrupción sin tocar destino y restauración sobre destino corrupto conservando el anterior. Guarda las invocaciones, códigos y salidas en `test-results/recovery-cli-*/resultado.json`.
+`npm run test:recovery` ejecuta los comandos reales de `scripts/data-cli.ts`: respaldo, restauración limpia con hashes idénticos, rechazo de corrupción sin tocar destino y restauración sobre destino corrupto conservando el anterior. Guarda las invocaciones, códigos y salidas en `test-results/recovery-cli-*/resultado.json`.
 
 ### Actualización desde 0.2.0 y reversión
 
