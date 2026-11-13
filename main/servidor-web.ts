@@ -1,138 +1,27 @@
-import { createReadStream } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { stat } from 'node:fs/promises';
-import { pipeline } from 'node:stream/promises';
-import { extname } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import type {
-  Config,
-  EntregaAudio,
-  Inicial,
-  Inventario,
-  Pantallas,
-  ResultadoImportacion,
-} from '../shared/contract.js';
-import { TIPOS_MIME } from './contenido.js';
-import { crearCsp } from './politica-csp.js';
+import type { Config, EntregaAudio, Inventario, Pantallas } from '../shared/contract.js';
 import { fileWithin } from './safe-file.js';
-import {
-  validarAccion,
-  validarAcuseAudio,
-  validarCategoria,
-  validarCategoriaOpcional,
-  validarUrlContenido,
-  validarYouTube,
-  validarVolumenes,
-  validarMensaje,
-  validarNivel,
-  validarSalud,
-} from './seguridad-ipc.js';
 import { toApiError } from '../shared/errors.js';
 import { APP_CONFIG } from '../shared/app-config.js';
-import type { Logger } from '../shared/logging.js';
-import type { Store } from './store.js';
-const MIME: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.json': 'application/json',
-  '.pdf': 'application/pdf',
-  ...TIPOS_MIME,
-};
-const origenContenido = 'turnero://app/contenido';
-const paraNavegador = (url: string | null) => url?.replace(origenContenido, '/contenido') ?? null;
-function inventarioNavegador(inventario: Inventario): Inventario {
-  return {
-    revisionAudio: inventario.revisionAudio,
-    videos: inventario.videos.map((url) => paraNavegador(url)!),
-    banner: inventario.banner.map((url) => paraNavegador(url)!),
-    voz: inventario.voz.map(paraNavegador),
-    aviso: paraNavegador(inventario.aviso),
-  };
-}
-interface OpcionesServidor {
-  informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
-  configurarVolumen: (voz: number, multimedia: number) => void;
-  vistas: string;
-  contenido: string;
-  puerto?: number;
-  store: Store;
-  inicial: () => Inicial;
-  diagnostico: () => unknown;
-  configurarYouTube: (url: string | null) => void;
-  importarContenido: (categoria: 'videos' | 'banner') => Promise<ResultadoImportacion>;
-  quitarContenido: (url: string) => boolean;
-  abrirCarpetaContenido: (categoria?: 'videos' | 'banner') => Promise<void>;
-  confirmarAnuncio: (
-    id: number,
-    n: number,
-    estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
-  ) => void;
-  logger: Logger;
-}
+import { createApiRoutes } from './web/api-routes.js';
+import { browserInventory } from './web/browser-inventory.js';
+import { sendJson } from './web/json-response.js';
+import { hasExpectedHost, isTrustedPost, readJsonBody } from './web/request-guards.js';
+import { createSseHub } from './web/sse.js';
+import { serveFile } from './web/static-files.js';
+import type { OpcionesServidor } from './web/types.js';
+
 export async function crearServidorWeb(opciones: OpcionesServidor) {
-  const clientes = new Set<ServerResponse>();
+  const sse = createSseHub();
+  const apiRoutes = createApiRoutes(opciones);
   let origen = '';
-  const publicar = (tipo: string, datos: unknown[]) => {
-    const mensaje = `data: ${JSON.stringify({ tipo, datos })}\n\n`;
-    for (const cliente of clientes) cliente.write(mensaje);
-  };
-  const sinSuscripcion = opciones.store.suscribir((instantanea, anuncio) =>
-    publicar('estado', [instantanea, anuncio]),
+  const sinSuscripcion = opciones.store.suscribir((instantanea, anuncio, revision) =>
+    sse.publish('estado', [instantanea, anuncio, revision]),
   );
-  const respuestaJson = (res: ServerResponse, dato: unknown, estado = 200) => {
-    res.writeHead(estado, {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store',
-    });
-    res.end(JSON.stringify(dato));
-  };
-  async function cuerpoJson(req: IncomingMessage): Promise<unknown> {
-    let texto = '';
-    for await (const parte of req) {
-      texto += parte;
-      if (texto.length > 65536) throw new Error('Solicitud demasiado grande.');
-    }
-    return JSON.parse(texto);
-  }
-  async function servirArchivo(req: IncomingMessage, res: ServerResponse, archivo: string) {
-    const size = (await stat(archivo)).size;
-    const tipo = MIME[extname(archivo).toLowerCase()] ?? 'application/octet-stream';
-    const cabeceras: Record<string, string> = {
-      'Content-Type': tipo,
-      'Cache-Control': 'no-cache',
-      'X-Content-Type-Options': 'nosniff',
-    };
-    if (tipo.startsWith('text/html')) cabeceras['Content-Security-Policy'] = crearCsp(false);
-    const rango = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
-    if (rango && (rango[1] || rango[2])) {
-      const inicio = rango[1] ? Number(rango[1]) : Math.max(0, size - Number(rango[2]));
-      const fin = rango[1] && rango[2] ? Math.min(Number(rango[2]), size - 1) : size - 1;
-      if (inicio >= size || inicio > fin) {
-        res.writeHead(416, { ...cabeceras, 'Content-Range': `bytes */${size}` });
-        res.end();
-        return;
-      }
-      res.writeHead(206, {
-        ...cabeceras,
-        'Accept-Ranges': 'bytes',
-        'Content-Range': `bytes ${inicio}-${fin}/${size}`,
-        'Content-Length': fin - inicio + 1,
-      });
-      // Si el archivo desaparece durante la lectura, se cierra la respuesta sin tumbar la app.
-      await pipeline(createReadStream(archivo, { start: inicio, end: fin }), res);
-      return;
-    }
-    res.writeHead(200, { ...cabeceras, 'Content-Length': size, 'Accept-Ranges': 'bytes' });
-    await pipeline(createReadStream(archivo), res);
-  }
   const atender = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      if (req.headers.host !== origen.replace('http://', '')) {
+      if (!hasExpectedHost(req, origen)) {
         res.writeHead(403).end();
         return;
       }
@@ -151,71 +40,26 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
       }
       if (req.method === 'GET' && url.pathname === '/api/inicial') {
         const inicial = opciones.inicial();
-        respuestaJson(res, { ...inicial, inventario: inventarioNavegador(inicial.inventario) });
+        sendJson(res, { ...inicial, inventario: browserInventory(inicial.inventario) });
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/diagnostico') {
-        respuestaJson(res, opciones.diagnostico());
+        sendJson(res, opciones.diagnostico());
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/events') {
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream; charset=utf-8',
-          'Cache-Control': 'no-store',
-          Connection: 'keep-alive',
-          'X-Content-Type-Options': 'nosniff',
-        });
-        res.write(': conectado\n\n');
-        clientes.add(res);
-        req.on('close', () => clientes.delete(res));
+        sse.connect(req, res);
         return;
       }
       if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
-        if (
-          req.headers.origin !== origen ||
-          req.headers['content-type'] !== 'application/json' ||
-          req.headers['x-turnero-cliente'] !== 'navegador'
-        ) {
+        if (!isTrustedPost(req, origen)) {
           res.writeHead(403).end();
           return;
         }
-        const dato = await cuerpoJson(req);
-        if (url.pathname === '/api/accion')
-          respuestaJson(res, opciones.store.despachar(validarAccion(dato)));
-        else if (url.pathname === '/api/volumen') {
-          if (!Array.isArray(dato) || dato.length !== 2) throw new Error('Volumen inválido.');
-          opciones.configurarVolumen(...validarVolumenes(dato[0], dato[1]));
-          respuestaJson(res, null);
-        } else if (url.pathname === '/api/youtube') {
-          if (dato !== null)
-            throw new Error(
-              'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',
-            );
-          opciones.configurarYouTube(validarYouTube(dato));
-          respuestaJson(res, null);
-        } else if (url.pathname === '/api/salud') {
-          if (!Array.isArray(dato) || dato.length !== 2) throw new Error('Salud inválida.');
-          opciones.informarSalud(...validarSalud(dato[0], dato[1]));
-          respuestaJson(res, null);
-        } else if (url.pathname === '/api/registro') {
-          const [mensaje, nivel] = Array.isArray(dato) ? (dato as unknown[]) : [dato];
-          opciones.logger.child('renderer:browser')[validarNivel(nivel)](validarMensaje(mensaje));
-          respuestaJson(res, null);
-        } else if (url.pathname === '/api/audio') {
-          opciones.confirmarAnuncio(...validarAcuseAudio(dato));
-          respuestaJson(res, null);
-        } else if (url.pathname === '/api/contenido/importar')
-          respuestaJson(res, await opciones.importarContenido(validarCategoria(dato)));
-        else if (url.pathname === '/api/contenido/quitar') {
-          if (typeof dato !== 'string' || !dato.startsWith('/contenido/'))
-            throw new Error('Archivo inválido.');
-          respuestaJson(res, opciones.quitarContenido(validarUrlContenido(`turnero://app${dato}`)));
-        } else if (url.pathname === '/api/contenido/abrir') {
-          await opciones.abrirCarpetaContenido(
-            validarCategoriaOpcional(dato === null ? undefined : dato),
-          );
-          respuestaJson(res, null);
-        } else res.writeHead(404).end();
+        const dato = await readJsonBody(req);
+        const handler = apiRoutes.get(url.pathname);
+        if (!handler) res.writeHead(404).end();
+        else sendJson(res, await handler(dato));
         return;
       }
       if (req.method !== 'GET') {
@@ -238,7 +82,7 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
         res.writeHead(404).end();
         return;
       }
-      await servirArchivo(req, res, archivo);
+      await serveFile(req, res, archivo);
     } catch (error) {
       const fallo = toApiError(error);
       opciones.logger.warn(`Servidor navegador: ${fallo.message}`, {
@@ -246,7 +90,7 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
         code: fallo.code,
       });
       if (!res.headersSent && !res.destroyed)
-        respuestaJson(res, { error: fallo.message, code: fallo.code }, 400);
+        sendJson(res, { error: fallo.message, code: fallo.code }, 400);
       else res.destroy();
     }
   };
@@ -273,15 +117,15 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
   origen = `http://127.0.0.1:${direccion.port}`;
   return {
     origen,
-    difundirConfig: (config: Config) => publicar('config', [config]),
+    difundirConfig: (config: Config) => sse.publish('config', [config]),
     difundirContenido: (inventario: Inventario) =>
-      publicar('contenido', [inventarioNavegador(inventario)]),
-    difundirPantallas: (pantallas: Pantallas) => publicar('pantallas', [pantallas]),
-    difundirEntregaAudio: (entrega: EntregaAudio) => publicar('entregaAudio', [entrega]),
+      sse.publish('contenido', [browserInventory(inventario)]),
+    difundirPantallas: (pantallas: Pantallas) => sse.publish('pantallas', [pantallas]),
+    difundirEntregaAudio: (entrega: EntregaAudio) => sse.publish('entregaAudio', [entrega]),
     cerrar: () =>
       new Promise<void>((resolver) => {
         sinSuscripcion();
-        for (const cliente of clientes) cliente.end();
+        sse.closeAll();
         servidor.close(() => resolver());
         servidor.closeAllConnections();
       }),
