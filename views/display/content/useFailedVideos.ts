@@ -9,5 +9,5 @@ export function useFailedVideos(videos: string[]) {
     (url: string) => setFailed((previous) => new Set(previous).add(url)),
     [],
   );
-  return { reproducibles: playable, marcarFallido: markFailed };
+  return { playable: playable, markFailed: markFailed };
 }

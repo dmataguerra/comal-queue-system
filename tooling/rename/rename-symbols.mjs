@@ -194,6 +194,88 @@ for (const { file, name, to } of map.symbols ?? []) {
   renamed++;
 }
 
+// ---- 2b. Member renames for in-process interfaces only (never wire or disk types).
+// map.members: [ [file, interfaceOrTypeName, { oldMember: newMember }] ]
+for (const [file, owner, renames] of map.members ?? []) {
+  const f = abs(file);
+  for (const [name, to] of Object.entries(renames)) {
+    const source = service.getProgram().getSourceFile(f);
+    let position = -1;
+    const visit = (node) => {
+      if (position >= 0) return;
+      const isOwner =
+        (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) &&
+        node.name.text === owner;
+      if (isOwner) {
+        const members = ts.isInterfaceDeclaration(node)
+          ? node.members
+          : node.type && ts.isTypeLiteralNode(node.type)
+            ? node.type.members
+            : [];
+        for (const m of members)
+          if (m.name && ts.isIdentifier(m.name) && m.name.text === name)
+            position = m.name.getStart(source);
+        return;
+      }
+      ts.forEachChild(node, visit);
+    };
+    if (source) visit(source);
+    if (position < 0) {
+      problems.push(`no member ${owner}.${name} in ${file}`);
+      continue;
+    }
+    const locations = service.findRenameLocations(f, position, false, false, prefs) ?? [];
+    const edits = new Map();
+    for (const loc of locations) {
+      const lf = toPosix(loc.fileName);
+      if (lf.includes('/node_modules/')) continue;
+      const list = edits.get(lf) ?? [];
+      list.push({ span: loc.textSpan, newText: `${loc.prefixText ?? ''}${to}${loc.suffixText ?? ''}` });
+      edits.set(lf, list);
+    }
+    applyEdits([...edits].map(([fileName, textChanges]) => ({ fileName, textChanges })));
+    renamed++;
+  }
+}
+
+// ---- 2c. Properties of objects returned by factories/hooks (in-process APIs).
+// map.returned: [ [file, { oldKey: newKey }] ]
+for (const [file, renames] of map.returned ?? []) {
+  const f = abs(file);
+  for (const [name, to] of Object.entries(renames)) {
+    const source = service.getProgram().getSourceFile(f);
+    let position = -1;
+    const visit = (node) => {
+      if (position >= 0) return;
+      const obj = ts.isReturnStatement(node)
+        ? node.expression
+        : ts.isArrowFunction(node) && ts.isParenthesizedExpression(node.body)
+          ? node.body.expression
+          : undefined;
+      if (obj && ts.isObjectLiteralExpression(obj))
+        for (const p of obj.properties)
+          if (p.name && ts.isIdentifier(p.name) && p.name.text === name) position = p.name.getStart(source);
+      ts.forEachChild(node, visit);
+    };
+    if (source) visit(source);
+    if (position < 0) {
+      problems.push(`no returned property ${name} in ${file}`);
+      continue;
+    }
+    const locations = service.findRenameLocations(f, position, false, false, prefs) ?? [];
+    const edits = new Map();
+    for (const loc of locations) {
+      const lf = toPosix(loc.fileName);
+      if (lf.includes('/node_modules/')) continue;
+      const list = edits.get(lf) ?? [];
+      list.push({ span: loc.textSpan, newText: `${loc.prefixText ?? ''}${to}${loc.suffixText ?? ''}` });
+      edits.set(lf, list);
+    }
+    applyEdits([...edits].map(([fileName, textChanges]) => ({ fileName, textChanges })));
+    renamed++;
+  }
+}
+
 // ---- 3. Write results.
 const changed = [...files].filter(([, e]) => e.dirty).map(([f]) => f);
 console.log(

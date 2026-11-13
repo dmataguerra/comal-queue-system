@@ -30,8 +30,8 @@ test('20.000 transiciones reproducibles coinciden con el modelo de seis turnos y
       const n = random(100);
       const action = random(6);
       const previous = structuredClone(state);
-      Object.freeze(state.llamados);
-      if (state.deshacer) Object.freeze(state.deshacer.llamados);
+      Object.freeze(state.called);
+      if (state.undo) Object.freeze(state.undo.called);
       Object.freeze(state);
       let next;
       if (action <= 1) {
@@ -40,34 +40,34 @@ test('20.000 transiciones reproducibles coinciden con el modelo de seis turnos y
           correction = [...screen];
           screen = [n, ...screen.filter((turn) => turn !== n)].slice(0, 6);
         }
-        assert.deepEqual(next.efecto, { tipo: 'ANUNCIAR', n });
+        assert.deepEqual(next.effect, { tipo: 'ANUNCIAR', n });
       } else if (action === 2) {
         next = remove(state, n);
         if (screen.includes(n)) {
           screen = screen.filter((turn) => turn !== n);
           correction = null;
         }
-        assert.equal(next.efecto, null);
+        assert.equal(next.effect, null);
       } else if (action === 3) {
         next = undo(state);
         if (correction) screen = [...correction];
         correction = null;
-        assert.equal(next.efecto, null);
+        assert.equal(next.effect, null);
       } else if (action === 4) {
         const expired = [n, random(100), random(100)];
         next = expire(state, expired);
         if (screen.length && expired.includes(screen[0])) correction = null;
         screen = screen.filter((turn) => !expired.includes(turn));
-        assert.equal(next.efecto, null);
+        assert.equal(next.effect, null);
       } else {
         next = callTurn(state, ['1234567', '-1', '12x', '１２', '', 'NaN'][random(6)]);
-        assert.equal(next.efecto?.tipo, 'CAPTURA_INVALIDA');
+        assert.equal(next.effect?.tipo, 'CAPTURA_INVALIDA');
       }
       const context = `seed=${initialSeed}, paso=${i}, accion=${action}, numero=${n}`;
       assert.deepEqual(state, previous, `No debe mutar el estado anterior: ${context}`);
-      state = next.estado;
+      state = next.state;
       assert.deepEqual(onScreen(state), screen, context);
-      assert.equal(state.deshacer !== null, correction !== null, context);
+      assert.equal(state.undo !== null, correction !== null, context);
       assert.ok(screen.length <= 6, context);
       assert.equal(new Set(screen).size, screen.length, context);
     }

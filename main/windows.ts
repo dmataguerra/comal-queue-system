@@ -6,23 +6,23 @@ interface WindowOptions {
   preload: string;
   icon: string;
   url: (view: View) => string;
-  pantallaPreferida: () => number | null;
-  alCambiarPantallas: (screens: Screens) => void;
-  alCerrarOperador: () => void;
+  preferredDisplay: () => number | null;
+  onScreensChanged: (screens: Screens) => void;
+  onOperatorClosed: () => void;
   logger: Logger;
   /** The public view is about to be replaced (navigation, reload or renderer crash). */
-  alReiniciarPublica?: () => void;
+  onDisplayReplaced?: () => void;
 }
 const BACKGROUND = '#021a28';
 export function createWindows({
   preload,
   icon,
   url,
-  pantallaPreferida: preferredScreen,
-  alCambiarPantallas: onScreensChanged,
-  alCerrarOperador: onOperatorClosed,
+  preferredDisplay: preferredScreen,
+  onScreensChanged: onScreensChanged,
+  onOperatorClosed: onOperatorClosed,
   logger,
-  alReiniciarPublica: onPublicReload = () => {},
+  onDisplayReplaced: onPublicReload = () => {},
 }: WindowOptions) {
   let operatorWindow: BrowserWindow | null = null;
   let publicWindow: BrowserWindow | null = null;
@@ -173,41 +173,41 @@ export function createWindows({
   }
   const onDisplayChanged = () => later(sync, 500);
   return {
-    iniciar() {
+    start() {
       createOperator();
       sync();
       screen.on('display-added', onDisplayChanged);
       screen.on('display-removed', onDisplayChanged);
       screen.on('display-metrics-changed', onDisplayChanged);
     },
-    sincronizar: sync,
-    pantallas: () => screens,
-    estadoVentanas: () => ({
+    sync: sync,
+    screens: () => screens,
+    windowStatus: () => ({
       operador: Boolean(operatorWindow && !operatorWindow.isDestroyed()),
       publica: Boolean(
         publicWindow && !publicWindow.isDestroyed() && !publicWindow.webContents.isCrashed(),
       ),
     }),
-    destinos: (): WebContents[] =>
+    targets: (): WebContents[] =>
       [operatorWindow, publicWindow].flatMap((win) =>
         win && !win.isDestroyed() ? [win.webContents] : [],
       ),
-    esOperador: (sender: WebContents) =>
+    isOperator: (sender: WebContents) =>
       Boolean(
         operatorWindow && !operatorWindow.isDestroyed() && sender === operatorWindow.webContents,
       ),
-    esPublica: (sender: WebContents) =>
+    isDisplay: (sender: WebContents) =>
       Boolean(publicWindow && !publicWindow.isDestroyed() && sender === publicWindow.webContents),
-    enfocarOperador() {
+    focusOperator() {
       if (!operatorWindow) return;
       if (operatorWindow.isMinimized()) operatorWindow.restore();
       operatorWindow.focus();
     },
-    recargarPublica() {
+    reloadDisplay() {
       if (publicWindow && !publicWindow.isDestroyed())
         publicWindow.webContents.reloadIgnoringCache();
     },
-    cerrar() {
+    close() {
       closing = true;
       screen.off('display-added', onDisplayChanged);
       screen.off('display-removed', onDisplayChanged);

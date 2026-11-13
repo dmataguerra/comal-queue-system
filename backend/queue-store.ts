@@ -18,13 +18,13 @@ export type Subscriber = (
   revision: number,
 ) => void;
 export interface Store {
-  obtener(): Snapshot;
+  getSnapshot(): Snapshot;
   /** Revision of the snapshot `obtener()` returns now. */
   revision(): number;
-  despachar(action: Action): DispatchResult;
-  suscribir(fn: Subscriber): () => void;
-  reiniciarSiCambioDia(): boolean;
-  saludPersistencia(): {
+  dispatch(action: Action): DispatchResult;
+  subscribe(fn: Subscriber): () => void;
+  resetIfDayChanged(): boolean;
+  persistenceHealth(): {
     estado: 'correcta' | 'error';
     primerFallo: string | null;
     restauradaEn: string | null;
@@ -35,36 +35,36 @@ export interface Store {
       fecha: string;
     } | null;
   };
-  cerrar(): void;
+  close(): void;
 }
 interface QueueStorePorts {
-  antesDeAnunciar?: () => void;
-  esperaAnuncioMs?: number;
+  beforeAnnounce?: () => void;
+  announcementWaitMs?: number;
   load: (today: string) => {
-    estado: QueueState;
-    desde: Map<number, number>;
-    advertencia?: string;
+    state: QueueState;
+    calledSince: Map<number, number>;
+    warning?: string;
   };
   save: (state: QueueState, date: string, since: ReadonlyMap<number, number>) => void;
   ensureCapacity: () => void;
   today: () => string;
   logger?: Logger;
-  ahora?: () => number;
-  vigenciaMs?: number;
+  now?: () => number;
+  expiryMs?: number;
 }
 export function createQueueStore({
-  antesDeAnunciar: beforeAnnounce,
-  esperaAnuncioMs: announcementWaitMs,
+  beforeAnnounce: beforeAnnounce,
+  announcementWaitMs: announcementWaitMs,
   load,
   save,
   ensureCapacity,
   today,
-  ahora: now = () => Date.now(),
-  vigenciaMs: expiryMs = EXPIRY_MS,
+  now: now = () => Date.now(),
+  expiryMs: expiryMs = EXPIRY_MS,
   logger = silentLogger,
 }: QueueStorePorts): Store {
   let currentDate = today();
-  let { estado: queueState, desde: calledSince, advertencia: recoveryWarning } = load(currentDate);
+  let { state: queueState, calledSince, warning: recoveryWarning } = load(currentDate);
   let previousCalledSince: Map<number, number> | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let nextAnnouncement = 1;
@@ -79,9 +79,9 @@ export function createQueueStore({
   } | null = null;
   const subscribers = new Set<Subscriber>();
   const get = (): Snapshot => ({
-    actual: queueState.actual,
-    llamados: queueState.llamados,
-    puedeDeshacer: queueState.deshacer !== null,
+    actual: queueState.current,
+    llamados: queueState.called,
+    puedeDeshacer: queueState.undo !== null,
     ...(firstFailure ? { persistencia: { estado: 'error' as const, desde: firstFailure } } : {}),
     ...(recoveryWarning ? { advertenciaRecuperacion: recoveryWarning } : {}),
   });
@@ -108,23 +108,23 @@ export function createQueueStore({
     }
   }
   const backup = () => ({
-    fecha: currentDate,
-    estado: queueState,
-    desde: calledSince,
-    desdePrevio: previousCalledSince,
-    siguienteAnuncio: nextAnnouncement,
-    ultimoAnuncio: lastAnnouncement,
-    advertenciaRecuperacion: recoveryWarning,
+    currentDate,
+    queueState,
+    calledSince,
+    previousCalledSince,
+    nextAnnouncement,
+    lastAnnouncement,
+    recoveryWarning,
   });
   function restore(previous: ReturnType<typeof backup>) {
     ({
-      fecha: currentDate,
-      estado: queueState,
-      desde: calledSince,
-      desdePrevio: previousCalledSince,
-      siguienteAnuncio: nextAnnouncement,
-      ultimoAnuncio: lastAnnouncement,
-      advertenciaRecuperacion: recoveryWarning,
+      currentDate,
+      queueState,
+      calledSince,
+      previousCalledSince,
+      nextAnnouncement,
+      lastAnnouncement,
+      recoveryWarning,
     } = previous);
     notify(null);
   }
@@ -144,9 +144,9 @@ export function createQueueStore({
     calledSince = new Map(onScreen(queueState).map((n) => [n, calledSince.get(n) ?? now()]));
     const expired = [...calledSince].filter(([, t]) => t <= limit).map(([n]) => n);
     if (!expired.length) return false;
-    queueState = expire(queueState, expired).estado;
+    queueState = expire(queueState, expired).state;
     for (const n of expired) calledSince.delete(n);
-    if (!queueState.deshacer) previousCalledSince = null;
+    if (!queueState.undo) previousCalledSince = null;
     return true;
   }
   function schedule(retryMs = 0) {
@@ -173,7 +173,7 @@ export function createQueueStore({
     const previous = backup();
     currentDate = fresh;
     recoveryWarning = undefined;
-    if (queueState.actual === null && !queueState.deshacer) return false;
+    if (queueState.current === null && !queueState.undo) return false;
     queueState = INITIAL_STATE;
     calledSince = new Map();
     previousCalledSince = null;
@@ -191,7 +191,7 @@ export function createQueueStore({
   function dispatch(action: Action): DispatchResult {
     resetOnDayChange();
     const previousOperation = backup();
-    const { estado: next, efecto: effect } =
+    const { state: next, effect: effect } =
       action.tipo === 'LLAMAR'
         ? callTurn(queueState, action.entrada)
         : action.tipo === 'QUITAR'
@@ -218,8 +218,8 @@ export function createQueueStore({
     if (action.tipo === 'DESHACER' && change && previousCalledSince)
       calledSince = previousCalledSince;
     if (announcement) calledSince = new Map(calledSince).set(announcement.n, now());
-    if (!next.deshacer) previousCalledSince = null;
-    else if (next.deshacer !== queueState.deshacer) previousCalledSince = previous;
+    if (!next.undo) previousCalledSince = null;
+    else if (next.undo !== queueState.undo) previousCalledSince = previous;
     queueState = next;
     const expiredNow = applyExpired();
     if (change || announcement || expiredNow) {
@@ -239,17 +239,17 @@ export function createQueueStore({
   if (applyExpired() && !persist()) restore(previousInitial);
   schedule(firstFailure ? 5000 : 0);
   return {
-    obtener: get,
+    getSnapshot: get,
     revision: () => revision,
-    despachar: dispatch,
-    suscribir(fn) {
+    dispatch: dispatch,
+    subscribe(fn) {
       subscribers.add(fn);
       return () => {
         subscribers.delete(fn);
       };
     },
-    reiniciarSiCambioDia: resetOnDayChange,
-    saludPersistencia: () => ({
+    resetIfDayChanged: resetOnDayChange,
+    persistenceHealth: () => ({
       estado: firstFailure ? 'error' : 'correcta',
       primerFallo: firstFailure,
       restauradaEn: restoredAt,
@@ -257,7 +257,7 @@ export function createQueueStore({
       ultimoError: lastError,
       ultimoAnuncio: lastAnnouncement,
     }),
-    cerrar() {
+    close() {
       clearTimeout(timer);
       subscribers.clear();
     },

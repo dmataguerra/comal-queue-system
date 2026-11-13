@@ -35,9 +35,9 @@ export function PublicFooter({ messages }: { messages: string[] }) {
       </span>
       {weather && (
         <span className="footer-ticker-item">
-          <Icon name={weather.soleado ? 'sun' : 'cloud'} />
-          <strong>{weather.temperatura}°C</strong>
-          {weather.descripcion} en Querétaro
+          <Icon name={weather.sunny ? 'sun' : 'cloud'} />
+          <strong>{weather.temperature}°C</strong>
+          {weather.description} en Querétaro
         </span>
       )}
       {tickerMessages.map((message, index) => (

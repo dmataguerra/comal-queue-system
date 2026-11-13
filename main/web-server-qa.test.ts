@@ -21,36 +21,36 @@ async function createEnvironment(t: TestContext) {
   writeFileSync(join(content, 'vacio.mp4'), '');
   writeFileSync(join(root, 'privado.txt'), 'NO PUBLICAR');
   const filePath = join(root, 'estado.json');
-  const store = createStore({ ruta: filePath });
+  const store = createStore({ filePath: filePath });
   const logs: string[] = [];
   const server = await createWebServer({
-    vistas: views,
-    contenido: content,
-    puerto: 0,
+    viewsDir: views,
+    contentDir: content,
+    port: 0,
     store,
-    inicial: () => ({
-      instantanea: store.obtener(),
+    initialState: () => ({
+      instantanea: store.getSnapshot(),
       config: DEFAULT_CONFIG,
       inventario: { videos: [], banner: [], voz: [], aviso: null },
       pantallas: { publica: 'ventana' },
     }),
-    diagnostico: () => ({}),
-    configurarVolumen: () => {},
-    configurarYouTube: () => {},
-    informarSalud: () => {},
-    importarContenido: async () => ({ agregados: [], omitidos: [], cancelado: true }),
-    quitarContenido: () => false,
-    abrirCarpetaContenido: async () => {},
-    confirmarAnuncio: () => {},
+    diagnostics: () => ({}),
+    setVolume: () => {},
+    setYouTube: () => {},
+    reportHealth: () => {},
+    importContent: async () => ({ agregados: [], omitidos: [], cancelado: true }),
+    removeContent: () => false,
+    openContentFolder: async () => {},
+    confirmAnnouncement: () => {},
     logger: messageLogger((message) => logs.push(message)),
   });
   t.after(() => {
-    server.cerrar();
-    store.cerrar();
+    server.close();
+    store.close();
     rmSync(root, { recursive: true, force: true });
   });
   const headers = {
-    Origin: server.origen,
+    Origin: server.origin,
     'Content-Type': 'application/json',
     'X-Turnero-Cliente': 'navegador',
   };
@@ -58,7 +58,7 @@ async function createEnvironment(t: TestContext) {
 }
 test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin cambiar estado', async (t) => {
   const e = await createEnvironment(t);
-  const before = e.store.obtener();
+  const before = e.store.getSnapshot();
   const body = JSON.stringify({ tipo: 'LLAMAR', entrada: '42' });
   for (const headers of [
     {},
@@ -67,13 +67,13 @@ test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin ca
     { ...e.headers, 'Content-Type': 'text/plain' },
     { ...e.headers, 'X-Turnero-Cliente': 'externo' },
   ]) {
-    const res = await fetch(`${e.origen}/api/accion`, { method: 'POST', headers, body });
+    const res = await fetch(`${e.origin}/api/accion`, { method: 'POST', headers, body });
     assert.equal(res.status, 403, JSON.stringify(headers));
     await res.text();
   }
   await new Promise<void>((resolve, reject) => {
     const req = request(
-      `${e.origen}/api/accion`,
+      `${e.origin}/api/accion`,
       {
         method: 'POST',
         headers: { ...e.headers, Host: 'externo.example' },
@@ -93,7 +93,7 @@ test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin ca
     req.on('error', reject);
     req.end(body);
   });
-  assert.deepEqual(e.store.obtener(), before);
+  assert.deepEqual(e.store.getSnapshot(), before);
 });
 test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados', async (t) => {
   const e = await createEnvironment(t);
@@ -106,12 +106,12 @@ test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados
     '/%ZZ',
     '/api/inicial?secreto=1',
   ]) {
-    const res = await fetch(`${e.origen}${path}`);
+    const res = await fetch(`${e.origin}${path}`);
     assert.ok([400, 404].includes(res.status), `${path}: ${res.status}`);
     assert.ok(!(await res.text()).includes('NO PUBLICAR'));
   }
   for (const method of ['PUT', 'DELETE', 'OPTIONS', 'PATCH']) {
-    const res = await fetch(`${e.origen}/api/accion`, { method });
+    const res = await fetch(`${e.origin}/api/accion`, { method });
     assert.equal(res.status, 404);
     await res.text();
   }
@@ -119,7 +119,7 @@ test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados
 test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas maliciosas', async (t) => {
   const e = await createEnvironment(t);
   for (const body of ['{', 'null', '[]', '"' + 'x'.repeat(70000) + '"']) {
-    const res = await fetch(`${e.origen}/api/accion`, {
+    const res = await fetch(`${e.origin}/api/accion`, {
       method: 'POST',
       headers: e.headers,
       body,
@@ -127,8 +127,8 @@ test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas ma
     assert.equal(res.status, 400);
     await res.text();
   }
-  assert.equal(e.store.obtener().actual, null);
-  const res = await fetch(`${e.origen}/api/accion`, {
+  assert.equal(e.store.getSnapshot().actual, null);
+  const res = await fetch(`${e.origin}/api/accion`, {
     method: 'POST',
     headers: e.headers,
     body: JSON.stringify({ tipo: 'LLAMAR', entrada: '123442' }),
@@ -138,7 +138,7 @@ test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas ma
 });
 test('HTTP conserva bytes, CSP y rangos de multimedia incluso con límites extremos', async (t) => {
   const e = await createEnvironment(t);
-  const html = await fetch(`${e.origen}/index.html`);
+  const html = await fetch(`${e.origin}/index.html`);
   assert.equal(html.status, 200);
   assert.ok(html.headers.get('content-security-policy')?.includes("default-src 'self'"));
   assert.equal(html.headers.get('x-content-type-options'), 'nosniff');
@@ -154,12 +154,12 @@ test('HTTP conserva bytes, CSP y rangos de multimedia incluso con límites extre
     ['bytes=-0', 416, '', 'bytes */10'],
     ['bytes=99999999999999999999-', 416, '', 'bytes */10'],
   ] as const) {
-    const res = await fetch(`${e.origen}/contenido/prueba.mp4`, { headers: { Range: range } });
+    const res = await fetch(`${e.origin}/contenido/prueba.mp4`, { headers: { Range: range } });
     assert.equal(res.status, status, range);
     assert.equal(res.headers.get('content-range'), contentRange, range);
     assert.equal(await res.text(), body, range);
   }
-  const empty = await fetch(`${e.origen}/contenido/vacio.mp4`, {
+  const empty = await fetch(`${e.origin}/contenido/vacio.mp4`, {
     headers: { Range: 'bytes=0-' },
   });
   assert.equal(empty.status, 416);
@@ -169,7 +169,7 @@ test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado co
   const e = await createEnvironment(t);
   const responses = await Promise.all(
     Array.from({ length: 100 }, async (_, n) => {
-      const res = await fetch(`${e.origen}/api/accion`, {
+      const res = await fetch(`${e.origin}/api/accion`, {
         method: 'POST',
         headers: e.headers,
         body: JSON.stringify({ tipo: 'LLAMAR', entrada: String(n) }),
@@ -185,7 +185,7 @@ test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado co
     Array.from({ length: 100 }, (_, n) => n + 1),
   );
   const last = responses.find((r) => r.anuncio.id === 100);
-  assert.deepEqual(e.store.obtener(), last.instantanea);
+  assert.deepEqual(e.store.getSnapshot(), last.instantanea);
   const persisted = JSON.parse(readFileSync(e.ruta, 'utf8'));
   assert.equal(persisted.actual, last.instantanea.actual);
   assert.deepEqual(persisted.llamados, last.instantanea.llamados);
@@ -193,15 +193,15 @@ test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado co
 test('HTTP notifica por SSE y libera la suscripción cuando el cliente desconecta', async (t) => {
   const e = await createEnvironment(t);
   const controller = new AbortController();
-  const res = await fetch(`${e.origen}/api/events`, { signal: controller.signal });
+  const res = await fetch(`${e.origin}/api/events`, { signal: controller.signal });
   const reader = res.body!.getReader();
   assert.match(new TextDecoder().decode((await reader.read()).value), /conectado/);
-  e.store.despachar({ tipo: 'LLAMAR', entrada: '42' });
+  e.store.dispatch({ tipo: 'LLAMAR', entrada: '42' });
   assert.match(new TextDecoder().decode((await reader.read()).value), /"actual":42/);
   controller.abort();
   await reader.cancel().catch(() => {});
-  e.store.despachar({ tipo: 'LLAMAR', entrada: '43' });
-  assert.equal(e.store.obtener().actual, 43);
+  e.store.dispatch({ tipo: 'LLAMAR', entrada: '43' });
+  assert.equal(e.store.getSnapshot().actual, 43);
 });
 test('HTTP contiene errores de lectura de archivos sin terminar el proceso principal', async (t) => {
   const e = await createEnvironment(t);
@@ -223,7 +223,7 @@ test('HTTP contiene errores de lectura de archivos sin terminar el proceso princ
     for (const range of [undefined, 'bytes=0-3']) {
       await new Promise<void>((resolve, reject) => {
         const req = request(
-          `${e.origen}/contenido/prueba.mp4`,
+          `${e.origin}/contenido/prueba.mp4`,
           {
             headers: range ? { Range: range } : {},
           },
@@ -244,7 +244,7 @@ test('HTTP contiene errores de lectura de archivos sin terminar el proceso princ
     syncBuiltinESMExports();
   }
   assert.equal(fs.createReadStream, original);
-  const res = await fetch(`${e.origen}/api/inicial`);
+  const res = await fetch(`${e.origin}/api/inicial`);
   assert.equal(res.status, 200);
   await res.text();
   assert.ok(

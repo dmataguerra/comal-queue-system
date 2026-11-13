@@ -32,22 +32,22 @@ import {
 const YOUTUBE_ORIGINS = ['https://www.youtube.com', 'https://www.youtube-nocookie.com'];
 import { volumeScript } from './youtube-volume.js';
 interface IpcOptions {
-  configurarVolumen: (voice: number, media: number) => void;
-  configurarYouTube: (url: string | null) => void;
+  setVolume: (voice: number, media: number) => void;
+  setYouTube: (url: string | null) => void;
   store: Store;
-  inicial: () => InitialState;
-  esOperador: (sender: WebContents) => boolean;
-  esPublica: (sender: WebContents) => boolean;
-  urlVista: (view: 'operador' | 'publica') => string;
-  destinos: () => WebContents[];
-  importarContenido: (category: ContentCategory) => Promise<ImportResult>;
-  quitarContenido: (url: string) => boolean;
-  abrirCarpetaContenido: (category?: ContentCategory) => Promise<void>;
-  abrirManual: () => Promise<void>;
+  initialState: () => InitialState;
+  isOperator: (sender: WebContents) => boolean;
+  isDisplay: (sender: WebContents) => boolean;
+  viewUrl: (view: 'operador' | 'publica') => string;
+  targets: () => WebContents[];
+  importContent: (category: ContentCategory) => Promise<ImportResult>;
+  removeContent: (url: string) => boolean;
+  openContentFolder: (category?: ContentCategory) => Promise<void>;
+  openManual: () => Promise<void>;
   logger: Logger;
-  diagnostico: () => Diagnostics;
-  informarSalud: (type: 'audio' | 'youtube', state: 'correcto' | 'degradado') => void;
-  confirmarAnuncio: (
+  diagnostics: () => Diagnostics;
+  reportHealth: (type: 'audio' | 'youtube', state: 'correcto' | 'degradado') => void;
+  confirmAnnouncement: (
     id: number,
     n: number,
     state: Exclude<AudioDelivery['estado'], 'pendiente'>,
@@ -55,21 +55,21 @@ interface IpcOptions {
 }
 export function connectIpc({
   store,
-  inicial: initialState,
-  esOperador: isOperator,
-  esPublica: isPublic,
-  urlVista: viewUrl,
-  destinos: targets,
-  importarContenido: importContent,
-  quitarContenido: removeContent,
-  abrirCarpetaContenido: openContentFolder,
-  abrirManual: openManual,
-  configurarYouTube: configureYouTube,
-  configurarVolumen: configureVolume,
+  initialState: initialState,
+  isOperator: isOperator,
+  isDisplay: isPublic,
+  viewUrl: viewUrl,
+  targets: targets,
+  importContent: importContent,
+  removeContent: removeContent,
+  openContentFolder: openContentFolder,
+  openManual: openManual,
+  setYouTube: configureYouTube,
+  setVolume: configureVolume,
   logger,
-  diagnostico: diagnostics,
-  informarSalud: reportHealth,
-  confirmarAnuncio: ackAnnouncement,
+  diagnostics: diagnostics,
+  reportHealth: reportHealth,
+  confirmAnnouncement: ackAnnouncement,
 }: IpcOptions) {
   const broadcast = (channel: string, ...data: unknown[]) => {
     for (const destination of targets())
@@ -135,7 +135,7 @@ export function connectIpc({
   });
   handle(IPC_CHANNELS.dispatch, 'operador', (args) => {
     validateCount(args, 1);
-    return store.despachar(validateAction(args[0]));
+    return store.dispatch(validateAction(args[0]));
   });
   handle(IPC_CHANNELS.setYouTube, 'operador', (args) => {
     validateCount(args, 1);
@@ -200,14 +200,14 @@ export function connectIpc({
     youtubeWarning = warning;
     return videos;
   });
-  store.suscribir((snapshot, announcement, revision) =>
+  store.subscribe((snapshot, announcement, revision) =>
     broadcast(IPC_CHANNELS.stateChanged, snapshot, announcement, revision),
   );
   return {
-    difundirEntregaAudio: (delivery: AudioDelivery) =>
+    broadcastAudioDelivery: (delivery: AudioDelivery) =>
       broadcast(IPC_CHANNELS.audioReceiptChanged, delivery),
-    difundirConfig: (config: Config) => broadcast(IPC_CHANNELS.configChanged, config),
-    difundirContenido: (inventory: Inventory) => broadcast(IPC_CHANNELS.contentChanged, inventory),
-    difundirPantallas: (screens: Screens) => broadcast(IPC_CHANNELS.screensChanged, screens),
+    broadcastConfig: (config: Config) => broadcast(IPC_CHANNELS.configChanged, config),
+    broadcastContent: (inventory: Inventory) => broadcast(IPC_CHANNELS.contentChanged, inventory),
+    broadcastScreens: (screens: Screens) => broadcast(IPC_CHANNELS.screensChanged, screens),
   };
 }

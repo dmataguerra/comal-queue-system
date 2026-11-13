@@ -10,14 +10,14 @@ export interface Persisted {
   guardadoEn: string;
 }
 export interface Loaded {
-  estado: QueueState;
-  desde: Map<number, number>;
-  advertencia?: string;
+  state: QueueState;
+  calledSince: Map<number, number>;
+  warning?: string;
 }
 const empty = (warning?: string): Loaded => ({
-  estado: INITIAL_STATE,
-  desde: new Map(),
-  ...(warning ? { advertencia: warning } : {}),
+  state: INITIAL_STATE,
+  calledSince: new Map(),
+  ...(warning ? { warning: warning } : {}),
 });
 export function localDate(date = new Date()): string {
   const two = (n: number) => String(n).padStart(2, '0');
@@ -106,7 +106,7 @@ export function readState(filePath: string, today: string, logger: Logger = sile
     logger.info(`estado.json pertenece a ${data.fecha}; se inicia la jornada ${today} vacía.`);
     return empty();
   }
-  const state: QueueState = { actual: data.actual, llamados: data.llamados, deshacer: null };
+  const state: QueueState = { current: data.actual, called: data.llamados, undo: null };
   const time = (value: unknown) => (typeof value === 'string' ? Date.parse(value) : NaN);
   const backup = time(data.guardadoEn);
   const calledSince = new Map<number, number>();
@@ -115,7 +115,7 @@ export function readState(filePath: string, today: string, logger: Logger = sile
     if (!Number.isNaN(t)) calledSince.set(n, t);
     else if (!Number.isNaN(backup)) calledSince.set(n, backup);
   }
-  return { estado: state, desde: calledSince };
+  return { state: state, calledSince: calledSince };
 }
 export function saveState(
   filePath: string,
@@ -126,8 +126,8 @@ export function saveState(
 ): void {
   const data: Persisted = {
     fecha: date,
-    actual: state.actual,
-    llamados: state.llamados,
+    actual: state.current,
+    llamados: state.called,
     desde: Object.fromEntries([...calledSince].map(([n, t]) => [n, new Date(t).toISOString()])),
     guardadoEn: now.toISOString(),
   };

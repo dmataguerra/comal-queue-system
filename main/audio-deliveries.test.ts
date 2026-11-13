@@ -12,47 +12,47 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 test('dos llamadas del mismo número conservan IDs y acuses independientes, aun fuera de orden', () => {
   const deliveries = createAudioDeliveries(() => {});
-  deliveries.registrar({ id: 1, n: 42 });
-  deliveries.registrar({ id: 2, n: 42 });
-  deliveries.confirmar(2, 42, 'reproduciendo');
-  deliveries.confirmar(1, 42, 'reproducido');
+  deliveries.register({ id: 1, n: 42 });
+  deliveries.register({ id: 2, n: 42 });
+  deliveries.confirm(2, 42, 'reproduciendo');
+  deliveries.confirm(1, 42, 'reproducido');
   assert.deepEqual(
-    deliveries.obtener().map((e) => [e.id, e.estado]),
+    deliveries.list().map((e) => [e.id, e.estado]),
     [
       [1, 'reproducido'],
       [2, 'reproduciendo'],
     ],
   );
-  assert.equal(latestDeliveries(deliveries.obtener())[0].id, 2);
-  deliveries.confirmar(2, 43, 'fallo');
-  assert.equal(deliveries.obtener()[1].estado, 'reproduciendo');
-  deliveries.confirmar(2, 42, 'reproducido');
-  deliveries.confirmar(1, 42, 'fallo');
-  assert.ok(deliveries.obtener().every((e) => e.estado === 'reproducido'));
+  assert.equal(latestDeliveries(deliveries.list())[0].id, 2);
+  deliveries.confirm(2, 43, 'fallo');
+  assert.equal(deliveries.list()[1].estado, 'reproduciendo');
+  deliveries.confirm(2, 42, 'reproducido');
+  deliveries.confirm(1, 42, 'fallo');
+  assert.ok(deliveries.list().every((e) => e.estado === 'reproducido'));
 });
 test('saturación rechaza antes de guardar y no consume un ID ni altera el turno', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-saturacion-'));
   const filePath = join(root, 'estado.json');
   const deliveries = createAudioDeliveries(() => {});
-  const store = createStore({ ruta: filePath, antesDeAnunciar: deliveries.comprobarCapacidad });
-  store.suscribir((s, a) => {
-    deliveries.sincronizar(s);
-    if (a) deliveries.registrar(a);
+  const store = createStore({ filePath: filePath, beforeAnnounce: deliveries.ensureCapacity });
+  store.subscribe((s, a) => {
+    deliveries.sync(s);
+    if (a) deliveries.register(a);
   });
   try {
-    for (let i = 0; i < 6; i++) store.despachar({ tipo: 'LLAMAR', entrada: '42' });
+    for (let i = 0; i < 6; i++) store.dispatch({ tipo: 'LLAMAR', entrada: '42' });
     const file = readFileSync(filePath, 'utf8');
-    const state = store.obtener();
+    const state = store.getSnapshot();
     assert.throws(
-      () => store.despachar({ tipo: 'LLAMAR', entrada: '43' }),
+      () => store.dispatch({ tipo: 'LLAMAR', entrada: '43' }),
       /cola de audio está llena/,
     );
-    assert.deepEqual(store.obtener(), state);
+    assert.deepEqual(store.getSnapshot(), state);
     assert.equal(readFileSync(filePath, 'utf8'), file);
-    deliveries.confirmar(1, 42, 'reproducido');
-    assert.equal(store.despachar({ tipo: 'LLAMAR', entrada: '43' }).anuncio?.id, 7);
+    deliveries.confirm(1, 42, 'reproducido');
+    assert.equal(store.dispatch({ tipo: 'LLAMAR', entrada: '43' }).anuncio?.id, 7);
   } finally {
-    store.cerrar();
+    store.close();
     rmSync(root, { recursive: true, force: true });
   }
 });
@@ -62,27 +62,27 @@ test('caducidad, retiro y falta de acuses liberan capacidad sin aceptar acuses t
     () => {},
     () => currentTime,
   );
-  deliveries.registrar({ id: 1, n: 42 });
-  deliveries.registrar({ id: 2, n: 43 });
-  deliveries.confirmar(1, 42, 'reproduciendo');
-  deliveries.sincronizar({ actual: 42, llamados: [], puedeDeshacer: false });
-  assert.equal(deliveries.obtener()[1].estado, 'descartado');
+  deliveries.register({ id: 1, n: 42 });
+  deliveries.register({ id: 2, n: 43 });
+  deliveries.confirm(1, 42, 'reproduciendo');
+  deliveries.sync({ actual: 42, llamados: [], puedeDeshacer: false });
+  assert.equal(deliveries.list()[1].estado, 'descartado');
   currentTime = MAX_ANNOUNCEMENT_WAIT_MS;
-  deliveries.vencer();
-  assert.ok(deliveries.obtener().every((e) => e.estado === 'descartado'));
-  deliveries.confirmar(1, 42, 'reproducido');
-  assert.equal(deliveries.obtener()[0].estado, 'descartado');
-  deliveries.comprobarCapacidad();
+  deliveries.expire();
+  assert.ok(deliveries.list().every((e) => e.estado === 'descartado'));
+  deliveries.confirm(1, 42, 'reproducido');
+  assert.equal(deliveries.list()[0].estado, 'descartado');
+  deliveries.ensureCapacity();
 });
 test('el historial es acotado, sin borrar entregas activas', () => {
   const deliveries = createAudioDeliveries(() => {});
-  deliveries.registrar({ id: 1, n: 42 });
+  deliveries.register({ id: 1, n: 42 });
   for (let id = 2; id < 150; id++) {
-    deliveries.registrar({ id, n: 43 });
-    deliveries.confirmar(id, 43, 'reproducido');
+    deliveries.register({ id, n: 43 });
+    deliveries.confirm(id, 43, 'reproducido');
   }
-  assert.equal(deliveries.obtener().length, MAX_ANNOUNCEMENT_HISTORY);
-  assert.equal(deliveries.obtener()[0].id, 1);
+  assert.equal(deliveries.list().length, MAX_ANNOUNCEMENT_HISTORY);
+  assert.equal(deliveries.list()[0].id, 1);
 });
 test('interrupted announcements go back to pending with a fresh wait window', () => {
   let now = 1000;
@@ -90,13 +90,13 @@ test('interrupted announcements go back to pending with a fresh wait window', ()
     () => {},
     () => now,
   );
-  deliveries.registrar({ id: 1, n: 27 });
-  deliveries.registrar({ id: 2, n: 28 });
-  deliveries.confirmar(1, 27, 'reproduciendo');
+  deliveries.register({ id: 1, n: 27 });
+  deliveries.register({ id: 2, n: 28 });
+  deliveries.confirm(1, 27, 'reproduciendo');
   now += 20000;
-  deliveries.reanudarInterrumpidos();
+  deliveries.resumeInterrupted();
   assert.deepEqual(
-    deliveries.obtener().map((e) => [e.id, e.estado]),
+    deliveries.list().map((e) => [e.id, e.estado]),
     [
       [1, 'pendiente'],
       [2, 'pendiente'],
@@ -104,9 +104,9 @@ test('interrupted announcements go back to pending with a fresh wait window', ()
   );
   // The resumed one gets a full new wait window; the untouched one keeps its original limit.
   now = 1000 + MAX_ANNOUNCEMENT_WAIT_MS + 1;
-  deliveries.vencer();
+  deliveries.expire();
   assert.deepEqual(
-    deliveries.obtener().map((e) => [e.id, e.estado]),
+    deliveries.list().map((e) => [e.id, e.estado]),
     [
       [1, 'pendiente'],
       [2, 'descartado'],

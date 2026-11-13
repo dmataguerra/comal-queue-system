@@ -13,9 +13,9 @@ function describe(code: number) {
   return 'Tormenta';
 }
 export interface Weather {
-  temperatura: number;
-  descripcion: string;
-  soleado: boolean;
+  temperature: number;
+  description: string;
+  sunny: boolean;
 }
 export function useWeather() {
   const [weather, setWeather] = useState<Weather | null>(null);
@@ -42,9 +42,9 @@ export function useWeather() {
         )
           return;
         setWeather({
-          temperatura: Math.round(current.temperature_2m),
-          descripcion: describe(current.weather_code),
-          soleado: current.weather_code <= 1,
+          temperature: Math.round(current.temperature_2m),
+          description: describe(current.weather_code),
+          sunny: current.weather_code <= 1,
         });
       } catch {
         /* El clima puede fallar sin interrumpir la pantalla. */

@@ -5,7 +5,7 @@ export function SizeControl({
 }: {
   notificar: (message: string, error?: boolean) => void;
 }) {
-  const { tamanio: size, cambiar: change } = useSize();
+  const { size: size, change: change } = useSize();
   const adjust = (next: (typeof sizes)[number]) => {
     try {
       change(next);

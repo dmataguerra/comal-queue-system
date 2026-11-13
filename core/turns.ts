@@ -1,11 +1,11 @@
 export const MAX_CALLED_TURNS = 5;
 export const EXPIRY_MS = 5 * 60000;
 export interface QueueState {
-  actual: number | null;
-  llamados: number[];
-  deshacer: {
-    actual: number | null;
-    llamados: number[];
+  current: number | null;
+  called: number[];
+  undo: {
+    current: number | null;
+    called: number[];
   } | null;
 }
 export type Effect =
@@ -18,13 +18,13 @@ export type Effect =
       entrada: unknown;
     };
 export interface Transition {
-  estado: QueueState;
-  efecto: Effect | null;
+  state: QueueState;
+  effect: Effect | null;
 }
 export const INITIAL_STATE: QueueState = Object.freeze({
-  actual: null,
-  llamados: [],
-  deshacer: null,
+  current: null,
+  called: [],
+  undo: null,
 });
 // El ticket admite hasta seis dígitos; en la pantalla sólo se usan los dos últimos.
 export function normalize(input: unknown): number | null {
@@ -34,7 +34,7 @@ export function normalize(input: unknown): number | null {
   return Number(d.slice(-2));
 }
 export function onScreen(state: QueueState): number[] {
-  return state.actual === null ? [...state.llamados] : [state.actual, ...state.llamados];
+  return state.current === null ? [...state.called] : [state.current, ...state.called];
 }
 export function format(n: number): string {
   return String(n).padStart(2, '0');
@@ -46,49 +46,49 @@ export function callTurn(
 ): Transition {
   const n = normalize(input);
   if (n === null) {
-    return { estado: state, efecto: { tipo: 'CAPTURA_INVALIDA', entrada: input } };
+    return { state: state, effect: { tipo: 'CAPTURA_INVALIDA', entrada: input } };
   }
-  if (state.actual === n) {
-    return { estado: state, efecto: { tipo: 'ANUNCIAR', n } };
+  if (state.current === n) {
+    return { state: state, effect: { tipo: 'ANUNCIAR', n } };
   }
   const calledTurns = [
-    ...(state.actual === null ? [] : [state.actual]),
-    ...state.llamados.filter((x) => x !== n),
+    ...(state.current === null ? [] : [state.current]),
+    ...state.called.filter((x) => x !== n),
   ].slice(0, maxCalledTurns);
   return {
-    estado: {
-      actual: n,
-      llamados: calledTurns,
-      deshacer: { actual: state.actual, llamados: state.llamados },
+    state: {
+      current: n,
+      called: calledTurns,
+      undo: { current: state.current, called: state.called },
     },
-    efecto: { tipo: 'ANUNCIAR', n },
+    effect: { tipo: 'ANUNCIAR', n },
   };
 }
 export function remove(state: QueueState, n: number): Transition {
-  if (state.actual !== n && !state.llamados.includes(n)) return { estado: state, efecto: null };
+  if (state.current !== n && !state.called.includes(n)) return { state: state, effect: null };
   const [current = null, ...calledTurns] = onScreen(state).filter((x) => x !== n);
   return {
-    estado: { actual: current, llamados: calledTurns, deshacer: null },
-    efecto: null,
+    state: { current: current, called: calledTurns, undo: null },
+    effect: null,
   };
 }
 export function expire(state: QueueState, expired: readonly number[]): Transition {
   const remaining = onScreen(state).filter((x) => !expired.includes(x));
-  if (remaining.length === onScreen(state).length) return { estado: state, efecto: null };
+  if (remaining.length === onScreen(state).length) return { state: state, effect: null };
   const [current = null, ...calledTurns] = remaining;
   return {
-    estado: {
-      actual: current,
-      llamados: calledTurns,
-      deshacer: current === state.actual ? state.deshacer : null,
+    state: {
+      current: current,
+      called: calledTurns,
+      undo: current === state.current ? state.undo : null,
     },
-    efecto: null,
+    effect: null,
   };
 }
 export function undo(state: QueueState): Transition {
-  if (!state.deshacer) return { estado: state, efecto: null };
+  if (!state.undo) return { state: state, effect: null };
   return {
-    estado: { ...state.deshacer, deshacer: null },
-    efecto: null,
+    state: { ...state.undo, undo: null },
+    effect: null,
   };
 }

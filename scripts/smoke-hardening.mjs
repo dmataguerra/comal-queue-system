@@ -107,7 +107,7 @@ async function verify() {
       release = resolve;
     });
     const operation = importFiles(join(data, 'contenido'), 'videos', [origin], silentLogger, {
-      copiar: async (source, target) => {
+      copy: async (source, target) => {
         start();
         await blocked;
         await copyFile(source, target);

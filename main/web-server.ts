@@ -17,7 +17,7 @@ export async function createWebServer(options: ServerOptions) {
   const sse = createSseHub();
   const apiRoutes = createApiRoutes(options);
   let source = '';
-  const noSubscription = options.store.suscribir((snapshot, announcement, revision) =>
+  const noSubscription = options.store.subscribe((snapshot, announcement, revision) =>
     sse.publish('estado', [snapshot, announcement, revision]),
   );
   const handle = async (req: IncomingMessage, res: ServerResponse) => {
@@ -40,12 +40,12 @@ export async function createWebServer(options: ServerOptions) {
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/inicial') {
-        const initialState = options.inicial();
+        const initialState = options.initialState();
         sendJson(res, { ...initialState, inventario: browserInventory(initialState.inventario) });
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/diagnostico') {
-        sendJson(res, options.diagnostico());
+        sendJson(res, options.diagnostics());
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/events') {
@@ -76,7 +76,7 @@ export async function createWebServer(options: ServerOptions) {
       }
       const isContent = filePath.startsWith('/contenido/');
       const file = await fileWithin(
-        isContent ? options.contenido : options.vistas,
+        isContent ? options.contentDir : options.viewsDir,
         filePath.slice(isContent ? '/contenido/'.length : 1),
       );
       if (!file) {
@@ -102,7 +102,7 @@ export async function createWebServer(options: ServerOptions) {
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);
       server.listen(
-        options.puerto ?? APP_CONFIG.localServer.defaultPort,
+        options.port ?? APP_CONFIG.localServer.defaultPort,
         APP_CONFIG.localServer.host,
         () => {
           server.off('error', reject);
@@ -117,13 +117,13 @@ export async function createWebServer(options: ServerOptions) {
   const address = server.address() as AddressInfo;
   source = `http://127.0.0.1:${address.port}`;
   return {
-    origen: source,
-    difundirConfig: (config: Config) => sse.publish('config', [config]),
-    difundirContenido: (inventory: Inventory) =>
+    origin: source,
+    broadcastConfig: (config: Config) => sse.publish('config', [config]),
+    broadcastContent: (inventory: Inventory) =>
       sse.publish('contenido', [browserInventory(inventory)]),
-    difundirPantallas: (screens: Screens) => sse.publish('pantallas', [screens]),
-    difundirEntregaAudio: (delivery: AudioDelivery) => sse.publish('entregaAudio', [delivery]),
-    cerrar: () =>
+    broadcastScreens: (screens: Screens) => sse.publish('pantallas', [screens]),
+    broadcastAudioDelivery: (delivery: AudioDelivery) => sse.publish('entregaAudio', [delivery]),
+    close: () =>
       new Promise<void>((resolve) => {
         noSubscription();
         sse.closeAll();

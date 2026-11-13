@@ -16,20 +16,20 @@ test('limita activo y pendientes y descarta por espera o pérdida de vigencia', 
     },
     () => {},
     {
-      limite: 3,
-      esperaMs: 100,
-      ahora: () => now,
-      alDescartar: (n) => {
+      limit: 3,
+      waitMs: 100,
+      now: () => now,
+      onDiscard: (n) => {
         discarded.push(n);
       },
     },
   );
   try {
-    assert.equal(queue.agregar(1), true);
-    assert.equal(queue.agregar(2), true);
-    assert.equal(queue.agregar(3), true);
-    assert.equal(queue.agregar(4), false);
-    queue.descartar((n) => n === 2);
+    assert.equal(queue.add(1), true);
+    assert.equal(queue.add(2), true);
+    assert.equal(queue.add(3), true);
+    assert.equal(queue.add(4), false);
+    queue.discard((n) => n === 2);
     now = 101;
     finish();
     await new Promise((resolve) => setImmediate(resolve));
@@ -37,7 +37,7 @@ test('limita activo y pendientes y descarta por espera o pérdida de vigencia', 
     assert.deepEqual(discarded, [4, 2, 3]);
   } finally {
     finish();
-    queue.detener();
+    queue.stop();
   }
 });
 test('el watchdog aborta audio atascado y continúa con el siguiente anuncio', async () => {
@@ -58,20 +58,20 @@ test('el watchdog aborta audio atascado y continúa con el siguiente anuncio', a
     },
     () => {},
     {
-      duracionMs: 20,
-      alDescartar: (n) => {
+      durationMs: 20,
+      onDiscard: (n) => {
         discarded.push(n);
       },
     },
   );
   try {
-    queue.agregar(1);
-    queue.agregar(2);
+    queue.add(1);
+    queue.add(2);
     await finished;
     assert.deepEqual(seen, [1, 2]);
     assert.deepEqual(discarded, [1]);
   } finally {
-    queue.detener();
+    queue.stop();
   }
 });
 test('55 termina antes de 66 y los repetidos mantienen su lugar', async () => {
@@ -96,14 +96,14 @@ test('55 termina antes de 66 y los repetidos mantienen su lugar', async () => {
       throw error;
     },
   );
-  queue.agregar(55);
-  queue.agregar(66);
-  queue.agregar(66);
+  queue.add(55);
+  queue.add(66);
+  queue.add(66);
   assert.deepEqual(events, ['inicio 55']);
   finish();
   await completed;
   assert.deepEqual(events, ['inicio 55', 'fin 55', 'inicio 66', 'fin 66', 'inicio 66', 'fin 66']);
-  queue.detener();
+  queue.stop();
 });
 test('un fallo permite continuar y detener rechaza nuevos anuncios', async () => {
   const errors: unknown[] = [];
@@ -120,11 +120,11 @@ test('un fallo permite continuar y detener rechaza nuevos anuncios', async () =>
     },
     (error) => errors.push(error),
   );
-  queue.agregar(1);
-  queue.agregar(2);
+  queue.add(1);
+  queue.add(2);
   await completed;
-  queue.detener();
-  queue.agregar(3);
+  queue.stop();
+  queue.add(3);
   assert.deepEqual(seen, [1, 2]);
   assert.equal(errors.length, 1);
 });

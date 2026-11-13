@@ -22,9 +22,9 @@ export function ConfirmActionDialog({
   return (
     <Modal title="¿Deseas confirmar la acción?" onClose={onCancel}>
       <p className="modal-copy">
-        {pending.tipo === 'anunciar'
-          ? `Se anunciará de nuevo el turno ${format(pending.numero)} en la TV, con aviso y voz.`
-          : `Se quitará el turno ${format(pending.numero)} de la pantalla.`}
+        {pending.kind === 'anunciar'
+          ? `Se anunciará de nuevo el turno ${format(pending.number)} en la TV, con aviso y voz.`
+          : `Se quitará el turno ${format(pending.number)} de la pantalla.`}
       </p>
       <label className="session-confirmation">
         <input type="checkbox" checked={dontAsk} onChange={(e) => setDontAsk(e.target.checked)} />
@@ -39,11 +39,11 @@ export function ConfirmActionDialog({
         </button>
         <button
           type="button"
-          className={`button ${pending.tipo === 'quitar' ? 'danger' : 'primary'}`}
+          className={`button ${pending.kind === 'quitar' ? 'danger' : 'primary'}`}
           onClick={onConfirm}
           disabled={busy}
         >
-          {pending.tipo === 'anunciar' ? 'Confirmar anuncio' : 'Confirmar quitar'}
+          {pending.kind === 'anunciar' ? 'Confirmar anuncio' : 'Confirmar quitar'}
         </button>
       </div>
     </Modal>

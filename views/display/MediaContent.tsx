@@ -12,23 +12,23 @@ interface Props {
   videos: string[];
   banner: string[];
   config: Config;
-  atenuado: boolean;
-  confirmarAtenuacion: () => void;
-  registrar: (message: string) => void;
+  ducked: boolean;
+  confirmDucking: () => void;
+  log: (message: string) => void;
 }
 
 export function MediaContent({
   videos,
   banner,
   config,
-  atenuado: ducked,
-  registrar: log,
-  confirmarAtenuacion: confirmDucking,
+  ducked: ducked,
+  log: log,
+  confirmDucking: confirmDucking,
 }: Props) {
   const { informarSalud: reportHealth, youtubeAdmitido: youtubeAllowed } = useQueue();
-  const { youtubeDisponible: youtubeAvailable, youtubeFallo: youtubeFailed } =
+  const { youtubeAvailable: youtubeAvailable, youtubeFailed: youtubeFailed } =
     useYoutubeAvailability(config.youtubeUrl, reportHealth);
-  const { reproducibles: playable, marcarFallido: markFailed } = useFailedVideos(videos);
+  const { playable: playable, markFailed: markFailed } = useFailedVideos(videos);
   const volume = ducked ? config.volumenMusica * config.atenuacionMusica : config.volumenMusica;
   useEffect(() => {
     if (ducked && !(youtubeAllowed && config.youtubeUrl && youtubeAvailable) && !playable.length)
@@ -55,10 +55,10 @@ export function MediaContent({
     return (
       <Videos
         videos={playable}
-        volumen={volume}
-        atenuado={ducked}
-        confirmarAtenuacion={confirmDucking}
-        alFallar={(url) => {
+        volume={volume}
+        ducked={ducked}
+        confirmDucking={confirmDucking}
+        onFail={(url) => {
           log(`Video no reproducible, se salta: ${mediaName(url)}`);
           markFailed(url);
         }}

@@ -21,5 +21,5 @@ export function useYoutubeAvailability(
       window.removeEventListener('online', reconnect);
     };
   }, [youtubeUrl, reportHealth]);
-  return { youtubeDisponible: youtubeAvailable, youtubeFallo: youtubeFailed };
+  return { youtubeAvailable: youtubeAvailable, youtubeFailed: youtubeFailed };
 }

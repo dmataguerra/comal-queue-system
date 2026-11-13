@@ -24,7 +24,7 @@ export function createContentActions({
   openPath,
 }: ContentActionsOptions) {
   return {
-    async importarContenido(category: ContentCategory): Promise<ImportResult> {
+    async importContent(category: ContentCategory): Promise<ImportResult> {
       const videos = category === 'videos';
       const files = await pickFiles({
         title: videos ? 'Agregar videos a la pantalla 2' : 'Agregar imágenes a la pantalla 2',
@@ -37,13 +37,13 @@ export function createContentActions({
         logger.info(`contenido: se importaron ${result.agregados.join(', ')}`);
       return result;
     },
-    quitarContenido(url: string): boolean {
+    removeContent(url: string): boolean {
       const removed = removeFile(contentDir, url);
       if (removed)
         logger.info(`contenido: se eliminó ${decodeURIComponent(url.split('/').pop() ?? url)}`);
       return removed;
     },
-    async abrirCarpetaContenido(category?: ContentCategory): Promise<void> {
+    async openContentFolder(category?: ContentCategory): Promise<void> {
       const folder = join(contentDir, category ?? '');
       mkdirSync(folder, { recursive: true });
       const failure = await openPath(folder);

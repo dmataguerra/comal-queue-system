@@ -5,8 +5,8 @@ import { createDiagnosticsProvider, availableSpace } from './diagnostics.js';
 import type { Store } from './store.js';
 test('proveedor reúne salud, inventario y espacio sin exponer datos externos', () => {
   const store = {
-    obtener: () => ({ actual: 42, llamados: [41], puedeDeshacer: false }),
-    saludPersistencia: () => ({
+    getSnapshot: () => ({ actual: 42, llamados: [41], puedeDeshacer: false }),
+    persistenceHealth: () => ({
       estado: 'correcta',
       primerFallo: null,
       restauradaEn: null,
@@ -16,20 +16,20 @@ test('proveedor reúne salud, inventario y espacio sin exponer datos externos', 
     }),
   } as Store;
   const get = createDiagnosticsProvider({
-    carpetaDatos: 'C:/datos',
+    dataDir: 'C:/datos',
     version: '0.3.0',
     store,
     config: () => ({ youtubeUrl: null }) as Config,
-    inventario: () => ({
+    inventory: () => ({
       videos: ['a'],
       banner: ['b'],
       voz: Array(100).fill('voz'),
       aviso: 'aviso',
     }),
-    pantallas: () => ({ publica: 'tv' }),
-    ventanas: () => ({ operador: true, publica: true }),
-    salud: () => ({ audio: 'correcto', youtube: 'inactivo', ultimoErrorAplicacion: null }),
-    espacio: () => 1024 ** 3,
+    screens: () => ({ publica: 'tv' }),
+    windows: () => ({ operador: true, publica: true }),
+    health: () => ({ audio: 'correcto', youtube: 'inactivo', ultimoErrorAplicacion: null }),
+    freeSpace: () => 1024 ** 3,
   });
   const data = get();
   assert.equal(data.vocesValidas, 100);
@@ -40,7 +40,7 @@ test('proveedor reúne salud, inventario y espacio sin exponer datos externos', 
 });
 test('fallos de subsistemas producen datos parciales y espacio desconocido', () => {
   const get = createDiagnosticsProvider({
-    carpetaDatos: 'C:/datos',
+    dataDir: 'C:/datos',
     version: '0.3.0',
     store: {
       obtener: () => {
@@ -53,19 +53,19 @@ test('fallos de subsistemas producen datos parciales y espacio desconocido', () 
     config: () => {
       throw Error('config');
     },
-    inventario: () => {
+    inventory: () => {
       throw Error('contenido');
     },
-    pantallas: () => {
+    screens: () => {
       throw Error('TV');
     },
-    ventanas: () => {
+    windows: () => {
       throw Error('ventanas');
     },
-    salud: () => {
+    health: () => {
       throw Error('audio');
     },
-    espacio: () => {
+    freeSpace: () => {
       throw Error('disco');
     },
   });

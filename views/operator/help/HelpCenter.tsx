@@ -57,26 +57,26 @@ export function HelpCenter({
             ← Volver a las tareas
           </button>
           <span className="help-topic-icon">
-            <Icon name={topic.icono} />
+            <Icon name={topic.icon} />
           </span>
           <h3 ref={topicTitle} tabIndex={-1}>
-            {topic.titulo}
+            {topic.title}
           </h3>
-          <p className="help-intro">{topic.resumen}</p>
+          <p className="help-intro">{topic.summary}</p>
           {images[topic.id] && (
             <img
               className="help-article-image"
               src={images[topic.id]}
-              alt={`Detalle de los controles para ${topic.titulo.toLocaleLowerCase('es')}`}
+              alt={`Detalle de los controles para ${topic.title.toLocaleLowerCase('es')}`}
             />
           )}
           <ol className="help-steps">
-            {topic.pasos.map((step) => (
+            {topic.steps.map((step) => (
               <li key={step}>{step}</li>
             ))}
           </ol>
           <div className="help-notes">
-            {topic.notas.map((note) => (
+            {topic.notes.map((note) => (
               <p key={note}>{note}</p>
             ))}
           </div>
@@ -87,11 +87,11 @@ export function HelpCenter({
                 : 'Estás usando el navegador: elige contenido local.'}
             </p>
           )}
-          {topic.recorrido && (
+          {topic.tour && (
             <button
               type="button"
               className="button primary"
-              onClick={() => onStartTour(topic.recorrido!)}
+              onClick={() => onStartTour(topic.tour!)}
             >
               Mostrarme dónde
             </button>
@@ -144,10 +144,10 @@ export function HelpCenter({
                 onClick={() => setTopic(item)}
               >
                 <span className="help-topic-icon">
-                  <Icon name={item.icono} />
+                  <Icon name={item.icon} />
                 </span>
-                <strong>{item.titulo}</strong>
-                <span>{item.resumen}</span>
+                <strong>{item.title}</strong>
+                <span>{item.summary}</span>
                 <span className="help-topic-link">
                   Ver pasos <span aria-hidden="true">→</span>
                 </span>

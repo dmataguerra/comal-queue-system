@@ -29,8 +29,8 @@ function subscribe(notify: () => void) {
 export function useTheme() {
   const current = useSyncExternalStore(subscribe, () => theme);
   return {
-    tema: current,
-    cambiarTema: () => {
+    theme: current,
+    toggleTheme: () => {
       const next = theme === 'azul' ? 'morado' : 'azul';
       localStorage.setItem(key, next);
       apply(next);

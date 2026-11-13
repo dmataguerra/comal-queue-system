@@ -10,7 +10,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ crumb, notify, onOpenHelp }: TopbarProps) {
-  const { tema: theme, cambiarTema: changeTheme } = useTheme();
+  const { theme: theme, toggleTheme: changeTheme } = useTheme();
   return (
     <header className="admin-topbar">
       <div className="breadcrumb">

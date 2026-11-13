@@ -70,26 +70,26 @@ function MediaFileRow({
   );
 }
 interface LibraryProps {
-  categoria: ContentCategory;
-  titulo: string;
-  descripcion: string;
-  requisitos: string;
-  aviso?: string;
-  archivos: string[];
-  ocupado: boolean;
-  agregar: (category: ContentCategory) => void;
-  quitar: (url: string) => void;
+  category: ContentCategory;
+  title: string;
+  description: string;
+  requirements: string;
+  notice?: string;
+  files: string[];
+  busy: boolean;
+  onAdd: (category: ContentCategory) => void;
+  onRemove: (url: string) => void;
 }
 function Library({
-  categoria: category,
-  titulo: title,
-  descripcion: description,
-  requisitos: requirements,
-  aviso: notice,
-  archivos: files,
-  ocupado: busy,
-  agregar: add,
-  quitar: remove,
+  category: category,
+  title: title,
+  description: description,
+  requirements: requirements,
+  notice: notice,
+  files: files,
+  busy: busy,
+  onAdd: add,
+  onRemove: remove,
 }: LibraryProps) {
   const isVideo = category === 'videos';
   return (
@@ -205,31 +205,31 @@ export function MultimediaPanel({
       <YouTubePanel notificar={notify} />
       <div className="media-library-layout">
         <Library
-          categoria="videos"
-          titulo="Videos"
-          descripcion="Se reproducen en orden aleatorio y de forma continua."
-          requisitos="MP4 (H.264) o WebM · hasta 1080p"
-          archivos={inventory.videos}
-          ocupado={busy}
-          agregar={(category) => void add(category)}
-          quitar={(url) => void remove(url)}
+          category="videos"
+          title="Videos"
+          description="Se reproducen en orden aleatorio y de forma continua."
+          requirements="MP4 (H.264) o WebM · hasta 1080p"
+          files={inventory.videos}
+          busy={busy}
+          onAdd={(category) => void add(category)}
+          onRemove={(url) => void remove(url)}
         />
         <Library
-          categoria="banner"
-          titulo="Imágenes"
-          descripcion="Aparecen como carrusel cuando no hay videos disponibles."
-          requisitos="JPG, PNG o WebP · 1920 × 1080 recomendado"
-          aviso={
+          category="banner"
+          title="Imágenes"
+          description="Aparecen como carrusel cuando no hay videos disponibles."
+          requirements="JPG, PNG o WebP · 1920 × 1080 recomendado"
+          notice={
             config.youtubeUrl || inventory.videos.length
               ? config.youtubeUrl
                 ? 'YouTube está seleccionado. Si no está disponible, la TV intenta reproducir los videos locales; si tampoco se pueden reproducir, muestra las imágenes de respaldo.'
                 : 'La TV intenta reproducir los videos locales. Si todos fallan, muestra las imágenes de respaldo.'
               : undefined
           }
-          archivos={inventory.banner}
-          ocupado={busy}
-          agregar={(category) => void add(category)}
-          quitar={(url) => void remove(url)}
+          files={inventory.banner}
+          busy={busy}
+          onAdd={(category) => void add(category)}
+          onRemove={(url) => void remove(url)}
         />
       </div>
       <div className="media-note">

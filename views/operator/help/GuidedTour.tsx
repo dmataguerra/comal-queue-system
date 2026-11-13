@@ -28,7 +28,7 @@ export function GuidedTour({
   exit.current = onExit;
   useEffect(() => {
     setRect(null);
-    onNavigate(step.pagina);
+    onNavigate(step.page);
     let active = true;
     let frame = 0;
     let attempts = 0;
@@ -49,7 +49,7 @@ export function GuidedTour({
     };
     const find = () => {
       if (!active) return;
-      target = document.querySelector<HTMLElement>(step.objetivo);
+      target = document.querySelector<HTMLElement>(step.target);
       if (!target) {
         if (++attempts < 80) frame = requestAnimationFrame(find);
         return;
@@ -213,7 +213,7 @@ export function GuidedTour({
       data-tour-id={id}
       data-step-index={index}
       data-step-count={tour.pasos.length}
-      data-tour-target={step.objetivo}
+      data-tour-target={step.target}
     >
       {rect && (
         <div
@@ -249,8 +249,8 @@ export function GuidedTour({
         </div>
         <progress max={tour.pasos.length} value={index + 1} aria-label="Avance del recorrido" />
         <div aria-live="polite" aria-atomic="true">
-          <h2 id="help-tour-title">{step.titulo}</h2>
-          <p id="help-tour-copy">{step.texto}</p>
+          <h2 id="help-tour-title">{step.title}</h2>
+          <p id="help-tour-copy">{step.text}</p>
         </div>
         {!rect && (
           <p className="help-tour-fallback">

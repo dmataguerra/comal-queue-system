@@ -37,7 +37,7 @@ test('una copia lenta cede el hilo y no publica archivos parciales; las importac
   });
   try {
     const firstImport = importFiles(data, 'videos', [source], silentLogger, {
-      copiar: async (from, to) => {
+      copy: async (from, to) => {
         signalStart();
         await canProceed;
         await copyFile(from, to);
@@ -71,7 +71,7 @@ test('una copia truncada se rechaza sin publicar ni dejar temporales', async () 
   writeFileSync(source, 'imagen completa');
   try {
     const result = await importFiles(join(root, 'datos'), 'banner', [source], silentLogger, {
-      copiar: async (_from, to) => {
+      copy: async (_from, to) => {
         writeFileSync(to, 'x');
       },
     });
@@ -299,12 +299,12 @@ test('importación rechaza archivos grandes o disco sin reserva y limpia una cop
     assert.match(tooLarge.motivos?.['foto.jpeg'] ?? '', /25 MB/);
     writeFileSync(source, 'imagen');
     const noSpace = await importFiles(content, 'banner', [source], silentLogger, {
-      espacioLibre: () => 0,
+      freeSpace: () => 0,
     });
     assert.match(noSpace.motivos?.['foto.jpeg'] ?? '', /espacio suficiente/);
     const failedCopy = await importFiles(content, 'banner', [source], silentLogger, {
-      espacioLibre: () => Number.MAX_SAFE_INTEGER,
-      copiar: (_source, destination) => {
+      freeSpace: () => Number.MAX_SAFE_INTEGER,
+      copy: (_source, destination) => {
         writeFileSync(destination, 'parcial');
         throw new Error('copia fallida');
       },

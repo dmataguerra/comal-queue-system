@@ -1,25 +1,25 @@
 import { useEffect, useRef } from 'react';
 
 interface ClipProps {
-  alAjustar?: () => void;
+  onAdjust?: () => void;
   url: string;
-  activo: boolean;
-  volumen: number;
-  rampa: number;
-  alTerminar: () => void;
-  alCasiTerminar: () => void;
-  alFallar: () => void;
+  active: boolean;
+  volume: number;
+  ramp: number;
+  onEnded: () => void;
+  onNearEnd: () => void;
+  onFail: () => void;
 }
 
 export function Clip({
   url,
-  activo: active,
-  volumen: volume,
-  rampa: ramp,
-  alTerminar: onEnded,
-  alCasiTerminar: onNearEnd,
-  alFallar: onFail,
-  alAjustar: onAdjust,
+  active: active,
+  volume: volume,
+  ramp: ramp,
+  onEnded: onEnded,
+  onNearEnd: onNearEnd,
+  onFail: onFail,
+  onAdjust: onAdjust,
 }: ClipProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const currentVolume = useRef(volume);

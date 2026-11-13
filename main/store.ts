@@ -25,34 +25,34 @@ export function checkStateSpace(
   }
 }
 interface StoreOptions {
-  antesDeAnunciar?: () => void;
-  esperaAnuncioMs?: number;
-  ruta: string;
-  hoy?: () => string;
-  ahora?: () => number;
-  vigenciaMs?: number;
+  beforeAnnounce?: () => void;
+  announcementWaitMs?: number;
+  filePath: string;
+  today?: () => string;
+  now?: () => number;
+  expiryMs?: number;
   logger?: Logger;
-  guardar?: typeof saveState;
+  save?: typeof saveState;
 }
 export function createStore({
-  antesDeAnunciar: beforeAnnounce,
-  esperaAnuncioMs: announcementWaitMs,
-  ruta: filePath,
-  hoy: getToday = () => localDate(),
-  ahora: now,
-  vigenciaMs: expiryMs,
+  beforeAnnounce: beforeAnnounce,
+  announcementWaitMs: announcementWaitMs,
+  filePath: filePath,
+  today: getToday = () => localDate(),
+  now: now,
+  expiryMs: expiryMs,
   logger = silentLogger,
-  guardar: save = saveState,
+  save: save = saveState,
 }: StoreOptions): Store {
   return createQueueStore({
-    antesDeAnunciar: beforeAnnounce,
-    esperaAnuncioMs: announcementWaitMs,
+    beforeAnnounce: beforeAnnounce,
+    announcementWaitMs: announcementWaitMs,
     load: (today) => readState(filePath, today, logger),
     save: (state, date, since) => save(filePath, state, date, since),
     ensureCapacity: () => checkStateSpace(filePath),
     today: getToday,
-    ahora: now,
-    vigenciaMs: expiryMs,
+    now: now,
+    expiryMs: expiryMs,
     logger,
   });
 }

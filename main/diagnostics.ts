@@ -23,22 +23,22 @@ function lastSavedAt(filePath: string): string | null {
   }
 }
 interface DiagnosticSources {
-  carpetaDatos: string;
+  dataDir: string;
   version: string;
   store: Store;
   config: () => Config;
-  inventario: () => Inventory;
-  pantallas: () => Screens;
-  ventanas: () => {
+  inventory: () => Inventory;
+  screens: () => Screens;
+  windows: () => {
     operador: boolean;
     publica: boolean;
   };
-  salud: () => {
+  health: () => {
     audio: Diagnostics['audio'];
     youtube: Diagnostics['youtube'];
     ultimoErrorAplicacion: string | null;
   };
-  espacio?: (folder: string) => number | null;
+  freeSpace?: (folder: string) => number | null;
 }
 export function createDiagnosticsProvider(sources: DiagnosticSources): () => Diagnostics {
   const safely = <T>(get: () => T, backup: T): T => {
@@ -49,10 +49,10 @@ export function createDiagnosticsProvider(sources: DiagnosticSources): () => Dia
     }
   };
   return () => {
-    const inventory = safely(sources.inventario, { videos: [], banner: [], voz: [], aviso: null });
-    const screens = safely(sources.pantallas, { publica: 'ninguna' as const });
-    const windows = safely(sources.ventanas, { operador: false, publica: false });
-    const persistence = safely(() => sources.store.saludPersistencia(), {
+    const inventory = safely(sources.inventory, { videos: [], banner: [], voz: [], aviso: null });
+    const screens = safely(sources.screens, { publica: 'ninguna' as const });
+    const windows = safely(sources.windows, { operador: false, publica: false });
+    const persistence = safely(() => sources.store.persistenceHealth(), {
       estado: 'error' as const,
       primerFallo: null,
       restauradaEn: null,
@@ -60,17 +60,17 @@ export function createDiagnosticsProvider(sources: DiagnosticSources): () => Dia
       ultimoError: null,
       ultimoAnuncio: null,
     });
-    const state = safely(() => sources.store.obtener(), {
+    const state = safely(() => sources.store.getSnapshot(), {
       actual: null,
       llamados: [],
       puedeDeshacer: false,
     });
-    const health = safely(sources.salud, {
+    const health = safely(sources.health, {
       audio: 'desconocido' as const,
       youtube: 'inactivo' as const,
       ultimoErrorAplicacion: null,
     });
-    const free = safely(() => (sources.espacio ?? availableSpace)(sources.carpetaDatos), null);
+    const free = safely(() => (sources.freeSpace ?? availableSpace)(sources.dataDir), null);
     const youtubeConfigured = Boolean(
       safely(sources.config, { youtubeUrl: null } as Config).youtubeUrl,
     );
@@ -80,16 +80,16 @@ export function createDiagnosticsProvider(sources: DiagnosticSources): () => Dia
       node: process.versions.node,
       plataforma: process.platform,
       arquitectura: process.arch,
-      carpetaDatos: sources.carpetaDatos,
-      rutaConfig: join(sources.carpetaDatos, 'config.json'),
-      rutaEstado: join(sources.carpetaDatos, 'estado.json'),
-      rutaLog: join(sources.carpetaDatos, 'turnero.log'),
+      carpetaDatos: sources.dataDir,
+      rutaConfig: join(sources.dataDir, 'config.json'),
+      rutaEstado: join(sources.dataDir, 'estado.json'),
+      rutaLog: join(sources.dataDir, 'turnero.log'),
       pantalla: screens.publica,
       operadorActivo: windows.operador,
       publicaActiva: windows.publica,
       persistencia: persistence.estado,
       ultimoGuardado:
-        persistence.ultimoGuardado ?? lastSavedAt(join(sources.carpetaDatos, 'estado.json')),
+        persistence.ultimoGuardado ?? lastSavedAt(join(sources.dataDir, 'estado.json')),
       ultimoErrorPersistencia: persistence.ultimoError,
       ultimoErrorAplicacion: health.ultimoErrorAplicacion,
       audio: health.audio,

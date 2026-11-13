@@ -17,9 +17,9 @@ export function DisplayPage() {
     registrar: log,
   } = useQueue();
   const {
-    anuncio: announcement,
-    atenuado: ducked,
-    confirmarAtenuacion: confirmDucking,
+    announcement: announcement,
+    ducked: ducked,
+    confirmDucking: confirmDucking,
   } = useAnnouncements();
   useEffect(() => {
     document.title = 'Troyanos · Turnos';
@@ -68,9 +68,9 @@ export function DisplayPage() {
               videos={inventory.videos}
               banner={inventory.banner}
               config={config}
-              atenuado={ducked}
-              confirmarAtenuacion={confirmDucking}
-              registrar={log}
+              ducked={ducked}
+              confirmDucking={confirmDucking}
+              log={log}
             />
           </div>
           <AnnouncementCard anuncio={announcement} />

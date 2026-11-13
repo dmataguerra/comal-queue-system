@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 
 export type TurnActionKind = 'anunciar' | 'quitar';
 export interface PendingAction {
-  numero: number;
-  tipo: TurnActionKind;
+  number: number;
+  kind: TurnActionKind;
 }
 
 interface Options {
@@ -34,13 +34,13 @@ export function useTurnConfirmation({
       void (kind === 'anunciar' ? announceAgain(turnNumber) : removeTurn(turnNumber));
     } else {
       setDontAsk(false);
-      setPending({ numero: turnNumber, tipo: kind });
+      setPending({ number: turnNumber, kind: kind });
     }
   }
 
   function confirmAction() {
     if (!pending || busy) return;
-    const { numero: turnNumber, tipo: kind } = pending;
+    const { number: turnNumber, kind: kind } = pending;
     setPending(null);
     if (turnNumber !== current && !called.includes(turnNumber)) {
       notify('Ese turno ya no está en pantalla. No se realizó la acción.', true);

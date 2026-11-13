@@ -24,8 +24,8 @@ export const VIDEO_LIMIT = 2 * 1024 ** 3;
 export const IMAGE_LIMIT = 25 * 1024 ** 2;
 export const DISK_RESERVE = 512 * 1024 ** 2;
 interface ImportOptions {
-  espacioLibre?: (folder: string) => number | null | Promise<number | null>;
-  copiar?: (source: string, destination: string) => void | Promise<void>;
+  freeSpace?: (folder: string) => number | null | Promise<number | null>;
+  copy?: (source: string, destination: string) => void | Promise<void>;
 }
 const freeSpace = async (folder: string): Promise<number | null> => {
   try {
@@ -94,7 +94,7 @@ export async function importFiles(
         skip(name, `${name}: supera el límite de ${category === 'videos' ? '2 GB' : '25 MB'}.`);
         continue;
       }
-      const free = await (options.espacioLibre ?? freeSpace)(folder);
+      const free = await (options.freeSpace ?? freeSpace)(folder);
       if (free !== null && free - info.size < DISK_RESERVE) {
         skip(name, `${name}: no hay espacio suficiente en la unidad de datos.`);
         continue;
@@ -102,7 +102,7 @@ export async function importFiles(
       let destination = name;
       const tempPath = join(folder, `.${crypto.randomUUID()}.tmp`);
       try {
-        await (options.copiar ?? copyFile)(source, tempPath);
+        await (options.copy ?? copyFile)(source, tempPath);
         if ((await stat(tempPath)).size !== info.size)
           throw new Error('La copia quedó incompleta.');
         const parts = parse(name);
@@ -300,8 +300,8 @@ export function watchContent(
   onChange: (inventory: Inventory) => void,
   logger: Logger = silentLogger,
 ): {
-  inicial: Inventory;
-  detener: () => void;
+  initial: Inventory;
+  stop: () => void;
 } {
   const reported = new Set<string>();
   const initialState = buildInventory(root, logger, reported);
@@ -324,8 +324,8 @@ export function watchContent(
     }, 500);
   });
   return {
-    inicial: initialState,
-    detener: () => {
+    initial: initialState,
+    stop: () => {
       clearTimeout(timer);
       watcher.close();
     },

@@ -4,12 +4,12 @@ import {
   MAX_ANNOUNCEMENT_WAIT_MS,
 } from '../shared/announcement-policy.js';
 interface QueueOptions<T> {
-  limite?: number;
-  esperaMs?: number;
-  duracionMs?: number;
-  ahora?: () => number;
-  vigente?: (value: T) => boolean;
-  alDescartar?: (value: T) => void;
+  limit?: number;
+  waitMs?: number;
+  durationMs?: number;
+  now?: () => number;
+  isCurrent?: (value: T) => boolean;
+  onDiscard?: (value: T) => void;
 }
 export function createQueue<T>(
   processItem: (value: T, signal: AbortSignal) => Promise<void>,
@@ -20,7 +20,7 @@ export function createQueue<T>(
     valor: T;
     desde: number;
   }[] = [];
-  const now = options.ahora ?? Date.now;
+  const now = options.now ?? Date.now;
   const control = new AbortController();
   let current: {
     valor: T;
@@ -34,18 +34,18 @@ export function createQueue<T>(
       while (pending.length && !control.signal.aborted) {
         const next = pending.shift()!;
         if (
-          now() - next.desde >= (options.esperaMs ?? MAX_ANNOUNCEMENT_WAIT_MS) ||
-          options.vigente?.(next.valor) === false
+          now() - next.desde >= (options.waitMs ?? MAX_ANNOUNCEMENT_WAIT_MS) ||
+          options.isCurrent?.(next.valor) === false
         ) {
-          options.alDescartar?.(next.valor);
+          options.onDiscard?.(next.valor);
           continue;
         }
         const task = { valor: next.valor, control: new AbortController() };
         current = task;
         const limit = setTimeout(() => {
           task.control.abort();
-          options.alDescartar?.(task.valor);
-        }, options.duracionMs ?? MAX_ANNOUNCEMENT_DURATION_MS);
+          options.onDiscard?.(task.valor);
+        }, options.durationMs ?? MAX_ANNOUNCEMENT_DURATION_MS);
         try {
           await processItem(next.valor, task.control.signal);
         } catch (error) {
@@ -60,26 +60,26 @@ export function createQueue<T>(
     }
   }
   return {
-    agregar(value: T) {
+    add(value: T) {
       if (control.signal.aborted) return false;
-      if (pending.length + Number(working) >= (options.limite ?? MAX_ANNOUNCEMENTS)) {
-        options.alDescartar?.(value);
+      if (pending.length + Number(working) >= (options.limit ?? MAX_ANNOUNCEMENTS)) {
+        options.onDiscard?.(value);
         return false;
       }
       pending.push({ valor: value, desde: now() });
       void consume();
       return true;
     },
-    descartar(matches: (value: T) => boolean) {
+    discard(matches: (value: T) => boolean) {
       for (let i = pending.length - 1; i >= 0; i--) {
         if (matches(pending[i].valor)) {
           const [dropped] = pending.splice(i, 1);
-          options.alDescartar?.(dropped.valor);
+          options.onDiscard?.(dropped.valor);
         }
       }
       if (current && matches(current.valor)) current.control.abort();
     },
-    detener() {
+    stop() {
       pending.length = 0;
       control.abort();
       current?.control.abort();

@@ -35,5 +35,5 @@ export function useMediaRotation(videos: string[]) {
     );
   const remove = (id: number) =>
     setPieces((currentPieces) => currentPieces.filter((p) => p.id !== id));
-  return { piezas: pieces, avanzar: advance, precargarSiguiente: preloadNext, quitar: remove };
+  return { pieces: pieces, advance: advance, preloadNext: preloadNext, remove: remove };
 }

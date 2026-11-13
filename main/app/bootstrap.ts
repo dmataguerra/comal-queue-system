@@ -73,17 +73,17 @@ export async function bootstrap(
     broadcast.audioDelivery(delivery);
   });
   const store = createStore({
-    ruta: paths.stateFile,
+    filePath: paths.stateFile,
     logger,
-    antesDeAnunciar: audioDeliveries.comprobarCapacidad,
-    esperaAnuncioMs: MAX_ANNOUNCEMENT_WAIT_MS,
+    beforeAnnounce: audioDeliveries.ensureCapacity,
+    announcementWaitMs: MAX_ANNOUNCEMENT_WAIT_MS,
   });
-  disposers.push(() => store.cerrar());
-  store.suscribir((snapshot, announcement) => {
-    audioDeliveries.sincronizar(snapshot);
-    if (announcement) audioDeliveries.registrar(announcement);
+  disposers.push(() => store.close());
+  store.subscribe((snapshot, announcement) => {
+    audioDeliveries.sync(snapshot);
+    if (announcement) audioDeliveries.register(announcement);
   });
-  const sweep = setInterval(audioDeliveries.vencer, APP_CONFIG.audioSweepIntervalMs);
+  const sweep = setInterval(audioDeliveries.expire, APP_CONFIG.audioSweepIntervalMs);
   disposers.push(() => clearInterval(sweep));
   // `ventanas` and `reload` are referenced by the config callback, which only fires after
   // startup finishes, so both are assigned before it can run.
@@ -97,16 +97,16 @@ export async function bootstrap(
   // 4. Content.
   seedContent(paths.factoryContentDir, paths.contentDir, logger);
   const content = watchContent(paths.contentDir, broadcast.content, logger);
-  let inventory = content.inicial;
+  let inventory = content.initial;
   disposers.push(
     broadcast.add({
-      difundirContenido: (updated) => (inventory = updated),
-      difundirConfig: () => {},
-      difundirPantallas: () => {},
-      difundirEntregaAudio: () => {},
+      broadcastContent: (updated) => (inventory = updated),
+      broadcastConfig: () => {},
+      broadcastScreens: () => {},
+      broadcastAudioDelivery: () => {},
     }),
   );
-  disposers.push(content.detener);
+  disposers.push(content.stop);
   const contentActions = createContentActions({
     contentDir: paths.contentDir,
     logger,
@@ -128,58 +128,58 @@ export async function bootstrap(
     preload: paths.preload,
     icon: paths.windowIcon,
     url: paths.viewUrl,
-    pantallaPreferida: () => config.get().pantallaPublica,
-    alCambiarPantallas: (updatedScreens) => {
+    preferredDisplay: () => config.get().pantallaPublica,
+    onScreensChanged: (updatedScreens) => {
       screens = updatedScreens;
       broadcast.screens(updatedScreens);
     },
-    alCerrarOperador: () => app.quit(),
-    alReiniciarPublica: () => audioDeliveries.reanudarInterrumpidos(),
+    onOperatorClosed: () => app.quit(),
+    onDisplayReplaced: () => audioDeliveries.resumeInterrupted(),
     logger,
   });
   const diagnostics = createDiagnosticsProvider({
-    carpetaDatos: paths.dataDir,
+    dataDir: paths.dataDir,
     version: app.getVersion(),
     store,
     config: config.get,
-    inventario: () => inventory,
-    pantallas: () => screens,
-    ventanas: windows.estadoVentanas,
-    salud: () => ({
+    inventory: () => inventory,
+    screens: () => screens,
+    windows: windows.windowStatus,
+    health: () => ({
       ...health.snapshot(),
       ultimoErrorAplicacion: logger.lastError()?.message ?? null,
     }),
   });
   const initialState = (): InitialState => ({
-    instantanea: store.obtener(),
+    instantanea: store.getSnapshot(),
     revision: store.revision(),
     config: config.get(),
     inventario: inventory,
     pantallas: screens,
     entregaAudio: lastDelivery,
-    entregasAudio: audioDeliveries.obtener(),
+    entregasAudio: audioDeliveries.list(),
   });
   const configureYouTube = (url: string | null) => config.update({ youtubeUrl: url });
   const configureVolume = (voice: number, media: number) =>
     config.update({ volumenVoz: voice, volumenMusica: media });
   // 6. Transports: IPC for the Electron windows, HTTP+SSE for a plain browser.
   const ipc = connectIpc({
-    abrirManual: createManualOpener({
+    openManual: createManualOpener({
       origen: paths.manualSource,
       cache: paths.manualCache,
       abrir: (filePath) => shell.openPath(filePath),
     }),
-    configurarVolumen: configureVolume,
-    configurarYouTube: configureYouTube,
-    diagnostico: diagnostics,
-    informarSalud: health.report,
-    confirmarAnuncio: audioDeliveries.confirmar,
+    setVolume: configureVolume,
+    setYouTube: configureYouTube,
+    diagnostics: diagnostics,
+    reportHealth: health.report,
+    confirmAnnouncement: audioDeliveries.confirm,
     store,
-    inicial: initialState,
-    esOperador: windows.esOperador,
-    esPublica: windows.esPublica,
-    urlVista: paths.viewUrl,
-    destinos: windows.destinos,
+    initialState: initialState,
+    isOperator: windows.isOperator,
+    isDisplay: windows.isDisplay,
+    viewUrl: paths.viewUrl,
+    targets: windows.targets,
     ...contentActions,
     logger,
   });
@@ -187,40 +187,40 @@ export async function bootstrap(
   const reload = createDailyReload({
     time: () => config.get().recargaDiaria,
     run: () => {
-      store.reiniciarSiCambioDia();
-      windows.recargarPublica();
+      store.resetIfDayChanged();
+      windows.reloadDisplay();
     },
     logger,
   });
   disposers.push(reload.stop);
   onConfigChanged = (next, previous) => {
     broadcast.config(next);
-    if (next.pantallaPublica !== previous.pantallaPublica) windows.sincronizar();
+    if (next.pantallaPublica !== previous.pantallaPublica) windows.sync();
     if (next.recargaDiaria !== previous.recargaDiaria) reload.schedule();
   };
-  windows.iniciar();
-  disposers.push(() => windows.cerrar());
+  windows.start();
+  disposers.push(() => windows.close());
   try {
     const webServer = await createWebServer({
-      puerto: env.serverPort,
-      informarSalud: health.report,
-      vistas: paths.viewsDir,
-      contenido: paths.contentDir,
+      port: env.serverPort,
+      reportHealth: health.report,
+      viewsDir: paths.viewsDir,
+      contentDir: paths.contentDir,
       store,
-      inicial: initialState,
-      diagnostico: diagnostics,
-      configurarYouTube: configureYouTube,
-      configurarVolumen: configureVolume,
+      initialState: initialState,
+      diagnostics: diagnostics,
+      setYouTube: configureYouTube,
+      setVolume: configureVolume,
       ...contentActions,
-      confirmarAnuncio: audioDeliveries.confirmar,
+      confirmAnnouncement: audioDeliveries.confirm,
       logger,
     });
-    disposers.push(broadcast.add(webServer), () => webServer.cerrar());
-    logger.info(`Navegador local: ${webServer.origen} y ${webServer.origen}/publica`);
+    disposers.push(broadcast.add(webServer), () => webServer.close());
+    logger.info(`Navegador local: ${webServer.origin} y ${webServer.origin}/publica`);
   } catch (error) {
     logger.error(`No se pudo iniciar el navegador local: ${(error as Error).message}`);
   }
   reload.schedule();
   logger.info(`Turnero iniciado · datos en ${paths.dataDir}`);
-  return { disposers, focusOperator: () => windows.enfocarOperador() };
+  return { disposers, focusOperator: () => windows.focusOperator() };
 }

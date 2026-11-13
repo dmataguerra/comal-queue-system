@@ -37,7 +37,7 @@ export function createAudioDeliveries(
     }
   }
   return {
-    comprobarCapacidad: () => {
+    ensureCapacity: () => {
       expire();
       if ([...deliveries.values()].filter(isActive).length >= MAX_ANNOUNCEMENTS)
         throw new AppError(
@@ -45,7 +45,7 @@ export function createAudioDeliveries(
           `La cola de audio está llena (${MAX_ANNOUNCEMENTS} anuncios). Espera a que termine uno y vuelve a llamar. El turno no cambió.`,
         );
     },
-    registrar(announcement: Announcement) {
+    register(announcement: Announcement) {
       const e: AudioDelivery = {
         id: announcement.id,
         n: announcement.n,
@@ -60,7 +60,7 @@ export function createAudioDeliveries(
       }
       broadcast(e);
     },
-    confirmar: (id: number, n: number, state: Exclude<AudioDelivery['estado'], 'pendiente'>) => {
+    confirm: (id: number, n: number, state: Exclude<AudioDelivery['estado'], 'pendiente'>) => {
       expire();
       const e = deliveries.get(id);
       if (!e || e.n !== n || !isActive(e)) return;
@@ -74,7 +74,7 @@ export function createAudioDeliveries(
           : undefined,
       );
     },
-    sincronizar(snapshot: Snapshot) {
+    sync(snapshot: Snapshot) {
       const visible = [snapshot.actual, ...snapshot.llamados];
       for (const e of deliveries.values()) {
         if (e.estado === 'pendiente' && !visible.includes(e.n))
@@ -87,14 +87,14 @@ export function createAudioDeliveries(
      * go back to pending with a fresh wait window so the next view plays them instead of
      * letting them expire as "reproduciendo".
      */
-    reanudarInterrumpidos() {
+    resumeInterrupted() {
       for (const e of deliveries.values()) {
         if (e.estado !== 'reproduciendo') continue;
         deadlines.set(e.id, now() + MAX_ANNOUNCEMENT_WAIT_MS);
         changeState(e, 'pendiente', 'La pantalla pública se recargó; el anuncio se repetirá.');
       }
     },
-    vencer: expire,
-    obtener: () => [...deliveries.values()],
+    expire: expire,
+    list: () => [...deliveries.values()],
   };
 }

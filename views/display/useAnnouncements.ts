@@ -136,20 +136,20 @@ export function useAnnouncements() {
         log(`Audio: ${errorMessageOf(error)}`, 'error');
       },
       {
-        vigente: (next) => next.limiteInicio === undefined || Date.now() < next.limiteInicio,
-        alDescartar: (next) => confirmAnnouncement(next.id, next.n, 'descartado'),
+        isCurrent: (next) => next.limiteInicio === undefined || Date.now() < next.limiteInicio,
+        onDiscard: (next) => confirmAnnouncement(next.id, next.n, 'descartado'),
       },
     );
-    const remove = subscribeAnnouncement((next) => queue.agregar(next));
+    const remove = subscribeAnnouncement((next) => queue.add(next));
     const removeAcks = subscribeAudioDelivery((delivery) => {
-      if (delivery.estado === 'descartado') queue.descartar((next) => next.id === delivery.id);
+      if (delivery.estado === 'descartado') queue.discard((next) => next.id === delivery.id);
     });
     return () => {
       remove();
       removeAcks();
-      queue.detener();
+      queue.stop();
       closeAudio();
     };
   }, [subscribeAnnouncement, subscribeAudioDelivery, log, reportHealth, confirmAnnouncement]);
-  return { anuncio: announcement, atenuado: ducked, confirmarAtenuacion: confirmDucking };
+  return { announcement: announcement, ducked: ducked, confirmDucking: confirmDucking };
 }

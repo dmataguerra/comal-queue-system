@@ -31,8 +31,8 @@ const subscribe = (fn: () => void) => {
 export function useSize() {
   const size = useSyncExternalStore(subscribe, () => current);
   return {
-    tamanio: size,
-    cambiar: (value: Size) => {
+    size: size,
+    change: (value: Size) => {
       localStorage.setItem(key, String(value));
       apply(value);
     },

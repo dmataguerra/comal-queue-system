@@ -18,28 +18,28 @@ afterEach(() => {
   mock.timers.reset();
   rmSync(root, { recursive: true, force: true });
 });
-const open = () => createStore({ ruta: filePath, vigenciaMs: ONE_DAY });
+const open = () => createStore({ filePath: filePath, expiryMs: ONE_DAY });
 const callTurn = (store: Store, ...inputs: string[]) => {
-  for (const input of inputs) store.despachar({ tipo: 'LLAMAR', entrada: input });
+  for (const input of inputs) store.dispatch({ tipo: 'LLAMAR', entrada: input });
 };
 test('apagado de un día para otro: al reabrir después de medianoche arranca vacío', () => {
   mock.timers.enable({ apis: ['Date', 'setTimeout'], now: time(21, 23, 0) });
   callTurn(open(), '10', '2', '5', '1');
   mock.timers.setTime(time(21, 23, 59));
-  assert.equal(open().obtener().actual, 1, 'el mismo día, antes de vencer, siguen');
+  assert.equal(open().getSnapshot().actual, 1, 'el mismo día, antes de vencer, siguen');
   mock.timers.setTime(time(22, 0, 0));
-  assert.deepEqual(open().obtener(), EMPTY);
+  assert.deepEqual(open().getSnapshot(), EMPTY);
 });
 test('encendida toda la noche: los turnos siguen tras medianoche y la recarga los limpia', () => {
   mock.timers.enable({ apis: ['Date', 'setTimeout'], now: time(21, 14, 0) });
   const store = open();
   callTurn(store, '10', '2', '5', '1');
   const wait = msUntilTime('04:00');
-  setTimeout(() => store.reiniciarSiCambioDia(), wait);
+  setTimeout(() => store.resetIfDayChanged(), wait);
   mock.timers.tick(wait - 1);
-  assert.equal(store.obtener().actual, 1, 'sin despachos ni recarga, la pantalla no cambia');
+  assert.equal(store.getSnapshot().actual, 1, 'sin despachos ni recarga, la pantalla no cambia');
   mock.timers.tick(1);
-  assert.deepEqual(store.obtener(), EMPTY);
+  assert.deepEqual(store.getSnapshot(), EMPTY);
   const saved = JSON.parse(readFileSync(filePath, 'utf8'));
   assert.deepEqual([saved.fecha, saved.actual, saved.llamados], ['2026-09-22', null, []]);
 });

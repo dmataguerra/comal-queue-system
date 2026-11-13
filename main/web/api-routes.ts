@@ -17,12 +17,12 @@ export type ApiHandler = (data: unknown) => unknown;
 
 export function createApiRoutes(options: ServerOptions): Map<string, ApiHandler> {
   return new Map<string, ApiHandler>([
-    ['/api/accion', (data) => options.store.despachar(validateAction(data))],
+    ['/api/accion', (data) => options.store.dispatch(validateAction(data))],
     [
       '/api/volumen',
       (data) => {
         if (!Array.isArray(data) || data.length !== 2) throw new Error('Volumen inválido.');
-        options.configurarVolumen(...validateVolumes(data[0], data[1]));
+        options.setVolume(...validateVolumes(data[0], data[1]));
         return null;
       },
     ],
@@ -33,7 +33,7 @@ export function createApiRoutes(options: ServerOptions): Map<string, ApiHandler>
           throw new Error(
             'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',
           );
-        options.configurarYouTube(validateYouTube(data));
+        options.setYouTube(validateYouTube(data));
         return null;
       },
     ],
@@ -41,7 +41,7 @@ export function createApiRoutes(options: ServerOptions): Map<string, ApiHandler>
       '/api/salud',
       (data) => {
         if (!Array.isArray(data) || data.length !== 2) throw new Error('Salud inválida.');
-        options.informarSalud(...validateHealth(data[0], data[1]));
+        options.reportHealth(...validateHealth(data[0], data[1]));
         return null;
       },
     ],
@@ -56,25 +56,23 @@ export function createApiRoutes(options: ServerOptions): Map<string, ApiHandler>
     [
       '/api/audio',
       (data) => {
-        options.confirmarAnuncio(...validateAudioAck(data));
+        options.confirmAnnouncement(...validateAudioAck(data));
         return null;
       },
     ],
-    ['/api/contenido/importar', (data) => options.importarContenido(validateCategory(data))],
+    ['/api/contenido/importar', (data) => options.importContent(validateCategory(data))],
     [
       '/api/contenido/quitar',
       (data) => {
         if (typeof data !== 'string' || !data.startsWith('/contenido/'))
           throw new Error('Archivo inválido.');
-        return options.quitarContenido(validateContentUrl(`turnero://app${data}`));
+        return options.removeContent(validateContentUrl(`turnero://app${data}`));
       },
     ],
     [
       '/api/contenido/abrir',
       async (data) => {
-        await options.abrirCarpetaContenido(
-          validateOptionalCategory(data === null ? undefined : data),
-        );
+        await options.openContentFolder(validateOptionalCategory(data === null ? undefined : data));
         return null;
       },
     ],

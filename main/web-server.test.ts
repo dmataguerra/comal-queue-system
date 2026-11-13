@@ -12,34 +12,34 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
   mkdirSync(join(root, 'manual'));
   const manual = Buffer.from('%PDF-1.7\nmanual de prueba');
   writeFileSync(join(root, 'manual', 'manual-usuario-0.4.0.pdf'), manual);
-  const store = createStore({ ruta: join(root, 'estado.json') });
+  const store = createStore({ filePath: join(root, 'estado.json') });
   const received: unknown[] = [];
   const health: unknown[] = [];
   const logs: string[] = [];
   const youtube: unknown[] = [];
   const server = await createWebServer({
-    informarSalud: (...args) => {
+    reportHealth: (...args) => {
       health.push(args);
     },
-    vistas: root,
-    contenido: root,
-    puerto: 0,
+    viewsDir: root,
+    contentDir: root,
+    port: 0,
     store,
-    inicial: () => ({
-      instantanea: store.obtener(),
+    initialState: () => ({
+      instantanea: store.getSnapshot(),
       config: DEFAULT_CONFIG,
       inventario: { videos: [], banner: [], voz: [], aviso: null },
       pantallas: { publica: 'ventana' },
     }),
-    diagnostico: () => ({}),
-    configurarVolumen: () => {},
-    configurarYouTube: (url) => {
+    diagnostics: () => ({}),
+    setVolume: () => {},
+    setYouTube: (url) => {
       youtube.push(url);
     },
-    importarContenido: async () => ({ agregados: [], omitidos: [], cancelado: true }),
-    quitarContenido: () => false,
-    abrirCarpetaContenido: async () => {},
-    confirmarAnuncio: (...args) => {
+    importContent: async () => ({ agregados: [], omitidos: [], cancelado: true }),
+    removeContent: () => false,
+    openContentFolder: async () => {},
+    confirmAnnouncement: (...args) => {
       received.push(args);
     },
     logger: messageLogger((message) => {
@@ -47,7 +47,7 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     }),
   });
   try {
-    const pdf = await fetch(`${server.origen}/manual/manual-usuario-0.4.0.pdf`);
+    const pdf = await fetch(`${server.origin}/manual/manual-usuario-0.4.0.pdf`);
     assert.equal(pdf.status, 200);
     assert.equal(pdf.headers.get('content-type'), 'application/pdf');
     assert.deepEqual(Buffer.from(await pdf.arrayBuffer()), manual);
@@ -65,10 +65,10 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
       [1, 42, 'pendiente'],
       [Number.MAX_SAFE_INTEGER + 1, 42, 'fallo'],
     ]) {
-      const r = await fetch(`${server.origen}/api/audio`, {
+      const r = await fetch(`${server.origin}/api/audio`, {
         method: 'POST',
         headers: {
-          Origin: server.origen,
+          Origin: server.origin,
           'Content-Type': 'application/json',
           'X-Turnero-Cliente': 'navegador',
         },
@@ -79,10 +79,10 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     }
     assert.equal(received.length, 0);
     for (const state of ['reproduciendo', 'reproducido', 'fallo', 'descartado']) {
-      const r = await fetch(`${server.origen}/api/audio`, {
+      const r = await fetch(`${server.origin}/api/audio`, {
         method: 'POST',
         headers: {
-          Origin: server.origen,
+          Origin: server.origin,
           'Content-Type': 'application/json',
           'X-Turnero-Cliente': 'navegador',
         },
@@ -93,10 +93,10 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     }
     assert.equal(received.length, 4);
     const post = async (filePath: string, data: unknown) => {
-      const r = await fetch(`${server.origen}/api/${filePath}`, {
+      const r = await fetch(`${server.origin}/api/${filePath}`, {
         method: 'POST',
         headers: {
-          Origin: server.origen,
+          Origin: server.origin,
           'Content-Type': 'application/json',
           'X-Turnero-Cliente': 'navegador',
         },
@@ -120,8 +120,8 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     assert.ok(logs.includes('Audio de prueba falló'));
     assert.equal((await post('registro', 'x'.repeat(501))).status, 400);
   } finally {
-    server.cerrar();
-    store.cerrar();
+    server.close();
+    store.close();
     rmSync(root, { recursive: true, force: true });
   }
 });

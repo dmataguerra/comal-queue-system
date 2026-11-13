@@ -24,16 +24,16 @@ function folder() {
 test('guarda y lee actual y llamados; deshacer no se persiste', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
-    const state = callTurn(callTurn(INITIAL_STATE, '43').estado, '213298').estado;
+    const state = callTurn(callTurn(INITIAL_STATE, '43').state, '213298').state;
     saveState(filePath, state, '2026-09-11');
     assert.equal(existsSync(`${filePath}.tmp`), false);
     const saved = JSON.parse(readFileSync(filePath, 'utf8'));
     assert.deepEqual([saved.fecha, saved.actual, saved.llamados], ['2026-09-11', 98, [43]]);
     assert.equal('deshacer' in saved, false);
-    assert.deepEqual(readState(filePath, '2026-09-11').estado, {
-      actual: 98,
-      llamados: [43],
-      deshacer: null,
+    assert.deepEqual(readState(filePath, '2026-09-11').state, {
+      current: 98,
+      called: [43],
+      undo: null,
     });
   } finally {
     clear();
@@ -42,7 +42,7 @@ test('guarda y lee actual y llamados; deshacer no se persiste', () => {
 test('guarda y lee la hora del último anuncio de cada número en pantalla', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
-    const state = callTurn(callTurn(INITIAL_STATE, '43').estado, '98').estado;
+    const state = callTurn(callTurn(INITIAL_STATE, '43').state, '98').state;
     const from = new Map([
       [98, Date.parse('2026-09-11T15:02:00.000Z')],
       [43, Date.parse('2026-09-11T15:00:00.000Z')],
@@ -52,7 +52,7 @@ test('guarda y lee la hora del último anuncio de cada número en pantalla', () 
       98: '2026-09-11T15:02:00.000Z',
       43: '2026-09-11T15:00:00.000Z',
     });
-    assert.deepEqual(readState(filePath, '2026-09-11').desde, from);
+    assert.deepEqual(readState(filePath, '2026-09-11').calledSince, from);
   } finally {
     clear();
   }
@@ -66,7 +66,7 @@ test('formato anterior sin `desde`: los números cuentan desde el último guarda
     );
     const savedAt = Date.parse('2026-09-11T20:50:49.196Z');
     assert.deepEqual(
-      readState(filePath, '2026-09-11').desde,
+      readState(filePath, '2026-09-11').calledSince,
       new Map([
         [1, savedAt],
         [5, savedAt],
@@ -79,8 +79,8 @@ test('formato anterior sin `desde`: los números cuentan desde el último guarda
 test('reinicio diario: un estado de otro día arranca vacío (CU-05 paso 4)', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
-    saveState(filePath, callTurn(INITIAL_STATE, '12').estado, '2026-09-10');
-    assert.equal(readState(filePath, '2026-09-11').estado, INITIAL_STATE);
+    saveState(filePath, callTurn(INITIAL_STATE, '12').state, '2026-09-10');
+    assert.equal(readState(filePath, '2026-09-11').state, INITIAL_STATE);
   } finally {
     clear();
   }
@@ -89,7 +89,7 @@ test('archivo ausente, dañado o con forma inválida: arranca vacío y lo regist
   const { ruta: filePath, limpiar: clear } = folder();
   const logs: string[] = [];
   try {
-    assert.equal(readState(filePath, '2026-09-11').estado, INITIAL_STATE);
+    assert.equal(readState(filePath, '2026-09-11').state, INITIAL_STATE);
     for (const content of [
       '{"fecha":"2026-09-11","actual":98,',
       '{"fecha":"2026-09-11","actual":100,"llamados":[]}',
@@ -103,7 +103,7 @@ test('archivo ausente, dañado o con forma inválida: arranca vacío y lo regist
           filePath,
           '2026-09-11',
           messageLogger((m) => logs.push(m)),
-        ).estado,
+        ).state,
         INITIAL_STATE,
       );
     }
@@ -115,12 +115,12 @@ test('archivo ausente, dañado o con forma inválida: arranca vacío y lo regist
 test('reescribir sobre un estado existente lo reemplaza completo', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
-    saveState(filePath, callTurn(INITIAL_STATE, '01').estado, '2026-09-11');
+    saveState(filePath, callTurn(INITIAL_STATE, '01').state, '2026-09-11');
     saveState(filePath, INITIAL_STATE, '2026-09-11');
-    assert.deepEqual(readState(filePath, '2026-09-11').estado, {
-      actual: null,
-      llamados: [],
-      deshacer: null,
+    assert.deepEqual(readState(filePath, '2026-09-11').state, {
+      current: null,
+      called: [],
+      undo: null,
     });
   } finally {
     clear();

@@ -21,16 +21,16 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 function open() {
-  const store = createStore({ ruta: filePath });
+  const store = createStore({ filePath: filePath });
   const events: [Snapshot, Announcement | null][] = [];
-  store.suscribir((snapshot, announcement) => events.push([snapshot, announcement]));
+  store.subscribe((snapshot, announcement) => events.push([snapshot, announcement]));
   return { store, eventos: events };
 }
 const callTurn = (store: Store, ...inputs: string[]) => {
-  for (const input of inputs) store.despachar({ tipo: 'LLAMAR', entrada: input });
+  for (const input of inputs) store.dispatch({ tipo: 'LLAMAR', entrada: input });
 };
 const screen = (store: Store) => {
-  const { actual: current, llamados: calledTurns } = store.obtener();
+  const { actual: current, llamados: calledTurns } = store.getSnapshot();
   return current === null ? calledTurns : [current, ...calledTurns];
 };
 test('un turno sale de la TV a los 5 minutos exactos, sin anuncio, y se persiste', () => {
@@ -52,7 +52,7 @@ test('cada número cuenta su propio tiempo: salen del más viejo al más nuevo',
   callTurn(store, '12');
   mock.timers.tick(3 * MIN);
   assert.deepEqual(screen(store), [12, 11]);
-  assert.equal(store.obtener().puedeDeshacer, true, 'vencer un turno viejo no quita deshacer');
+  assert.equal(store.getSnapshot().puedeDeshacer, true, 'vencer un turno viejo no quita deshacer');
   mock.timers.tick(MIN);
   assert.deepEqual(screen(store), [12]);
   mock.timers.tick(MIN);
@@ -79,7 +79,7 @@ test('deshacer después de un vencimiento no revive el número vencido', () => {
   callTurn(store, '11');
   mock.timers.tick(1000);
   assert.deepEqual(screen(store), [11]);
-  const { instantanea: snapshot } = store.despachar({ tipo: 'DESHACER' });
+  const { instantanea: snapshot } = store.dispatch({ tipo: 'DESHACER' });
   assert.deepEqual(snapshot, { actual: null, llamados: [], puedeDeshacer: false });
 });
 test('quitar a mano un número no altera el tiempo de los demás', () => {
@@ -87,14 +87,14 @@ test('quitar a mano un número no altera el tiempo de los demás', () => {
   callTurn(store, '10');
   mock.timers.tick(MIN);
   callTurn(store, '11', '12');
-  store.despachar({ tipo: 'QUITAR', n: 11 });
+  store.dispatch({ tipo: 'QUITAR', n: 11 });
   mock.timers.tick(4 * MIN);
   assert.deepEqual(screen(store), [12]);
   mock.timers.tick(MIN);
   assert.deepEqual(screen(store), []);
 });
 test('al reabrir se descuenta el tiempo que la app estuvo cerrada', () => {
-  const state = { actual: 11, llamados: [10], deshacer: null };
+  const state = { current: 11, called: [10], undo: null };
   saveState(
     filePath,
     state,
