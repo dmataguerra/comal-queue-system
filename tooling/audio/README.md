@@ -156,7 +156,7 @@ Si una voz de la *Voice Library* responde 402, tu plan no la permite por API: us
 ## Aviso y verificación
 
 ```powershell
-node tooling/audio/generate-aviso.mjs
+node tooling/audio/generate-chime.mjs
 node tooling/audio/verify-audio.mjs
 ```
 
