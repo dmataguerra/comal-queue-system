@@ -44,7 +44,7 @@ export async function serveFile(req: IncomingMessage, res: ServerResponse, file:
       'Content-Range': `bytes ${copyStarted}-${finished}/${size}`,
       'Content-Length': finished - copyStarted + 1,
     });
-    // Si el archivo desaparece durante la lectura, se cierra la respuesta sin tumbar la app.
+    // If the file disappears while being read, the response is closed without crashing the app.
     await pipeline(createReadStream(file, { start: copyStarted, end: finished }), res);
     return;
   }

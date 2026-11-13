@@ -56,7 +56,7 @@ async function createEnvironment(t: TestContext) {
   };
   return { ...server, raiz: root, ruta: filePath, store, headers, logs };
 }
-test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin cambiar estado', async (t) => {
+test('HTTP rejects unauthorized Host, Origin and write requests without changing state', async (t) => {
   const e = await createEnvironment(t);
   const before = e.store.getSnapshot();
   const body = JSON.stringify({ tipo: 'LLAMAR', entrada: '42' });
@@ -95,7 +95,7 @@ test('HTTP rechaza Host, Origin y solicitudes de escritura no autorizadas sin ca
   });
   assert.deepEqual(e.store.getSnapshot(), before);
 });
-test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados', async (t) => {
+test('HTTP rejects encoded traversal, invalid paths and unexpected methods', async (t) => {
   const e = await createEnvironment(t);
   for (const path of [
     '/%2e%2e%5cprivado.txt',
@@ -116,7 +116,7 @@ test('HTTP rechaza traversal codificado, rutas inválidas y métodos inesperados
     await res.text();
   }
 });
-test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas maliciosas', async (t) => {
+test('HTTP limits bodies, validates JSON and stays operational after malicious input', async (t) => {
   const e = await createEnvironment(t);
   for (const body of ['{', 'null', '[]', '"' + 'x'.repeat(70000) + '"']) {
     const res = await fetch(`${e.origin}/api/accion`, {
@@ -136,7 +136,7 @@ test('HTTP limita cuerpos, valida JSON y sigue operativo después de entradas ma
   assert.equal(res.status, 200);
   assert.equal((await res.json()).instantanea.actual, 42);
 });
-test('HTTP conserva bytes, CSP y rangos de multimedia incluso con límites extremos', async (t) => {
+test('HTTP preserves bytes, CSP and media ranges even with extreme limits', async (t) => {
   const e = await createEnvironment(t);
   const html = await fetch(`${e.origin}/index.html`);
   assert.equal(html.status, 200);
@@ -165,7 +165,7 @@ test('HTTP conserva bytes, CSP y rangos de multimedia incluso con límites extre
   assert.equal(empty.status, 416);
   await empty.text();
 });
-test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado confirmado', async (t) => {
+test('HTTP serializes a burst of 100 calls and persists the last confirmed state', async (t) => {
   const e = await createEnvironment(t);
   const responses = await Promise.all(
     Array.from({ length: 100 }, async (_, n) => {
@@ -190,7 +190,7 @@ test('HTTP serializa una ráfaga de 100 llamadas y persiste el último estado co
   assert.equal(persisted.actual, last.instantanea.actual);
   assert.deepEqual(persisted.llamados, last.instantanea.llamados);
 });
-test('HTTP notifica por SSE y libera la suscripción cuando el cliente desconecta', async (t) => {
+test('HTTP notifies via SSE and releases the subscription when the client disconnects', async (t) => {
   const e = await createEnvironment(t);
   const controller = new AbortController();
   const res = await fetch(`${e.origin}/api/events`, { signal: controller.signal });
@@ -203,7 +203,7 @@ test('HTTP notifica por SSE y libera la suscripción cuando el cliente desconect
   e.store.dispatch({ tipo: 'LLAMAR', entrada: '43' });
   assert.equal(e.store.getSnapshot().actual, 43);
 });
-test('HTTP contiene errores de lectura de archivos sin terminar el proceso principal', async (t) => {
+test('HTTP contains file read errors without terminating the main process', async (t) => {
   const e = await createEnvironment(t);
   const original = fs.createReadStream;
   t.mock.method(

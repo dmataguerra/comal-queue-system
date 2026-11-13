@@ -21,7 +21,7 @@ function folder() {
     limpiar: () => rmSync(root, { recursive: true, force: true }),
   };
 }
-test('guarda y lee actual y llamados; deshacer no se persiste', () => {
+test('saves and reads current and calls; undo is not persisted', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
     const state = callTurn(callTurn(INITIAL_STATE, '43').state, '213298').state;
@@ -39,7 +39,7 @@ test('guarda y lee actual y llamados; deshacer no se persiste', () => {
     clear();
   }
 });
-test('guarda y lee la hora del último anuncio de cada número en pantalla', () => {
+test('saves and reads the last announcement time of each number on screen', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
     const state = callTurn(callTurn(INITIAL_STATE, '43').state, '98').state;
@@ -57,7 +57,7 @@ test('guarda y lee la hora del último anuncio de cada número en pantalla', () 
     clear();
   }
 });
-test('formato anterior sin `desde`: los números cuentan desde el último guardado', () => {
+test('previous format without `desde`: numbers count from the last save', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
     writeFileSync(
@@ -76,7 +76,7 @@ test('formato anterior sin `desde`: los números cuentan desde el último guarda
     clear();
   }
 });
-test('reinicio diario: un estado de otro día arranca vacío (CU-05 paso 4)', () => {
+test('daily reset: a state from another day starts empty (CU-05 step 4)', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
     saveState(filePath, callTurn(INITIAL_STATE, '12').state, '2026-09-10');
@@ -85,7 +85,7 @@ test('reinicio diario: un estado de otro día arranca vacío (CU-05 paso 4)', ()
     clear();
   }
 });
-test('archivo ausente, dañado o con forma inválida: arranca vacío y lo registra', () => {
+test('missing, corrupt or malformed file: starts empty and logs it', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   const logs: string[] = [];
   try {
@@ -112,7 +112,7 @@ test('archivo ausente, dañado o con forma inválida: arranca vacío y lo regist
     clear();
   }
 });
-test('reescribir sobre un estado existente lo reemplaza completo', () => {
+test('rewriting over an existing state replaces it completely', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   try {
     saveState(filePath, callTurn(INITIAL_STATE, '01').state, '2026-09-11');
@@ -126,11 +126,11 @@ test('reescribir sobre un estado existente lo reemplaza completo', () => {
     clear();
   }
 });
-test('la fecha de la jornada es la local, no la UTC', () => {
+test('the date of the day is local, not UTC', () => {
   assert.equal(localDate(new Date(2026, 8, 11, 23, 30)), '2026-09-11');
   assert.equal(localDate(new Date(2026, 0, 5, 0, 5)), '2026-01-05');
 });
-test('JSON corrupto y timestamps inválidos conservan copias diagnósticas distintas', () => {
+test('corrupt JSON and invalid timestamps keep distinct diagnostic copies', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   const messages: string[] = [];
   try {
@@ -156,7 +156,7 @@ test('JSON corrupto y timestamps inválidos conservan copias diagnósticas disti
     clear();
   }
 });
-test('un error de E/S al leer el estado no se confunde con un archivo ausente', () => {
+test('an I/O error reading the state is not confused with a missing file', () => {
   const { ruta: filePath, limpiar: clear } = folder();
   const messages: string[] = [];
   try {

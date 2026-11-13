@@ -33,7 +33,7 @@ const screen = (store: Store) => {
   const { actual: current, llamados: calledTurns } = store.getSnapshot();
   return current === null ? calledTurns : [current, ...calledTurns];
 };
-test('un turno sale de la TV a los 5 minutos exactos, sin anuncio, y se persiste', () => {
+test('a turn leaves the TV at exactly 5 minutes, without announcement, and is persisted', () => {
   const { store, eventos: events } = open();
   callTurn(store, '10');
   mock.timers.tick(5 * MIN - 1);
@@ -43,7 +43,7 @@ test('un turno sale de la TV a los 5 minutos exactos, sin anuncio, y se persiste
   const saved = JSON.parse(readFileSync(filePath, 'utf8'));
   assert.deepEqual([saved.actual, saved.llamados, saved.desde], [null, [], {}]);
 });
-test('cada número cuenta su propio tiempo: salen del más viejo al más nuevo', () => {
+test('each number counts its own time: they leave from oldest to newest', () => {
   const { store } = open();
   callTurn(store, '10');
   mock.timers.tick(MIN);
@@ -58,7 +58,7 @@ test('cada número cuenta su propio tiempo: salen del más viejo al más nuevo',
   mock.timers.tick(MIN);
   assert.deepEqual(screen(store), []);
 });
-test('rellamar o repetir el anuncio reinicia los 5 minutos de ese número', () => {
+test('re-calling or repeating the announcement restarts the 5 minutes of that number', () => {
   const { store } = open();
   callTurn(store, '10', '11');
   mock.timers.tick(4 * MIN);
@@ -72,7 +72,7 @@ test('rellamar o repetir el anuncio reinicia los 5 minutos de ese número', () =
   mock.timers.tick(1);
   assert.deepEqual(screen(store), []);
 });
-test('deshacer después de un vencimiento no revive el número vencido', () => {
+test('undo after an expiry does not revive the expired number', () => {
   const { store } = open();
   callTurn(store, '10');
   mock.timers.tick(5 * MIN - 1000);
@@ -82,7 +82,7 @@ test('deshacer después de un vencimiento no revive el número vencido', () => {
   const { instantanea: snapshot } = store.dispatch({ tipo: 'DESHACER' });
   assert.deepEqual(snapshot, { actual: null, llamados: [], puedeDeshacer: false });
 });
-test('quitar a mano un número no altera el tiempo de los demás', () => {
+test('manually removing a number does not alter the time of the others', () => {
   const { store } = open();
   callTurn(store, '10');
   mock.timers.tick(MIN);
@@ -93,7 +93,7 @@ test('quitar a mano un número no altera el tiempo de los demás', () => {
   mock.timers.tick(MIN);
   assert.deepEqual(screen(store), []);
 });
-test('al reabrir se descuenta el tiempo que la app estuvo cerrada', () => {
+test('on reopen, the time the app was closed is deducted', () => {
   const state = { current: 11, called: [10], undo: null };
   saveState(
     filePath,
@@ -111,13 +111,13 @@ test('al reabrir se descuenta el tiempo que la app estuvo cerrada', () => {
   mock.timers.tick(3 * MIN);
   assert.deepEqual(screen(store), []);
 });
-test('apagado muchas horas el mismo día: al reabrir la pantalla arranca vacía', () => {
+test('shut down for many hours the same day: on reopen the screen starts empty', () => {
   callTurn(open().store, '10', '2', '5', '1');
   mock.timers.setTime(new Date(2026, 8, 21, 19, 50).getTime());
   assert.deepEqual(screen(open().store), []);
   assert.equal(JSON.parse(readFileSync(filePath, 'utf8')).actual, null);
 });
-test('estado.json del formato anterior: cuenta desde el último guardado', () => {
+test('estado.json in the previous format: counts from the last save', () => {
   const savedAt = new Date(START - 6 * MIN).toISOString();
   writeFileSync(
     filePath,

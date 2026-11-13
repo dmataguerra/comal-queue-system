@@ -8,7 +8,7 @@ interface Rect {
   width: number;
   height: number;
 }
-// El recorrido muestra los controles y bloquea las acciones de operación mientras está abierto.
+// The tour shows the controls and blocks operation actions while it is open.
 export function GuidedTour({
   id,
   onNavigate,

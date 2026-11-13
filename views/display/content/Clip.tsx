@@ -66,7 +66,7 @@ export function Clip({
     return () => cancelAnimationFrame(frame);
   }, [volume, ramp, active, onAdjust]);
   return (
-    // El archivo local no incluye una pista de subtítulos separada.
+    // The local file does not include a separate subtitle track.
     // eslint-disable-next-line jsx-a11y/media-has-caption
     <video
       ref={ref}

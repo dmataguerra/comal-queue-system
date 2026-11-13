@@ -26,7 +26,7 @@ export const INITIAL_STATE: QueueState = Object.freeze({
   called: [],
   undo: null,
 });
-// El ticket admite hasta seis dígitos; en la pantalla sólo se usan los dos últimos.
+// A ticket may have up to six digits; the screen only uses the last two.
 export function normalize(input: unknown): number | null {
   if (typeof input !== 'string' && typeof input !== 'number') return null;
   const d = String(input).trim();

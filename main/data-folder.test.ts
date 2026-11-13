@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { migrateDocumentsData, resolveDataDir } from './data-folder.js';
-test('producción usa el perfil de la aplicación; desarrollo y ruta explícita se conservan', () => {
+test('production uses the application profile; development and explicit path are preserved', () => {
   const options = {
     empaquetada: true,
     perfil: join(tmpdir(), 'perfil'),
@@ -26,7 +26,7 @@ test('producción usa el perfil de la aplicación; desarrollo y ruta explícita 
     resolve('./datos-prueba'),
   );
 });
-test('migra configuración, turnos y multimedia sin alterar el original ni repetir la copia', () => {
+test('migrates configuration, turns and media without altering the original or repeating the copy', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   const source = join(root, 'OneDrive', 'Documentos', 'Turnero Comal');
   const destination = join(root, 'perfil', 'datos');
@@ -51,7 +51,7 @@ test('migra configuración, turnos y multimedia sin alterar el original ni repet
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('una instalación nueva no crea ni escribe en Documentos', () => {
+test('a new installation neither creates nor writes to Documents', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   try {
     const source = join(root, 'Documentos', 'Turnero Comal');
@@ -61,7 +61,7 @@ test('una instalación nueva no crea ni escribe en Documentos', () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('un fallo de lectura de la ubicación anterior no se interpreta como datos ausentes', () => {
+test('a read failure of the previous location is not interpreted as missing data', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   try {
     const source = join(root, 'origen');
@@ -74,7 +74,7 @@ test('un fallo de lectura de la ubicación anterior no se interpreta como datos 
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('una copia interrumpida no publica datos parciales y permite reintentar', () => {
+test('an interrupted copy does not publish partial data and allows retrying', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-datos-'));
   const source = join(root, 'origen');
   const destination = join(root, 'perfil', 'datos');

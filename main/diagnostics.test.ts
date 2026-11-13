@@ -3,7 +3,7 @@ import test from 'node:test';
 import type { Config } from '../shared/contract.js';
 import { createDiagnosticsProvider, availableSpace } from './diagnostics.js';
 import type { Store } from './store.js';
-test('proveedor reúne salud, inventario y espacio sin exponer datos externos', () => {
+test('provider gathers health, inventory and space without exposing external data', () => {
   const store = {
     getSnapshot: () => ({ actual: 42, llamados: [41], puedeDeshacer: false }),
     persistenceHealth: () => ({
@@ -38,7 +38,7 @@ test('proveedor reúne salud, inventario y espacio sin exponer datos externos', 
   assert.equal(data.accionPendiente, false);
   assert.equal('env' in data, false);
 });
-test('fallos de subsistemas producen datos parciales y espacio desconocido', () => {
+test('subsystem failures produce partial data and unknown space', () => {
   const get = createDiagnosticsProvider({
     dataDir: 'C:/datos',
     version: '0.3.0',

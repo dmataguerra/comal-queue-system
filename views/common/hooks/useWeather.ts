@@ -47,7 +47,7 @@ export function useWeather() {
           sunny: current.weather_code <= 1,
         });
       } catch {
-        /* El clima puede fallar sin interrumpir la pantalla. */
+        /* Weather may fail without interrupting the screen. */
       } finally {
         clearTimeout(timeoutId);
         controller.signal.removeEventListener('abort', cancel);

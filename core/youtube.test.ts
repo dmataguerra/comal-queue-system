@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { isYouTube, parseYouTube } from './youtube.js';
-test('YouTube acepta videos, enlaces cortos y playlists', () => {
+test('YouTube accepts videos, short links and playlists', () => {
   for (const url of [
     'https://youtu.be/dQw4w9WgXcQ',
     'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -14,7 +14,7 @@ test('YouTube acepta videos, enlaces cortos y playlists', () => {
     'PL1234567890',
   );
 });
-test('YouTube rechaza dominios parecidos, protocolos y parámetros malformados', () => {
+test('YouTube rejects look-alike domains, protocols and malformed parameters', () => {
   for (const url of [
     'https://youtube.com.evil.test/watch?v=dQw4w9WgXcQ',
     'javascript:alert(1)',

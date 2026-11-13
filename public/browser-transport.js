@@ -52,7 +52,7 @@ if (!window.turnero) {
       if (audioDelivery) notify('entregaAudio', audioDelivery);
       for (const delivery of audioDeliveries ?? []) notify('entregaAudio', delivery);
     } catch {
-      /* La conexión se recupera con el siguiente intento de EventSource. */
+      /* The connection recovers on the next EventSource attempt. */
     }
   };
   window.turnero = {

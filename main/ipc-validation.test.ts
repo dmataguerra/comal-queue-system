@@ -18,7 +18,7 @@ const urls = {
   operador: 'turnero://app/views/operator/index.html',
   publica: 'turnero://app/views/display/index.html',
 };
-test('volúmenes: límites, silencios y rechazo de valores no finitos', () => {
+test('volumes: limits, silences and rejection of non-finite values', () => {
   assert.deepEqual(validateVolumes(0, 0), [0, 0]);
   assert.deepEqual(validateVolumes(3, 1), [3, 1]);
   for (const value of [NaN, Infinity, -1, '1', null, undefined]) {
@@ -41,7 +41,7 @@ const authorize = (
   } | null,
   view: 'operador' | 'publica' | 'cualquiera',
 ) => authorizeIpc({ sender: sender, senderFrame: frame }, view, operatorRole, publicRole, viewUrl);
-test('IPC admite cada vista solo para su función y el estado para ambas', () => {
+test('IPC allows each view only for its function and the state for both', () => {
   assert.equal(authorize(operatorWindow, operatorWindow.mainFrame, 'operador'), 'operador');
   assert.equal(authorize(publicWindow, publicWindow.mainFrame, 'publica'), 'publica');
   assert.equal(authorize(publicWindow, publicWindow.mainFrame, 'cualquiera'), 'publica');
@@ -58,7 +58,7 @@ test('IPC admite cada vista solo para su función y el estado para ambas', () =>
   validateNoArguments([]);
   validateCount(['videos'], 1);
 });
-test('IPC rechaza remitente, marco y página ajenos', () => {
+test('IPC rejects foreign sender, frame and page', () => {
   const foreign = createSender(urls.operador);
   assert.throws(() => authorize(foreign, foreign.mainFrame, 'cualquiera'), /Vista no autorizada/);
   assert.throws(
@@ -85,7 +85,7 @@ test('IPC rechaza remitente, marco y página ajenos', () => {
   assert.throws(() => validateNoArguments(['extra']), /Argumentos no válidos/);
   assert.throws(() => validateCount([], 1), /Argumentos no válidos/);
 });
-test('IPC rechaza acciones, categorías y enlaces inválidos', () => {
+test('IPC rejects invalid actions, categories and links', () => {
   for (const action of [null, [], { tipo: 'LLAMAR', entrada: 12 }, { tipo: 'QUITAR', n: 100 }])
     assert.throws(() => validateAction(action), /Acción no válida/);
   assert.throws(() => validateCategory('voz'), /Categoría multimedia no válida/);
@@ -107,7 +107,7 @@ test('IPC rechaza acciones, categorías y enlaces inválidos', () => {
   ])
     assert.throws(() => validateContentUrl(url), /Archivo multimedia no válido/);
 });
-test('IPC rechaza volumen, rampa y registros fuera de rango', () => {
+test('IPC rejects out-of-range volume, ramp and log entries', () => {
   for (const volume of [-0.1, 1.1, Number.NaN, '1'])
     assert.throws(() => validateVolume(volume, 0), /Volumen no válido/);
   for (const ramp of [-1, 2001, Number.POSITIVE_INFINITY, '100'])

@@ -7,7 +7,7 @@ import { DEFAULT_CONFIG } from './config.js';
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', async () => {
+test('HTTP accepts only acknowledgements with the same strict IPC contract', async () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-acuses-'));
   mkdirSync(join(root, 'manual'));
   const manual = Buffer.from('%PDF-1.7\nmanual de prueba');

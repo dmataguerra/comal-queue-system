@@ -18,7 +18,7 @@ const validState = JSON.stringify({
   llamados: [],
   guardadoEn: '2026-09-25T12:00:00.000Z',
 });
-test('respaldo atómico conserva estructura, crea nombres únicos y restaura solo con app cerrada', () => {
+test('atomic backup keeps the structure, creates unique names and restores only with the app closed', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-respaldo-'));
   const data = join(root, 'datos');
   const copies = join(root, 'copias');
@@ -51,7 +51,7 @@ test('respaldo atómico conserva estructura, crea nombres únicos y restaura sol
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('restauración limpia preserva datos válidos y rechaza corrupción antes de tocar el destino', () => {
+test('clean restore preserves valid data and rejects corruption before touching the destination', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-restaurar-'));
   try {
     const data = join(root, 'datos');
@@ -88,7 +88,7 @@ test('restauración limpia preserva datos válidos y rechaza corrupción antes d
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('respaldo fallido no publica una carpeta incompleta', () => {
+test('a failed backup does not publish an incomplete folder', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-respaldo-'));
   try {
     const data = join(root, 'datos');

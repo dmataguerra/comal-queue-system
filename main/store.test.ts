@@ -21,7 +21,7 @@ function fixture(date = { valor: '2026-09-11' }) {
     limpiar: () => rmSync(root, { recursive: true, force: true }),
   };
 }
-test('llamar difunde el estado con un anuncio de id creciente, también al repetir el actual', () => {
+test('call broadcasts the state with an announcement of increasing id, also when repeating the current one', () => {
   const f = fixture();
   try {
     const first = f.store.dispatch({ tipo: 'LLAMAR', entrada: '213298' });
@@ -38,7 +38,7 @@ test('llamar difunde el estado con un anuncio de id creciente, también al repet
     f.limpiar();
   }
 });
-test('captura inválida: se responde solo al operador, sin difundir ni escribir disco', () => {
+test('invalid input: only the operator is answered, without broadcasting or writing to disk', () => {
   const f = fixture();
   try {
     const result = f.store.dispatch({ tipo: 'LLAMAR', entrada: 'abc' });
@@ -49,7 +49,7 @@ test('captura inválida: se responde solo al operador, sin difundir ni escribir 
     f.limpiar();
   }
 });
-test('deshacer difunde sin anuncio y persiste; sin nada que deshacer no difunde', () => {
+test('undo broadcasts without announcement and persists; with nothing to undo it does not broadcast', () => {
   const f = fixture();
   try {
     f.store.dispatch({ tipo: 'LLAMAR', entrada: '43' });
@@ -69,7 +69,7 @@ test('deshacer difunde sin anuncio y persiste; sin nada que deshacer no difunde'
     f.limpiar();
   }
 });
-test('quitar difunde sin anuncio y persiste; un número fuera de pantalla no difunde', () => {
+test('remove broadcasts without announcement and persists; a number off screen does not broadcast', () => {
   const f = fixture();
   try {
     for (const input of ['10', '11', '12']) f.store.dispatch({ tipo: 'LLAMAR', entrada: input });
@@ -91,7 +91,7 @@ test('quitar difunde sin anuncio y persiste; un número fuera de pantalla no dif
     f.limpiar();
   }
 });
-test('el estado sobrevive a reabrir el store el mismo día, pero sin deshacer', () => {
+test('the state survives reopening the store the same day, but without undo', () => {
   const f = fixture();
   try {
     f.store.dispatch({ tipo: 'LLAMAR', entrada: '43' });
@@ -102,7 +102,7 @@ test('el estado sobrevive a reabrir el store el mismo día, pero sin deshacer', 
     f.limpiar();
   }
 });
-test('cambio de día sin reiniciar la app: el siguiente despacho arranca de cero', () => {
+test('day change without restarting the app: the next dispatch starts from zero', () => {
   const f = fixture();
   try {
     f.store.dispatch({ tipo: 'LLAMAR', entrada: '43' });
@@ -120,7 +120,7 @@ test('cambio de día sin reiniciar la app: el siguiente despacho arranca de cero
     f.limpiar();
   }
 });
-test('un fallo persistente rechaza llamadas sin anunciar ni alterar estado y permite reintentar', () => {
+test('a persistent failure rejects calls without announcing or altering state and allows retrying', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-salud-'));
   const messages: string[] = [];
   let failure = true;
@@ -159,7 +159,7 @@ test('un fallo persistente rechaza llamadas sin anunciar ni alterar estado y per
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('un fallo al guardar el cambio de jornada conserva la jornada anterior', () => {
+test('a failure saving the day change keeps the previous day', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-cambio-fallido-'));
   const filePath = join(root, 'estado.json');
   let date = '2026-09-11';
@@ -184,7 +184,7 @@ test('un fallo al guardar el cambio de jornada conserva la jornada anterior', ()
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('el operador recibe aviso si el estado inicial estaba corrupto', () => {
+test('the operator is notified if the initial state was corrupt', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-recuperacion-'));
   try {
     const filePath = join(root, 'estado.json');

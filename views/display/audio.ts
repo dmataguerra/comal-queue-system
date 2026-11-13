@@ -105,7 +105,7 @@ export async function play(url: string, volume: number, signal: AbortSignal) {
       try {
         source.stop();
       } catch {
-        /* El cierre del audio puede coincidir con su limpieza. */
+        /* Closing the audio may coincide with its cleanup. */
       }
       source.disconnect();
       gain.disconnect();

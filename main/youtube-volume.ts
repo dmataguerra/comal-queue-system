@@ -3,8 +3,8 @@ export const volumeScript = (volume: number, ramp: number) => `(async () => {
   const id = (window.__turneroRampa = (window.__turneroRampa || 0) + 1);
   const limite = performance.now() + 6000;
   let videos = [];
-  // El iframe puede existir antes que su elemento <video>. No confirmamos el
-  // ducking hasta que el reproductor real esté presente y la rampa termine.
+  // The iframe may exist before its <video> element. Ducking is not confirmed
+  // until the real player is present and the ramp has finished.
   while (!(videos = [...document.querySelectorAll('video')]).length && performance.now() < limite) {
     if (window.__turneroRampa !== id) return { videos: 0, sonando: 0 };
     await new Promise(resolve => setTimeout(resolve, 50));

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { test } from 'node:test';
 import { createManualOpener } from './user-manual.js';
-test('el lector recibe una copia real del PDF, estable y reparable, fuera de asar', async (t) => {
+test('the reader receives a real, stable and repairable copy of the PDF, outside asar', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'comal-manual-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const source = join(root, 'original.pdf');
@@ -30,7 +30,7 @@ test('el lector recibe una copia real del PDF, estable y reparable, fuera de asa
   assert.equal(paths[0], paths[1]);
   assert.deepEqual(await readFile(paths[1]), pdf);
 });
-test('manual ausente, incompleto y lector no disponible ofrecen errores recuperables', async (t) => {
+test('missing or incomplete manual and unavailable reader give recoverable errors', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'comal-manual-error-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const source = join(root, 'manual.pdf');

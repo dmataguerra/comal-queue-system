@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { closeAudio, preload, play } from '../views/display/audio.js';
-test('audio: una nueva revisión recarga bytes bajo la misma URL; una revisión estable usa cache', async (t) => {
+test('audio: a new revision reloads bytes under the same URL; a stable revision uses the cache', async (t) => {
   const originalFetch = globalThis.fetch,
     originalContext = globalThis.AudioContext;
   let downloads = 0;
@@ -45,7 +45,7 @@ for (const scenario of [
   'decode-falla',
   'http-falla',
 ]) {
-  test(`audio: ${scenario} libera recursos o rechaza la espera`, async (t) => {
+  test(`audio: ${scenario} releases resources or rejects the wait`, async (t) => {
     t.mock.timers.enable({ apis: ['setTimeout'] });
     const originalFetch = globalThis.fetch;
     const originalContext = globalThis.AudioContext;

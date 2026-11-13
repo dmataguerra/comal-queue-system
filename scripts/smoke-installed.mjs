@@ -52,7 +52,7 @@ async function waitFor(check, message, timeout = 30000) {
       const result = await check();
       if (result) return result;
     } catch {
-      /* El ejecutable puede seguir arrancando. */
+      /* The executable may still be starting. */
     }
     await pause(250);
   }

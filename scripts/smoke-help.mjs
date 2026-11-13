@@ -47,7 +47,7 @@ async function wait(check, message, limit = 15000) {
     try {
       if (await check()) return;
     } catch {
-      /* La vista puede seguir cargando. */
+      /* The view may still be loading. */
     }
     await pause(80);
   }
@@ -978,7 +978,7 @@ async function verify() {
         if (window.webContents.getURL().includes('/operator/'))
           await capture(window, `failure-operator-${index}`);
       } catch {
-        /* Si tampoco se puede capturar la ventana, se conserva el error original. */
+        /* If the window cannot be captured either, the original error is kept. */
       }
     }
     save();

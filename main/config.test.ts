@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { DEFAULT_CONFIG, readConfig, msUntilTime, validateConfig } from './config.js';
-test('config.json ausente: se crea con los valores por defecto', () => {
+test('missing config.json: created with the default values', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   try {
     const filePath = join(root, 'config.json');
@@ -17,7 +17,7 @@ test('config.json ausente: se crea con los valores por defecto', () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('un fallo al crear config.json se informa y no simula guardado correcto', () => {
+test('a failure creating config.json is reported and does not fake a successful save', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   const messages: string[] = [];
   try {
@@ -36,7 +36,7 @@ test('un fallo al crear config.json se informa y no simula guardado correcto', (
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('valores parciales se mezclan; inválidos y claves desconocidas usan el default y se registran', () => {
+test('partial values are merged; invalid ones and unknown keys use the default and are logged', () => {
   const logs: string[] = [];
   const config = validateConfig(
     {
@@ -54,7 +54,7 @@ test('valores parciales se mezclan; inválidos y claves desconocidas usan el def
   assert.deepEqual(config.mensajes, ['Hola']);
   assert.equal(logs.length, 3);
 });
-test('una clave heredada desconocida no rompe la validación de configuración', () => {
+test('an unknown legacy key does not break configuration validation', () => {
   const messages: string[] = [];
   const config = validateConfig(
     JSON.parse('{"__proto__":{"youtubeUrl":"malicioso"}}'),
@@ -63,7 +63,7 @@ test('una clave heredada desconocida no rompe la validación de configuración',
   assert.deepEqual(config, DEFAULT_CONFIG);
   assert.match(messages[0], /clave desconocida/);
 });
-test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo del administrador', () => {
+test('corrupt JSON at startup: default values without overwriting the administrator file', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   try {
     const filePath = join(root, 'config.json');
@@ -74,7 +74,7 @@ test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo 
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('msHastaHora apunta a la próxima ocurrencia local', () => {
+test('msUntilTime points to the next local occurrence', () => {
   const now = new Date(2026, 8, 11, 3, 30);
   assert.equal(msUntilTime('04:00', now), 30 * 60 * 1000);
   assert.equal(msUntilTime('03:30', now), 24 * 60 * 60 * 1000);

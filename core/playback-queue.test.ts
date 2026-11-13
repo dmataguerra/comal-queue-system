@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createQueue } from './playback-queue.js';
-test('limita activo y pendientes y descarta por espera o pérdida de vigencia', async () => {
+test('limits active and pending items and discards them on wait timeout or loss of validity', async () => {
   const seen: number[] = [],
     discarded: number[] = [];
   let now = 0,
@@ -40,7 +40,7 @@ test('limita activo y pendientes y descarta por espera o pérdida de vigencia', 
     queue.stop();
   }
 });
-test('el watchdog aborta audio atascado y continúa con el siguiente anuncio', async () => {
+test('the watchdog aborts stuck audio and continues with the next announcement', async () => {
   const seen: number[] = [],
     discarded: number[] = [];
   let complete!: () => void;
@@ -74,7 +74,7 @@ test('el watchdog aborta audio atascado y continúa con el siguiente anuncio', a
     queue.stop();
   }
 });
-test('55 termina antes de 66 y los repetidos mantienen su lugar', async () => {
+test('55 finishes before 66 and repeats keep their place', async () => {
   const events: string[] = [];
   let finish!: () => void;
   const first = new Promise<void>((resolve) => {
@@ -105,7 +105,7 @@ test('55 termina antes de 66 y los repetidos mantienen su lugar', async () => {
   assert.deepEqual(events, ['inicio 55', 'fin 55', 'inicio 66', 'fin 66', 'inicio 66', 'fin 66']);
   queue.stop();
 });
-test('un fallo permite continuar y detener rechaza nuevos anuncios', async () => {
+test('a failure allows continuing and stopping rejects new announcements', async () => {
   const errors: unknown[] = [];
   const seen: number[] = [];
   let complete!: () => void;

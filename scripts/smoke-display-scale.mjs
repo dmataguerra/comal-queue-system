@@ -106,7 +106,7 @@ async function verify() {
             elements,
           };
         })()`);
-        // El lienzo puede estar listo antes de que sus hijos terminen de ajustarse.
+        // The canvas may be ready before its children finish resizing.
         stable =
           metrics?.ready &&
           previous?.ready &&

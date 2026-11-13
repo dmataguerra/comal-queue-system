@@ -32,7 +32,7 @@ export function saveCompleted(id: TourId, current: TourId[] = []): TourId[] {
       JSON.stringify({ version: VERSION, completados: completed }),
     );
   } catch {
-    /* La ayuda sigue funcionando aunque no se pueda guardar el avance. */
+    /* Help keeps working even if progress cannot be saved. */
   }
   return completed;
 }

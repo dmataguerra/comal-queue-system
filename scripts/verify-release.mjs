@@ -31,7 +31,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const report = verifyRelease(version, process.env);
   const target = join('test-results', 'release-preflight.json');
   mkdirSync('test-results', { recursive: true });
-  // El informe registra presencia y validez, nunca el certificado ni sus credenciales.
+  // The report records presence and validity, never the certificate or its credentials.
   writeFileSync(target, `${JSON.stringify(report, null, 2)}\n`);
   console.log(`Release preflight: ${report.status}. Evidence: ${target}`);
   for (const error of report.errors) console.error(error);

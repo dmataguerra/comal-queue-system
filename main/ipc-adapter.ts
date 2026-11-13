@@ -122,7 +122,7 @@ export function connectIpc({
       const [type, state] = validateHealth(args[0], args[1]);
       reportHealth(type, state);
     } catch {
-      /* Se ignora el mensaje si no supera la validación. */
+      /* The message is ignored if it fails validation. */
     }
   });
   ipcMain.on(IPC_CHANNELS.audioReceipt, (event, ...args: unknown[]) => {
@@ -130,7 +130,7 @@ export function connectIpc({
       authorize(event, 'publica');
       ackAnnouncement(...validateAudioAck(args));
     } catch {
-      /* Se ignora el mensaje si no supera la validación. */
+      /* The message is ignored if it fails validation. */
     }
   });
   handle(IPC_CHANNELS.dispatch, 'operador', (args) => {
@@ -166,7 +166,7 @@ export function connectIpc({
         .child(view === 'operador' ? 'renderer:operator' : 'renderer:public')
         [validateLevel(args[1])](message);
     } catch {
-      /* Se ignora el mensaje si no supera la validación. */
+      /* The message is ignored if it fails validation. */
     }
   });
   let youtubeWarning = '';

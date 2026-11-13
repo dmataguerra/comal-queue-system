@@ -22,7 +22,7 @@ async function waitFor(check, message) {
     try {
       if (await check()) return;
     } catch {
-      /* La página puede seguir cargando durante el primer intento. */
+      /* The page may still be loading during the first attempt. */
     }
     await pause(100);
   }

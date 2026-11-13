@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
 import { migrateFrom02 } from './legacy-migration.js';
-test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni repetir la migración', () => {
+test('migrates 0.2.0 turns and configuration without altering the previous database or repeating the migration', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-migracion-'));
   const data = join(root, 'datos');
   const basePath = join(root, 'comal.sqlite');
@@ -49,7 +49,7 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('configuración legacy corrupta rechaza migración sin modificar SQLite ni publicar estado vacío', () => {
+test('corrupt legacy configuration rejects migration without modifying SQLite or publishing empty state', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-migracion-corrupta-'));
   const data = join(root, 'datos');
   const basePath = join(root, 'comal.sqlite');

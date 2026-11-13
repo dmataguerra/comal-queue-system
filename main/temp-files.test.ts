@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { cleanTempJsonFiles } from './temp-files.js';
-test('inicio retira solo temporales JSON antiguos de nombre conocido', () => {
+test('startup removes only old JSON temp files with a known name', () => {
   const folder = mkdtempSync(join(tmpdir(), 'comal-temporales-'));
   try {
     const old = join(folder, 'estado.json.123.12345678-1234-1234-1234-123456789abc.tmp');

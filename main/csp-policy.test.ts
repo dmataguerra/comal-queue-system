@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCsp } from './csp-policy.js';
-test('la CSP de producción bloquea páginas remotas y permisos amplios', () => {
+test('the production CSP blocks remote pages and broad permissions', () => {
   const csp = createCsp(false);
   assert.match(csp, /default-src 'self'/);
   assert.match(csp, /frame-src https:\/\/www\.youtube\.com https:\/\/www\.youtube-nocookie\.com/);
@@ -13,7 +13,7 @@ test('la CSP de producción bloquea páginas remotas y permisos amplios', () => 
   assert.doesNotMatch(csp, /unsafe-eval|script-src[^;]*unsafe-inline|\*/);
   assert.doesNotMatch(csp, /example\.org/);
 });
-test('la CSP de desarrollo limita la recarga a Vite local', () => {
+test('the development CSP limits reload to local Vite', () => {
   const csp = createCsp(true);
   assert.match(csp, /ws:\/\/127\.0\.0\.1:5173/);
   assert.match(csp, /img-src 'self' data: turnero:\/\/app/);

@@ -23,7 +23,7 @@ import {
   removeFile,
   seedContent,
 } from './content.js';
-test('una copia lenta cede el hilo y no publica archivos parciales; las importaciones concurrentes no sobrescriben', async () => {
+test('a slow copy yields the thread and does not publish partial files; concurrent imports do not overwrite', async () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-import-async-'));
   const source = join(root, 'video.mp4');
   const data = join(root, 'datos');
@@ -65,7 +65,7 @@ test('una copia lenta cede el hilo y no publica archivos parciales; las importac
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('una copia truncada se rechaza sin publicar ni dejar temporales', async () => {
+test('a truncated copy is rejected without publishing or leaving temp files', async () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-import-partial-'));
   const source = join(root, 'foto.png');
   writeFileSync(source, 'imagen completa');
@@ -82,10 +82,10 @@ test('una copia truncada se rechaza sin publicar ni dejar temporales', async () 
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('el protocolo sirve WAV con el tipo MIME de audio correcto', () => {
+test('the protocol serves WAV with the correct audio MIME type', () => {
   assert.equal(MIME_TYPES['.wav'], 'audio/wav');
 });
-test('reemplazar una voz con el mismo nombre cambia revisión sin cambiar la URL', () => {
+test('replacing a voice with the same name changes the revision without changing the URL', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-revision-audio-'));
   try {
     buildInventory(root);
@@ -100,7 +100,7 @@ test('reemplazar una voz con el mismo nombre cambia revisión sin cambiar la URL
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('un fallo de siembra impide arrancar como si hubiera contenido y permite reintentar', () => {
+test('a seeding failure prevents starting as if content existed and allows retrying', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-siembra-'));
   try {
     const source = join(root, 'fabrica');
@@ -117,7 +117,7 @@ test('un fallo de siembra impide arrancar como si hubiera contenido y permite re
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('inventario: videos, banner, voz por número y aviso; lo no soportado se ignora y se registra una vez', () => {
+test('inventory: videos, banner, voice per number and notice; unsupported items are ignored and logged once', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-contenido-'));
   try {
     const empty = buildInventory(root);
@@ -178,7 +178,7 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el administrador no vuelve', () => {
+test('seeding: copies the factory content only once; what the administrator deletes does not come back', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-sembrar-'));
   const factory = join(root, 'fabrica'),
     data = join(root, 'datos', 'contenido');
@@ -206,7 +206,7 @@ test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el admi
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('sembrar repara audio obligatorio faltante o vacío ignorando MP3 y sin recrear banners borrados', () => {
+test('seeding repairs missing or empty required audio, ignoring MP3 and without recreating deleted banners', () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-reparar-'));
   const factory = join(root, 'fabrica');
   const data = join(root, 'datos');
@@ -241,7 +241,7 @@ test('sembrar repara audio obligatorio faltante o vacío ignorando MP3 y sin rec
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('administración: importa sin sobrescribir y solo elimina archivos multimedia inventariados', async () => {
+test('administration: imports without overwriting and only deletes inventoried media files', async () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-administrar-'));
   const source = join(root, 'origen');
   const content = join(root, 'contenido');
@@ -269,7 +269,7 @@ test('administración: importa sin sobrescribir y solo elimina archivos multimed
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('importación: un archivo vacío (descarga incompleta) se omite y no se copia', async () => {
+test('import: an empty file (incomplete download) is skipped and not copied', async () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-vacio-'));
   const source = join(root, 'origen');
   const content = join(root, 'contenido');
@@ -288,7 +288,7 @@ test('importación: un archivo vacío (descarga incompleta) se omite y no se cop
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('importación rechaza archivos grandes o disco sin reserva y limpia una copia fallida', async () => {
+test('import rejects large files or a disk without reserve and cleans up a failed copy', async () => {
   const root = mkdtempSync(join(tmpdir(), 'turnero-limites-'));
   const source = join(root, 'foto.jpeg');
   const content = join(root, 'contenido');

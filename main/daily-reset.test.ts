@@ -22,7 +22,7 @@ const open = () => createStore({ filePath: filePath, expiryMs: ONE_DAY });
 const callTurn = (store: Store, ...inputs: string[]) => {
   for (const input of inputs) store.dispatch({ tipo: 'LLAMAR', entrada: input });
 };
-test('apagado de un día para otro: al reabrir después de medianoche arranca vacío', () => {
+test('shut down overnight: reopening after midnight starts empty', () => {
   mock.timers.enable({ apis: ['Date', 'setTimeout'], now: time(21, 23, 0) });
   callTurn(open(), '10', '2', '5', '1');
   mock.timers.setTime(time(21, 23, 59));
@@ -30,7 +30,7 @@ test('apagado de un día para otro: al reabrir después de medianoche arranca va
   mock.timers.setTime(time(22, 0, 0));
   assert.deepEqual(open().getSnapshot(), EMPTY);
 });
-test('encendida toda la noche: los turnos siguen tras medianoche y la recarga los limpia', () => {
+test('left on all night: turns persist after midnight and the reload clears them', () => {
   mock.timers.enable({ apis: ['Date', 'setTimeout'], now: time(21, 14, 0) });
   const store = open();
   callTurn(store, '10', '2', '5', '1');

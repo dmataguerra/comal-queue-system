@@ -1,6 +1,6 @@
-// Convierte contenido/voz/NN.mp3 a NN.wav (PCM16, 22 050 Hz, mono) con el decodificador de Chromium.
+// Converts contenido/voz/NN.mp3 to NN.wav (PCM16, 22 050 Hz, mono) with the Chromium decoder.
 // Uso: npx electron tooling/audio/mp3-to-wav.mjs [--delete]
-// Sin dependencias nuevas: solo Electron, que ya es dependencia del proyecto.
+// No new dependencies: only Electron, which is already a project dependency.
 import { app, BrowserWindow } from 'electron';
 import { readdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';

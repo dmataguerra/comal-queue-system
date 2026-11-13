@@ -10,13 +10,13 @@ import {
   expire,
   type QueueState,
 } from './turns.js';
-test('todos los tickets de hasta seis dígitos anuncian exactamente su terminación 00–99', () => {
+test('every ticket of up to six digits announces exactly its 00–99 ending', () => {
   for (let ticket = 0; ticket < 1000000; ticket++) {
     assert.equal(normalize(String(ticket)), ticket % 100);
     assert.equal(normalize(String(ticket).padStart(6, '0')), ticket % 100);
   }
 });
-test('20.000 transiciones reproducibles coinciden con el modelo de seis turnos y corrección', () => {
+test('20,000 reproducible transitions match the six-turn model with correction', () => {
   for (const initialSeed of [1, 42, 0xc0a1, 0xffffffff]) {
     let seed = initialSeed;
     const random = (max: number) => {

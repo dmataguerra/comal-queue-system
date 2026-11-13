@@ -40,7 +40,7 @@ export function YouTubePanel({
         try {
           localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
         } catch {
-          /* La operación continúa aunque no se pueda avisar al transporte. */
+          /* The operation continues even if the transport cannot be notified. */
         }
       }
       notify(

@@ -29,7 +29,7 @@ function scenario() {
     },
   };
 }
-test('una solicitud antigua esperando video no restaura volumen sobre un ducking nuevo', async () => {
+test('an old request waiting for video does not restore volume over a new ducking', async () => {
   const e = scenario();
   const old = e.aplicar(1);
   const fresh = e.aplicar(0.15);
@@ -39,7 +39,7 @@ test('una solicitud antigua esperando video no restaura volumen sobre un ducking
   assert.equal((await fresh).videos, 1);
   assert.equal(e.videos[0].volume, 0.15);
 });
-test('confirma solo al terminar la rampa y respeta pausa y silencio', async () => {
+test('confirms only when the ramp ends and respects pause and silence', async () => {
   const e = scenario();
   e.videos.push({ volume: 1, paused: true, muted: true });
   let confirmed = false;
@@ -55,13 +55,13 @@ test('confirma solo al terminar la rampa y respeta pausa y silencio', async () =
   assert.equal(e.videos[0].paused, true);
   assert.equal(e.videos[0].muted, true);
 });
-test('sin video termina sin confirmar atenuación', async () => {
+test('without video it ends without confirming attenuation', async () => {
   const e = scenario();
   const result = e.aplicar(0.15);
   await e.avanzar(6001);
   assert.equal((await result).videos, 0);
 });
-test('una rampa reemplazada no confirma éxito ni sobrescribe el volumen nuevo', async () => {
+test('a replaced ramp neither confirms success nor overwrites the new volume', async () => {
   const e = scenario();
   e.videos.push({ volume: 1, paused: false, muted: false });
   const old = assert.rejects(e.aplicar(0.6, 400), /reemplazada/);

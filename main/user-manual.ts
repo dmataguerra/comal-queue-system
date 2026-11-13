@@ -6,7 +6,7 @@ export function createManualOpener(options: {
   cache: string;
   abrir: (filePath: string) => Promise<string>;
 }) {
-  // Compartir la apertura pendiente evita abrir dos lectores al pulsar varias veces.
+  // Sharing the pending open avoids launching two readers when clicked repeatedly.
   let pending: Promise<void> | undefined;
   const open = async () => {
     let pdf: Buffer;

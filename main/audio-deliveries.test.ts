@@ -10,7 +10,7 @@ import { createStore } from './store.js';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-test('dos llamadas del mismo número conservan IDs y acuses independientes, aun fuera de orden', () => {
+test('two calls of the same number keep independent IDs and acknowledgements, even out of order', () => {
   const deliveries = createAudioDeliveries(() => {});
   deliveries.register({ id: 1, n: 42 });
   deliveries.register({ id: 2, n: 42 });
@@ -30,7 +30,7 @@ test('dos llamadas del mismo número conservan IDs y acuses independientes, aun 
   deliveries.confirm(1, 42, 'fallo');
   assert.ok(deliveries.list().every((e) => e.estado === 'reproducido'));
 });
-test('saturación rechaza antes de guardar y no consume un ID ni altera el turno', () => {
+test('saturation rejects before saving and neither consumes an ID nor alters the turn', () => {
   const root = mkdtempSync(join(tmpdir(), 'comal-saturacion-'));
   const filePath = join(root, 'estado.json');
   const deliveries = createAudioDeliveries(() => {});
@@ -56,7 +56,7 @@ test('saturación rechaza antes de guardar y no consume un ID ni altera el turno
     rmSync(root, { recursive: true, force: true });
   }
 });
-test('caducidad, retiro y falta de acuses liberan capacidad sin aceptar acuses tardíos', () => {
+test('expiry, removal and missing acknowledgements free capacity without accepting late acknowledgements', () => {
   let currentTime = 0;
   const deliveries = createAudioDeliveries(
     () => {},
@@ -74,7 +74,7 @@ test('caducidad, retiro y falta de acuses liberan capacidad sin aceptar acuses t
   assert.equal(deliveries.list()[0].estado, 'descartado');
   deliveries.ensureCapacity();
 });
-test('el historial es acotado, sin borrar entregas activas', () => {
+test('the history is bounded, without deleting active deliveries', () => {
   const deliveries = createAudioDeliveries(() => {});
   deliveries.register({ id: 1, n: 42 });
   for (let id = 2; id < 150; id++) {

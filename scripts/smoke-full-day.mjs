@@ -467,7 +467,7 @@ async function waitForPublicPage(publicWindow) {
       )
         return true;
     } catch {
-      /* La ventana puede estar recargando. */
+      /* The window may be reloading. */
     }
     await pause(100);
   }
@@ -521,7 +521,7 @@ function readLogSummary() {
         }
       }
     } catch {
-      /* Puede no haberse creado todavía este archivo del registro. */
+      /* This log file may not have been created yet. */
     }
   }
   return summary;

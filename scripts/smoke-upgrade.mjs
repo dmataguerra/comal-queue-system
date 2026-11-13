@@ -53,7 +53,7 @@ async function waitFor(check, message, ms = 30000) {
       const value = await check();
       if (value) return value;
     } catch {
-      /* La aplicación puede seguir arrancando. */
+      /* The application may still be starting. */
     }
     await pause(250);
   }
@@ -204,7 +204,7 @@ try {
     await fetch('http://127.0.0.1:3001/api/health', { signal: AbortSignal.timeout(5000) });
     previousPortBusy = true;
   } catch {
-    /* Sin respuesta, el puerto anterior no está ocupado. */
+    /* With no response, the previous port is not in use. */
   }
   if (previousPortBusy)
     throw new Error('El puerto 3001 ya está ocupado; cierre la versión 0.2.0 antes de la prueba.');

@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { checkStateSpace, STATE_RESERVE } from './store.js';
-test('guardado de estado rechaza disco bajo antes de escribir', () => {
+test('state save rejects low disk space before writing', () => {
   assert.throws(
     () => checkStateSpace('C:/datos/estado.json', () => STATE_RESERVE - 1),
     /Espacio insuficiente/,
   );
   assert.doesNotThrow(() => checkStateSpace('C:/datos/estado.json', () => STATE_RESERVE));
 });
-test('guardado tolera consulta de espacio no disponible pero conserva otros errores', () => {
+test('save tolerates an unavailable space query but keeps other errors', () => {
   assert.doesNotThrow(() =>
     checkStateSpace('C:/datos/estado.json', () => {
       throw Object.assign(new Error('No compatible'), { code: 'ENOSYS' });
