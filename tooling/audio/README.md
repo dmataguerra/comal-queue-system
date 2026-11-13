@@ -3,9 +3,10 @@
 Los audios ya se incluyen en `contenido/`. No hace falta descargar ni instalar un sintetizador para
 usar el turnero: se generan una sola vez y la aplicación reproduce los archivos tal cual (RNF-01).
 El catálogo es **solo WAV**: la aplicación ignora cualquier `.mp3` en `contenido/voz/` y el
-verificador falla si encuentra uno. Las voces 00–99 (salvo 40) provienen de la voz neuronal
-que se oía en la versión anterior (MP3 de ElevenLabs), decodificada a WAV; el turno 40, que nunca
-tuvo un MP3 válido, conserva el WAV de Piper. Inventario medido en
+verificador falla si encuentra uno. Las 100 voces usan la misma voz neuronal que se oía en la versión
+anterior (MP3 de ElevenLabs), decodificada a WAV. El turno 40 nunca tuvo un MP3 válido: su WAV se
+obtuvo recortando «Turno cuarenta» de la grabación de 44 (con fundido de 30 ms y 0,3 s de silencio
+final), elegido tras escucharlo. Inventario medido en
 [docs/audio/audio-inventory.md](../../docs/audio/audio-inventory.md).
 
 ### Cómo se produjo

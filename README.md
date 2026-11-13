@@ -240,7 +240,7 @@ Límites de importación de contenido (`main/content.ts`): videos hasta 2 GB, im
 - Secuencia en la pantalla pública: aviso, voz y, si `repeticiones` es 2, pausa de 300 ms y voz de nuevo.
 - Verificación: `node tooling/audio/verify-audio.mjs` (o `npm run verify:audio`; también corre dentro de `npm test`). Con `--table` regenera el inventario [docs/audio/audio-inventory.md](docs/audio/audio-inventory.md).
 - Herramientas de generación en `tooling/audio/`: `generate-announcements.ps1` + `synthesize.py` (Piper), `generate-azure.mjs`, `generate-elevenlabs.mjs`, `generate-chime.mjs`, `mp3-to-wav.mjs`. Procedimientos, parámetros y licencias en [tooling/audio/README.md](tooling/audio/README.md).
-- **Pendiente:** la voz del turno 40 difiere de las demás (se conserva el WAV de Piper; el resto proviene de otra voz). Está pendiente de reemplazo.
+- Las 100 voces usan la misma voz. El turno 40 se obtuvo recortando «Turno cuarenta» de la grabación del 44, porque nunca existió un MP3 válido para ese número.
 
 ## 8. Registro (logging)
 
@@ -285,7 +285,6 @@ Estos controles existen en el repositorio y en CI (`.github/workflows/validate.y
 | Tema | Detalle |
 | --- | --- |
 | **Nombres en español por compatibilidad** | Los nombres de propiedades en el cable y en disco siguen en español a propósito: tipos de `shared/contract.ts`, API `window.turnero`, claves de `config.json` y `estado.json`, canales IPC (`shared/ipc-channels.ts`, prefijo `turnero:`), identificadores de vista `'operador'` / `'publica'` y la URL `/publica`. Renombrarlos exige una API versionada o una migración. |
-| **Voz del turno 40** | Difiere del resto del catálogo; pendiente de reemplazo (ver [Audio](#7-audio)). |
 | **YouTube en navegador** | El modo de navegador simple no admite YouTube: `public/browser-transport.js` fija `youtubeAdmitido: false`; solo funciona en la aplicación de escritorio. |
 | **Recarga de la pantalla en navegador** | La pantalla pública en un navegador simple no puede avisar al proceso principal de que se recarga, como sí lo hace la ventana de Electron (`onDisplayReplaced` en `main/windows.ts`, que reanuda las entregas de audio interrumpidas en `main/app/bootstrap.ts`). La recuperación de la carrera de recarga aplica a la pantalla de Electron. |
 | **Tamaño del repositorio** | El historial de git aún contiene un instalador de 133 MB en la rama `release/0.3.1`. Pendiente de decisión. |
