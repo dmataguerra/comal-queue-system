@@ -1,371 +1,77 @@
-import { app, dialog, Menu, protocol, shell, session } from 'electron';
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { migrarDatosDocumentos, resolverCarpetaDatos } from './carpeta-datos.js';
-import { conectarIpc } from './adaptador-ipc.js';
-import { leerConfig, msHastaHora, vigilarConfig } from './config.js';
-import {
-  importarArchivos,
-  quitarArchivo,
-  sembrarContenido,
-  vigilarContenido,
-} from './contenido.js';
-import type {
-  CategoriaContenido,
-  Config,
-  EntregaAudio,
-  Inventario,
-  Pantallas,
-  ResultadoImportacion,
-} from '../shared/contract.js';
-import { createLogger, type FileLogger } from './logger.js';
+import { app, dialog } from 'electron';
 import { silentLogger, type Logger } from '../shared/logging.js';
-import { AppError } from '../shared/errors.js';
-import { crearProveedorDiagnostico } from './diagnostico.js';
-import { limpiarTemporalesJson } from './temporales.js';
-import { crearCsp } from './politica-csp.js';
-import { registerContentProtocol } from './content-protocol.js';
-import { escribirJsonAtomico } from './escritura-atomica.js';
-import { crearStore } from './store.js';
-import { crearVentanas, type Vista } from './ventanas.js';
-import { crearEntregasAudio } from './entregas-audio.js';
-import { MAX_ESPERA_ANUNCIO_MS } from '../shared/politica-anuncios.js';
-import { crearServidorWeb } from './servidor-web.js';
-import { migrarDesde02 } from './migracion-02.js';
-import { crearAperturaManual } from './manual-usuario.js';
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'turnero',
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true,
-      stream: true,
-      corsEnabled: true,
-    },
-  },
-]);
-const urlDesarrollo = process.env.TURNERO_DEV_URL;
-const raizApp = app.getAppPath();
-const carpetaDatos = resolverCarpetaDatos({
-  personalizada: process.env.TURNERO_DATOS,
-  empaquetada: app.isPackaged,
-  perfil: app.getPath('userData'),
-  raiz: raizApp,
+import { bootstrap, type Disposer } from './app/bootstrap.js';
+import { registerPrivilegedScheme } from './app/electron-setup.js';
+import { readEnv } from './app/env.js';
+import { resolvePaths } from './app/paths.js';
+registerPrivilegedScheme();
+const env = readEnv();
+const paths = resolvePaths({
+  env,
+  appRoot: app.getAppPath(),
+  isPackaged: app.isPackaged,
+  execPath: process.execPath,
+  userData: app.getPath('userData'),
+  documents: app.getPath('documents'),
+  mainDir: import.meta.dirname,
 });
-const carpetaContenido = join(carpetaDatos, 'contenido');
-const contenidoDeFabrica = join(app.isPackaged ? dirname(process.execPath) : raizApp, 'contenido');
-const carpetaVistas = join(raizApp, 'dist');
-let archivoLog: FileLogger | null = null;
 let logger: Logger = silentLogger;
-const urlVista = (vista: Vista) =>
-  urlDesarrollo
-    ? `${urlDesarrollo}/vistas/${vista}/index.html`
-    : `turnero://app/vistas/${vista}/index.html`;
-async function iniciar() {
-  const migrados =
-    app.isPackaged && !process.env.TURNERO_DATOS
-      ? migrarDatosDocumentos(join(app.getPath('documents'), 'Turnero Comal'), carpetaDatos)
-      : false;
-  mkdirSync(carpetaDatos, { recursive: true });
-  archivoLog = createLogger(join(carpetaDatos, 'turnero.log'), { version: app.getVersion() });
-  logger = archivoLog;
-  if (migrados)
-    logger.info(`Datos copiados desde Documentos a ${carpetaDatos}; originales conservados.`);
-  limpiarTemporalesJson(carpetaDatos, logger);
-  Menu.setApplicationMenu(null);
-  if (urlDesarrollo) await session.defaultSession.clearCache();
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    { urls: ['https://www.youtube.com/embed/*'] },
-    (details, callback) => {
-      callback({
-        requestHeaders: { ...details.requestHeaders, Referer: 'https://mx.uaq.comal.local/' },
-      });
-    },
-  );
-  registerContentProtocol({
-    contentRoot: carpetaContenido,
-    viewsRoot: carpetaVistas,
-    developmentUrl: urlDesarrollo,
-    contentSecurityPolicy: crearCsp(false),
-  });
-  const rutaConfig = join(carpetaDatos, 'config.json');
-  migrarDesde02(join(app.getPath('userData'), 'comal.sqlite'), carpetaDatos, logger);
-  let config: Config = leerConfig(rutaConfig, logger);
-  let inventario: Inventario;
-  let pantallas: Pantallas = { publica: 'ninguna' };
-  const entregasAudio = crearEntregasAudio((entrega) => {
-    entregaAudio = entrega;
-    ipc.difundirEntregaAudio(entrega);
-    servidorWeb?.difundirEntregaAudio(entrega);
-    logger[
-      entrega.estado === 'fallo' ? 'error' : entrega.estado === 'descartado' ? 'warn' : 'info'
-    ](`Audio del turno ${entrega.n}, anuncio ${entrega.id}: ${entrega.estado}.`, {
-      announcementId: entrega.id,
-      turn: entrega.n,
-      status: entrega.estado,
-    });
-  });
-  const store = crearStore({
-    ruta: join(carpetaDatos, 'estado.json'),
-    logger,
-    antesDeAnunciar: entregasAudio.comprobarCapacidad,
-    esperaAnuncioMs: MAX_ESPERA_ANUNCIO_MS,
-  });
-  let saludAudio: 'correcto' | 'degradado' | 'desconocido' = 'desconocido';
-  let saludYouTube: 'activo' | 'no disponible' | 'inactivo' = 'inactivo';
-  let entregaAudio: EntregaAudio | null = null;
-  let servidorWeb: Awaited<ReturnType<typeof crearServidorWeb>> | null = null;
-  const ventanas = crearVentanas({
-    preload: join(import.meta.dirname, 'preload.cjs'),
-    icon: join(raizApp, 'public/assets/branding/comal-trojan-helmet.ico'),
-    url: urlVista,
-    pantallaPreferida: () => config.pantallaPublica,
-    alCambiarPantallas: (nuevas) => {
-      pantallas = nuevas;
-      ipc.difundirPantallas(nuevas);
-      servidorWeb?.difundirPantallas(nuevas);
-    },
-    alCerrarOperador: () => app.quit(),
-    logger,
-  });
-  const importarContenido = async (
-    categoria: CategoriaContenido,
-  ): Promise<ResultadoImportacion> => {
-    const videos = categoria === 'videos';
-    const seleccion = await dialog.showOpenDialog({
-      title: videos ? 'Agregar videos a la pantalla 2' : 'Agregar imágenes a la pantalla 2',
-      properties: ['openFile', 'multiSelections'],
-      filters: [
-        {
-          name: videos ? 'Videos compatibles' : 'Imágenes compatibles',
-          extensions: videos ? ['mp4', 'webm'] : ['jpg', 'jpeg', 'png', 'webp'],
-        },
-        { name: 'Todos los archivos', extensions: ['*'] },
-      ],
-    });
-    if (seleccion.canceled) return { agregados: [], omitidos: [], cancelado: true };
-    const resultado = await importarArchivos(
-      carpetaContenido,
-      categoria,
-      seleccion.filePaths,
-      logger,
-    );
-    if (resultado.agregados.length)
-      logger.info(`contenido: se importaron ${resultado.agregados.join(', ')}`);
-    return resultado;
-  };
-  const quitarContenido = (url: string) => {
-    const eliminado = quitarArchivo(carpetaContenido, url);
-    if (eliminado)
-      logger.info(`contenido: se eliminó ${decodeURIComponent(url.split('/').pop() ?? url)}`);
-    return eliminado;
-  };
-  const abrirCarpetaContenido = async (categoria?: CategoriaContenido) => {
-    const carpeta = join(carpetaContenido, categoria ?? '');
-    mkdirSync(carpeta, { recursive: true });
-    const error = await shell.openPath(carpeta);
-    if (error)
-      throw new AppError(
-        'CONTENT_FOLDER_UNAVAILABLE',
-        `No se pudo abrir la carpeta de multimedia: ${error}`,
-      );
-  };
-  const diagnostico = crearProveedorDiagnostico({
-    carpetaDatos,
-    version: app.getVersion(),
-    store,
-    config: () => config,
-    inventario: () => inventario,
-    pantallas: () => pantallas,
-    ventanas: ventanas.estadoVentanas,
-    salud: () => ({
-      audio: saludAudio,
-      youtube: saludYouTube,
-      ultimoErrorAplicacion: archivoLog?.lastError()?.message ?? null,
-    }),
-  });
-  const configurarYouTube = (url: string | null) => {
-    const nueva = { ...leerConfig(rutaConfig, logger), youtubeUrl: url };
+let disposers: Disposer[] = [];
+let quitting = false;
+async function shutdown() {
+  // Reverse order: transports and windows close before the store they read from.
+  for (const dispose of disposers.reverse()) {
     try {
-      escribirJsonAtomico(rutaConfig, nueva, 2);
+      await dispose();
     } catch (error) {
-      logger.error(`No se pudo guardar config.json: ${(error as Error).message}`);
-      throw error;
+      logger.warn(`Cierre incompleto: ${(error as Error).message}`);
     }
-    config = { ...config, youtubeUrl: url };
-    ipc.difundirConfig(config);
-    servidorWeb?.difundirConfig(config);
-  };
-  const configurarVolumen = (voz: number, multimedia: number) => {
-    const nueva = {
-      ...leerConfig(rutaConfig, logger),
-      volumenVoz: voz,
-      volumenMusica: multimedia,
-    };
-    escribirJsonAtomico(rutaConfig, nueva, 2);
-    config = { ...config, volumenVoz: voz, volumenMusica: multimedia };
-    ipc.difundirConfig(config);
-    servidorWeb?.difundirConfig(config);
-  };
-  const informarSalud = (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => {
-    if (tipo === 'audio') {
-      const siguiente = estado === 'correcto' ? 'correcto' : 'degradado';
-      if (saludAudio !== siguiente) {
-        if (siguiente === 'correcto') logger.info('Audio recuperado.');
-        else logger.warn('Audio degradado.');
-        saludAudio = siguiente;
-      }
-    } else {
-      const siguiente = estado === 'correcto' ? 'activo' : 'no disponible';
-      if (saludYouTube !== siguiente) {
-        if (siguiente === 'activo') logger.info('YouTube recuperado.');
-        else logger.warn('YouTube no disponible.');
-        saludYouTube = siguiente;
-      }
-    }
-  };
-  const ipc = conectarIpc({
-    abrirManual: crearAperturaManual({
-      origen: urlDesarrollo
-        ? join(raizApp, 'output', 'pdf', 'Comal++_Manual_de_usuario_0.4.0.pdf')
-        : join(carpetaVistas, 'manual', 'manual-usuario-0.4.0.pdf'),
-      cache: join(app.getPath('userData'), 'manual'),
-      abrir: (ruta) => shell.openPath(ruta),
-    }),
-    configurarVolumen,
-    diagnostico,
-    informarSalud,
-    confirmarAnuncio: entregasAudio.confirmar,
-    configurarYouTube,
-    store,
-    inicial: () => ({
-      instantanea: store.obtener(),
-      config,
-      inventario,
-      pantallas,
-      entregaAudio,
-      entregasAudio: entregasAudio.obtener(),
-    }),
-    esOperador: ventanas.esOperador,
-    esPublica: ventanas.esPublica,
-    urlVista,
-    destinos: ventanas.destinos,
-    importarContenido,
-    quitarContenido,
-    abrirCarpetaContenido,
-    logger,
-  });
-  store.suscribir((instantanea, anuncio) => {
-    entregasAudio.sincronizar(instantanea);
-    if (anuncio) entregasAudio.registrar(anuncio);
-  });
-  const vigilarAnuncios = setInterval(entregasAudio.vencer, 250);
-  sembrarContenido(contenidoDeFabrica, carpetaContenido, logger);
-  const contenido = vigilarContenido(
-    carpetaContenido,
-    (nuevo) => {
-      inventario = nuevo;
-      ipc.difundirContenido(nuevo);
-      servidorWeb?.difundirContenido(nuevo);
-    },
-    logger,
-  );
-  inventario = contenido.inicial;
-  let recarga: ReturnType<typeof setTimeout> | undefined;
-  const programarRecarga = () => {
-    clearTimeout(recarga);
-    recarga = setTimeout(() => {
-      try {
-        store.reiniciarSiCambioDia();
-        ventanas.recargarPublica();
-      } catch (error) {
-        logger.error(`No se pudo reiniciar la jornada: ${(error as Error).message}`);
-      } finally {
-        programarRecarga();
-      }
-    }, msHastaHora(config.recargaDiaria));
-  };
-  const detenerConfig = vigilarConfig(
-    rutaConfig,
-    (nueva) => {
-      const cambioPantalla = nueva.pantallaPublica !== config.pantallaPublica;
-      const cambioRecarga = nueva.recargaDiaria !== config.recargaDiaria;
-      config = nueva;
-      ipc.difundirConfig(nueva);
-      servidorWeb?.difundirConfig(nueva);
-      if (cambioPantalla) ventanas.sincronizar();
-      if (cambioRecarga) programarRecarga();
-    },
-    logger,
-  );
-  app.on('second-instance', () => ventanas.enfocarOperador());
-  app.on('before-quit', () => {
-    clearInterval(vigilarAnuncios);
-    detenerConfig();
-    contenido.detener();
-    clearTimeout(recarga);
-    store.cerrar();
-    servidorWeb?.cerrar();
-    ventanas.cerrar();
-  });
-  app.on('window-all-closed', () => app.quit());
-  ventanas.iniciar();
-  try {
-    servidorWeb = await crearServidorWeb({
-      puerto: process.env.TURNERO_PUERTO === '0' ? 0 : undefined,
-      informarSalud,
-      vistas: carpetaVistas,
-      contenido: carpetaContenido,
-      store,
-      inicial: () => ({
-        instantanea: store.obtener(),
-        config,
-        inventario,
-        pantallas,
-        entregaAudio,
-        entregasAudio: entregasAudio.obtener(),
-      }),
-      diagnostico,
-      configurarYouTube,
-      configurarVolumen,
-      importarContenido,
-      quitarContenido,
-      abrirCarpetaContenido,
-      confirmarAnuncio: entregasAudio.confirmar,
-      logger,
-    });
-    logger.info(`Navegador local: ${servidorWeb.origen} y ${servidorWeb.origen}/publica`);
-  } catch (error) {
-    logger.error(`No se pudo iniciar el navegador local: ${(error as Error).message}`);
   }
-  programarRecarga();
-  logger.info(`Turnero iniciado · datos en ${carpetaDatos}`);
+  disposers = [];
+}
+async function reportStartupFailure(error: unknown) {
+  const detail = error instanceof Error ? error.message : String(error);
+  if (logger === silentLogger) console.error('No se pudo iniciar:', error);
+  else
+    logger.error(`No se pudo iniciar: ${detail}`, {
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+  try {
+    await dialog.showMessageBox({
+      type: 'error',
+      title: 'Turnero',
+      message: 'No se pudo iniciar el turnero.',
+      detail: `${detail}\n\nCarpeta de datos: ${paths.dataDir}. Revise permisos, ruta y espacio disponible.`,
+    });
+  } catch (dialogError) {
+    console.error('No se pudo mostrar el diagnóstico de arranque:', dialogError);
+  } finally {
+    app.quit();
+  }
 }
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
+  // Lifecycle handlers are registered before any await so no event can arrive unhandled.
+  let focusOperator = () => {};
+  app.on('second-instance', () => focusOperator());
+  app.on('window-all-closed', () => app.quit());
+  app.on('before-quit', (event) => {
+    if (quitting || !disposers.length) return;
+    event.preventDefault();
+    quitting = true;
+    void shutdown().finally(() => app.quit());
+  });
   app
     .whenReady()
-    .then(iniciar)
-    .catch(async (error: unknown) => {
-      const detalle = error instanceof Error ? error.message : String(error);
-      if (archivoLog)
-        logger.error(`No se pudo iniciar: ${detalle}`, {
-          stack: error instanceof Error ? error.stack : undefined,
-        });
-      else console.error('No se pudo iniciar:', error);
-      try {
-        await dialog.showMessageBox({
-          type: 'error',
-          title: 'Turnero',
-          message: 'No se pudo iniciar el turnero.',
-          detail: `${detalle}\n\nCarpeta de datos: ${carpetaDatos}. Revise permisos, ruta y espacio disponible.`,
-        });
-      } catch (dialogError) {
-        console.error('No se pudo mostrar el diagnóstico de arranque:', dialogError);
-      } finally {
-        app.quit();
-      }
-    });
+    .then(() =>
+      bootstrap(paths, env, (fileLogger) => {
+        logger = fileLogger;
+      }),
+    )
+    .then((result) => {
+      disposers = result.disposers;
+      focusOperator = result.focusOperator;
+    })
+    .catch(reportStartupFailure);
 }

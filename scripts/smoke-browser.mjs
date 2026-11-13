@@ -127,8 +127,15 @@ async function verificar() {
     await esperar(() => {
       const registro = readFileSync(join(process.env.TURNERO_DATOS, 'turnero.log'), 'utf8');
       return (
-        registro.includes('[navegador] prueba de registro HTTP') &&
-        (registro.match(/Audio degradado\./g) ?? []).length > degradacionesPrevias
+        registro
+          .trim()
+          .split('\n')
+          .map((linea) => JSON.parse(linea))
+          .some(
+            (entrada) =>
+              entrada.component === 'renderer:browser' &&
+              entrada.message === 'prueba de registro HTTP',
+          ) && (registro.match(/Audio degradado\./g) ?? []).length > degradacionesPrevias
       );
     }, 'La salud o el mensaje HTTP no se registraron.');
     await operador.webContents.executeJavaScript('window.turnero.configurarYouTube(null)');

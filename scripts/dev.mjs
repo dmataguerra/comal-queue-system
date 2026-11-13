@@ -3,14 +3,18 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const tsc = ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.main.json'];
 if (spawnSync(process.execPath, tsc, { cwd: root, stdio: 'inherit' }).status !== 0) process.exit(1);
-const electronEnv = { ...process.env, TURNERO_DEV_URL: 'http://127.0.0.1:5173' };
+// tsc above has just emitted the shared config, so the dev URL comes from one place.
+const { devServerUrl } = await import(
+  new URL('../build/shared/app-config.js', import.meta.url).href
+);
+const electronEnv = { ...process.env, TURNERO_DEV_URL: devServerUrl };
 delete electronEnv.ELECTRON_RUN_AS_NODE;
 const children = [
   spawn(process.execPath, [...tsc, '--watch', '--preserveWatchOutput'], {
     cwd: root,
     stdio: 'inherit',
   }),
-  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1'], {
+  spawn(process.execPath, ['node_modules/vite/bin/vite.js'], {
     cwd: root,
     stdio: 'inherit',
   }),

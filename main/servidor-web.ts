@@ -28,6 +28,7 @@ import {
   validarSalud,
 } from './seguridad-ipc.js';
 import { toApiError } from '../shared/errors.js';
+import { APP_CONFIG } from '../shared/app-config.js';
 import type { Logger } from '../shared/logging.js';
 import type { Store } from './store.js';
 const MIME: Record<string, string> = {
@@ -255,10 +256,14 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
   try {
     await new Promise<void>((resolver, rechazar) => {
       servidor.once('error', rechazar);
-      servidor.listen(opciones.puerto ?? 4317, '127.0.0.1', () => {
-        servidor.off('error', rechazar);
-        resolver();
-      });
+      servidor.listen(
+        opciones.puerto ?? APP_CONFIG.localServer.defaultPort,
+        APP_CONFIG.localServer.host,
+        () => {
+          servidor.off('error', rechazar);
+          resolver();
+        },
+      );
     });
   } catch (error) {
     sinSuscripcion();
@@ -273,10 +278,12 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
       publicar('contenido', [inventarioNavegador(inventario)]),
     difundirPantallas: (pantallas: Pantallas) => publicar('pantallas', [pantallas]),
     difundirEntregaAudio: (entrega: EntregaAudio) => publicar('entregaAudio', [entrega]),
-    cerrar: () => {
-      sinSuscripcion();
-      for (const cliente of clientes) cliente.end();
-      servidor.close();
-    },
+    cerrar: () =>
+      new Promise<void>((resolver) => {
+        sinSuscripcion();
+        for (const cliente of clientes) cliente.end();
+        servidor.close(() => resolver());
+        servidor.closeAllConnections();
+      }),
   };
 }

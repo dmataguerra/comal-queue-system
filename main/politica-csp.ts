@@ -1,13 +1,14 @@
+import { APP_CONFIG, devServerWebSocketUrl } from '../shared/app-config.js';
 const YOUTUBE_SCRIPT = 'https://www.youtube.com https://s.ytimg.com';
 const YOUTUBE_FRAME = 'https://www.youtube.com https://www.youtube-nocookie.com';
 const CLIMA = 'https://api.open-meteo.com';
 export function crearCsp(desarrollo: boolean): string {
-  const contenido = desarrollo ? ' turnero://app' : '';
+  const contenido = desarrollo ? ` ${APP_CONFIG.protocol.origin}` : '';
   const script = desarrollo
     ? `'self' 'unsafe-inline' ${YOUTUBE_SCRIPT}`
     : `'self' ${YOUTUBE_SCRIPT}`;
   const connect = desarrollo
-    ? `'self' turnero://app ws://127.0.0.1:5173 ${CLIMA}`
+    ? `'self' ${APP_CONFIG.protocol.origin} ${devServerWebSocketUrl} ${CLIMA}`
     : `'self' ${CLIMA}`;
   return [
     "default-src 'self'",
