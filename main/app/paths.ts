@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { APP_CONFIG, viewUrl } from '../../shared/app-config.js';
-import { resolverCarpetaDatos } from '../carpeta-datos.js';
-import type { Vista } from '../ventanas.js';
+import { resolveDataDir } from '../data-folder.js';
+import type { View } from '../windows.js';
 import type { AppEnv } from './env.js';
 interface PathSources {
   env: AppEnv;
@@ -16,7 +16,7 @@ interface PathSources {
 export type AppPaths = ReturnType<typeof resolvePaths>;
 export function resolvePaths(sources: PathSources) {
   const { files, manual } = APP_CONFIG;
-  const dataDir = resolverCarpetaDatos({
+  const dataDir = resolveDataDir({
     personalizada: sources.env.dataDir,
     empaquetada: sources.isPackaged,
     perfil: sources.userData,
@@ -46,6 +46,6 @@ export function resolvePaths(sources: PathSources) {
     windowIcon: join(sources.appRoot, APP_CONFIG.assets.windowIcon),
     manualSource: devUrl ? join(sources.appRoot, manual.source) : join(viewsDir, manual.served),
     manualCache: join(sources.userData, 'manual'),
-    viewUrl: (view: Vista) => viewUrl(devUrl ?? APP_CONFIG.protocol.origin, view),
+    viewUrl: (view: View) => viewUrl(devUrl ?? APP_CONFIG.protocol.origin, view),
   };
 }

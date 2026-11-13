@@ -19,7 +19,7 @@ async function verify() {
     let client;
     for (let i = 0; i < 150; i++) {
       client = BrowserWindow.getAllWindows().find((w) =>
-        w.webContents.getURL().includes('/publica/'),
+        w.webContents.getURL().includes('/display/'),
       );
       if (
         client &&

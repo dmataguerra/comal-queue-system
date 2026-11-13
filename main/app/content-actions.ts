@@ -1,9 +1,9 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import type { CategoriaContenido, ResultadoImportacion } from '../../shared/contract.js';
+import type { ContentCategory, ImportResult } from '../../shared/contract.js';
 import { AppError } from '../../shared/errors.js';
 import type { Logger } from '../../shared/logging.js';
-import { importarArchivos, quitarArchivo } from '../contenido.js';
+import { importFiles, removeFile } from '../content.js';
 interface ContentActionsOptions {
   contentDir: string;
   logger: Logger;
@@ -24,27 +24,27 @@ export function createContentActions({
   openPath,
 }: ContentActionsOptions) {
   return {
-    async importarContenido(categoria: CategoriaContenido): Promise<ResultadoImportacion> {
-      const videos = categoria === 'videos';
+    async importarContenido(category: ContentCategory): Promise<ImportResult> {
+      const videos = category === 'videos';
       const files = await pickFiles({
         title: videos ? 'Agregar videos a la pantalla 2' : 'Agregar imágenes a la pantalla 2',
         filterName: videos ? 'Videos compatibles' : 'Imágenes compatibles',
         extensions: videos ? ['mp4', 'webm'] : ['jpg', 'jpeg', 'png', 'webp'],
       });
       if (!files) return { agregados: [], omitidos: [], cancelado: true };
-      const result = await importarArchivos(contentDir, categoria, files, logger);
+      const result = await importFiles(contentDir, category, files, logger);
       if (result.agregados.length)
         logger.info(`contenido: se importaron ${result.agregados.join(', ')}`);
       return result;
     },
     quitarContenido(url: string): boolean {
-      const removed = quitarArchivo(contentDir, url);
+      const removed = removeFile(contentDir, url);
       if (removed)
         logger.info(`contenido: se eliminó ${decodeURIComponent(url.split('/').pop() ?? url)}`);
       return removed;
     },
-    async abrirCarpetaContenido(categoria?: CategoriaContenido): Promise<void> {
-      const folder = join(contentDir, categoria ?? '');
+    async abrirCarpetaContenido(category?: ContentCategory): Promise<void> {
+      const folder = join(contentDir, category ?? '');
       mkdirSync(folder, { recursive: true });
       const failure = await openPath(folder);
       if (failure)

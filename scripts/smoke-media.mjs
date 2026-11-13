@@ -72,10 +72,10 @@ async function verify() {
       30000,
     );
     const operator = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/operador/'),
+      w.webContents.getURL().includes('/operator/'),
     );
     const screen = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/publica/'),
+      w.webContents.getURL().includes('/display/'),
     );
     assert.ok(operator && screen);
     for (const window of [operator, screen]) window.webContents.setBackgroundThrottling(false);
@@ -131,8 +131,8 @@ async function verify() {
     assert.ok(bytes.length > 1000, `Synthetic video did not encode frames (${bytes.length} bytes)`);
     const fixture = join(data, 'prueba.webm');
     writeFileSync(fixture, Buffer.from(bytes));
-    const { importarArchivos } = await import('../build/main/contenido.js');
-    assert.equal((await importarArchivos(content, 'videos', [fixture])).agregados.length, 1);
+    const { importFiles } = await import('../build/main/content.js');
+    assert.equal((await importFiles(content, 'videos', [fixture])).agregados.length, 1);
     await waitFor(
       () => execute(operator, "document.querySelector('.media-preview video')?.videoWidth===64"),
       'Falló la vista previa de video',

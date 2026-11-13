@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { crearCsp } from './main/politica-csp';
+import { createCsp } from './main/csp-policy';
 import { APP_CONFIG } from './shared/app-config';
 export default defineConfig({
   plugins: [
@@ -23,15 +23,15 @@ export default defineConfig({
     host: APP_CONFIG.devServer.host,
     port: APP_CONFIG.devServer.port,
     strictPort: true,
-    headers: { 'Content-Security-Policy': crearCsp(true), 'Cache-Control': 'no-store' },
+    headers: { 'Content-Security-Policy': createCsp(true), 'Cache-Control': 'no-store' },
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        operador: resolve('vistas/operador/index.html'),
-        publica: resolve('vistas/publica/index.html'),
+        operator: resolve('views/operator/index.html'),
+        display: resolve('views/display/index.html'),
       },
     },
   },

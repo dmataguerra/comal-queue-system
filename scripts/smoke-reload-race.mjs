@@ -38,8 +38,8 @@ async function verify() {
     let operator;
     let display;
     await wait(async () => {
-      operator = findWindow('operador');
-      display = findWindow('publica');
+      operator = findWindow('operator');
+      display = findWindow('display');
       return (
         operator &&
         display &&

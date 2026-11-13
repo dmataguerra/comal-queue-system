@@ -8,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const RATE = 22050;
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), '../../contenido/voz');
-const borrar = process.argv.includes('--delete');
+const deleteSource = process.argv.includes('--delete');
 
-function wavDesdePcm(pcm) {
+function wavFromPcm(pcm) {
   const data = Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength);
   const header = Buffer.alloc(44);
   header.write('RIFF', 0, 'ascii');
@@ -28,7 +28,7 @@ function wavDesdePcm(pcm) {
   return Buffer.concat([header, data]);
 }
 
-const decodificar = `(async (b64, rate) => {
+const decodeScript = `(async (b64, rate) => {
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   const ctx = new OfflineAudioContext(1, 1, rate);
   const buf = await ctx.decodeAudioData(bytes.buffer);
@@ -49,24 +49,24 @@ const decodificar = `(async (b64, rate) => {
 app.whenReady().then(async () => {
   const win = new BrowserWindow({ show: false });
   await win.loadURL('about:blank');
-  let fallos = 0;
-  for (const nombre of readdirSync(dir).filter((n) => /^\d{2}\.mp3$/i.test(n))) {
-    const origen = resolve(dir, nombre);
+  let failures = 0;
+  for (const name of readdirSync(dir).filter((n) => /^\d{2}\.mp3$/i.test(n))) {
+    const sourcePath = resolve(dir, name);
     try {
-      const b64 = readFileSync(origen).toString('base64');
+      const b64 = readFileSync(sourcePath).toString('base64');
       const r = await win.webContents.executeJavaScript(
-        `${decodificar}(${JSON.stringify(b64)}, ${RATE})`,
+        `${decodeScript}(${JSON.stringify(b64)}, ${RATE})`,
       );
       if (r.rate !== RATE) throw new Error(`frecuencia inesperada ${r.rate}`);
       const pcm = Buffer.from(r.b64, 'base64');
-      const wav = wavDesdePcm(new Int16Array(pcm.buffer, pcm.byteOffset, pcm.length / 2));
-      writeFileSync(resolve(dir, nombre.replace(/\.mp3$/i, '.wav')), wav);
-      if (borrar) unlinkSync(origen);
-      console.log(`${nombre}: ${r.channels} canal(es) -> ${(pcm.length / 2 / RATE).toFixed(3)} s`);
+      const wav = wavFromPcm(new Int16Array(pcm.buffer, pcm.byteOffset, pcm.length / 2));
+      writeFileSync(resolve(dir, name.replace(/\.mp3$/i, '.wav')), wav);
+      if (deleteSource) unlinkSync(sourcePath);
+      console.log(`${name}: ${r.channels} canal(es) -> ${(pcm.length / 2 / RATE).toFixed(3)} s`);
     } catch (error) {
-      fallos++;
-      console.error(`${nombre}: FALLO ${error.message}`);
+      failures++;
+      console.error(`${name}: FALLO ${error.message}`);
     }
   }
-  app.exit(fallos ? 1 : 0);
+  app.exit(failures ? 1 : 0);
 });

@@ -11,9 +11,9 @@ export default tseslint.config(
     files: [
       'main/**/*.{ts,cts}',
       'backend/**/*.ts',
-      'nucleo/**/*.ts',
+      'core/**/*.ts',
       'shared/**/*.ts',
-      'vistas/**/*.{ts,tsx}',
+      'views/**/*.{ts,tsx}',
       'scripts/**/*.mjs',
       'vite.config.ts',
     ],
@@ -23,9 +23,9 @@ export default tseslint.config(
     files: [
       'backend/**/*.ts',
       'main/**/*.{ts,cts}',
-      'nucleo/**/*.ts',
+      'core/**/*.ts',
       'shared/**/*.ts',
-      'vistas/**/*.{ts,tsx}',
+      'views/**/*.{ts,tsx}',
       'vite.config.ts',
     ],
     extends: [...tseslint.configs.recommendedTypeChecked],
@@ -42,7 +42,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['vistas/**/*.{ts,tsx}'],
+    files: ['views/**/*.{ts,tsx}'],
     extends: [
       react.configs.flat.recommended,
       react.configs.flat['jsx-runtime'],
@@ -62,7 +62,7 @@ export default tseslint.config(
     files: [
       'backend/**/*.ts',
       'main/**/*.{ts,cts}',
-      'nucleo/**/*.ts',
+      'core/**/*.ts',
       'scripts/**/*.mjs',
       'vite.config.ts',
     ],
@@ -73,7 +73,7 @@ export default tseslint.config(
     rules: { 'no-unused-vars': ['error', { argsIgnorePattern: '^_' }] },
   },
   {
-    files: ['main/**/*.test.ts', 'nucleo/**/*.test.ts'],
+    files: ['main/**/*.test.ts', 'core/**/*.test.ts'],
     extends: [tseslint.configs.disableTypeChecked],
     rules: { '@typescript-eslint/no-floating-promises': 'off' },
   },

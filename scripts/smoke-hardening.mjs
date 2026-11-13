@@ -29,7 +29,7 @@ async function verify() {
     let operator;
     await wait(async () => {
       operator = BrowserWindow.getAllWindows().find((w) =>
-        w.webContents.getURL().includes('/operador/'),
+        w.webContents.getURL().includes('/operator/'),
       );
       return (
         operator &&
@@ -95,7 +95,8 @@ async function verify() {
         "window.turnero.obtener().then(x=>x.entregasAudio.every(e=>e.estado!=='pendiente'&&e.estado!=='reproduciendo'))",
       ),
     );
-    const { importarArchivos } = await import('../build/main/contenido.js');
+    const { importFiles } = await import('../build/main/content.js');
+    const { silentLogger } = await import('../build/shared/logging.js');
     const origin = join(data, 'prueba.mp4');
     writeFileSync(origin, 'video de prueba');
     let start, release;
@@ -105,7 +106,7 @@ async function verify() {
     const blocked = new Promise((resolve) => {
       release = resolve;
     });
-    const operation = importarArchivos(join(data, 'contenido'), 'videos', [origin], () => {}, {
+    const operation = importFiles(join(data, 'contenido'), 'videos', [origin], silentLogger, {
       copiar: async (source, target) => {
         start();
         await blocked;

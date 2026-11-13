@@ -1,80 +1,84 @@
 if (!window.turnero) {
-  const oyentes = {
+  const listeners = {
     estado: new Set(),
     config: new Set(),
     contenido: new Set(),
     pantallas: new Set(),
     entregaAudio: new Set(),
   };
-  const avisar = (tipo, ...datos) => oyentes[tipo]?.forEach((fn) => fn(...datos));
-  const escuchar = (tipo, fn) => {
-    oyentes[tipo].add(fn);
-    return () => oyentes[tipo].delete(fn);
+  const notify = (type, ...data) => listeners[type]?.forEach((fn) => fn(...data));
+  const listen = (type, fn) => {
+    listeners[type].add(fn);
+    return () => listeners[type].delete(fn);
   };
-  async function solicitar(ruta, dato) {
-    const opciones =
-      dato === undefined
+  async function request(path, payload) {
+    const options =
+      payload === undefined
         ? {}
         : {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Turnero-Cliente': 'navegador' },
-            body: JSON.stringify(dato),
+            body: JSON.stringify(payload),
           };
-    const respuesta = await fetch(ruta, opciones);
-    const resultado = await respuesta.json();
-    if (!respuesta.ok)
-      throw Object.assign(new Error(resultado.error || 'No se pudo comunicar con el turnero.'), {
-        code: resultado.code || 'INTERNAL',
+    const response = await fetch(path, options);
+    const result = await response.json();
+    if (!response.ok)
+      throw Object.assign(new Error(result.error || 'No se pudo comunicar con el turnero.'), {
+        code: result.code || 'INTERNAL',
       });
-    return resultado;
+    return result;
   }
-  const eventos = new EventSource('/api/events');
-  eventos.onmessage = (evento) => {
-    const { tipo, datos } = JSON.parse(evento.data);
-    avisar(tipo, ...datos);
+  const eventSource = new EventSource('/api/events');
+  eventSource.onmessage = (messageEvent) => {
+    const { tipo: type, datos: data } = JSON.parse(messageEvent.data);
+    notify(type, ...data);
   };
-  eventos.onopen = async () => {
+  eventSource.onopen = async () => {
     try {
-      const { instantanea, revision, config, inventario, pantallas, entregaAudio, entregasAudio } =
-        await solicitar('/api/inicial');
+      const {
+        instantanea: snapshot,
+        revision,
+        config,
+        inventario: inventory,
+        pantallas: displays,
+        entregaAudio: audioDelivery,
+        entregasAudio: audioDeliveries,
+      } = await request('/api/inicial');
       // The revision lets the page ignore this snapshot if a newer event already arrived.
-      avisar('estado', instantanea, null, revision);
-      avisar('config', config);
-      avisar('contenido', inventario);
-      avisar('pantallas', pantallas);
-      if (entregaAudio) avisar('entregaAudio', entregaAudio);
-      for (const entrega of entregasAudio ?? []) avisar('entregaAudio', entrega);
+      notify('estado', snapshot, null, revision);
+      notify('config', config);
+      notify('contenido', inventory);
+      notify('pantallas', displays);
+      if (audioDelivery) notify('entregaAudio', audioDelivery);
+      for (const delivery of audioDeliveries ?? []) notify('entregaAudio', delivery);
     } catch {
       /* La conexión se recupera con el siguiente intento de EventSource. */
     }
   };
   window.turnero = {
     youtubeAdmitido: false,
-    obtener: () => solicitar('/api/inicial'),
-    diagnostico: () => solicitar('/api/diagnostico'),
-    despachar: (accion) => solicitar('/api/accion', accion),
-    configurarYouTube: (url) => solicitar('/api/youtube', url),
-    configurarVolumen: (voz, multimedia) => solicitar('/api/volumen', [voz, multimedia]),
-    importarContenido: (categoria) => solicitar('/api/contenido/importar', categoria),
-    quitarContenido: (url) => solicitar('/api/contenido/quitar', url),
-    abrirCarpetaContenido: (categoria) => solicitar('/api/contenido/abrir', categoria ?? null),
+    obtener: () => request('/api/inicial'),
+    diagnostico: () => request('/api/diagnostico'),
+    despachar: (action) => request('/api/accion', action),
+    configurarYouTube: (url) => request('/api/youtube', url),
+    configurarVolumen: (voice, media) => request('/api/volumen', [voice, media]),
+    importarContenido: (category) => request('/api/contenido/importar', category),
+    quitarContenido: (url) => request('/api/contenido/quitar', url),
+    abrirCarpetaContenido: (category) => request('/api/contenido/abrir', category ?? null),
     abrirManual: async () => {
-      const respuesta = await fetch('/manual/manual-usuario-0.4.0.pdf');
-      if (
-        !respuesta.ok ||
-        respuesta.headers.get('content-type')?.split(';')[0] !== 'application/pdf'
-      )
+      const response = await fetch('/manual/manual-usuario-0.4.0.pdf');
+      if (!response.ok || response.headers.get('content-type')?.split(';')[0] !== 'application/pdf')
         throw new Error('No se encontró el manual PDF. Consulta al responsable.');
-      const archivo = await respuesta.blob();
-      const url = URL.createObjectURL(archivo);
-      const enlace = document.createElement('a');
-      enlace.href = url;
-      enlace.download = 'Comal++_Manual_de_usuario_0.4.0.pdf';
-      document.body.append(enlace);
+      const file = await response.blob();
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Comal++_Manual_de_usuario_0.4.0.pdf';
+      document.body.append(link);
       try {
-        enlace.click();
+        link.click();
       } finally {
-        enlace.remove();
+        link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 30000);
       }
     },
@@ -83,17 +87,17 @@ if (!window.turnero) {
         'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',
       );
     },
-    informarSalud: (tipo, estado) => {
-      void solicitar('/api/salud', [tipo, estado]).catch(console.error);
+    informarSalud: (type, state) => {
+      void request('/api/salud', [type, state]).catch(console.error);
     },
-    confirmarAnuncio: (id, n, estado) => solicitar('/api/audio', [id, n, estado]),
-    alCambiarEstado: (fn) => escuchar('estado', fn),
-    alCambiarConfig: (fn) => escuchar('config', fn),
-    alCambiarContenido: (fn) => escuchar('contenido', fn),
-    alCambiarPantallas: (fn) => escuchar('pantallas', fn),
-    alCambiarEntregaAudio: (fn) => escuchar('entregaAudio', fn),
-    registrar: (mensaje, nivel) => {
-      void solicitar('/api/registro', [mensaje, nivel ?? 'warn']).catch(console.error);
+    confirmarAnuncio: (id, n, state) => request('/api/audio', [id, n, state]),
+    alCambiarEstado: (fn) => listen('estado', fn),
+    alCambiarConfig: (fn) => listen('config', fn),
+    alCambiarContenido: (fn) => listen('contenido', fn),
+    alCambiarPantallas: (fn) => listen('pantallas', fn),
+    alCambiarEntregaAudio: (fn) => listen('entregaAudio', fn),
+    registrar: (message, level) => {
+      void request('/api/registro', [message, level ?? 'warn']).catch(console.error);
     },
   };
 }

@@ -3,151 +3,152 @@ import assert from 'node:assert/strict';
 import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const raiz = fileURLToPath(new URL('../', import.meta.url));
-const resultados = join(raiz, 'test-results');
-mkdirSync(resultados, { recursive: true });
-process.env.TURNERO_DATOS = mkdtempSync(join(resultados, 'desktop-'));
-cpSync(join(raiz, 'contenido'), join(process.env.TURNERO_DATOS, 'contenido'), { recursive: true });
+const root = fileURLToPath(new URL('../', import.meta.url));
+const resultsDir = join(root, 'test-results');
+mkdirSync(resultsDir, { recursive: true });
+process.env.TURNERO_DATOS = mkdtempSync(join(resultsDir, 'desktop-'));
+cpSync(join(root, 'contenido'), join(process.env.TURNERO_DATOS, 'contenido'), { recursive: true });
 app.commandLine.appendSwitch('disable-gpu');
 app.disableHardwareAcceleration();
-app.setAppPath(raiz);
+app.setAppPath(root);
 app.setPath('userData', join(process.env.TURNERO_DATOS, 'electron'));
 BrowserWindow.prototype.show = function () {};
 BrowserWindow.prototype.showInactive = function () {};
 BrowserWindow.prototype.maximize = function () {};
-const pausa = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-async function capturar(ventana, nombre) {
-  await ventana.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
-  await pausa(300);
-  const imagen = await ventana.webContents.capturePage(undefined, {
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+async function capture(appWindow, name) {
+  await appWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
+  await pause(300);
+  const image = await appWindow.webContents.capturePage(undefined, {
     stayHidden: true,
     stayAwake: true,
   });
-  writeFileSync(join(resultados, nombre), imagen.toPNG());
+  writeFileSync(join(resultsDir, name), image.toPNG());
 }
-async function esperar(comprobar, mensaje, limite = 15000) {
-  const inicio = Date.now();
-  while (Date.now() - inicio < limite) {
-    if (await comprobar()) return;
-    await pausa(100);
+async function waitFor(check, message, timeout = 15000) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeout) {
+    if (await check()) return;
+    await pause(100);
   }
-  throw new Error(mensaje);
+  throw new Error(message);
 }
-async function verificar() {
+async function verify() {
   try {
     await import('../build/main/main.js');
-    await esperar(
+    await waitFor(
       () =>
         BrowserWindow.getAllWindows().filter(
           (w) =>
-            /\/vistas\/(operador|publica)\//.test(w.webContents.getURL()) &&
+            /\/views\/(operator|display)\//.test(w.webContents.getURL()) &&
             !w.webContents.isLoading(),
         ).length === 2,
       'No se crearon las dos vistas',
     );
-    const operador = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/operador/'),
+    const operatorWindow = BrowserWindow.getAllWindows().find((w) =>
+      w.webContents.getURL().includes('/operator/'),
     );
-    const publica = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/publica/'),
+    const displayWindow = BrowserWindow.getAllWindows().find((w) =>
+      w.webContents.getURL().includes('/display/'),
     );
-    assert.ok(operador && publica);
-    const urlPublica = publica.webContents.getURL();
-    await publica.webContents.executeJavaScript("location.href = 'https://example.org/'");
-    await pausa(300);
+    assert.ok(operatorWindow && displayWindow);
+    const displayUrl = displayWindow.webContents.getURL();
+    await displayWindow.webContents.executeJavaScript("location.href = 'https://example.org/'");
+    await pause(300);
     assert.equal(
-      publica.webContents.getURL(),
-      urlPublica,
+      displayWindow.webContents.getURL(),
+      displayUrl,
       'La vista pública no debe navegar fuera de la app',
     );
-    operador.webContents.setBackgroundThrottling(false);
-    const ejecutar = (ventana, expresion) => ventana.webContents.executeJavaScript(expresion, true);
-    await esperar(
-      () => ejecutar(operador, "Boolean(document.querySelector('#turn-number'))"),
+    operatorWindow.webContents.setBackgroundThrottling(false);
+    const run = (appWindow, expression) =>
+      appWindow.webContents.executeJavaScript(expression, true);
+    await waitFor(
+      () => run(operatorWindow, "Boolean(document.querySelector('#turn-number'))"),
       'No cargó el operador',
     );
-    await esperar(
-      () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
+    await waitFor(
+      () => run(displayWindow, "Boolean(document.querySelector('.public-screen'))"),
       'No cargó la pantalla pública',
     );
-    await ejecutar(operador, `document.querySelector('.help-button').click()`);
-    await ejecutar(operador, `document.querySelector('.help-diagnostics-link').click()`);
-    await esperar(
-      () => ejecutar(operador, "Boolean(document.querySelector('.diagnostics-grid'))"),
+    await run(operatorWindow, `document.querySelector('.help-button').click()`);
+    await run(operatorWindow, `document.querySelector('.help-diagnostics-link').click()`);
+    await waitFor(
+      () => run(operatorWindow, "Boolean(document.querySelector('.diagnostics-grid'))"),
       'No cargó el diagnóstico del operador',
     );
     assert.equal(
-      await ejecutar(publica, "Boolean(document.querySelector('.diagnostics-grid'))"),
+      await run(displayWindow, "Boolean(document.querySelector('.diagnostics-grid'))"),
       false,
       'La TV no debe mostrar diagnósticos',
     );
     assert.equal(
-      await ejecutar(
-        publica,
+      await run(
+        displayWindow,
         "Boolean(document.querySelector('.audio-warning, .display-notices'))",
       ),
       false,
       'La TV no debe mostrar errores técnicos',
     );
-    await ejecutar(
-      operador,
+    await run(
+      operatorWindow,
       `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Turnos').click()`,
     );
-    publica.webContents.debugger.attach('1.3');
-    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+    displayWindow.webContents.debugger.attach('1.3');
+    await displayWindow.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
     });
-    const animacionActiva = () =>
-      ejecutar(publica, "Boolean(document.querySelector('.public-animated-background animate'))");
-    await esperar(animacionActiva, 'El fondo no se anima', 3000);
-    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+    const isBackgroundAnimated = () =>
+      run(displayWindow, "Boolean(document.querySelector('.public-animated-background animate'))");
+    await waitFor(isBackgroundAnimated, 'El fondo no se anima', 3000);
+    await displayWindow.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     });
-    publica.reload();
-    await esperar(
-      () => ejecutar(publica, "Boolean(document.querySelector('.public-screen'))"),
+    displayWindow.reload();
+    await waitFor(
+      () => run(displayWindow, "Boolean(document.querySelector('.public-screen'))"),
       'La pantalla pública no recargó para la prueba de movimiento reducido',
     );
     assert.equal(
-      await ejecutar(
-        publica,
+      await run(
+        displayWindow,
         "Boolean(document.querySelector('.public-animated-background animate'))",
       ),
       false,
       'El fondo debe respetar prefers-reduced-motion',
     );
-    await publica.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+    await displayWindow.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
     });
-    operador.setSize(1280, 900);
-    publica.setSize(1280, 900);
-    const inventario = await ejecutar(operador, 'window.turnero.obtener()');
+    operatorWindow.setSize(1280, 900);
+    displayWindow.setSize(1280, 900);
+    const inventory = await run(operatorWindow, 'window.turnero.obtener()');
     assert.equal(
-      inventario.inventario.voz.filter(Boolean).length,
+      inventory.inventario.voz.filter(Boolean).length,
       100,
       'Faltan voces en el inventario',
     );
-    assert.match(inventario.inventario.voz[40], /\/voz\/40\.wav$/, 'El turno 40 debe usar WAV');
-    assert.ok(inventario.inventario.aviso, 'Falta el aviso');
-    assert.ok(inventario.inventario.banner.length >= 2, 'Faltan las imágenes locales');
-    await esperar(
+    assert.match(inventory.inventario.voz[40], /\/voz\/40\.wav$/, 'El turno 40 debe usar WAV');
+    assert.ok(inventory.inventario.aviso, 'Falta el aviso');
+    assert.ok(inventory.inventario.banner.length >= 2, 'Faltan las imágenes locales');
+    await waitFor(
       () =>
-        ejecutar(
-          publica,
-          `(()=>{const images=[...document.querySelectorAll('.banner-stage img')].filter(i=>i.src.includes('/contenido/banner/'));return images.length===${inventario.inventario.banner.length}&&images.every(i=>i.complete&&i.naturalWidth>0)})()`,
+        run(
+          displayWindow,
+          `(()=>{const images=[...document.querySelectorAll('.banner-stage img')].filter(i=>i.src.includes('/contenido/banner/'));return images.length===${inventory.inventario.banner.length}&&images.every(i=>i.complete&&i.naturalWidth>0)})()`,
         ),
       'Las imágenes locales no se mostraron',
     );
     assert.equal(
-      await ejecutar(
-        publica,
-        `fetch(${JSON.stringify(inventario.inventario.aviso)}).then((r) => r.headers.get('access-control-allow-origin'))`,
+      await run(
+        displayWindow,
+        `fetch(${JSON.stringify(inventory.inventario.aviso)}).then((r) => r.headers.get('access-control-allow-origin'))`,
       ),
       null,
       'El contenido local no debe permitir CORS comodín',
     );
-    const audioDecodificado = await ejecutar(
-      publica,
+    const decodedAudio = await run(
+      displayWindow,
       `(async () => {
       const { inventario } = await window.turnero.obtener();
       const contexto = new AudioContext();
@@ -171,13 +172,9 @@ async function verificar() {
       return { archivos: 101, errores };
     })()`,
     );
-    assert.deepEqual(
-      audioDecodificado.errores,
-      [],
-      'Hay archivos de audio que Chromium no reproduce',
-    );
-    await esperar(
-      () => ejecutar(operador, "window.turnero.diagnostico().then(d=>d.audio==='correcto')"),
+    assert.deepEqual(decodedAudio.errores, [], 'Hay archivos de audio que Chromium no reproduce');
+    await waitFor(
+      () => run(operatorWindow, "window.turnero.diagnostico().then(d=>d.audio==='correcto')"),
       'Diagnósticos sigue marcando el audio como degradado',
     );
     if (process.env.TURNERO_SMOKE_QUICK === '1') {
@@ -185,122 +182,121 @@ async function verificar() {
       app.exit(0);
       return;
     }
-    console.log(
-      `PASS: ${audioDecodificado.archivos} audios seleccionados se decodifican en Chromium.`,
-    );
+    console.log(`PASS: ${decodedAudio.archivos} audios seleccionados se decodifican en Chromium.`);
     assert.ok(
-      inventario.inventario.voz[55] && inventario.inventario.voz[66],
+      inventory.inventario.voz[55] && inventory.inventario.voz[66],
       'Faltan voces de prueba',
     );
-    await ejecutar(
-      publica,
+    await run(
+      displayWindow,
       `window.anunciosPrueba=[]; new MutationObserver(()=>{const n=document.querySelector('.announcement-number')?.textContent;if(n&&window.anunciosPrueba.at(-1)?.n!==n)window.anunciosPrueba.push({n,t:Date.now()});}).observe(document.body,{subtree:true,childList:true,characterData:true});`,
     );
-    await ejecutar(
-      operador,
+    await run(
+      operatorWindow,
       `window.turnero.despachar({tipo:'LLAMAR',entrada:'55'}).then(()=>window.turnero.despachar({tipo:'LLAMAR',entrada:'66'}))`,
     );
-    await esperar(
-      () => ejecutar(publica, 'window.anunciosPrueba.length===2'),
+    await waitFor(
+      () => run(displayWindow, 'window.anunciosPrueba.length===2'),
       'Los anuncios no avanzaron en orden',
       20000,
     );
-    const anuncios = await ejecutar(publica, 'window.anunciosPrueba');
+    const announcements = await run(displayWindow, 'window.anunciosPrueba');
     assert.deepEqual(
-      anuncios.map((a) => a.n),
+      announcements.map((a) => a.n),
       ['55', '66'],
     );
     assert.ok(
-      anuncios[1].t - anuncios[0].t >= 5900,
+      announcements[1].t - announcements[0].t >= 5900,
       'El anuncio debe permanecer visible al menos seis segundos',
     );
-    const anuncioEnMultimedia = await ejecutar(
-      publica,
+    const announcementInMedia = await run(
+      displayWindow,
       `(()=>{const a=document.querySelector('.public-focus'),m=document.querySelector('.public-media-frame');if(!a||!m)return null;const x=a.getBoundingClientRect(),y=m.getBoundingClientRect();return {dentro:a.parentElement===m,centroX:Math.abs((x.left+x.right-y.left-y.right)/2),centroY:Math.abs((x.top+x.bottom-y.top-y.bottom)/2)};})()`,
     );
-    assert.ok(anuncioEnMultimedia?.dentro, 'El anuncio no está dentro del reproductor multimedia');
+    assert.ok(announcementInMedia?.dentro, 'El anuncio no está dentro del reproductor multimedia');
     assert.ok(
-      anuncioEnMultimedia.centroX <= 1 && anuncioEnMultimedia.centroY <= 1,
+      announcementInMedia.centroX <= 1 && announcementInMedia.centroY <= 1,
       'El anuncio no está centrado en el reproductor multimedia',
     );
     assert.equal(
-      await ejecutar(publica, "document.querySelector('.audio-warning')?.textContent ?? ''"),
+      await run(displayWindow, "document.querySelector('.audio-warning')?.textContent ?? ''"),
       '',
       'La pantalla reportó un error de audio al precargar los WAV válidos',
     );
-    await pausa(800);
-    await capturar(publica, 'anuncio-multimedia.png');
-    assert.equal(await ejecutar(publica, "document.querySelectorAll('.trojan-mascot').length"), 0);
-    for (const [ancho, alto] of [
+    await pause(800);
+    await capture(displayWindow, 'anuncio-multimedia.png');
+    assert.equal(await run(displayWindow, "document.querySelectorAll('.trojan-mascot').length"), 0);
+    for (const [viewWidth, viewHeight] of [
       [1280, 900],
       [900, 650],
     ]) {
-      operador.setSize(ancho, alto);
-      await pausa(200);
-      const geometria = await ejecutar(
-        operador,
+      operatorWindow.setSize(viewWidth, viewHeight);
+      await pause(200);
+      const geometry = await run(
+        operatorWindow,
         `(()=>{const row=document.querySelector('[aria-label="Acciones del turno 66"]');return {buttons:row.querySelectorAll('button').length,visible:[...row.querySelectorAll('button')].every(b=>b.getBoundingClientRect().right<=innerWidth)};})()`,
       );
-      assert.deepEqual(geometria, { buttons: 2, visible: true });
-      await capturar(operador, `operador-${ancho}.png`);
+      assert.deepEqual(geometry, { buttons: 2, visible: true });
+      await capture(operatorWindow, `operador-${viewWidth}.png`);
     }
-    await ejecutar(
-      operador,
+    await run(
+      operatorWindow,
       `window.turnero.despachar({tipo:'QUITAR',n:66}).then(()=>window.turnero.despachar({tipo:'DESHACER'}))`,
     );
-    const estado = await ejecutar(operador, 'window.turnero.obtener()');
-    assert.equal(estado.instantanea.actual, 55);
-    assert.equal(estado.instantanea.puedeDeshacer, false);
-    await ejecutar(
-      operador,
+    const state = await run(operatorWindow, 'window.turnero.obtener()');
+    assert.equal(state.instantanea.actual, 55);
+    assert.equal(state.instantanea.puedeDeshacer, false);
+    await run(
+      operatorWindow,
       `Array.from(document.querySelectorAll('nav button')).find(b=>b.textContent==='Multimedia').click()`,
     );
-    await pausa(200);
-    await capturar(operador, 'multimedia.png');
-    await ejecutar(
-      operador,
+    await pause(200);
+    await capture(operatorWindow, 'multimedia.png');
+    await run(
+      operatorWindow,
       `window.turnero.configurarYouTube('https://www.youtube.com/watch?v=M7lc1UVf-VE')`,
     );
-    await esperar(
-      () => ejecutar(publica, "Boolean(document.querySelector('.youtube-host iframe'))"),
+    await waitFor(
+      () => run(displayWindow, "Boolean(document.querySelector('.youtube-host iframe'))"),
       'No se creó el reproductor YouTube',
       25000,
     );
-    await pausa(5000);
-    await capturar(publica, 'youtube.png');
-    await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'77'})`);
-    await esperar(
+    await pause(5000);
+    await capture(displayWindow, 'youtube.png');
+    await run(operatorWindow, `window.turnero.despachar({tipo:'LLAMAR',entrada:'77'})`);
+    await waitFor(
       () =>
-        ejecutar(
-          publica,
+        run(
+          displayWindow,
           "document.querySelector('.public-media-frame .announcement-number')?.textContent==='77'",
         ),
       'El anuncio no apareció sobre YouTube',
     );
-    await pausa(800);
-    await capturar(publica, 'youtube-anuncio.png');
-    await ejecutar(operador, 'window.turnero.configurarYouTube(null)');
-    await publica.webContents.debugger.sendCommand('Network.enable');
-    await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
+    await pause(800);
+    await capture(displayWindow, 'youtube-anuncio.png');
+    await run(operatorWindow, 'window.turnero.configurarYouTube(null)');
+    await displayWindow.webContents.debugger.sendCommand('Network.enable');
+    await displayWindow.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
       offline: true,
       latency: 0,
       downloadThroughput: 0,
       uploadThroughput: 0,
     });
-    await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'88'})`);
-    await esperar(
-      () => ejecutar(publica, "document.querySelector('.announcement-number')?.textContent==='88'"),
+    await run(operatorWindow, `window.turnero.despachar({tipo:'LLAMAR',entrada:'88'})`);
+    await waitFor(
+      () =>
+        run(displayWindow, "document.querySelector('.announcement-number')?.textContent==='88'"),
       'El llamado local no funcionó sin internet',
     );
     assert.equal(
-      await ejecutar(
-        publica,
-        `fetch(${JSON.stringify(inventario.inventario.aviso)}).then(r=>r.ok)`,
+      await run(
+        displayWindow,
+        `fetch(${JSON.stringify(inventory.inventario.aviso)}).then(r=>r.ok)`,
       ),
       true,
       'El aviso local no se pudo leer sin internet',
     );
-    await publica.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
+    await displayWindow.webContents.debugger.sendCommand('Network.emulateNetworkConditions', {
       offline: false,
       latency: 0,
       downloadThroughput: 0,
@@ -308,16 +304,16 @@ async function verificar() {
     });
     console.log('PASS: llamada y aviso local con la red emulada sin conexión.');
     for (const n of [11, 22, 33, 44]) {
-      await ejecutar(operador, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
+      await run(operatorWindow, `window.turnero.despachar({tipo:'LLAMAR',entrada:'${n}'})`);
     }
-    await esperar(
-      () => ejecutar(publica, "!document.querySelector('.announcement-number')"),
+    await waitFor(
+      () => run(displayWindow, "!document.querySelector('.announcement-number')"),
       'No terminó la cola',
       90000,
     );
-    const medir = () =>
-      ejecutar(
-        publica,
+    const measure = () =>
+      run(
+        displayWindow,
         `(() => {
       const rect = (s) => { const r=document.querySelector(s).getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; };
       const frame=rect('.public-media-frame'), queue=rect('.public-queue');
@@ -330,7 +326,7 @@ async function verificar() {
       [2560, 1440],
       [3840, 2160],
     ]) {
-      publica.webContents.enableDeviceEmulation({
+      displayWindow.webContents.enableDeviceEmulation({
         screenPosition: 'desktop',
         screenSize: { width, height },
         viewPosition: { x: 0, y: 0 },
@@ -338,47 +334,47 @@ async function verificar() {
         deviceScaleFactor: 1,
         scale: Math.min(1, 1920 / width, 1080 / height),
       });
-      await pausa(500);
-      assert.deepEqual(await ejecutar(publica, '[innerWidth, innerHeight]'), [width, height]);
-      await esperar(
+      await pause(500);
+      assert.deepEqual(await run(displayWindow, '[innerWidth, innerHeight]'), [width, height]);
+      await waitFor(
         () =>
-          ejecutar(
-            publica,
+          run(
+            displayWindow,
             "(()=>{const r=document.querySelector('.public-screen').getBoundingClientRect(),s=Math.min(innerWidth/1920,innerHeight/1080);return Math.abs(r.width-1920*s)<1&&Math.abs(r.height-1080*s)<1})()",
           ),
         'El lienzo público no estabilizó su escala',
       );
-      const normal = await medir();
+      const normal = await measure();
       assert.equal(normal.rows, 6);
       assert.ok(normal.aligned && !normal.clipped && !normal.overflow, JSON.stringify(normal));
-      await capturar(publica, `publica-normal-${width}.png`);
+      await capture(displayWindow, `publica-normal-${width}.png`);
       const ticker = () =>
-        ejecutar(
-          publica,
+        run(
+          displayWindow,
           "getComputedStyle(document.querySelector('.footer-ticker-track')).transform",
         );
-      const antes = await ticker();
-      await pausa(150);
-      assert.notEqual(await ticker(), antes);
-      await ejecutar(operador, "window.turnero.despachar({tipo:'LLAMAR',entrada:'44'})");
-      await esperar(
-        () => ejecutar(publica, "Boolean(document.querySelector('.announcement-number'))"),
+      const before = await ticker();
+      await pause(150);
+      assert.notEqual(await ticker(), before);
+      await run(operatorWindow, "window.turnero.despachar({tipo:'LLAMAR',entrada:'44'})");
+      await waitFor(
+        () => run(displayWindow, "Boolean(document.querySelector('.announcement-number'))"),
         'No apareció el anuncio',
       );
-      await pausa(600);
-      const activo = await medir();
+      await pause(600);
+      const activo = await measure();
       assert.deepEqual(activo.frame, normal.frame, 'El marco multimedia cambió de tamaño');
       assert.ok(!activo.clipped && !activo.overflow, JSON.stringify(activo));
-      await capturar(publica, `publica-anuncio-${width}.png`);
-      await esperar(
-        () => ejecutar(publica, "!document.querySelector('.public-focus.is-visible')"),
+      await capture(displayWindow, `publica-anuncio-${width}.png`);
+      await waitFor(
+        () => run(displayWindow, "!document.querySelector('.public-focus.is-visible')"),
         'No empezó la salida',
       );
-      await esperar(
-        () => ejecutar(publica, "!document.querySelector('.announcement-number')"),
+      await waitFor(
+        () => run(displayWindow, "!document.querySelector('.announcement-number')"),
         'No terminó la salida',
       );
-      assert.deepEqual((await medir()).frame, normal.frame);
+      assert.deepEqual((await measure()).frame, normal.frame);
     }
     console.log(
       'PASS: seis pedidos, ticker en movimiento, anuncio y salida sin cambios de geometría ni recortes en 1080p, 1440p y 4K.',
@@ -388,16 +384,16 @@ async function verificar() {
     );
     console.log(
       'YouTube:',
-      await ejecutar(
-        publica,
+      await run(
+        displayWindow,
         "document.querySelector('.youtube-error')?.textContent ?? 'Sin error reportado por el reproductor'",
       ),
     );
-    publica.webContents.debugger.detach();
+    displayWindow.webContents.debugger.detach();
     app.exit(0);
   } catch (error) {
     console.error(error);
     app.exit(1);
   }
 }
-void verificar();
+void verify();

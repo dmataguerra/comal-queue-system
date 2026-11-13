@@ -1,79 +1,79 @@
 import {
-  validarAccion,
-  validarAcuseAudio,
-  validarCategoria,
-  validarCategoriaOpcional,
-  validarUrlContenido,
-  validarYouTube,
-  validarVolumenes,
-  validarMensaje,
-  validarNivel,
-  validarSalud,
-} from '../seguridad-ipc.js';
-import type { OpcionesServidor } from './types.js';
+  validateAction,
+  validateAudioAck,
+  validateCategory,
+  validateOptionalCategory,
+  validateContentUrl,
+  validateYouTube,
+  validateVolumes,
+  validateMessage,
+  validateLevel,
+  validateHealth,
+} from '../ipc-validation.js';
+import type { ServerOptions } from './types.js';
 
 /** A POST handler receives the parsed JSON body and returns the JSON response value. */
-export type ApiHandler = (dato: unknown) => unknown;
+export type ApiHandler = (data: unknown) => unknown;
 
-export function createApiRoutes(opciones: OpcionesServidor): Map<string, ApiHandler> {
+export function createApiRoutes(options: ServerOptions): Map<string, ApiHandler> {
   return new Map<string, ApiHandler>([
-    ['/api/accion', (dato) => opciones.store.despachar(validarAccion(dato))],
+    ['/api/accion', (data) => options.store.despachar(validateAction(data))],
     [
       '/api/volumen',
-      (dato) => {
-        if (!Array.isArray(dato) || dato.length !== 2) throw new Error('Volumen inválido.');
-        opciones.configurarVolumen(...validarVolumenes(dato[0], dato[1]));
+      (data) => {
+        if (!Array.isArray(data) || data.length !== 2) throw new Error('Volumen inválido.');
+        options.configurarVolumen(...validateVolumes(data[0], data[1]));
         return null;
       },
     ],
     [
       '/api/youtube',
-      (dato) => {
-        if (dato !== null)
+      (data) => {
+        if (data !== null)
           throw new Error(
             'YouTube no está admitido en navegador. Usa la aplicación de escritorio o contenido local.',
           );
-        opciones.configurarYouTube(validarYouTube(dato));
+        options.configurarYouTube(validateYouTube(data));
         return null;
       },
     ],
     [
       '/api/salud',
-      (dato) => {
-        if (!Array.isArray(dato) || dato.length !== 2) throw new Error('Salud inválida.');
-        opciones.informarSalud(...validarSalud(dato[0], dato[1]));
+      (data) => {
+        if (!Array.isArray(data) || data.length !== 2) throw new Error('Salud inválida.');
+        options.informarSalud(...validateHealth(data[0], data[1]));
         return null;
       },
     ],
     [
       '/api/registro',
-      (dato) => {
-        const [mensaje, nivel] = Array.isArray(dato) ? (dato as unknown[]) : [dato];
-        opciones.logger.child('renderer:browser')[validarNivel(nivel)](validarMensaje(mensaje));
+      (data) => {
+        const [message, level] = Array.isArray(data) ? (data as unknown[]) : [data];
+        options.logger.child('renderer:browser')[validateLevel(level)](validateMessage(message));
         return null;
       },
     ],
     [
       '/api/audio',
-      (dato) => {
-        opciones.confirmarAnuncio(...validarAcuseAudio(dato));
+      (data) => {
+        options.confirmarAnuncio(...validateAudioAck(data));
         return null;
       },
     ],
-    ['/api/contenido/importar', (dato) => opciones.importarContenido(validarCategoria(dato))],
+    ['/api/contenido/importar', (data) => options.importarContenido(validateCategory(data))],
     [
       '/api/contenido/quitar',
-      (dato) => {
-        if (typeof dato !== 'string' || !dato.startsWith('/contenido/'))
+      (data) => {
+        if (typeof data !== 'string' || !data.startsWith('/contenido/'))
           throw new Error('Archivo inválido.');
-        return opciones.quitarContenido(validarUrlContenido(`turnero://app${dato}`));
+        return options.quitarContenido(validateContentUrl(`turnero://app${data}`));
       },
     ],
     [
       '/api/contenido/abrir',
-      async (dato) => {
-        await opciones.abrirCarpetaContenido(
-          validarCategoriaOpcional(dato === null ? undefined : dato),
+      async (data) => {
+        await options.abrirCarpetaContenido(
+          validateOptionalCategory(data === null ? undefined : data),
         );
         return null;
       },

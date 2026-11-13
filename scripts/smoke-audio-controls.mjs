@@ -32,10 +32,10 @@ async function verify() {
     let operator, client;
     await wait(async () => {
       operator = BrowserWindow.getAllWindows().find((w) =>
-        w.webContents.getURL().includes('/operador/'),
+        w.webContents.getURL().includes('/operator/'),
       );
       client = BrowserWindow.getAllWindows().find((w) =>
-        w.webContents.getURL().includes('/publica/'),
+        w.webContents.getURL().includes('/display/'),
       );
       return (
         operator &&

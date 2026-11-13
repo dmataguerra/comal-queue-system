@@ -31,5 +31,8 @@ export const APP_CONFIG = {
 } as const;
 export const devServerUrl = `http://${APP_CONFIG.devServer.host}:${APP_CONFIG.devServer.port}`;
 export const devServerWebSocketUrl = `ws://${APP_CONFIG.devServer.host}:${APP_CONFIG.devServer.port}`;
-export const viewUrl = (base: string, view: 'operador' | 'publica') =>
-  `${base}/vistas/${view}/index.html`;
+/** View ids are runtime values used across IPC checks; folders are the English source layout. */
+export const VIEW_FOLDERS = { operador: 'views/operator', publica: 'views/display' } as const;
+export const viewPath = (view: keyof typeof VIEW_FOLDERS) => `/${VIEW_FOLDERS[view]}/index.html`;
+export const viewUrl = (base: string, view: keyof typeof VIEW_FOLDERS) =>
+  `${base}${viewPath(view)}`;

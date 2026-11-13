@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { cerrarAudio, precargar, reproducir } from '../vistas/publica/audio.ts';
+import { closeAudio, preload, play } from '../views/display/audio.js';
 test('audio: una nueva revisión recarga bytes bajo la misma URL; una revisión estable usa cache', async (t) => {
   const originalFetch = globalThis.fetch,
     originalContext = globalThis.AudioContext;
-  let descargas = 0;
+  let downloads = 0;
   globalThis.fetch = async () => {
-    descargas++;
+    downloads++;
     return { ok: true, arrayBuffer: async () => new ArrayBuffer(4) };
   };
   globalThis.AudioContext = class {
@@ -16,24 +16,24 @@ test('audio: una nueva revisión recarga bytes bajo la misma URL; una revisión 
     async close() {}
   };
   t.after(() => {
-    cerrarAudio();
+    closeAudio();
     globalThis.fetch = originalFetch;
     globalThis.AudioContext = originalContext;
   });
-  const inventario = {
+  const inventory = {
     revisionAudio: 'v1',
     aviso: 'https://test.invalid/aviso.wav',
     voz: [],
     videos: [],
     banner: [],
   };
-  await precargar(inventario);
-  await precargar(inventario);
-  assert.equal(descargas, 1);
-  await precargar({ ...inventario, revisionAudio: 'v2' });
-  assert.equal(descargas, 2);
+  await preload(inventory);
+  await preload(inventory);
+  assert.equal(downloads, 1);
+  await preload({ ...inventory, revisionAudio: 'v2' });
+  assert.equal(downloads, 2);
 });
-for (const caso of [
+for (const scenario of [
   'termina',
   'cancela',
   'sin-ended',
@@ -45,45 +45,45 @@ for (const caso of [
   'decode-falla',
   'http-falla',
 ]) {
-  test(`audio: ${caso} libera recursos o rechaza la espera`, async (t) => {
+  test(`audio: ${scenario} libera recursos o rechaza la espera`, async (t) => {
     t.mock.timers.enable({ apis: ['setTimeout'] });
     const originalFetch = globalThis.fetch;
     const originalContext = globalThis.AudioContext;
-    let desconexiones = 0;
-    let inicio;
-    const iniciado = new Promise((resolve) => {
-      inicio = resolve;
+    let disconnections = 0;
+    let signalStarted;
+    const started = new Promise((resolve) => {
+      signalStarted = resolve;
     });
-    const fuente = {
-      connect: () => ganancia,
+    const source = {
+      connect: () => gainNode,
       disconnect: () => {
-        desconexiones++;
+        disconnections++;
       },
       stop() {},
       start() {
-        inicio();
-        if (caso === 'start-falla') throw new Error('start falló');
+        signalStarted();
+        if (scenario === 'start-falla') throw new Error('start falló');
       },
       onended: null,
     };
-    const ganancia = {
+    const gainNode = {
       gain: {},
       connect() {},
       disconnect: () => {
-        desconexiones++;
+        disconnections++;
       },
     };
     globalThis.fetch =
-      caso === 'carga-bloqueada'
+      scenario === 'carga-bloqueada'
         ? () => new Promise(() => {})
         : async () => ({
-            ok: caso !== 'http-falla',
+            ok: scenario !== 'http-falla',
             status: 404,
             arrayBuffer: async () => new ArrayBuffer(0),
           });
     let ctx;
     globalThis.AudioContext = class extends EventTarget {
-      state = ['resume-bloqueado', 'resume-sin-dispositivo'].includes(caso)
+      state = ['resume-bloqueado', 'resume-sin-dispositivo'].includes(scenario)
         ? 'suspended'
         : 'running';
       constructor() {
@@ -91,49 +91,49 @@ for (const caso of [
         ctx = this;
       }
       async decodeAudioData() {
-        if (caso === 'decode-falla') throw new Error('decode falló');
+        if (scenario === 'decode-falla') throw new Error('decode falló');
         return { duration: 1 };
       }
       resume() {
-        inicio();
-        if (caso === 'resume-sin-dispositivo') return Promise.resolve();
+        signalStarted();
+        if (scenario === 'resume-sin-dispositivo') return Promise.resolve();
         return new Promise(() => {});
       }
       createBufferSource() {
-        return fuente;
+        return source;
       }
       createGain() {
-        return ganancia;
+        return gainNode;
       }
       async close() {}
     };
     t.after(() => {
-      cerrarAudio();
+      closeAudio();
       globalThis.fetch = originalFetch;
       globalThis.AudioContext = originalContext;
     });
     const control = new AbortController();
-    const resultado = reproducir('https://test.invalid/voz.wav', 1, control.signal);
-    const verificacion = ['termina', 'cancela'].includes(caso)
-      ? assert.doesNotReject(resultado)
-      : assert.rejects(resultado, /tiempo|Tiempo|start|sonido|dispositivo|decodificar|HTTP/);
-    if (!['carga-bloqueada', 'decode-falla', 'http-falla'].includes(caso)) await iniciado;
-    if (caso === 'termina') fuente.onended();
-    else if (caso === 'cancela') control.abort();
-    else if (caso === 'dispositivo-desconectado') {
+    const result = play('https://test.invalid/voz.wav', 1, control.signal);
+    const verification = ['termina', 'cancela'].includes(scenario)
+      ? assert.doesNotReject(result)
+      : assert.rejects(result, /tiempo|Tiempo|start|sonido|dispositivo|decodificar|HTTP/);
+    if (!['carga-bloqueada', 'decode-falla', 'http-falla'].includes(scenario)) await started;
+    if (scenario === 'termina') source.onended();
+    else if (scenario === 'cancela') control.abort();
+    else if (scenario === 'dispositivo-desconectado') {
       ctx.state = 'suspended';
       ctx.dispatchEvent(new Event('statechange'));
-    } else if (caso !== 'start-falla') t.mock.timers.tick(21000);
-    await verificacion;
+    } else if (scenario !== 'start-falla') t.mock.timers.tick(21000);
+    await verification;
     assert.equal(
-      desconexiones,
+      disconnections,
       [
         'resume-bloqueado',
         'resume-sin-dispositivo',
         'carga-bloqueada',
         'decode-falla',
         'http-falla',
-      ].includes(caso)
+      ].includes(scenario)
         ? 0
         : 2,
     );

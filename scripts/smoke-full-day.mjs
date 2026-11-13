@@ -12,7 +12,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renombrarConReintentos } from '../build/main/escritura-atomica.js';
+import { renameWithRetries } from '../build/main/atomic-write.js';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const results = join(root, 'test-results');
 mkdirSync(results, { recursive: true });
@@ -92,7 +92,7 @@ function checkpoint() {
   report.latencySummary = summarizeLatencies();
   writeMetricsCsv();
   writeFileSync(reportPath + '.tmp', JSON.stringify(report, null, 2) + '\n');
-  renombrarConReintentos(reportPath + '.tmp', reportPath);
+  renameWithRetries(reportPath + '.tmp', reportPath);
 }
 async function heartbeat() {
   assert.equal(report.failures.length, 0, 'Se detectó un cierre, suspensión o caída de proceso.');
@@ -199,9 +199,9 @@ function sample(stage) {
 async function waitForWindows() {
   for (let attempt = 0; attempt < 150; attempt++) {
     const windows = BrowserWindow.getAllWindows();
-    const operator = windows.find((window) => window.webContents.getURL().includes('/operador/'));
+    const operator = windows.find((window) => window.webContents.getURL().includes('/operator/'));
     const publicWindow = windows.find((window) =>
-      window.webContents.getURL().includes('/publica/'),
+      window.webContents.getURL().includes('/display/'),
     );
     if (
       operator &&
@@ -316,16 +316,16 @@ function appendAction(entry) {
   });
 }
 async function checkInvariants(operator, stage) {
-  const inicial = await run(operator, 'window.turnero.obtener()');
-  const instantanea = inicial.instantanea;
-  const visibles = [instantanea.actual, ...instantanea.llamados].filter((n) => n !== null);
+  const initialState = await run(operator, 'window.turnero.obtener()');
+  const snapshot = initialState.instantanea;
+  const visibleTurns = [snapshot.actual, ...snapshot.llamados].filter((n) => n !== null);
   const invariant = {
     stage,
-    queueLength: visibles.length,
-    unique: new Set(visibles).size === visibles.length,
-    bounded: visibles.length <= 6,
-    validNumbers: visibles.every((n) => Number.isInteger(n) && n >= 0 && n <= 99),
-    persisted: !instantanea.persistencia,
+    queueLength: visibleTurns.length,
+    unique: new Set(visibleTurns).size === visibleTurns.length,
+    bounded: visibleTurns.length <= 6,
+    validNumbers: visibleTurns.every((n) => Number.isInteger(n) && n >= 0 && n <= 99),
+    persisted: !snapshot.persistencia,
   };
   report.invariants.push(invariant);
   assert.equal(invariant.unique, true, `La cola tiene turnos duplicados en ${stage}.`);
@@ -333,12 +333,12 @@ async function checkInvariants(operator, stage) {
   assert.equal(invariant.validNumbers, true, `La cola tiene un turno inválido en ${stage}.`);
   assert.equal(invariant.persisted, true, `La persistencia falló en ${stage}.`);
   assert.ok(
-    inicial.entregasAudio.length <= 100,
+    initialState.entregasAudio.length <= 100,
     `El historial de audio crece sin límite en ${stage}.`,
   );
   assert.ok(
-    inicial.entregasAudio.filter((e) => ['pendiente', 'reproduciendo'].includes(e.estado)).length <=
-      6,
+    initialState.entregasAudio.filter((e) => ['pendiente', 'reproduciendo'].includes(e.estado))
+      .length <= 6,
     `La cola de audio excede su capacidad en ${stage}.`,
   );
   const deadline = performance.now() + 5000;
@@ -571,10 +571,10 @@ async function verify() {
     powerMonitor.on('suspend', () =>
       report.failures.push({ error: 'El equipo se suspendió: jornada interrumpida.' }),
     );
-    ipcMain.on('turnero:anuncio:acuse', (event, id, n, estado) => {
+    ipcMain.on('turnero:anuncio:acuse', (event, id, n, deliveryState) => {
       if (event.sender !== publicWindow.webContents) return;
-      const entry = { id, n, estado, at: new Date().toISOString() };
-      if (estado !== 'reproduciendo') receivedAudio.set(id, entry);
+      const entry = { id, n, estado: deliveryState, at: new Date().toISOString() };
+      if (deliveryState !== 'reproduciendo') receivedAudio.set(id, entry);
       appendAction({ audioReceipt: entry });
     });
     operator.webContents.setBackgroundThrottling(false);
@@ -650,8 +650,8 @@ async function verify() {
       assert.equal(report.audioProbe.starts, report.audioProbe.ends);
       await drainAudio('preflight-recarga');
       const beforeInvalid = (await run(operator, 'window.turnero.obtener()')).instantanea;
-      for (const entrada of ['', '1234567', '12x', 'no-es-un-turno']) {
-        const invalid = await dispatch(operator, { tipo: 'LLAMAR', entrada });
+      for (const turnInput of ['', '1234567', '12x', 'no-es-un-turno']) {
+        const invalid = await dispatch(operator, { tipo: 'LLAMAR', entrada: turnInput });
         assert.equal(invalid.efecto, 'CAPTURA_INVALIDA');
         assert.equal(invalid.anuncio, null);
         assert.deepEqual(invalid.instantanea, beforeInvalid);

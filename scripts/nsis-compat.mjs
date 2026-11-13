@@ -1,12 +1,12 @@
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-export function prepararCompatibilidadNsis(raiz, temporal) {
-  const plantillas = join(raiz, 'node_modules', 'app-builder-lib', 'templates', 'nsis');
-  const original = readFileSync(join(plantillas, 'include', 'installUtil.nsh'), 'utf8').replaceAll(
+export function prepareNsisCompatibility(root, tempDir) {
+  const templates = join(root, 'node_modules', 'app-builder-lib', 'templates', 'nsis');
+  const original = readFileSync(join(templates, 'include', 'installUtil.nsh'), 'utf8').replaceAll(
     '\r\n',
     '\n',
   );
-  const anterior = `  !insertMacro setIsTryToKeepShortcuts
+  const previousBlock = `  !insertMacro setIsTryToKeepShortcuts
 
   \${if} $isTryToKeepShortcuts == "true"
     !insertmacro readReg $R5 "$rootKey" "\${INSTALL_REGISTRY_KEY}" KeepShortcuts
@@ -16,21 +16,24 @@ export function prepararCompatibilidadNsis(raiz, temporal) {
       StrCpy $0 "$0 --keep-shortcuts"
     \${endIf}
   \${endIf}`;
-  if (original.split(anterior).length !== 2)
+  if (original.split(previousBlock).length !== 2)
     throw new Error(
       'Cambió la plantilla de actualización NSIS. Revisar la compatibilidad antes de publicar.',
     );
-  const nuevo = `  # Comal: preserve existing shortcuts even when the installation path changes.
+  const replacement = `  # Comal: preserve existing shortcuts even when the installation path changes.
   # The new installer refreshes Start Menu; it never writes to protected Desktop.
   !insertmacro readReg $R5 "$rootKey" "\${INSTALL_REGISTRY_KEY}" KeepShortcuts
   \${if} $R5 == "true"
     StrCpy $0 "$0 --keep-shortcuts"
   \${endIf}`;
-  const recursos = join(temporal, 'nsis-compat');
-  cpSync(plantillas, recursos, { recursive: true });
-  writeFileSync(join(recursos, 'installUtil.nsh'), original.replace(anterior, nuevo));
-  const escapar = (ruta) => ruta.replaceAll('$', '$$').replaceAll('"', '$\\"');
-  const inclusion = join(recursos, 'comal.nsh');
-  writeFileSync(inclusion, `!cd "${escapar(recursos)}"\n`);
-  return inclusion;
+  const resourcesDir = join(tempDir, 'nsis-compat');
+  cpSync(templates, resourcesDir, { recursive: true });
+  writeFileSync(
+    join(resourcesDir, 'installUtil.nsh'),
+    original.replace(previousBlock, replacement),
+  );
+  const escapeNsis = (filePath) => filePath.replaceAll('$', '$$').replaceAll('"', '$\\"');
+  const includeFile = join(resourcesDir, 'comal.nsh');
+  writeFileSync(includeFile, `!cd "${escapeNsis(resourcesDir)}"\n`);
+  return includeFile;
 }

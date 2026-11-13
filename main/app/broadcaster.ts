@@ -1,10 +1,10 @@
-import type { Config, EntregaAudio, Inventario, Pantallas } from '../../shared/contract.js';
+import type { Config, AudioDelivery, Inventory, Screens } from '../../shared/contract.js';
 /** Anything that can push state to clients: the IPC adapter and the local web server. */
 export interface BroadcastTarget {
   difundirConfig(config: Config): void;
-  difundirContenido(inventario: Inventario): void;
-  difundirPantallas(pantallas: Pantallas): void;
-  difundirEntregaAudio(entrega: EntregaAudio): void;
+  difundirContenido(inventory: Inventory): void;
+  difundirPantallas(screens: Screens): void;
+  difundirEntregaAudio(delivery: AudioDelivery): void;
 }
 /**
  * Fan-out hub. Producers hold the hub and transports register when they are ready, so no
@@ -20,10 +20,10 @@ export function createBroadcaster() {
       };
     },
     config: (config: Config) => targets.forEach((t) => t.difundirConfig(config)),
-    content: (inventario: Inventario) => targets.forEach((t) => t.difundirContenido(inventario)),
-    screens: (pantallas: Pantallas) => targets.forEach((t) => t.difundirPantallas(pantallas)),
-    audioDelivery: (entrega: EntregaAudio) =>
-      targets.forEach((t) => t.difundirEntregaAudio(entrega)),
+    content: (inventory: Inventory) => targets.forEach((t) => t.difundirContenido(inventory)),
+    screens: (screens: Screens) => targets.forEach((t) => t.difundirPantallas(screens)),
+    audioDelivery: (delivery: AudioDelivery) =>
+      targets.forEach((t) => t.difundirEntregaAudio(delivery)),
   };
 }
 export type Broadcaster = ReturnType<typeof createBroadcaster>;

@@ -1,8 +1,8 @@
 import type { Config } from '../../shared/contract.js';
 import { AppError } from '../../shared/errors.js';
 import type { Logger } from '../../shared/logging.js';
-import { leerConfig, vigilarConfig } from '../config.js';
-import { escribirJsonAtomico } from '../escritura-atomica.js';
+import { readConfig, watchConfig } from '../config.js';
+import { writeJsonAtomic } from '../atomic-write.js';
 interface ConfigServiceOptions {
   path: string;
   logger: Logger;
@@ -16,7 +16,7 @@ const same = (a: Config, b: Config) => JSON.stringify(a) === JSON.stringify(b);
  * operator's settings with defaults.
  */
 export function createConfigService({ path, logger, onChange }: ConfigServiceOptions) {
-  let current = leerConfig(path, logger);
+  let current = readConfig(path, logger);
   const apply = (next: Config) => {
     if (same(next, current)) return;
     const previous = current;
@@ -24,13 +24,13 @@ export function createConfigService({ path, logger, onChange }: ConfigServiceOpt
     onChange(next, previous);
   };
   // The watcher also fires for our own writes; apply() ignores those because nothing changed.
-  const stopWatching = vigilarConfig(path, apply, logger);
+  const stopWatching = watchConfig(path, apply, logger);
   return {
     get: () => current,
     update(patch: Partial<Config>) {
       const next = { ...current, ...patch };
       try {
-        escribirJsonAtomico(path, next, 2);
+        writeJsonAtomic(path, next, 2);
       } catch (error) {
         logger.error(`No se pudo guardar config.json: ${(error as Error).message}`);
         throw new AppError(

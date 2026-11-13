@@ -1,28 +1,28 @@
 import {
-  ESTADO_INICIAL,
-  VIGENCIA_MS,
-  deshacer,
-  enPantalla,
-  llamar,
-  quitar,
-  vencer,
-  type Estado,
-} from '../nucleo/turnos.js';
-import type { Accion, Anuncio, Instantanea, ResultadoDespacho } from '../shared/contract.js';
+  INITIAL_STATE,
+  EXPIRY_MS,
+  undo,
+  onScreen,
+  callTurn,
+  remove,
+  expire,
+  type QueueState,
+} from '../core/turns.js';
+import type { Action, Announcement, Snapshot, DispatchResult } from '../shared/contract.js';
 import { AppError } from '../shared/errors.js';
 import { silentLogger, type Logger } from '../shared/logging.js';
 /** `revision` increases with every notification so clients can drop out-of-order snapshots. */
-export type Suscriptor = (
-  instantanea: Instantanea,
-  anuncio: Anuncio | null,
+export type Subscriber = (
+  snapshot: Snapshot,
+  announcement: Announcement | null,
   revision: number,
 ) => void;
 export interface Store {
-  obtener(): Instantanea;
+  obtener(): Snapshot;
   /** Revision of the snapshot `obtener()` returns now. */
   revision(): number;
-  despachar(accion: Accion): ResultadoDespacho;
-  suscribir(fn: Suscriptor): () => void;
+  despachar(action: Action): DispatchResult;
+  suscribir(fn: Subscriber): () => void;
   reiniciarSiCambioDia(): boolean;
   saludPersistencia(): {
     estado: 'correcta' | 'error';
@@ -41,11 +41,11 @@ interface QueueStorePorts {
   antesDeAnunciar?: () => void;
   esperaAnuncioMs?: number;
   load: (today: string) => {
-    estado: Estado;
+    estado: QueueState;
     desde: Map<number, number>;
     advertencia?: string;
   };
-  save: (state: Estado, date: string, since: ReadonlyMap<number, number>) => void;
+  save: (state: QueueState, date: string, since: ReadonlyMap<number, number>) => void;
   ensureCapacity: () => void;
   today: () => string;
   logger?: Logger;
@@ -53,53 +53,53 @@ interface QueueStorePorts {
   vigenciaMs?: number;
 }
 export function createQueueStore({
-  antesDeAnunciar,
-  esperaAnuncioMs,
+  antesDeAnunciar: beforeAnnounce,
+  esperaAnuncioMs: announcementWaitMs,
   load,
   save,
   ensureCapacity,
   today,
-  ahora = () => Date.now(),
-  vigenciaMs = VIGENCIA_MS,
+  ahora: now = () => Date.now(),
+  vigenciaMs: expiryMs = EXPIRY_MS,
   logger = silentLogger,
 }: QueueStorePorts): Store {
-  let fecha = today();
-  let { estado, desde, advertencia: advertenciaRecuperacion } = load(fecha);
-  let desdePrevio: Map<number, number> | null = null;
-  let temporizador: ReturnType<typeof setTimeout> | undefined;
-  let siguienteAnuncio = 1;
+  let currentDate = today();
+  let { estado: queueState, desde: calledSince, advertencia: recoveryWarning } = load(currentDate);
+  let previousCalledSince: Map<number, number> | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let nextAnnouncement = 1;
   let revision = 0;
-  let primerFallo: string | null = null;
-  let restauradaEn: string | null = null;
-  let ultimoGuardado: string | null = null;
-  let ultimoError: string | null = null;
-  let ultimoAnuncio: {
+  let firstFailure: string | null = null;
+  let restoredAt: string | null = null;
+  let lastSaved: string | null = null;
+  let lastError: string | null = null;
+  let lastAnnouncement: {
     n: number;
     fecha: string;
   } | null = null;
-  const suscriptores = new Set<Suscriptor>();
-  const obtener = (): Instantanea => ({
-    actual: estado.actual,
-    llamados: estado.llamados,
-    puedeDeshacer: estado.deshacer !== null,
-    ...(primerFallo ? { persistencia: { estado: 'error' as const, desde: primerFallo } } : {}),
-    ...(advertenciaRecuperacion ? { advertenciaRecuperacion } : {}),
+  const subscribers = new Set<Subscriber>();
+  const get = (): Snapshot => ({
+    actual: queueState.actual,
+    llamados: queueState.llamados,
+    puedeDeshacer: queueState.deshacer !== null,
+    ...(firstFailure ? { persistencia: { estado: 'error' as const, desde: firstFailure } } : {}),
+    ...(recoveryWarning ? { advertenciaRecuperacion: recoveryWarning } : {}),
   });
-  function persistir(): boolean {
+  function persist(): boolean {
     try {
       ensureCapacity();
-      save(estado, fecha, desde);
-      ultimoGuardado = new Date(ahora()).toISOString();
-      if (primerFallo) {
-        restauradaEn = new Date(ahora()).toISOString();
-        logger.info(`Persistencia de estado.json restaurada en ${restauradaEn}.`);
-        primerFallo = null;
+      save(queueState, currentDate, calledSince);
+      lastSaved = new Date(now()).toISOString();
+      if (firstFailure) {
+        restoredAt = new Date(now()).toISOString();
+        logger.info(`Persistencia de estado.json restaurada en ${restoredAt}.`);
+        firstFailure = null;
       }
       return true;
     } catch (error) {
-      ultimoError = String((error as Error).message).slice(0, 200);
-      if (!primerFallo) {
-        primerFallo = new Date(ahora()).toISOString();
+      lastError = String((error as Error).message).slice(0, 200);
+      if (!firstFailure) {
+        firstFailure = new Date(now()).toISOString();
         logger.error(
           `No se pudo guardar estado.json; la acción no se aplicó: ${(error as Error).message}`,
         );
@@ -107,155 +107,159 @@ export function createQueueStore({
       return false;
     }
   }
-  const respaldo = () => ({
-    fecha,
-    estado,
-    desde,
-    desdePrevio,
-    siguienteAnuncio,
-    ultimoAnuncio,
-    advertenciaRecuperacion,
+  const backup = () => ({
+    fecha: currentDate,
+    estado: queueState,
+    desde: calledSince,
+    desdePrevio: previousCalledSince,
+    siguienteAnuncio: nextAnnouncement,
+    ultimoAnuncio: lastAnnouncement,
+    advertenciaRecuperacion: recoveryWarning,
   });
-  function restaurar(anterior: ReturnType<typeof respaldo>) {
+  function restore(previous: ReturnType<typeof backup>) {
     ({
-      fecha,
-      estado,
-      desde,
-      desdePrevio,
-      siguienteAnuncio,
-      ultimoAnuncio,
-      advertenciaRecuperacion,
-    } = anterior);
-    notificar(null);
+      fecha: currentDate,
+      estado: queueState,
+      desde: calledSince,
+      desdePrevio: previousCalledSince,
+      siguienteAnuncio: nextAnnouncement,
+      ultimoAnuncio: lastAnnouncement,
+      advertenciaRecuperacion: recoveryWarning,
+    } = previous);
+    notify(null);
   }
-  function notificar(anuncio: Anuncio | null) {
+  function notify(announcement: Announcement | null) {
     revision++;
-    const instantanea = obtener();
-    for (const fn of suscriptores) {
+    const snapshot = get();
+    for (const fn of subscribers) {
       try {
-        fn(instantanea, anuncio, revision);
+        fn(snapshot, announcement, revision);
       } catch (error) {
         logger.error(`Error al notificar el estado: ${(error as Error).message}`);
       }
     }
   }
-  function aplicarVencidos(): boolean {
-    const limite = ahora() - vigenciaMs;
-    desde = new Map(enPantalla(estado).map((n) => [n, desde.get(n) ?? ahora()]));
-    const vencidos = [...desde].filter(([, t]) => t <= limite).map(([n]) => n);
-    if (!vencidos.length) return false;
-    estado = vencer(estado, vencidos).estado;
-    for (const n of vencidos) desde.delete(n);
-    if (!estado.deshacer) desdePrevio = null;
+  function applyExpired(): boolean {
+    const limit = now() - expiryMs;
+    calledSince = new Map(onScreen(queueState).map((n) => [n, calledSince.get(n) ?? now()]));
+    const expired = [...calledSince].filter(([, t]) => t <= limit).map(([n]) => n);
+    if (!expired.length) return false;
+    queueState = expire(queueState, expired).estado;
+    for (const n of expired) calledSince.delete(n);
+    if (!queueState.deshacer) previousCalledSince = null;
     return true;
   }
-  function programar(reintentoMs = 0) {
-    clearTimeout(temporizador);
-    if (!desde.size) return;
-    const espera = Math.max(reintentoMs, Math.min(...desde.values()) + vigenciaMs - ahora());
-    temporizador = setTimeout(() => {
-      const anterior = respaldo();
-      if (aplicarVencidos()) {
-        if (!persistir()) {
-          restaurar(anterior);
-          programar(5000);
+  function schedule(retryMs = 0) {
+    clearTimeout(timer);
+    if (!calledSince.size) return;
+    const wait = Math.max(retryMs, Math.min(...calledSince.values()) + expiryMs - now());
+    timer = setTimeout(() => {
+      const previous = backup();
+      if (applyExpired()) {
+        if (!persist()) {
+          restore(previous);
+          schedule(5000);
           return;
         }
-        notificar(null);
+        notify(null);
       }
-      programar();
-    }, espera);
-    temporizador.unref?.();
+      schedule();
+    }, wait);
+    timer.unref?.();
   }
-  function reiniciarSiCambioDia(): boolean {
-    const nueva = today();
-    if (nueva === fecha) return false;
-    const anterior = respaldo();
-    fecha = nueva;
-    advertenciaRecuperacion = undefined;
-    if (estado.actual === null && !estado.deshacer) return false;
-    estado = ESTADO_INICIAL;
-    desde = new Map();
-    desdePrevio = null;
-    if (!persistir()) {
-      restaurar(anterior);
+  function resetOnDayChange(): boolean {
+    const fresh = today();
+    if (fresh === currentDate) return false;
+    const previous = backup();
+    currentDate = fresh;
+    recoveryWarning = undefined;
+    if (queueState.actual === null && !queueState.deshacer) return false;
+    queueState = INITIAL_STATE;
+    calledSince = new Map();
+    previousCalledSince = null;
+    if (!persist()) {
+      restore(previous);
       throw new AppError(
         'DAY_ROLLOVER_FAILED',
         'No se pudo guardar el cambio de jornada. Revise disco y permisos.',
       );
     }
-    programar();
-    notificar(null);
+    schedule();
+    notify(null);
     return true;
   }
-  function despachar(accion: Accion): ResultadoDespacho {
-    reiniciarSiCambioDia();
-    const anteriorOperacion = respaldo();
-    const { estado: siguiente, efecto } =
-      accion.tipo === 'LLAMAR'
-        ? llamar(estado, accion.entrada)
-        : accion.tipo === 'QUITAR'
-          ? quitar(estado, accion.n)
-          : deshacer(estado);
-    if (efecto?.tipo === 'CAPTURA_INVALIDA') {
-      return { instantanea: obtener(), efecto: 'CAPTURA_INVALIDA', anuncio: null };
+  function dispatch(action: Action): DispatchResult {
+    resetOnDayChange();
+    const previousOperation = backup();
+    const { estado: next, efecto: effect } =
+      action.tipo === 'LLAMAR'
+        ? callTurn(queueState, action.entrada)
+        : action.tipo === 'QUITAR'
+          ? remove(queueState, action.n)
+          : undo(queueState);
+    if (effect?.tipo === 'CAPTURA_INVALIDA') {
+      return { instantanea: get(), efecto: 'CAPTURA_INVALIDA', anuncio: null };
     }
-    if (efecto?.tipo === 'ANUNCIAR') antesDeAnunciar?.();
-    const anuncio =
-      efecto?.tipo === 'ANUNCIAR'
+    if (effect?.tipo === 'ANUNCIAR') beforeAnnounce?.();
+    const announcement =
+      effect?.tipo === 'ANUNCIAR'
         ? {
-            id: siguienteAnuncio++,
-            n: efecto.n,
-            ...(esperaAnuncioMs === undefined ? {} : { limiteInicio: ahora() + esperaAnuncioMs }),
+            id: nextAnnouncement++,
+            n: effect.n,
+            ...(announcementWaitMs === undefined
+              ? {}
+              : { limiteInicio: now() + announcementWaitMs }),
           }
         : null;
-    if (anuncio) ultimoAnuncio = { n: anuncio.n, fecha: new Date(ahora()).toISOString() };
-    const cambio = siguiente !== estado;
-    const anterior = desde;
-    if (accion.tipo === 'DESHACER' && cambio && desdePrevio) desde = desdePrevio;
-    if (anuncio) desde = new Map(desde).set(anuncio.n, ahora());
-    if (!siguiente.deshacer) desdePrevio = null;
-    else if (siguiente.deshacer !== estado.deshacer) desdePrevio = anterior;
-    estado = siguiente;
-    const vencio = aplicarVencidos();
-    if (cambio || anuncio || vencio) {
-      if (!persistir()) {
-        restaurar(anteriorOperacion);
+    if (announcement)
+      lastAnnouncement = { n: announcement.n, fecha: new Date(now()).toISOString() };
+    const change = next !== queueState;
+    const previous = calledSince;
+    if (action.tipo === 'DESHACER' && change && previousCalledSince)
+      calledSince = previousCalledSince;
+    if (announcement) calledSince = new Map(calledSince).set(announcement.n, now());
+    if (!next.deshacer) previousCalledSince = null;
+    else if (next.deshacer !== queueState.deshacer) previousCalledSince = previous;
+    queueState = next;
+    const expiredNow = applyExpired();
+    if (change || announcement || expiredNow) {
+      if (!persist()) {
+        restore(previousOperation);
         throw new AppError(
           'STATE_SAVE_FAILED',
           'No se pudo guardar el turno. La TV y la cola no cambiaron. Revise disco y permisos.',
         );
       }
-      notificar(anuncio);
+      notify(announcement);
     }
-    programar();
-    return { instantanea: obtener(), efecto: anuncio ? 'ANUNCIAR' : null, anuncio };
+    schedule();
+    return { instantanea: get(), efecto: announcement ? 'ANUNCIAR' : null, anuncio: announcement };
   }
-  const anteriorInicial = respaldo();
-  if (aplicarVencidos() && !persistir()) restaurar(anteriorInicial);
-  programar(primerFallo ? 5000 : 0);
+  const previousInitial = backup();
+  if (applyExpired() && !persist()) restore(previousInitial);
+  schedule(firstFailure ? 5000 : 0);
   return {
-    obtener,
+    obtener: get,
     revision: () => revision,
-    despachar,
+    despachar: dispatch,
     suscribir(fn) {
-      suscriptores.add(fn);
+      subscribers.add(fn);
       return () => {
-        suscriptores.delete(fn);
+        subscribers.delete(fn);
       };
     },
-    reiniciarSiCambioDia,
+    reiniciarSiCambioDia: resetOnDayChange,
     saludPersistencia: () => ({
-      estado: primerFallo ? 'error' : 'correcta',
-      primerFallo,
-      restauradaEn,
-      ultimoGuardado,
-      ultimoError,
-      ultimoAnuncio,
+      estado: firstFailure ? 'error' : 'correcta',
+      primerFallo: firstFailure,
+      restauradaEn: restoredAt,
+      ultimoGuardado: lastSaved,
+      ultimoError: lastError,
+      ultimoAnuncio: lastAnnouncement,
     }),
     cerrar() {
-      clearTimeout(temporizador);
-      suscriptores.clear();
+      clearTimeout(timer);
+      subscribers.clear();
     },
   };
 }

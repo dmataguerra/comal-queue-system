@@ -4,7 +4,7 @@ import { stat } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
-import { TIPOS_MIME } from './contenido.js';
+import { MIME_TYPES } from './content.js';
 import { fileWithin } from './safe-file.js';
 interface ProtocolOptions {
   contentRoot: string;
@@ -14,7 +14,7 @@ interface ProtocolOptions {
 }
 async function serveMedia(file: string, range: string | null, headers: Record<string, string>) {
   const size = (await stat(file)).size;
-  const type = TIPOS_MIME[extname(file).toLowerCase()] ?? 'application/octet-stream';
+  const type = MIME_TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream';
   const parts = range && /^bytes=(\d*)-(\d*)$/.exec(range);
   if (parts && (parts[1] || parts[2])) {
     const start = parts[1] ? Number(parts[1]) : Math.max(0, size - Number(parts[2]));

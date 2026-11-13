@@ -4,41 +4,41 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { CONFIG_POR_DEFECTO, leerConfig, msHastaHora, validarConfig } from './config.js';
+import { DEFAULT_CONFIG, readConfig, msUntilTime, validateConfig } from './config.js';
 test('config.json ausente: se crea con los valores por defecto', () => {
-  const raiz = mkdtempSync(join(tmpdir(), 'turnero-config-'));
+  const root = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   try {
-    const ruta = join(raiz, 'config.json');
-    assert.deepEqual(leerConfig(ruta), CONFIG_POR_DEFECTO);
-    assert.equal(existsSync(ruta), true);
-    assert.deepEqual(JSON.parse(readFileSync(ruta, 'utf8')), CONFIG_POR_DEFECTO);
-    assert.deepEqual(readdirSync(raiz), ['config.json']);
+    const filePath = join(root, 'config.json');
+    assert.deepEqual(readConfig(filePath), DEFAULT_CONFIG);
+    assert.equal(existsSync(filePath), true);
+    assert.deepEqual(JSON.parse(readFileSync(filePath, 'utf8')), DEFAULT_CONFIG);
+    assert.deepEqual(readdirSync(root), ['config.json']);
   } finally {
-    rmSync(raiz, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
   }
 });
 test('un fallo al crear config.json se informa y no simula guardado correcto', () => {
-  const raiz = mkdtempSync(join(tmpdir(), 'turnero-config-'));
-  const mensajes: string[] = [];
+  const root = mkdtempSync(join(tmpdir(), 'turnero-config-'));
+  const messages: string[] = [];
   try {
-    const ruta = join(raiz, 'no-existe', 'config.json');
+    const filePath = join(root, 'no-existe', 'config.json');
     assert.throws(
       () =>
-        leerConfig(
-          ruta,
-          messageLogger((m) => mensajes.push(m)),
+        readConfig(
+          filePath,
+          messageLogger((m) => messages.push(m)),
         ),
       /No se pudo crear config.json/,
     );
-    assert.match(mensajes[0], /No se pudo crear config.json/);
-    assert.equal(existsSync(ruta), false);
+    assert.match(messages[0], /No se pudo crear config.json/);
+    assert.equal(existsSync(filePath), false);
   } finally {
-    rmSync(raiz, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
   }
 });
 test('valores parciales se mezclan; inválidos y claves desconocidas usan el default y se registran', () => {
-  const registro: string[] = [];
-  const config = validarConfig(
+  const logs: string[] = [];
+  const config = validateConfig(
     {
       repeticiones: 1,
       volumenMusica: 1.5,
@@ -46,36 +46,36 @@ test('valores parciales se mezclan; inválidos y claves desconocidas usan el def
       mensajes: ['Hola'],
       color: 'rojo',
     },
-    messageLogger((m) => registro.push(m)),
+    messageLogger((m) => logs.push(m)),
   );
   assert.equal(config.repeticiones, 1);
-  assert.equal(config.volumenMusica, CONFIG_POR_DEFECTO.volumenMusica);
+  assert.equal(config.volumenMusica, DEFAULT_CONFIG.volumenMusica);
   assert.equal(config.recargaDiaria, '04:00');
   assert.deepEqual(config.mensajes, ['Hola']);
-  assert.equal(registro.length, 3);
+  assert.equal(logs.length, 3);
 });
 test('una clave heredada desconocida no rompe la validación de configuración', () => {
-  const mensajes: string[] = [];
-  const config = validarConfig(
+  const messages: string[] = [];
+  const config = validateConfig(
     JSON.parse('{"__proto__":{"youtubeUrl":"malicioso"}}'),
-    messageLogger((m) => mensajes.push(m)),
+    messageLogger((m) => messages.push(m)),
   );
-  assert.deepEqual(config, CONFIG_POR_DEFECTO);
-  assert.match(mensajes[0], /clave desconocida/);
+  assert.deepEqual(config, DEFAULT_CONFIG);
+  assert.match(messages[0], /clave desconocida/);
 });
 test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo del administrador', () => {
-  const raiz = mkdtempSync(join(tmpdir(), 'turnero-config-'));
+  const root = mkdtempSync(join(tmpdir(), 'turnero-config-'));
   try {
-    const ruta = join(raiz, 'config.json');
-    writeFileSync(ruta, '{ "repeticiones": 1, ');
-    assert.deepEqual(leerConfig(ruta, silentLogger), CONFIG_POR_DEFECTO);
-    assert.equal(readFileSync(ruta, 'utf8'), '{ "repeticiones": 1, ');
+    const filePath = join(root, 'config.json');
+    writeFileSync(filePath, '{ "repeticiones": 1, ');
+    assert.deepEqual(readConfig(filePath, silentLogger), DEFAULT_CONFIG);
+    assert.equal(readFileSync(filePath, 'utf8'), '{ "repeticiones": 1, ');
   } finally {
-    rmSync(raiz, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
   }
 });
 test('msHastaHora apunta a la próxima ocurrencia local', () => {
-  const ahora = new Date(2026, 8, 11, 3, 30);
-  assert.equal(msHastaHora('04:00', ahora), 30 * 60 * 1000);
-  assert.equal(msHastaHora('03:30', ahora), 24 * 60 * 60 * 1000);
+  const now = new Date(2026, 8, 11, 3, 30);
+  assert.equal(msUntilTime('04:00', now), 30 * 60 * 1000);
+  assert.equal(msUntilTime('03:30', now), 24 * 60 * 60 * 1000);
 });

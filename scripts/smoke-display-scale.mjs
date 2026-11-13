@@ -23,7 +23,7 @@ async function verify() {
     let client;
     for (let i = 0; i < 150; i++) {
       client = BrowserWindow.getAllWindows().find((w) =>
-        w.webContents.getURL().includes('/publica/'),
+        w.webContents.getURL().includes('/display/'),
       );
       if (
         client &&
@@ -71,7 +71,7 @@ async function verify() {
       let metrics;
       let previous;
       let stable = false;
-      for (let intento = 0; intento < 60; intento++) {
+      for (let attempt = 0; attempt < 60; attempt++) {
         metrics = await client.webContents.executeJavaScript(`(() => {
           const viewport = [innerWidth, innerHeight];
           const expectedViewport = ${JSON.stringify(expectedViewport)};

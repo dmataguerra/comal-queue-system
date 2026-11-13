@@ -1,9 +1,9 @@
-import type { Diagnostico } from '../../shared/contract.js';
+import type { Diagnostics } from '../../shared/contract.js';
 import type { Logger } from '../../shared/logging.js';
 /** Tracks audio and YouTube health reported by the public display and logs transitions once. */
 export function createHealthMonitor(logger: Logger) {
-  let audio: Diagnostico['audio'] = 'desconocido';
-  let youtube: Diagnostico['youtube'] = 'inactivo';
+  let audio: Diagnostics['audio'] = 'desconocido';
+  let youtube: Diagnostics['youtube'] = 'inactivo';
   const report = (kind: 'audio' | 'youtube', state: 'correcto' | 'degradado') => {
     if (kind === 'audio') {
       if (audio === state) return;

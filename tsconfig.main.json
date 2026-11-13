@@ -4,6 +4,6 @@
     "strict": true, "skipLibCheck": true, "esModuleInterop": true,
     "outDir": "build", "rootDir": ".", "types": ["node"]
   },
-  "include": ["nucleo/**/*.ts", "backend/**/*.ts", "main/**/*.ts", "main/**/*.cts", "shared/**/*.ts"],
+  "include": ["core/**/*.ts", "backend/**/*.ts", "main/**/*.ts", "main/**/*.cts", "shared/**/*.ts"],
   "exclude": ["**/*.test.ts"]
 }

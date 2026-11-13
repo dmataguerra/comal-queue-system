@@ -1,5 +1,5 @@
 import type { Logger } from '../../shared/logging.js';
-import { msHastaHora } from '../config.js';
+import { msUntilTime } from '../config.js';
 interface DailyReloadOptions {
   /** Current reload time as HH:MM; read on every scheduling so config edits apply. */
   time: () => string;
@@ -22,7 +22,7 @@ export function createDailyReload({ time, run, logger }: DailyReloadOptions) {
       } finally {
         schedule();
       }
-    }, msHastaHora(time()));
+    }, msUntilTime(time()));
   }
   const stop = () => {
     stopped = true;

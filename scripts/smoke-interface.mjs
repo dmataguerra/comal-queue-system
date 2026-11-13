@@ -41,15 +41,15 @@ async function verify() {
       () =>
         BrowserWindow.getAllWindows().filter(
           (w) =>
-            /\/vistas\/(operador|publica)\//.test(w.webContents.getURL()) &&
+            /\/views\/(operator|display)\//.test(w.webContents.getURL()) &&
             !w.webContents.isLoading(),
         ).length === 2,
     );
     const operator = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/operador/'),
+      w.webContents.getURL().includes('/operator/'),
     );
     const client = BrowserWindow.getAllWindows().find((w) =>
-      w.webContents.getURL().includes('/publica/'),
+      w.webContents.getURL().includes('/display/'),
     );
     for (const w of [operator, client]) w.webContents.setBackgroundThrottling(false);
     operator.setContentSize(1366, 900);

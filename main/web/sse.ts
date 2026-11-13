@@ -2,11 +2,11 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 /** Server-sent events hub: tracks connected clients and broadcasts typed messages. */
 export function createSseHub() {
-  const clientes = new Set<ServerResponse>();
+  const clients = new Set<ServerResponse>();
   return {
-    publish(tipo: string, datos: unknown[]) {
-      const mensaje = `data: ${JSON.stringify({ tipo, datos })}\n\n`;
-      for (const cliente of clientes) cliente.write(mensaje);
+    publish(type: string, data: unknown[]) {
+      const message = `data: ${JSON.stringify({ tipo: type, datos: data })}\n\n`;
+      for (const client of clients) client.write(message);
     },
     connect(req: IncomingMessage, res: ServerResponse) {
       res.writeHead(200, {
@@ -16,11 +16,11 @@ export function createSseHub() {
         'X-Content-Type-Options': 'nosniff',
       });
       res.write(': conectado\n\n');
-      clientes.add(res);
-      req.on('close', () => clientes.delete(res));
+      clients.add(res);
+      req.on('close', () => clients.delete(res));
     },
     closeAll() {
-      for (const cliente of clientes) cliente.end();
+      for (const client of clients) client.end();
     },
   };
 }

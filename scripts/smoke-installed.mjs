@@ -15,276 +15,278 @@ import { createServer } from 'node:net';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 if (process.platform !== 'win32') throw new Error('Esta prueba requiere Windows.');
-const raiz = fileURLToPath(new URL('../', import.meta.url));
-const version = JSON.parse(readFileSync(join(raiz, 'package.json'), 'utf8')).version;
-const instalador = resolve(
-  process.argv[2] ?? join(raiz, 'release', `Comal++ Setup ${version}.exe`),
-);
-const instaladorAnterior = process.argv[3] ? resolve(process.argv[3]) : null;
-assert.ok(existsSync(instalador), `Falta el instalador: ${instalador}`);
-const hash = createHash('sha256').update(readFileSync(instalador)).digest('hex').toUpperCase();
-const resultados = join(raiz, 'test-results');
-mkdirSync(resultados, { recursive: true });
-const prueba = mkdtempSync(join(resultados, 'installed-'));
-const instalacion = join(prueba, 'app');
-const datos = join(prueba, 'datos');
-mkdirSync(datos);
-const ejecutable = join(instalacion, 'Comal++.exe');
-const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
-const reporte = {
+const root = fileURLToPath(new URL('../', import.meta.url));
+const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+const installer = resolve(process.argv[2] ?? join(root, 'release', `Comal++ Setup ${version}.exe`));
+const previousInstaller = process.argv[3] ? resolve(process.argv[3]) : null;
+assert.ok(existsSync(installer), `Falta el instalador: ${installer}`);
+const hash = createHash('sha256').update(readFileSync(installer)).digest('hex').toUpperCase();
+const resultsDir = join(root, 'test-results');
+mkdirSync(resultsDir, { recursive: true });
+const testDir = mkdtempSync(join(resultsDir, 'installed-'));
+const installDir = join(testDir, 'app');
+const dataDir = join(testDir, 'datos');
+mkdirSync(dataDir);
+const executable = join(installDir, 'Comal++.exe');
+const pause = (ms) => new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
+const report = {
   inicio: new Date().toISOString(),
-  instalador,
-  archivo: basename(instalador),
+  instalador: installer,
+  archivo: basename(installer),
   version,
   sha256: hash,
-  prueba,
+  prueba: testDir,
   pasos: [],
 };
-async function puertoLibre() {
-  const servidor = createServer();
-  await new Promise((resolver) => servidor.listen(0, '127.0.0.1', resolver));
-  const puerto = servidor.address().port;
-  await new Promise((resolver) => servidor.close(resolver));
-  return puerto;
+async function findFreePort() {
+  const server = createServer();
+  await new Promise((resolvePromise) => server.listen(0, '127.0.0.1', resolvePromise));
+  const port = server.address().port;
+  await new Promise((resolvePromise) => server.close(resolvePromise));
+  return port;
 }
-async function esperar(comprobar, mensaje, limite = 30000) {
-  const fin = Date.now() + limite;
-  while (Date.now() < fin) {
+async function waitFor(check, message, timeout = 30000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
     try {
-      const resultado = await comprobar();
-      if (resultado) return resultado;
+      const result = await check();
+      if (result) return result;
     } catch {
       /* El ejecutable puede seguir arrancando. */
     }
-    await pausa(250);
+    await pause(250);
   }
-  throw new Error(mensaje);
+  throw new Error(message);
 }
-async function conectar(puerto) {
-  const pagina = await esperar(async () => {
-    const respuesta = await fetch(`http://127.0.0.1:${puerto}/json/list`, {
+async function connect(port) {
+  const page = await waitFor(async () => {
+    const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
       signal: AbortSignal.timeout(5000),
     });
-    const paginas = await respuesta.json();
-    return paginas.find((p) => p.type === 'page' && p.url.includes('/vistas/operador/'));
+    const pages = await response.json();
+    return pages.find((p) => p.type === 'page' && p.url.includes('/views/operator/'));
   }, 'No apareció la vista del operador en el ejecutable instalado.');
-  const socket = new WebSocket(pagina.webSocketDebuggerUrl);
-  await new Promise((resolver, rechazar) => {
-    const limite = setTimeout(() => {
+  const socket = new WebSocket(page.webSocketDebuggerUrl);
+  await new Promise((resolvePromise, rejectPromise) => {
+    const timeout = setTimeout(() => {
       socket.close();
-      rechazar(new Error('Timeout al conectar DevTools.'));
+      rejectPromise(new Error('Timeout al conectar DevTools.'));
     }, 10000);
     socket.addEventListener(
       'open',
       () => {
-        clearTimeout(limite);
-        resolver();
+        clearTimeout(timeout);
+        resolvePromise();
       },
       { once: true },
     );
-    const fallo = () => {
-      clearTimeout(limite);
-      rechazar(new Error('DevTools cerró durante la conexión.'));
+    const onFailure = () => {
+      clearTimeout(timeout);
+      rejectPromise(new Error('DevTools cerró durante la conexión.'));
     };
-    socket.addEventListener('error', fallo, { once: true });
-    socket.addEventListener('close', fallo, { once: true });
+    socket.addEventListener('error', onFailure, { once: true });
+    socket.addEventListener('close', onFailure, { once: true });
   });
   let id = 0;
-  const pendientes = new Map();
-  const fallarPendientes = () => {
-    for (const pendiente of pendientes.values()) {
-      clearTimeout(pendiente.limite);
-      pendiente.rechazar(new Error('Se perdió la conexión con el ejecutable instalado.'));
+  const pending = new Map();
+  const failPending = () => {
+    for (const pendingRequest of pending.values()) {
+      clearTimeout(pendingRequest.limite);
+      pendingRequest.rechazar(new Error('Se perdió la conexión con el ejecutable instalado.'));
     }
-    pendientes.clear();
+    pending.clear();
   };
-  socket.addEventListener('close', fallarPendientes);
-  socket.addEventListener('error', fallarPendientes);
-  socket.addEventListener('message', (evento) => {
-    const mensaje = JSON.parse(evento.data);
-    if (!mensaje.id || !pendientes.has(mensaje.id)) return;
-    const { resolver, rechazar, limite } = pendientes.get(mensaje.id);
-    clearTimeout(limite);
-    pendientes.delete(mensaje.id);
-    if (mensaje.error) rechazar(new Error(mensaje.error.message));
-    else resolver(mensaje.result);
+  socket.addEventListener('close', failPending);
+  socket.addEventListener('error', failPending);
+  socket.addEventListener('message', (messageEvent) => {
+    const message = JSON.parse(messageEvent.data);
+    if (!message.id || !pending.has(message.id)) return;
+    const {
+      resolver: resolvePromise,
+      rechazar: rejectPromise,
+      limite: timeout,
+    } = pending.get(message.id);
+    clearTimeout(timeout);
+    pending.delete(message.id);
+    if (message.error) rejectPromise(new Error(message.error.message));
+    else resolvePromise(message.result);
   });
   return {
-    async evaluar(expresion) {
+    async evaluar(expression) {
       if (socket.readyState !== WebSocket.OPEN) throw new Error('DevTools no está conectado.');
-      const numero = ++id;
-      const respuesta = new Promise((resolver, rechazar) => {
-        const limite = setTimeout(() => {
-          pendientes.delete(numero);
-          rechazar(new Error('El ejecutable no respondió a DevTools en 15 segundos.'));
+      const requestId = ++id;
+      const response = new Promise((resolvePromise, rejectPromise) => {
+        const timeout = setTimeout(() => {
+          pending.delete(requestId);
+          rejectPromise(new Error('El ejecutable no respondió a DevTools en 15 segundos.'));
         }, 15000);
-        pendientes.set(numero, { resolver, rechazar, limite });
+        pending.set(requestId, {
+          resolver: resolvePromise,
+          rechazar: rejectPromise,
+          limite: timeout,
+        });
       });
       socket.send(
         JSON.stringify({
-          id: numero,
+          id: requestId,
           method: 'Runtime.evaluate',
-          params: { expression: expresion, awaitPromise: true, returnByValue: true },
+          params: { expression: expression, awaitPromise: true, returnByValue: true },
         }),
       );
-      const resultado = await respuesta;
-      if (resultado.exceptionDetails) throw new Error(resultado.exceptionDetails.text);
-      return resultado.result.value;
+      const result = await response;
+      if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+      return result.result.value;
     },
     cerrar() {
       socket.close();
     },
   };
 }
-function detener(proceso) {
-  if (!proceso || proceso.exitCode !== null) return;
-  spawnSync('taskkill', ['/PID', String(proceso.pid), '/T', '/F'], { stdio: 'ignore' });
+function stopProcess(appProcess) {
+  if (!appProcess || appProcess.exitCode !== null) return;
+  spawnSync('taskkill', ['/PID', String(appProcess.pid), '/T', '/F'], { stdio: 'ignore' });
 }
-let proceso;
+let appProcess;
 try {
-  if (instaladorAnterior) {
-    assert.ok(existsSync(instaladorAnterior), 'No existe el instalador anterior.');
-    const anterior = spawnSync(
-      instaladorAnterior,
-      ['/S', '--no-desktop-shortcut', `/D=${join(prueba, 'legacy-app')}`],
+  if (previousInstaller) {
+    assert.ok(existsSync(previousInstaller), 'No existe el instalador anterior.');
+    const previousInstall = spawnSync(
+      previousInstaller,
+      ['/S', '--no-desktop-shortcut', `/D=${join(testDir, 'legacy-app')}`],
       {
         timeout: 180000,
         windowsHide: true,
         stdio: 'ignore',
       },
     );
-    if (anterior.error) throw anterior.error;
-    assert.equal(anterior.status, 0, 'Falló la preparación de la instalación anterior.');
-    reporte.instaladorAnterior = instaladorAnterior;
-    reporte.sha256Anterior = createHash('sha256')
-      .update(readFileSync(instaladorAnterior))
+    if (previousInstall.error) throw previousInstall.error;
+    assert.equal(previousInstall.status, 0, 'Falló la preparación de la instalación anterior.');
+    report.instaladorAnterior = previousInstaller;
+    report.sha256Anterior = createHash('sha256')
+      .update(readFileSync(previousInstaller))
       .digest('hex')
       .toUpperCase();
-    reporte.pasos.push(
+    report.pasos.push(
       'instalador histórico preparado en otra carpeta sin crear acceso de Escritorio',
     );
   }
-  const instalacionResultado = spawnSync(instalador, ['/S', `/D=${instalacion}`], {
+  const installResult = spawnSync(installer, ['/S', `/D=${installDir}`], {
     timeout: 180000,
     windowsHide: true,
     stdio: 'ignore',
   });
-  if (instalacionResultado.error) throw instalacionResultado.error;
-  assert.equal(instalacionResultado.status, 0, 'El instalador silencioso falló.');
-  assert.ok(existsSync(ejecutable), 'El instalador no creó Comal++.exe.');
-  assert.ok(existsSync(join(instalacion, 'contenido', 'voz', '40.wav')));
-  reporte.pasos.push('instalación aislada y contenido de fábrica');
-  const manualEmpaquetado = extractFile(
-    join(instalacion, 'resources', 'app.asar'),
+  if (installResult.error) throw installResult.error;
+  assert.equal(installResult.status, 0, 'El instalador silencioso falló.');
+  assert.ok(existsSync(executable), 'El instalador no creó Comal++.exe.');
+  assert.ok(existsSync(join(installDir, 'contenido', 'voz', '40.wav')));
+  report.pasos.push('instalación aislada y contenido de fábrica');
+  const packagedManual = extractFile(
+    join(installDir, 'resources', 'app.asar'),
     join('dist', 'manual', 'manual-usuario-0.4.0.pdf'),
   );
-  const manualFuente = readFileSync(join(raiz, 'output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf'));
-  assert.deepEqual(
-    manualEmpaquetado,
-    manualFuente,
-    'El instalador debe incluir el manual vigente.',
-  );
-  reporte.manualSha256 = createHash('sha256').update(manualEmpaquetado).digest('hex');
-  reporte.pasos.push('manual PDF empaquetado idéntico al documento fuente');
-  async function abrir(usarRutaPredeterminada = false) {
-    const puerto = await puertoLibre();
-    const salida = openSync(join(prueba, 'aplicacion.log'), 'a');
-    const entorno = { ...process.env, TURNERO_DATOS: datos };
-    if (usarRutaPredeterminada) delete entorno.TURNERO_DATOS;
-    proceso = spawn(
-      ejecutable,
-      [`--remote-debugging-port=${puerto}`, `--user-data-dir=${join(prueba, 'electron-profile')}`],
+  const sourceManual = readFileSync(join(root, 'output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf'));
+  assert.deepEqual(packagedManual, sourceManual, 'El instalador debe incluir el manual vigente.');
+  report.manualSha256 = createHash('sha256').update(packagedManual).digest('hex');
+  report.pasos.push('manual PDF empaquetado idéntico al documento fuente');
+  async function launch(useDefaultPath = false) {
+    const port = await findFreePort();
+    const logFd = openSync(join(testDir, 'aplicacion.log'), 'a');
+    const env = { ...process.env, TURNERO_DATOS: dataDir };
+    if (useDefaultPath) delete env.TURNERO_DATOS;
+    appProcess = spawn(
+      executable,
+      [`--remote-debugging-port=${port}`, `--user-data-dir=${join(testDir, 'electron-profile')}`],
       {
-        env: entorno,
+        env: env,
         windowsHide: true,
-        stdio: ['ignore', salida, salida],
+        stdio: ['ignore', logFd, logFd],
       },
     );
-    closeSync(salida);
-    proceso.on('error', (error) => {
-      reporte.errorProceso = String(error);
+    closeSync(logFd);
+    appProcess.on('error', (error) => {
+      report.errorProceso = String(error);
     });
-    const cliente = await conectar(puerto);
-    await esperar(
-      () => cliente.evaluar("Boolean(document.querySelector('#turn-number'))"),
+    const client = await connect(port);
+    await waitFor(
+      () => client.evaluar("Boolean(document.querySelector('#turn-number'))"),
       'No cargó el operador instalado.',
     );
-    return cliente;
+    return client;
   }
-  let cliente = await abrir();
-  const inicial = await cliente.evaluar('window.turnero.obtener()');
-  assert.equal(inicial.instantanea.actual, null);
-  await cliente.evaluar(`(() => {
+  let client = await launch();
+  const initialState = await client.evaluar('window.turnero.obtener()');
+  assert.equal(initialState.instantanea.actual, null);
+  await client.evaluar(`(() => {
     const input = document.querySelector('#turn-number');
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '42');
     input.dispatchEvent(new Event('input', { bubbles: true }));
   })()`);
-  await esperar(
-    () => cliente.evaluar("document.querySelector('#turn-number').value === '42'"),
+  await waitFor(
+    () => client.evaluar("document.querySelector('#turn-number').value === '42'"),
     'No se pudo preparar una captura válida para comprobar el bloqueo del recorrido.',
   );
-  await cliente.evaluar("document.querySelector('.help-button').click()");
-  await esperar(
-    () => cliente.evaluar('Boolean(document.querySelector(\'[data-testid="help-center"]\'))'),
+  await client.evaluar("document.querySelector('.help-button').click()");
+  await waitFor(
+    () => client.evaluar('Boolean(document.querySelector(\'[data-testid="help-center"]\'))'),
     'El centro de ayuda no abrió en la aplicación instalada.',
   );
-  await cliente.evaluar(
+  await client.evaluar(
     'document.querySelector(\'[data-testid="help-tour-start-llamar"]\').click()',
   );
-  await esperar(
-    () => cliente.evaluar('Boolean(document.querySelector(\'[data-testid="help-tour"]\'))'),
+  await waitFor(
+    () => client.evaluar('Boolean(document.querySelector(\'[data-testid="help-tour"]\'))'),
     'El recorrido no abrió en la aplicación instalada.',
   );
-  await cliente.evaluar("document.querySelector('.register-button').click()");
+  await client.evaluar("document.querySelector('.register-button').click()");
   assert.deepEqual(
-    (await cliente.evaluar('window.turnero.obtener()')).instantanea,
-    inicial.instantanea,
+    (await client.evaluar('window.turnero.obtener()')).instantanea,
+    initialState.instantanea,
     'El recorrido instalado no debe modificar la cola.',
   );
-  await cliente.evaluar('document.querySelector(\'[data-testid="help-tour-close"]\').click()');
-  await esperar(
-    () => cliente.evaluar('Boolean(document.querySelector(\'[data-testid="help-center"]\'))'),
+  await client.evaluar('document.querySelector(\'[data-testid="help-tour-close"]\').click()');
+  await waitFor(
+    () => client.evaluar('Boolean(document.querySelector(\'[data-testid="help-center"]\'))'),
     'Cerrar el recorrido no devolvió al centro de ayuda.',
   );
-  await cliente.evaluar("document.querySelector('.help-center .modal-heading button').click()");
-  reporte.pasos.push('ayuda y recorrido instalados abren, bloquean operaciones y cierran');
-  const llamada = await cliente.evaluar("window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})");
-  assert.equal(llamada.instantanea.actual, 42);
-  assert.ok(existsSync(join(datos, 'estado.json')));
-  reporte.pasos.push('arranque y llamada 42 desde el ejecutable instalado');
-  cliente.cerrar();
-  detener(proceso);
-  await pausa(500);
-  cliente = await abrir();
-  const restaurado = await cliente.evaluar('window.turnero.obtener()');
-  assert.equal(restaurado.instantanea.actual, 42);
-  cliente.cerrar();
-  reporte.pasos.push('conservación de estado tras reinicio del ejecutable');
-  detener(proceso);
-  await pausa(500);
-  const datosPerfil = join(prueba, 'electron-profile', 'datos');
-  mkdirSync(datosPerfil, { recursive: true });
-  cliente = await abrir(true);
-  const estadoPerfil = await cliente.evaluar('window.turnero.obtener()');
-  assert.equal(estadoPerfil.instantanea.actual, null);
-  const llamadaPerfil = await cliente.evaluar(
+  await client.evaluar("document.querySelector('.help-center .modal-heading button').click()");
+  report.pasos.push('ayuda y recorrido instalados abren, bloquean operaciones y cierran');
+  const callResult = await client.evaluar("window.turnero.despachar({tipo:'LLAMAR',entrada:'42'})");
+  assert.equal(callResult.instantanea.actual, 42);
+  assert.ok(existsSync(join(dataDir, 'estado.json')));
+  report.pasos.push('arranque y llamada 42 desde el ejecutable instalado');
+  client.cerrar();
+  stopProcess(appProcess);
+  await pause(500);
+  client = await launch();
+  const restored = await client.evaluar('window.turnero.obtener()');
+  assert.equal(restored.instantanea.actual, 42);
+  client.cerrar();
+  report.pasos.push('conservación de estado tras reinicio del ejecutable');
+  stopProcess(appProcess);
+  await pause(500);
+  const profileDataDir = join(testDir, 'electron-profile', 'datos');
+  mkdirSync(profileDataDir, { recursive: true });
+  client = await launch(true);
+  const profileState = await client.evaluar('window.turnero.obtener()');
+  assert.equal(profileState.instantanea.actual, null);
+  const profileCallResult = await client.evaluar(
     "window.turnero.despachar({tipo:'LLAMAR',entrada:'43'})",
   );
-  assert.equal(llamadaPerfil.instantanea.actual, 43);
-  assert.equal(JSON.parse(readFileSync(join(datosPerfil, 'estado.json'), 'utf8')).actual, 43);
-  assert.ok(existsSync(join(datosPerfil, 'config.json')));
-  assert.ok(existsSync(join(datosPerfil, 'contenido', 'voz', '40.wav')));
-  cliente.cerrar();
-  detener(proceso);
-  await pausa(500);
-  cliente = await abrir(true);
-  const persistidoPerfil = await cliente.evaluar('window.turnero.obtener()');
-  assert.equal(persistidoPerfil.instantanea.actual, 43);
-  cliente.cerrar();
-  reporte.pasos.push(
+  assert.equal(profileCallResult.instantanea.actual, 43);
+  assert.equal(JSON.parse(readFileSync(join(profileDataDir, 'estado.json'), 'utf8')).actual, 43);
+  assert.ok(existsSync(join(profileDataDir, 'config.json')));
+  assert.ok(existsSync(join(profileDataDir, 'contenido', 'voz', '40.wav')));
+  client.cerrar();
+  stopProcess(appProcess);
+  await pause(500);
+  client = await launch(true);
+  const persistedProfile = await client.evaluar('window.turnero.obtener()');
+  assert.equal(persistedProfile.instantanea.actual, 43);
+  client.cerrar();
+  report.pasos.push(
     'ruta predeterminada sin TURNERO_DATOS: llamada 43, contenido y persistencia en perfil/datos',
   );
-  const defender = spawnSync(
+  const defenderCheck = spawnSync(
     'powershell.exe',
     [
       '-NoProfile',
@@ -311,33 +313,33 @@ try {
       timeout: 30000,
       env: {
         ...process.env,
-        COMAL_TEST_START: reporte.inicio,
-        COMAL_TEST_INSTALLER: instalador,
-        COMAL_TEST_DIRECTORY: instalacion,
+        COMAL_TEST_START: report.inicio,
+        COMAL_TEST_INSTALLER: installer,
+        COMAL_TEST_DIRECTORY: installDir,
       },
     },
   );
   assert.equal(
-    defender.status,
+    defenderCheck.status,
     0,
-    `No se pudo verificar el registro de Defender: ${defender.stderr || defender.error}`,
+    `No se pudo verificar el registro de Defender: ${defenderCheck.stderr || defenderCheck.error}`,
   );
-  reporte.bloqueosDefender = JSON.parse(defender.stdout.replace(/^\uFEFF/, '').trim());
+  report.bloqueosDefender = JSON.parse(defenderCheck.stdout.replace(/^\uFEFF/, '').trim());
   assert.equal(
-    reporte.bloqueosDefender.length,
+    report.bloqueosDefender.length,
     0,
     'Defender bloqueó al instalador o a la aplicación durante la prueba.',
   );
-  reporte.pasos.push(
+  report.pasos.push(
     'sin eventos 1123 de acceso a carpetas protegidas para el instalador y aplicación probados',
   );
-  console.log(`PASS: instalador ${hash}; evidencia en ${prueba}`);
+  console.log(`PASS: instalador ${hash}; evidencia en ${testDir}`);
 } catch (error) {
-  reporte.error = String(error);
+  report.error = String(error);
   console.error(error);
   process.exitCode = 1;
 } finally {
-  detener(proceso);
-  reporte.fecha = new Date().toISOString();
-  writeFileSync(join(prueba, 'resultado.json'), `${JSON.stringify(reporte, null, 2)}\n`);
+  stopProcess(appProcess);
+  report.fecha = new Date().toISOString();
+  writeFileSync(join(testDir, 'resultado.json'), `${JSON.stringify(report, null, 2)}\n`);
 }

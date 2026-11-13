@@ -1,22 +1,22 @@
 import { app, dialog, shell } from 'electron';
 import { mkdirSync } from 'node:fs';
 import { APP_CONFIG } from '../../shared/app-config.js';
-import type { Config, EntregaAudio, Inicial, Pantallas } from '../../shared/contract.js';
-import { MAX_ESPERA_ANUNCIO_MS } from '../../shared/politica-anuncios.js';
-import { conectarIpc } from '../adaptador-ipc.js';
-import { migrarDatosDocumentos } from '../carpeta-datos.js';
+import type { Config, AudioDelivery, InitialState, Screens } from '../../shared/contract.js';
+import { MAX_ANNOUNCEMENT_WAIT_MS } from '../../shared/announcement-policy.js';
+import { connectIpc } from '../ipc-adapter.js';
+import { migrateDocumentsData } from '../data-folder.js';
 import { registerContentProtocol } from '../content-protocol.js';
-import { sembrarContenido, vigilarContenido } from '../contenido.js';
-import { crearProveedorDiagnostico } from '../diagnostico.js';
-import { crearEntregasAudio } from '../entregas-audio.js';
+import { seedContent, watchContent } from '../content.js';
+import { createDiagnosticsProvider } from '../diagnostics.js';
+import { createAudioDeliveries } from '../audio-deliveries.js';
 import { createLogger, type FileLogger } from '../logger.js';
-import { crearAperturaManual } from '../manual-usuario.js';
-import { migrarDesde02 } from '../migracion-02.js';
-import { crearCsp } from '../politica-csp.js';
-import { crearServidorWeb } from '../servidor-web.js';
-import { crearStore } from '../store.js';
-import { limpiarTemporalesJson } from '../temporales.js';
-import { crearVentanas } from '../ventanas.js';
+import { createManualOpener } from '../user-manual.js';
+import { migrateFrom02 } from '../legacy-migration.js';
+import { createCsp } from '../csp-policy.js';
+import { createWebServer } from '../web-server.js';
+import { createStore } from '../store.js';
+import { cleanTempJsonFiles } from '../temp-files.js';
+import { createWindows } from '../windows.js';
 import { createBroadcaster } from './broadcaster.js';
 import { createConfigService } from './config-service.js';
 import { createContentActions } from './content-actions.js';
@@ -39,51 +39,51 @@ export async function bootstrap(
   const disposers: Disposer[] = [];
   // 1. Data folder and logger.
   const migrated = paths.legacyDocumentsDir
-    ? migrarDatosDocumentos(paths.legacyDocumentsDir, paths.dataDir)
+    ? migrateDocumentsData(paths.legacyDocumentsDir, paths.dataDir)
     : false;
   mkdirSync(paths.dataDir, { recursive: true });
   const logger = createLogger(paths.logFile, { version: app.getVersion() });
   onLogger(logger);
   if (migrated)
     logger.info(`Datos copiados desde Documentos a ${paths.dataDir}; originales conservados.`);
-  limpiarTemporalesJson(paths.dataDir, logger);
+  cleanTempJsonFiles(paths.dataDir, logger);
   // 2. Electron session and protocol.
   await configureSession({ development: Boolean(env.devUrl) });
   registerContentProtocol({
     contentRoot: paths.contentDir,
     viewsRoot: paths.viewsDir,
     developmentUrl: env.devUrl,
-    contentSecurityPolicy: crearCsp(false),
+    contentSecurityPolicy: createCsp(false),
   });
   // 3. Persistent state and configuration.
-  migrarDesde02(paths.legacyDatabase, paths.dataDir, logger);
+  migrateFrom02(paths.legacyDatabase, paths.dataDir, logger);
   const broadcast = createBroadcaster();
-  let pantallas: Pantallas = { publica: 'ninguna' };
-  let ultimaEntrega: EntregaAudio | null = null;
+  let screens: Screens = { publica: 'ninguna' };
+  let lastDelivery: AudioDelivery | null = null;
   const health = createHealthMonitor(logger);
-  const entregasAudio = crearEntregasAudio((entrega) => {
+  const audioDeliveries = createAudioDeliveries((delivery) => {
     const level =
-      entrega.estado === 'fallo' ? 'error' : entrega.estado === 'descartado' ? 'warn' : 'info';
-    logger[level](`Audio del turno ${entrega.n}, anuncio ${entrega.id}: ${entrega.estado}.`, {
-      announcementId: entrega.id,
-      turn: entrega.n,
-      status: entrega.estado,
+      delivery.estado === 'fallo' ? 'error' : delivery.estado === 'descartado' ? 'warn' : 'info';
+    logger[level](`Audio del turno ${delivery.n}, anuncio ${delivery.id}: ${delivery.estado}.`, {
+      announcementId: delivery.id,
+      turn: delivery.n,
+      status: delivery.estado,
     });
-    ultimaEntrega = entrega;
-    broadcast.audioDelivery(entrega);
+    lastDelivery = delivery;
+    broadcast.audioDelivery(delivery);
   });
-  const store = crearStore({
+  const store = createStore({
     ruta: paths.stateFile,
     logger,
-    antesDeAnunciar: entregasAudio.comprobarCapacidad,
-    esperaAnuncioMs: MAX_ESPERA_ANUNCIO_MS,
+    antesDeAnunciar: audioDeliveries.comprobarCapacidad,
+    esperaAnuncioMs: MAX_ANNOUNCEMENT_WAIT_MS,
   });
   disposers.push(() => store.cerrar());
-  store.suscribir((instantanea, anuncio) => {
-    entregasAudio.sincronizar(instantanea);
-    if (anuncio) entregasAudio.registrar(anuncio);
+  store.suscribir((snapshot, announcement) => {
+    audioDeliveries.sincronizar(snapshot);
+    if (announcement) audioDeliveries.registrar(announcement);
   });
-  const sweep = setInterval(entregasAudio.vencer, APP_CONFIG.audioSweepIntervalMs);
+  const sweep = setInterval(audioDeliveries.vencer, APP_CONFIG.audioSweepIntervalMs);
   disposers.push(() => clearInterval(sweep));
   // `ventanas` and `reload` are referenced by the config callback, which only fires after
   // startup finishes, so both are assigned before it can run.
@@ -95,12 +95,12 @@ export async function bootstrap(
   });
   disposers.push(config.stop);
   // 4. Content.
-  sembrarContenido(paths.factoryContentDir, paths.contentDir, logger);
-  const content = vigilarContenido(paths.contentDir, broadcast.content, logger);
-  let inventario = content.inicial;
+  seedContent(paths.factoryContentDir, paths.contentDir, logger);
+  const content = watchContent(paths.contentDir, broadcast.content, logger);
+  let inventory = content.inicial;
   disposers.push(
     broadcast.add({
-      difundirContenido: (nuevo) => (inventario = nuevo),
+      difundirContenido: (updated) => (inventory = updated),
       difundirConfig: () => {},
       difundirPantallas: () => {},
       difundirEntregaAudio: () => {},
@@ -124,62 +124,62 @@ export async function bootstrap(
     openPath: (path) => shell.openPath(path),
   });
   // 5. Windows.
-  const ventanas = crearVentanas({
+  const windows = createWindows({
     preload: paths.preload,
     icon: paths.windowIcon,
     url: paths.viewUrl,
     pantallaPreferida: () => config.get().pantallaPublica,
-    alCambiarPantallas: (nuevas) => {
-      pantallas = nuevas;
-      broadcast.screens(nuevas);
+    alCambiarPantallas: (updatedScreens) => {
+      screens = updatedScreens;
+      broadcast.screens(updatedScreens);
     },
     alCerrarOperador: () => app.quit(),
-    alReiniciarPublica: () => entregasAudio.reanudarInterrumpidos(),
+    alReiniciarPublica: () => audioDeliveries.reanudarInterrumpidos(),
     logger,
   });
-  const diagnostico = crearProveedorDiagnostico({
+  const diagnostics = createDiagnosticsProvider({
     carpetaDatos: paths.dataDir,
     version: app.getVersion(),
     store,
     config: config.get,
-    inventario: () => inventario,
-    pantallas: () => pantallas,
-    ventanas: ventanas.estadoVentanas,
+    inventario: () => inventory,
+    pantallas: () => screens,
+    ventanas: windows.estadoVentanas,
     salud: () => ({
       ...health.snapshot(),
       ultimoErrorAplicacion: logger.lastError()?.message ?? null,
     }),
   });
-  const inicial = (): Inicial => ({
+  const initialState = (): InitialState => ({
     instantanea: store.obtener(),
     revision: store.revision(),
     config: config.get(),
-    inventario,
-    pantallas,
-    entregaAudio: ultimaEntrega,
-    entregasAudio: entregasAudio.obtener(),
+    inventario: inventory,
+    pantallas: screens,
+    entregaAudio: lastDelivery,
+    entregasAudio: audioDeliveries.obtener(),
   });
-  const configurarYouTube = (url: string | null) => config.update({ youtubeUrl: url });
-  const configurarVolumen = (voz: number, multimedia: number) =>
-    config.update({ volumenVoz: voz, volumenMusica: multimedia });
+  const configureYouTube = (url: string | null) => config.update({ youtubeUrl: url });
+  const configureVolume = (voice: number, media: number) =>
+    config.update({ volumenVoz: voice, volumenMusica: media });
   // 6. Transports: IPC for the Electron windows, HTTP+SSE for a plain browser.
-  const ipc = conectarIpc({
-    abrirManual: crearAperturaManual({
+  const ipc = connectIpc({
+    abrirManual: createManualOpener({
       origen: paths.manualSource,
       cache: paths.manualCache,
-      abrir: (ruta) => shell.openPath(ruta),
+      abrir: (filePath) => shell.openPath(filePath),
     }),
-    configurarVolumen,
-    configurarYouTube,
-    diagnostico,
+    configurarVolumen: configureVolume,
+    configurarYouTube: configureYouTube,
+    diagnostico: diagnostics,
     informarSalud: health.report,
-    confirmarAnuncio: entregasAudio.confirmar,
+    confirmarAnuncio: audioDeliveries.confirmar,
     store,
-    inicial,
-    esOperador: ventanas.esOperador,
-    esPublica: ventanas.esPublica,
+    inicial: initialState,
+    esOperador: windows.esOperador,
+    esPublica: windows.esPublica,
     urlVista: paths.viewUrl,
-    destinos: ventanas.destinos,
+    destinos: windows.destinos,
     ...contentActions,
     logger,
   });
@@ -188,39 +188,39 @@ export async function bootstrap(
     time: () => config.get().recargaDiaria,
     run: () => {
       store.reiniciarSiCambioDia();
-      ventanas.recargarPublica();
+      windows.recargarPublica();
     },
     logger,
   });
   disposers.push(reload.stop);
   onConfigChanged = (next, previous) => {
     broadcast.config(next);
-    if (next.pantallaPublica !== previous.pantallaPublica) ventanas.sincronizar();
+    if (next.pantallaPublica !== previous.pantallaPublica) windows.sincronizar();
     if (next.recargaDiaria !== previous.recargaDiaria) reload.schedule();
   };
-  ventanas.iniciar();
-  disposers.push(() => ventanas.cerrar());
+  windows.iniciar();
+  disposers.push(() => windows.cerrar());
   try {
-    const servidorWeb = await crearServidorWeb({
+    const webServer = await createWebServer({
       puerto: env.serverPort,
       informarSalud: health.report,
       vistas: paths.viewsDir,
       contenido: paths.contentDir,
       store,
-      inicial,
-      diagnostico,
-      configurarYouTube,
-      configurarVolumen,
+      inicial: initialState,
+      diagnostico: diagnostics,
+      configurarYouTube: configureYouTube,
+      configurarVolumen: configureVolume,
       ...contentActions,
-      confirmarAnuncio: entregasAudio.confirmar,
+      confirmarAnuncio: audioDeliveries.confirmar,
       logger,
     });
-    disposers.push(broadcast.add(servidorWeb), () => servidorWeb.cerrar());
-    logger.info(`Navegador local: ${servidorWeb.origen} y ${servidorWeb.origen}/publica`);
+    disposers.push(broadcast.add(webServer), () => webServer.cerrar());
+    logger.info(`Navegador local: ${webServer.origen} y ${webServer.origen}/publica`);
   } catch (error) {
     logger.error(`No se pudo iniciar el navegador local: ${(error as Error).message}`);
   }
   reload.schedule();
   logger.info(`Turnero iniciado · datos en ${paths.dataDir}`);
-  return { disposers, focusOperator: () => ventanas.enfocarOperador() };
+  return { disposers, focusOperator: () => windows.enfocarOperador() };
 }
