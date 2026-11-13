@@ -30,3 +30,8 @@ docs/*.toc
 
 # Scratch output.
 *.tmp
+
+# Local databases (0.2.0 used comal.sqlite in the user profile, never in the repo).
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
