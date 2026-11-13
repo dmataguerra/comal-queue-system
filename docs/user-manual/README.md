@@ -1,4 +1,6 @@
-# Manual de usuario de Comal++ 0.4.0
+# Manual de usuario de Comal++
+
+> **Estado al 12 de noviembre de 2026.** La aplicación vigente es **1.0.0**. La guía del operador, el manual de texto y la guía rápida están actualizados a 1.0.0. El manual visual conserva su edición y nombre **0.4.0**: la aplicación lo incluye como `manual-usuario-0.4.0.pdf` y sus procedimientos siguen vigentes, pero no ilustra el centro de ayuda añadido después. Las secciones siguientes documentan cómo se preparó esa edición.
 
 La edición visual se actualizó el **2 de noviembre de 2026** en `codex/manual-usuario-0.4.0`. Mantiene 12 páginas y ya cuenta con fuente editable, imágenes separadas y generación reproducible. La base de trabajo procede de `main` (`88134cb`) y de la rama anterior `docs/user-manual` (`64f6cc1`).
 
@@ -7,8 +9,8 @@ La edición visual se actualizó el **2 de noviembre de 2026** en `codex/manual-
 | Material                                                                            | Uso y estado                                                                                                   |
 | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | [Manual visual de 12 páginas](../../output/pdf/Comal++_Manual_de_usuario_0.4.0.pdf) | Edición visual vigente: instrucciones breves, capturas centradas y navegación por secciones.                   |
-| [Guía del operador](operador.md)                                                    | Fuente de consulta para comprobar el comportamiento de 0.4.0. Conservar sus reglas al editar el manual visual. |
-| [Manual de texto de 4 páginas](Manual-de-Usuario.pdf)                               | Exportación de la guía del operador incluida en `main`. Es un documento distinto del manual visual.            |
+| [Guía del operador](operador.md)                                                    | Fuente de consulta para comprobar el comportamiento de 1.0.0. Conservar sus reglas al editar el manual visual. |
+| [Manual de texto](Manual-de-Usuario.pdf)                                            | Exportación de la guía del operador 1.0.0. Es un documento distinto del manual visual.                         |
 | [Guía rápida de una página](Guia-Rapida-Cajero.pdf)                                 | Consulta breve junto al equipo de caja.                                                                        |
 | [Requisitos multimedia](multimedia-requisitos.md)                                   | Formatos, tamaños y recomendaciones para archivos locales.                                                     |
 | [Inventario de capturas pendientes](SCREENSHOTS_REQUIRED.md)                        | Identifica las capturas antiguas y lo que hace falta conservar para una edición reproducible.                  |

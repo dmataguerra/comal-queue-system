@@ -1,6 +1,6 @@
-# Multimedia: requisitos vigentes · Comal++ 0.4.0
+# Multimedia: requisitos vigentes · Comal++ 1.0.0
 
-Revisado el 1 de octubre de 2026 contra `main/contenido.ts` y la reproducción de la pantalla pública.
+Revisado el 1 de octubre de 2026 y confirmado el 12 de noviembre de 2026 para 1.0.0 contra `main/contenido.ts` y la reproducción de la pantalla pública.
 
 ## Qué se muestra en la TV
 

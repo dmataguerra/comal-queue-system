@@ -134,7 +134,7 @@ Fuente: scripts/datos.ts; main/respaldo.ts; main/migracion-02.ts.
 
 ## Cobertura y estado
 
- 12 casos de uso y 43 escenarios diseñados. JSON y CSV conservan estado planned: son diseño, no evidencia de aprobación. Solo COMAL-QA-001 corresponde al smoke Selenium de integración fase 4; consultar evidencias del adaptador y TestLink para resultado real. La ejecución completa, regresión, audio físico, varios monitores, instalador, jornada y rendimiento quedan pendientes de fases 5/6.
+12 casos de uso y 46 escenarios: 43 del diseño inicial y 044–046, añadidos para cerrar huecos de cobertura. El diseño no es evidencia de aprobación; el resultado real está en TestLink y en qa/management/reporte-final.md. La regresión final del 8 de noviembre de 2026 registró 37 PASS, 0 FAIL y 9 BLOCKED. Audio físico, varios monitores, YouTube con Internet real, instalador 1.0.0, jornada completa y legibilidad a distancia siguen pendientes en el equipo de destino.
 
 El XML permite importar casos usando ID documental en el nombre. TestLink asigna su propio ID externo: numérico; conservar un mapa explícito y no asumir que coincide con COMAL-QA-xxx. JSON: objeto cases con id, caseId, useCase, title, type, priority, preconditions, steps, expected, source, status y automation.
 

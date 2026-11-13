@@ -1,6 +1,6 @@
-# Manual del operador · Comal++ 0.4.0
+# Manual del operador · Comal++ 1.0.0
 
-Actualizado el 1 de octubre de 2026. Incluye los cambios coordinados con la sesión de implementación.
+Revisado el 12 de noviembre de 2026 para la versión estable 1.0.0. Las reglas de turnos, audio y multimedia no cambiaron desde 0.4.0; esta versión añade el centro de ayuda con búsqueda y recorridos.
 
 ## 1. Antes de atender
 
@@ -51,7 +51,7 @@ Las lupas ofrecen **70%, 80%, 90%, 100%, 110%, 120% y 130%**. El selector **Azul
 
 Tema y tamaño se guardan por origen: las dos ventanas Electron comparten preferencias; las vistas del mismo navegador también. **Escritorio y navegador tienen preferencias independientes**. Estos ajustes no forman parte del respaldo JSON.
 
-**Ayuda** está en el encabezado y **F1**, sin entrada redundante en sidebar. **Escape** cierra la ayuda y devuelve el foco a captura.
+**Ayuda** está en el encabezado y **F1**, sin entrada redundante en sidebar. **Escape** cierra la ayuda y devuelve el foco a captura. La ayuda agrupa los procedimientos por tarea y permite buscarlos. Los recorridos guiados son informativos: señalan los controles reales, pero no llaman turnos, no importan archivos ni cambian la configuración. Desde la ayuda también se abre el manual PDF incluido, sin internet.
 
 ## 6. Multimedia
 

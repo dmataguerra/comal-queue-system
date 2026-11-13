@@ -1,8 +1,8 @@
 # Turnero El Comal — Requerimientos y casos de uso
 
-## Estado vigente al 1 de octubre de 2026
+## Estado vigente · versión 1.0.0
 
-La tabla siguiente contrasta las notas originales con 0.3.1. Las secciones posteriores conservan la propuesta del 11 de septiembre; si discrepan, esta tabla, [el manual](user-manual/operador.md) y el código vigente definen el comportamiento implementado.
+La tabla siguiente contrasta las notas originales con la versión 1.0.0 (elaborada el 1 de octubre de 2026 y revisada contra el código el 12 de noviembre de 2026). Los [casos de uso actualizados de QA](../qa/catalogo/casos-de-uso-actualizados.md) amplían esta tabla a 12 casos de uso y 46 escenarios de prueba. Las secciones posteriores conservan la propuesta del 11 de septiembre; si discrepan, esta tabla, [el manual](user-manual/operador.md) y el código vigente definen el comportamiento implementado.
 
 | Área / requisito | Implementación vigente |
 | --- | --- |
@@ -16,7 +16,7 @@ La tabla siguiente contrasta las notas originales con 0.3.1. Las secciones poste
 | RF-10/11/12/14 | Videos/banners locales e importación asíncrona; atenuación durante voz. Videos 2 GB, imágenes 25 MB y reserva 512 MB. |
 | RF-13 / pantallas | Dos ventanas Electron; TV extendida fullscreen o ventana pública en monitor primario. HTTP solo misma PC. |
 | RF-15 / configuración | Voz 0–300%, música 0–100%, repeticiones 1/2; valores completos en config.json. |
-| RF-16 / ayuda | Encabezado/F1, Escape cierra; Diagnósticos al final. Sin ayuda duplicada en sidebar. |
+| RF-16 / ayuda | Encabezado/F1, Escape cierra; Diagnósticos al final. Sin ayuda duplicada en sidebar. Tareas con búsqueda, recorridos informativos y manual PDF local. |
 | Persistencia | JSON atómico antes de anunciar, copia/restauración CLI y migración legacy SQLite de solo lectura. |
 | Multimedia externa | YouTube opcional en escritorio, deshabilitado en navegador; respaldo local. |
 | Fuera de alcance | Mostradores, ventas, estados de entrega/cancelación, historial y cuentas de administrador. |

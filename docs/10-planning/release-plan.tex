@@ -1,9 +1,9 @@
 \subsection{Release process}
 
-CI invokes reusable validation: formatting, lint, unit/audio/recovery checks and audit, then Windows build, desktop/browser/hardening/media/audio-control/interface/theme smoke, preflight, unsigned installer, installed validation and upgrade/rollback. The pinned legacy installer is built separately and its transferred SHA-256 verified.
+CI invokes reusable validation: formatting, lint, unit/audio/recovery checks and audit, then Windows build, desktop/browser/hardening/media/audio-control/interface/theme/help smoke, the automated accessibility audit, preflight, unsigned installer, installed validation and upgrade/rollback. The pinned legacy installer is built separately and its transferred SHA-256 verified.
 
 CD runs validation on version tags and publishes only a matching v plus package version. It builds a signed candidate in production, verifies Setup/app/uninstaller trust and timestamp, checks the installed-test hash and repeats upgrade/rollback for that artifact. It uploads SHA256.txt and a CycloneDX dependency SBOM, refusing to overwrite existing releases.
 
-A branch-only manual CD run validates without publishing. release.yml is a separate manual 390-minute self-hosted Windows endurance workflow, not the publication job.
+A branch-only manual CD run validates without publishing. release.yml is a separate manual 390-minute self-hosted Windows endurance workflow, not the publication job. The TestLink/Selenium QA regression is run locally and is not a CI or CD job.
 
 Evidence: .github/workflows/ci.yml; validate.yml; legacy-installer.yml; cd.yml; release.yml

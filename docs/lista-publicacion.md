@@ -21,7 +21,9 @@ Complete una copia por cada instalador. No declare aprobada una prueba sin su sa
 | Prueba de escritorio offline y estado/config corruptos en datos aislados | ____ |
 | Voz 00–99 y aviso: validación automática y escucha humana | ____ |
 | TV desconectada/reconectada, ventana pública terminada y reinicio/persistencia | ____ |
-| `npm run test:browser`, `test:hardening`, `test:media`, `test:interface`, `test:theme` | ____ |
+| `npm run test:browser`, `test:hardening`, `test:media`, `test:interface`, `test:theme`, `test:help`, `test:accessibility` | ____ |
+| `npm run qa:regression` con TestLink local: PASS/FAIL/BLOCKED, build de TestLink y lectura confirmada | Referencia 1.0.0, 2026-11-08: 37 PASS, 0 FAIL, 9 BLOCKED. [Reporte](../qa/management/reporte-final.md). Repetir sobre el candidato. |
+| Casos BLOCKED de la regresión ejecutados en la PC, TV y bocinas de destino | ____ |
 | Ayuda header/F1, zoom 70–130%, am/pm, avisos desplegables y tema estable | ____ |
 | Manuales y PDF actualizados al commit; revisión visual | ____ |
 | `npm run desktop:build:signed` y ruta del candidato firmado | ____ |

@@ -1,6 +1,6 @@
 # Plan y control de integración QA
 
-Alcance autorizado: fases 1 a 4. Las fases 5 (ejecución del catálogo) y 6 (regresión final) quedan pendientes. Una prueba mínima real de comunicación forma parte del criterio obligatorio de la fase 4.
+Alcance inicial autorizado: fases 1 a 4, con una prueba mínima real de comunicación como criterio obligatorio de la fase 4. Las fases 5 (ejecución del catálogo) y 6 (regresión final) se autorizaron y completaron después, el 7 y 8 de noviembre de 2026; ver la sección Estado.
 
 Revisión inicial Comal: 028a964015c12fdfc9e4a70a08c7d3157dfea190, versión package.json 1.0.0. Fecha: 2026-11-04.
 
@@ -19,7 +19,7 @@ PM: integra, revisa evidencia y decide avance. DevOps: qa/testlink. Selenium: qa
 
 - Fase 1: auditoría inicial validada (README, package.json, arquitectura vigente, casos originales, Docker ps).
 - Fase 2: plan y separación de responsabilidades definidos; prueba integradora COMAL-QA-001 acordada.
-- Fases 3 y 4: completadas (TestLink en Docker, Selenium, catálogo de 43 casos, integración verificada).
+- Fases 3 y 4: completadas (TestLink en Docker, Selenium, catálogo inicial de 43 casos, integración verificada).
 - Fase 5 (2026-11-07/08): catálogo completo ejecutado con `npm run qa:regression`; 2 fallos de automatización (espera inestable en integration.mjs) corregidos; error TestLink 6002 diagnosticado y resuelto.
 - Fase 6 (2026-11-08): regresión final 37 PASS / 0 FAIL / 9 BLOCKED sobre 46 casos (044–046 añadidos para cerrar huecos de cobertura), TestLink build 26, lectura confirmada. Ver reporte-final.md.
 

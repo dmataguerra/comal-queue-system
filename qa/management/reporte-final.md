@@ -71,7 +71,7 @@ Ninguno detectado en la regresión.
 ```powershell
 .\qa\testlink\setup.ps1          # levantar TestLink (Docker)
 .\qa\testlink\verify.ps1         # login, XML-RPC y bloqueos
-node qa/automation/import-catalog.mjs   # registrar/actualizar los 43 casos
+node qa/automation/import-catalog.mjs   # registrar/actualizar los 46 casos
 npm run qa:regression            # regresión completa + reporte a TestLink
 npm run qa:regression -- --no-testlink  # solo ejecución local
 ```

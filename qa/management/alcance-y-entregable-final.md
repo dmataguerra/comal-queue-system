@@ -49,7 +49,7 @@ un control negativo deliberado y TestLink conservó correctamente el estado
 
 ## 3. Alcance funcional de Comal
 
-El catálogo actualizado contiene 12 casos de uso y 43 escenarios:
+El catálogo actualizado contiene 12 casos de uso y 46 escenarios (43 iniciales más 044–046):
 
 | Área                       | Casos de uso         | Cobertura prevista                                                     |
 | -------------------------- | -------------------- | ---------------------------------------------------------------------- |
@@ -101,7 +101,7 @@ solo su resultado.
 El paquete final de QA debe contener:
 
 1. Casos de uso actualizados y contrastados con el código.
-2. Catálogo estructurado de los 43 escenarios.
+2. Catálogo estructurado de los 46 escenarios.
 3. Matriz de trazabilidad entre caso de uso, escenario, fuente y automatización.
 4. Docker Compose reproducible para TestLink y MySQL persistente.
 5. Framework Selenium y adaptador XML-RPC.
@@ -120,8 +120,9 @@ Desde la raíz del repositorio:
 .\qa\testlink\setup.ps1
 .\qa\testlink\verify.ps1
 npm run qa:integration
- npm run qa:ui
+npm run qa:ui
 node qa\automation\import-catalog.mjs
+npm run qa:regression
 ```
 
 `setup.ps1` genera credenciales locales si no existen y no las incorpora al
@@ -130,7 +131,9 @@ ejecuta Selenium headless y registra el smoke de integración en TestLink.
 `qa:ui` construye Comal, ejecuta la suite UI, guarda capturas en
 `test-results/qa-ui/evidence/` y registra resultados y adjuntos en TestLink.
 La importación del catálogo registra los casos como diseñados; no inventa
-ejecuciones.
+ejecuciones. `qa:regression` ejecuta los 46 escenarios según
+`qa/automation/regression-map.mjs` y publica cada resultado en TestLink; con
+`-- --no-testlink` solo ejecuta localmente.
 
 ## 8. Criterio de terminado
 
@@ -143,7 +146,10 @@ La integración de infraestructura se considera terminada cuando:
 - Existe trazabilidad entre documentación, script e identificador TestLink.
 - Los casos no ejecutados están marcados como `planned`.
 
-La regresión completa se considerará terminada únicamente después de ejecutar
-los 43 escenarios aplicables, analizar sus fallos y publicar el reporte final de
-cobertura. Esta separación evita confundir la disponibilidad de la herramienta
-con la calidad ya demostrada del producto.
+La regresión completa se considera terminada después de ejecutar los escenarios
+aplicables, analizar sus fallos y publicar el reporte final de cobertura. Ese
+criterio se cumplió el 8 de noviembre de 2026 para la parte automatizable: 46
+escenarios, 37 PASS, 0 FAIL y 9 BLOCKED. Los nueve casos BLOCKED exigen el
+equipo físico o una persona y siguen pendientes. Esta separación evita
+confundir la disponibilidad de la herramienta con la calidad ya demostrada del
+producto.

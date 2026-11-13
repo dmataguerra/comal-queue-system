@@ -1,9 +1,9 @@
 \subsection{Documentation status and confidence}
 
-Refreshed on 1 October 2026 against package 0.4.0, f0d842a and coordinated interface changes. All 57 technical sections were rewritten to remove the obsolete 0.2.0 runtime description. Current Markdown guides and user PDF sources are reconciled with code; historical reports keep their original run evidence.
+Reviewed on 12 November 2026 against package 1.0.0 and the head of qa/automated-regression-suite (4f06c75). The technical hierarchy has 58 sections: the 57 rewritten on 1 October 2026 to remove the obsolete 0.2.0 runtime description, plus the QA evidence section added in November. This review updates version baselines, the QA tooling, the help and accessibility checks, and the catalog counts. Current Markdown guides and user PDF sources are reconciled with code; historical reports keep their original run evidence.
 
-Code-backed facts: queue transitions, JSON fields/defaults, IPC/HTTP routes, audio policy, file limits and workflows. Acceptance still needed: target hardware, physical sound, connected desktop YouTube/weather, production protections/signing and resource distribution rights.
+Code-backed facts: queue transitions, JSON fields/defaults, IPC/HTTP routes, audio policy, file limits, npm commands and workflows. Acceptance still needed: target hardware, physical sound, connected desktop YouTube/weather, production protections/signing, the 1.0.0 installer and resource distribution rights.
 
-Validation performed for this documentation update is recorded in actualizacion-documentacion-2026-10-01.md. PDF generation/visual review and LaTeX compilation are distinct checks; do not infer a TeX compiler PASS from a generated PDF or from the previous September build.
+The technical PDF is compiled from these sources with LuaLaTeX through latexmk, because the QA evidence section uses tables and figures that the older ReportLab exporter cannot render. The text user manual and quick guide are still exported with ReportLab. Compilation and visual review are distinct checks from application testing; a generated PDF does not show that any test passed.
 
-Stable implementation snapshot d861e5f integrates the 13 final, previously uncommitted production-readiness source/test files. The remote production-readiness ref remains f0d842a. Verification and scope are recorded in docs/actualizacion-documentacion-2026-10-01.md.
+Earlier validation of the October rewrite is recorded in docs/actualizacion-documentacion-2026-10-01.md, which keeps its original scope.

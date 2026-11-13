@@ -2,8 +2,8 @@
 
 main/: Electron lifecycle, adapters, config, persistence, security, content and local server. backend/: queue application and ports. nucleo/: pure rules for turns, FIFO and YouTube URLs. shared/: contracts, channels and announcement limits.
 
-vistas/: separate operator/public React entry points, shared controls and styles. public/: static assets and browser transport. contenido/: factory voices, notice, banners and optional videos. tooling/audio/: generation and verification tools. scripts/: build, packaging, recovery and regression automation.
+vistas/: separate operator/public React entry points, shared controls and styles. public/: static assets and browser transport. contenido/: factory voices, notice, banners and optional videos. tooling/audio/: generation and verification tools. scripts/: build, packaging, recovery and regression automation. qa/: local QA tooling outside the product, with automation/ (Selenium UI suite, TestLink XML-RPC adapter, regression runner and case map), catalogo/ (46 scenarios, 12 use cases, traceability matrix), testlink/ (Docker Compose stack bound to 127.0.0.1:8090) and management/ (plan, scope and final report).
 
-.github/workflows/: validation, legacy fixture, signed release and endurance. docs/: current Markdown guides, technical LaTeX hierarchy, historical reports and reproducible user PDFs. data/: legacy SQLite artifacts, not active production storage.
+.github/workflows/: validation, legacy fixture, signed release and endurance. docs/: current Markdown guides, technical LaTeX hierarchy, historical reports, reproducible user PDFs, qa/ (regression summary, evidence screenshots, presentations) and feedback/ (customer and cashier feedback forms). data/: legacy SQLite artifacts, not active production storage.
 
 Evidence: repository tree; package.json

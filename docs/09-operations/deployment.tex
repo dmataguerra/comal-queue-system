@@ -5,6 +5,6 @@ Build the Windows x64 NSIS installer with npm run desktop:build for unsigned loc
 
 NSIS permits choosing the installation directory, uses per-user installation, creates a Start menu shortcut and does not automatically create a desktop shortcut. Factory contenido is packaged beside the app and seeded into the data directory on first startup; missing/empty required voice/notice files can be repaired from factory assets on later startups.
 
-The effective path in Diagnostics is authoritative. For 0.3.1 it normally resides in the application profile, outside Documentos/OneDrive. Installation from USB needs the exact installer, SHA-256 and reviewed signature/acceptance status.
+The effective path in Diagnostics is authoritative. Since 0.3.1, including 1.0.0, it normally resides in the application profile, outside Documentos/OneDrive. Installation from USB needs the exact installer, SHA-256 and reviewed signature/acceptance status.
 
 Evidence: package.json; main/carpeta-datos.ts; README-INSTALACION-USB.md

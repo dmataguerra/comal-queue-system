@@ -4,19 +4,23 @@
 \subsection{Evidence boundary}
 
 This section reports only evidence present in the repository and the dated QA
-report. A designed scenario is not an executed scenario. The current record
-covers a real local Selenium run, its TestLink read-back, and infrastructure
-checks; it does not certify the complete product regression.
+reports. A designed scenario is not an executed scenario. The record has two
+layers: the phase 4 integration (a real local Selenium run, its TestLink
+read-back and infrastructure checks, shown first) and the final regression of
+all 46 catalog scenarios on 8 November 2026 (phases 5 and 6, below). Neither
+layer certifies physical audio, displays, the installer or the full-day run.
 
+% Wrapped table cell: the p column type is unavailable with this class/package set.
+\providecommand{\QACell}[2]{\parbox[t]{#1}{\raggedright #2\strut}}
 \begin{center}
-\begin{tabular}{lll}
+\begin{tabular}{@{}lll@{}}
 \toprule
 \textbf{Document ID} & \textbf{Observed action} & \textbf{Recorded result}\\
 \midrule
-\Code{COMAL-QA-001} & Selenium enters \Code{42} in the operator view and the public view reads \Code{42}. & \textcolor{comalgreen}{PASS}\\
-\Code{COMAL-QA-003} & Selenium submits an invalid capture and verifies that state is not mutated. & \textcolor{comalgreen}{PASS}\\
-\Code{COMAL-QA-011} & Selenium corrects the last capture without announcing it. & \textcolor{comalgreen}{PASS}\\
-\Code{INFRA-ADAPTER-001} & Deliberate negative report is written and read back as TestLink status \Code{f}. & \textcolor{comalgreen}{PASS (control)}\\
+\Code{COMAL-QA-001} & \QACell{0.56\textwidth}{Selenium enters \Code{42} in the operator view and the public view reads \Code{42}.} & \textcolor{comalgreen}{PASS}\\
+\Code{COMAL-QA-003} & \QACell{0.56\textwidth}{Selenium submits an invalid capture and verifies that state is not mutated.} & \textcolor{comalgreen}{PASS}\\
+\Code{COMAL-QA-011} & \QACell{0.56\textwidth}{Selenium corrects the last capture without announcing it.} & \textcolor{comalgreen}{PASS}\\
+\Code{INFRA-ADAPTER-001} & \QACell{0.56\textwidth}{Deliberate negative report is written and read back as TestLink status \Code{f}.} & \textcolor{comalgreen}{PASS (control)}\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -41,14 +45,14 @@ containers without removing volumes preserved the schema, catalog, executions,
 and attachment record.
 
 \begin{center}
-\begin{tabular}{ll}
+\begin{tabular}{@{}ll@{}}
 \toprule
 \textbf{Component} & \textbf{Repository evidence}\\
 \midrule
-TestLink & \Code{qa/testlink/setup.ps1}, \Code{verify.ps1}, XML-RPC adapter, local-only endpoint\\
-Catalog & 43 designed scenarios in \Code{qa/catalogo/casos-prueba.json}; 12 use cases and traceability documentation\\
-Persistence & MySQL and TestLink named volumes; persistence check recorded as PASS\\
-Automation & \Code{qa:integration} and \Code{qa:ui}; UI report targets the three COMAL cases above\\
+TestLink & \QACell{0.74\textwidth}{\Code{qa/testlink/setup.ps1}, \Code{verify.ps1}, XML-RPC adapter, local-only endpoint}\\
+Catalog & \QACell{0.74\textwidth}{46 scenarios in \Code{qa/catalogo/casos-prueba.json} (43 original, 044--046 added to close coverage gaps); 12 use cases and traceability matrix}\\
+Persistence & \QACell{0.74\textwidth}{MySQL and TestLink named volumes; persistence check recorded as PASS}\\
+Automation & \QACell{0.74\textwidth}{\Code{qa:integration}, \Code{qa:ui} (14 Selenium scenarios) and \Code{qa:regression} (all 46 scenarios)}\\
 \bottomrule
 \end{tabular}
 \end{center}

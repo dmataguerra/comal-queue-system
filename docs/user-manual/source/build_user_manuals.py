@@ -36,12 +36,12 @@ Cierra la app antes de respaldar/restaurar. Usa la ruta de Diagnósticos y pide 
 
 def main():
     text = (OUT/'operador.md').read_text(encoding='utf-8-sig')
-    full = cover('Manual de Usuario', 'Comal++ 0.4.0 · 1 de octubre de 2026', 'Guía vigente para operar turnos listos, pantalla pública, audio y multimedia local. Las capturas de la interfaz anterior no se utilizan como instrucciones actuales.')
+    full = cover('Manual de Usuario', 'Comal++ 1.0.0 · 12 de noviembre de 2026', 'Guía vigente para operar turnos listos, pantalla pública, audio y multimedia local. Las capturas de la interfaz anterior no se utilizan como instrucciones actuales.')
     full += markdown(text)
-    build(OUT/'Manual-de-Usuario.pdf', 'Comal++ Manual de Usuario 0.4.0', full)
+    build(OUT/'Manual-de-Usuario.pdf', 'Comal++ Manual de Usuario 1.0.0', full)
 
-    quick = markdown('# Guía rápida\n\n## Comal++ 0.4.0 - Consulta de caja\n\n'+QUICK)
-    build(OUT/'Guia-Rapida-Cajero.pdf', 'Comal++ Guía Rápida 0.4.0', quick)
+    quick = markdown('# Guía rápida\n\n## Comal++ 1.0.0 - Consulta de caja\n\n'+QUICK)
+    build(OUT/'Guia-Rapida-Cajero.pdf', 'Comal++ Guía Rápida 1.0.0', quick)
     print(OUT/'Manual-de-Usuario.pdf')
     print(OUT/'Guia-Rapida-Cajero.pdf')
 

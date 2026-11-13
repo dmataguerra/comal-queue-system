@@ -1,17 +1,20 @@
 # CI/CD vigente · Comal++ 1.0.0
 
-Revisado contra los workflows el 4 de noviembre de 2026. CI corre en pull requests, pushes a main/master/development y ejecución manual. Configure protección de rama para exigir **Formatting, lint, tests and security** y **Windows application and installer**.
+Revisado contra los workflows el 12 de noviembre de 2026. CI corre en pull requests, pushes a main/master/development y ejecución manual. Configure protección de rama para exigir **Formatting, lint, tests and security** y **Windows application and installer**.
 
 ## Validación
 
 `validate.yml` ejecuta primero formato, lint, pruebas unitarias/catálogo, recuperación CLI y auditoría high/critical. Luego construye el fixture 0.2.0 fijado en `legacy-installer.yml` y el trabajo Windows:
 
 - Build de la aplicación una vez.
-- Smoke de escritorio, navegador, anuncios/importación, multimedia, controles de audio, interfaz y tema.
+- Smoke de escritorio, navegador, anuncios/importación, multimedia, controles de audio, interfaz, tema y centro de ayuda con recorridos.
+- Auditoría automática de accesibilidad con axe-core; no equivale a una certificación.
 - Preflight de jornada, que no equivale a jornada completa.
 - Instalador unsigned para pruebas, instalación y actualización/reversión contra el fixture cuyo SHA-256 se comprueba.
 
 El instalador validado se conserva siete días; diagnósticos y capturas se conservan también al pasar el trabajo Windows. El fixture 0.2.0 solo se usa para pruebas, no para distribución.
+
+La suite QA de `qa/` (`npm run qa:integration`, `qa:ui` y `qa:regression`) **no forma parte de CI ni de CD**: necesita Docker con TestLink local y un navegador para Selenium. Se ejecuta en el equipo de QA y su resultado se conserva en el [reporte final](../qa/management/reporte-final.md).
 
 `format` y `format:check` cubren los mismos directorios de código y workflows. Markdown/LaTeX y manuales requieren revisión documental separada. `.gitattributes`, Prettier y EditorConfig usan LF; `npm ci` reproduce el formatter del lockfile.
 

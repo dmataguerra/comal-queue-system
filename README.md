@@ -175,6 +175,7 @@ Consulta la [guía de operación y recuperación](docs/operacion-recuperacion.md
 | Revisar seguridad y distribución        | [Seguridad y publicación](docs/seguridad-y-publicacion.md)                                                |
 | Preparar una entrega                    | [Lista de publicación](docs/lista-publicacion.md)                                                         |
 | Revisar cambios y evidencias            | [Historial](CHANGELOG.md) · [Informe QA](docs/qa-2026-11-03.md)                                           |
+| Consultar la regresión de QA            | [Reporte final](qa/management/reporte-final.md) · [Catálogo de pruebas](qa/catalogo/README.md)            |
 | Explorar todos los documentos           | [Índice de documentación](docs/README.md) · [Documentación técnica PDF](docs/technical-documentation.pdf) |
 
 Los documentos fechados y los manuales con número de versión conservan su contexto original. El manual del operador y la arquitectura vigente son las referencias para el funcionamiento actual.
@@ -191,6 +192,8 @@ npm run build
 ```
 
 El repositorio incluye pruebas de escritorio, navegador, multimedia, accesibilidad, ayuda, recuperación e instalación. Consulta los scripts de [package.json](package.json) y las [ejecuciones de CI](https://github.com/dmataguerra/comal-queue-system/actions/workflows/ci.yml) para conocer los controles aplicados a cada cambio.
+
+La carpeta `qa/` contiene una suite de regresión independiente del producto: **46 escenarios** trazados a 12 casos de uso, automatización con Selenium y registro de resultados en un TestLink local en Docker. Se ejecuta con `npm run qa:regression` después de preparar [TestLink](qa/testlink/README.md) y no forma parte de CI. La regresión del 8 de noviembre de 2026 sobre 1.0.0 registró **37 PASS, 0 FAIL y 9 BLOCKED**; los casos bloqueados requieren la TV, las bocinas, internet real o el instalador final. Consulta el [reporte final](qa/management/reporte-final.md).
 
 El preflight de jornada se ejecuta con `npm run test:full-day:preflight` después de compilar. La prueba `npm run test:full-day` dura **390 minutos reales**; el preflight no sustituye esa jornada. La [jornada del 2 de octubre de 2026](docs/resultado-jornada-2026-10-02.md) conserva su propia evidencia y alcance.
 

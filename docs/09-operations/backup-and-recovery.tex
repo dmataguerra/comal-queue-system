@@ -6,6 +6,6 @@ Restore with npx tsx scripts/datos.ts restore BACKUP DATA --app-cerrada. The fla
 
 Corrupt startup state is copied to estado.json.corrupto-* when possible and starts empty with warning; unreadable state due to I/O errors stops startup. Old-day state never reopens prior turns. A same-day restore uses stored timestamps and does not replay audio.
 
-Migration from 0.2.0 reads legacy SQLite unchanged; migration from Documentos to 0.3.1 copies once and retains the original. Rollback requires the old verified installer and its own pre-upgrade data backup; post-migration calls are not reverse-converted to SQLite.
+Migration from 0.2.0 reads legacy SQLite unchanged; the one-time migration from Documentos introduced in 0.3.1 copies once and retains the original. Rollback requires the old verified installer and its own pre-upgrade data backup; post-migration calls are not reverse-converted to SQLite.
 
 Evidence: docs/operacion-recuperacion.md; main/respaldo.ts; main/migracion-02.ts

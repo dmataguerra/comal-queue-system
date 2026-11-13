@@ -1,8 +1,8 @@
 """Alternative PDF export from the current LaTeX chapter text, without TeX.
 
-This intentionally does not assert that a LaTeX compiler has passed. The
-original master remains available for latexmk in an appropriately configured
-environment. Supports the plain section/paragraph source format used here.
+Legacy exporter: the committed technical PDF is compiled with latexmk
+(LuaLaTeX). This script supports only the plain section/paragraph format and
+stops on the tables and figures of 07-quality/qa-evidence.tex.
 """
 from pathlib import Path
 from html import escape
@@ -25,7 +25,7 @@ def decode(text):
 def main():
     master = (DOCS/'technical-documentation.tex').read_text(encoding='utf-8')
     chapters = [name for name in re.findall(r'\\input\{([^}]+)\}', master) if name != 'preamble']
-    story = cover('Technical Documentation', 'Software 0.4.0 · 1 October 2026', 'Local Electron architecture, operator/public interfaces, JSON persistence, IPC and HTTP/SSE, quality, recovery and release controls. Exported from the current 57 LaTeX chapters using ReportLab; this file does not certify TeX compilation.')
+    story = cover('Technical Documentation', 'Software 1.0.0 · 12 November 2026', 'Local Electron architecture, operator/public interfaces, JSON persistence, IPC and HTTP/SSE, quality, recovery and release controls. Exported from the current 58 LaTeX chapters using ReportLab; this file does not certify TeX compilation.')
     story.append(p('Contents', 'ComalH1'))
     for name in chapters:
         text = (DOCS/(name+'.tex')).read_text(encoding='utf-8')
@@ -51,7 +51,7 @@ def main():
                 else:
                     story.append(paragraph)
     out = DOCS/'technical-documentation.pdf'
-    build(out, 'Comal++ Technical Documentation 0.4.0', story, technical=True)
+    build(out, 'Comal++ Technical Documentation 1.0.0', story, technical=True)
     print(out)
 
 if __name__=='__main__':

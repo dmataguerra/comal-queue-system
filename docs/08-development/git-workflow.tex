@@ -2,10 +2,10 @@
 
 Use a separate branch and checkout for parallel work; do not switch the branch of a checkout being edited by another session. Coordinate file ownership and inspect the other session's committed changes before merging or publishing documentation.
 
-This documentation branch is codex/documentacion-integral, based on f0d842a from codex/production-readiness. The parallel session owns implementation/tests; this session owns README files, docs and audio-tool documentation. Interface details are reconciled with its final code and evidence.
+Stable history lives on main, tagged v1.0.0. QA tooling was developed on qa/automated-regression-suite and the documentation review of 12 November 2026 on docs/sync-documentation-1.0.0, which is based on that branch. The October rewrite was produced on codex/documentacion-integral from f0d842a; that record is historical.
 
 Review the diff and exact base before opening a PR. A documentation branch based on unmerged implementation must declare that dependency. Do not claim a new installer or passing application run from a documentation-only change.
 
 Evidence: docs/actualizacion-documentacion-2026-10-01.md
 
-Stable implementation snapshot d861e5f integrates the 13 final, previously uncommitted production-readiness source/test files. The remote production-readiness ref remains f0d842a. Verification and scope are recorded in docs/actualizacion-documentacion-2026-10-01.md.
+Commit messages follow the conventional type(scope): summary form used in the history, for example test(qa) or docs(qa). CI runs for pull requests and for pushes to main, master and development; other branches are validated when their pull request is opened.

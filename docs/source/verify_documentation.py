@@ -12,7 +12,7 @@ DOCS = ROOT/'docs'
 def main():
     errors = []
     checks = {}
-    files = [*ROOT.glob('*.md'), *DOCS.rglob('*.md'), ROOT/'tooling/audio/README.md', *ROOT.glob('public/assets/icons/*/README.md')]
+    files = [*ROOT.glob('*.md'), *DOCS.rglob('*.md'), *(ROOT/'qa').rglob('*.md'), ROOT/'tooling/audio/README.md', *ROOT.glob('public/assets/icons/*/README.md')]
     local_links = 0
     for file in files:
         text = file.read_text(encoding='utf-8-sig')
@@ -29,8 +29,8 @@ def main():
     master = (DOCS/'technical-documentation.tex').read_text(encoding='utf-8')
     inputs = re.findall(r'\\input\{([^}]+)\}', master)
     chapters = [name for name in inputs if name!='preamble']
-    if len(chapters)!=57:
-        errors.append(f'Expected 57 chapters, got {len(chapters)}')
+    if len(chapters)!=58:
+        errors.append(f'Expected 58 chapters, got {len(chapters)}')
     for name in inputs:
         if not (DOCS/(name+'.tex')).is_file():
             errors.append('Missing input '+name)
@@ -105,7 +105,7 @@ def main():
                     if word['x0']<0 or word['x1']>page.width+1 or word['top']<0 or word['bottom']>page.height+1:
                         errors.append(f'Out-of-page text in {name} page {i}: {word["text"]}')
         checks['pdfs'][name] = {'pages':len(reader.pages), 'characters':len(text)}
-    result = {'status':'FAIL' if errors else 'PASS', 'checks':checks, 'errors':errors, 'latex_compilation':'not verified; ReportLab export', 'application_endurance':'390 minutes not executed'}
+    result = {'status':'FAIL' if errors else 'PASS', 'checks':checks, 'errors':errors, 'latex_compilation':'not verified by this script; technical PDF is compiled separately with latexmk', 'application_endurance':'390 minutes not executed'}
     out = ROOT/'test-results/docs-validation'
     out.mkdir(parents=True, exist_ok=True)
     (out/'resultado.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')

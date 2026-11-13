@@ -1,22 +1,22 @@
 \documentclass{ol-softwaremanual}
 \input{preamble}
 \title{COMAL Queue\\Documentation Index}
-\version{0.3.1}
+\version{1.0.0}
 \author{Comal++ / Troyanos Engineering}
-\date{1 October 2026}
+\date{12 November 2026}
 \softwarelogo{\vspace*{1.2cm}\includegraphics[width=8cm]{troyanos-logo.png}\\[2.2cm]}
 \begin{document}
 \maketitle
 \section{Current documentation index}
 The current navigation index is \Code{docs/README.md}. It links the operator manual, media requirements, architecture, recovery, CI/CD, security, release acceptance and dated historical evidence.
 
-The software baseline is 0.3.1: a local Electron application with two React views, JSON persistence, validated IPC and optional HTTP/SSE on loopback. The 57 chapter files assembled by \Code{technical-documentation.tex} were refreshed on 1 October 2026. NestJS, active SQLite order tables and Socket.IO describe the superseded 0.2.0 application only.
+The software baseline is 1.0.0: a local Electron application with two React views, JSON persistence, validated IPC and optional HTTP/SSE on loopback. The 58 chapter files assembled by \Code{technical-documentation.tex} were rewritten on 1 October 2026 and reviewed on 12 November 2026. NestJS, active SQLite order tables and Socket.IO describe the superseded 0.2.0 application only.
 
-User PDFs are generated from \Code{docs/user-manual/operador.md} using \Code{docs/user-manual/source/build_user_manuals.py}. The alternative technical PDF export uses \Code{docs/source/build_technical_documentation.py} and the same LaTeX chapter text. This ReportLab export does not establish that a TeX compiler passed. Native composition remains available with the included class and packages:
+User PDFs are generated from \Code{docs/user-manual/operador.md} using \Code{docs/user-manual/source/build_user_manuals.py}. The technical PDF is compiled with LuaLaTeX from the included class and packages. The older ReportLab exporter \Code{docs/source/build_technical_documentation.py} does not support the tables and figures of the QA evidence section:
 \begin{CodeBlock}
 cd docs
-latexmk -pdf -shell-escape -interaction=nonstopmode -halt-on-error technical-documentation.tex
+latexmk -lualatex -shell-escape -interaction=nonstopmode -halt-on-error technical-documentation.tex
 \end{CodeBlock}
 
-Source references, local links and PDF pages must be checked after regeneration. Validation, coordinated implementation baseline and remaining acceptance limits are recorded in \Code{docs/actualizacion-documentacion-2026-10-01.md}.
+Source references, local links and PDF pages must be checked after regeneration. QA tooling and results are described in \Code{qa/management/reporte-final.md}. The October validation record is \Code{docs/actualizacion-documentacion-2026-10-01.md}.
 \end{document}

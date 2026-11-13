@@ -1,8 +1,10 @@
-# Comal++ 0.3.1 — Instalación en la computadora del restaurante
+# Comal++ 1.0.0 — Instalación en la computadora del restaurante
+
+Esta guía usa los nombres de la versión estable **1.0.0**. Si la USB contiene otra versión, sustituye el número en los nombres de archivo y consulta las notas de esa publicación. El instalador 1.0.0 solo es válido para producción cuando procede de la [publicación firmada](https://github.com/dmataguerra/comal-queue-system/releases); los instaladores de versiones anteriores conservan su propia evidencia.
 
 ## Contenido de esta USB
 
-- `Comal++ Setup 0.3.1.exe`: instalador de la aplicación.
+- `Comal++ Setup 1.0.0.exe`: instalador de la aplicación.
 - `SHA256.txt`: huella digital del instalador para comprobar que no se dañó durante la copia.
 
 ## Antes de instalar
@@ -21,7 +23,7 @@ La comprobación del hash es recomendable, aunque no es indispensable para ejecu
 3. Ejecuta:
 
 ```powershell
-Get-FileHash "E:\INSTALADOR_FINAL\Comal++ Setup 0.3.1.exe" -Algorithm SHA256
+Get-FileHash "E:\INSTALADOR_FINAL\Comal++ Setup 1.0.0.exe" -Algorithm SHA256
 ```
 
 Compara el resultado con el valor guardado en `SHA256.txt`. Ambos deben coincidir exactamente.
@@ -30,7 +32,7 @@ Si no coinciden, no instales el archivo. Copia nuevamente el instalador desde la
 
 ## Instalar o actualizar
 
-1. Ejecuta `Comal++ Setup 0.3.1.exe`.
+1. Ejecuta `Comal++ Setup 1.0.0.exe`.
 2. Comprueba la identidad del firmante y el hash entregado. Para distribución de producción se exige firma válida; si Windows muestra «Editor desconocido», consulta al responsable para verificar el artefacto y su estado de aceptación antes de continuar. Un instalador unsigned de pruebas no acredita una publicación aprobada.
 3. Sigue el asistente de instalación.
 4. Conserva la carpeta de datos existente cuando se trate de una actualización.
@@ -136,6 +138,6 @@ No retires la USB hasta comprobar que la aplicación opera correctamente. Conser
 
 ## Controles e incidencias de la versión vigente
 
-[El manual del operador](docs/user-manual/operador.md) explica captura de 1–6 dígitos y últimos dos (incluido 00), seis turnos visibles, vigencia de cinco minutos y cola de seis anuncios. Ayuda está en el encabezado o F1, con Diagnósticos al final. El tamaño ofrece 70–130%, ambos relojes usan am/pm y los avisos se despliegan desde una franja compacta. Cola llena o guardado fallido no aceptan la llamada: conserva el ticket y reintenta tras resolver la causa.
+[El manual del operador](docs/user-manual/operador.md) explica captura de 1–6 dígitos y últimos dos (incluido 00), seis turnos visibles, vigencia de cinco minutos y cola de seis anuncios. Ayuda está en el encabezado o F1, con búsqueda, recorridos informativos, manual PDF local y Diagnósticos al final. El tamaño ofrece 70–130%, ambos relojes usan am/pm y los avisos se despliegan desde una franja compacta. Cola llena o guardado fallido no aceptan la llamada: conserva el ticket y reintenta tras resolver la causa.
 
 Después de instalar prueba la TV, la voz y contenido local. YouTube solo está admitido en escritorio y requiere internet. Al actualizar, conserva el respaldo anterior: una firma o hash correctos no sustituyen aceptación en la PC, TV y bocinas reales.
