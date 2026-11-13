@@ -9,6 +9,8 @@ import {
   type Estado,
 } from '../nucleo/turnos.js';
 import type { Accion, Anuncio, Instantanea, ResultadoDespacho } from '../shared/contract.js';
+import { AppError } from '../shared/errors.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 export type Suscriptor = (instantanea: Instantanea, anuncio: Anuncio | null) => void;
 export interface Store {
   obtener(): Instantanea;
@@ -39,7 +41,7 @@ interface QueueStorePorts {
   save: (state: Estado, date: string, since: ReadonlyMap<number, number>) => void;
   ensureCapacity: () => void;
   today: () => string;
-  registrar?: (message: string) => void;
+  logger?: Logger;
   ahora?: () => number;
   vigenciaMs?: number;
 }
@@ -52,7 +54,7 @@ export function createQueueStore({
   today,
   ahora = () => Date.now(),
   vigenciaMs = VIGENCIA_MS,
-  registrar = () => {},
+  logger = silentLogger,
 }: QueueStorePorts): Store {
   let fecha = today();
   let { estado, desde, advertencia: advertenciaRecuperacion } = load(fecha);
@@ -82,7 +84,7 @@ export function createQueueStore({
       ultimoGuardado = new Date(ahora()).toISOString();
       if (primerFallo) {
         restauradaEn = new Date(ahora()).toISOString();
-        registrar(`Persistencia de estado.json restaurada en ${restauradaEn}.`);
+        logger.info(`Persistencia de estado.json restaurada en ${restauradaEn}.`);
         primerFallo = null;
       }
       return true;
@@ -90,7 +92,7 @@ export function createQueueStore({
       ultimoError = String((error as Error).message).slice(0, 200);
       if (!primerFallo) {
         primerFallo = new Date(ahora()).toISOString();
-        registrar(
+        logger.error(
           `No se pudo guardar estado.json; la acción no se aplicó: ${(error as Error).message}`,
         );
       }
@@ -124,7 +126,7 @@ export function createQueueStore({
       try {
         fn(instantanea, anuncio);
       } catch (error) {
-        registrar(`Error al notificar el estado: ${(error as Error).message}`);
+        logger.error(`Error al notificar el estado: ${(error as Error).message}`);
       }
     }
   }
@@ -168,7 +170,10 @@ export function createQueueStore({
     desdePrevio = null;
     if (!persistir()) {
       restaurar(anterior);
-      throw new Error('No se pudo guardar el cambio de jornada. Revise disco y permisos.');
+      throw new AppError(
+        'DAY_ROLLOVER_FAILED',
+        'No se pudo guardar el cambio de jornada. Revise disco y permisos.',
+      );
     }
     programar();
     notificar(null);
@@ -207,7 +212,8 @@ export function createQueueStore({
     if (cambio || anuncio || vencio) {
       if (!persistir()) {
         restaurar(anteriorOperacion);
-        throw new Error(
+        throw new AppError(
+          'STATE_SAVE_FAILED',
           'No se pudo guardar el turno. La TV y la cola no cambiaron. Revise disco y permisos.',
         );
       }

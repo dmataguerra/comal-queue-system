@@ -32,7 +32,7 @@ interface Contexto extends Inicial {
   abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
   suscribirAnuncio: (fn: (anuncio: Anuncio) => void) => () => void;
   suscribirEntregaAudio: (fn: (entrega: EntregaAudio) => void) => () => void;
-  registrar: (mensaje: string) => void;
+  registrar: TurneroApi['registrar'];
 }
 const TurneroContext = createContext<Contexto | null>(null);
 export function TurneroProvider({ children }: { children: ReactNode }) {
@@ -68,7 +68,8 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
           anuncios.current.delete(fn);
         };
       },
-      registrar: (mensaje: string) => api?.registrar(mensaje),
+      registrar: (mensaje: string, nivel?: 'info' | 'warn' | 'error') =>
+        api?.registrar(mensaje, nivel),
       suscribirEntregaAudio: (fn: (entrega: EntregaAudio) => void) => {
         acuses.current.add(fn);
         return () => {

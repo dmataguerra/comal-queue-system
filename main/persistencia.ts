@@ -1,7 +1,7 @@
 import { constants, copyFileSync, readFileSync } from 'node:fs';
 import { ESTADO_INICIAL, MAX_LLAMADOS, enPantalla, type Estado } from '../nucleo/turnos.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
-import type { Registrar } from './log.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 export interface Persistido {
   fecha: string;
   actual: number | null;
@@ -55,49 +55,49 @@ function timestampsValidos(dato: Persistido): boolean {
 export function esEstadoPersistido(dato: unknown): dato is Persistido {
   return valido(dato) && timestampsValidos(dato);
 }
-function preservarCorrupto(ruta: string, motivo: string, registrar: Registrar): void {
+function preservarCorrupto(ruta: string, motivo: string, logger: Logger): void {
   const copia = `${ruta}.corrupto-${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomUUID()}`;
   try {
     copyFileSync(ruta, copia, constants.COPYFILE_EXCL);
-    registrar(`estado.json ${motivo}; copia diagnóstica en ${copia}; se arranca vacío.`);
+    logger.warn(`estado.json ${motivo}; copia diagnóstica en ${copia}; se arranca vacío.`);
   } catch (error) {
-    registrar(
+    logger.warn(
       `estado.json ${motivo}; no se pudo crear copia diagnóstica: ${(error as Error).message}; se arranca vacío.`,
     );
   }
 }
-export function leerEstado(ruta: string, hoy: string, registrar: Registrar = () => {}): Cargado {
+export function leerEstado(ruta: string, hoy: string, logger: Logger = silentLogger): Cargado {
   let texto: string;
   try {
     texto = readFileSync(ruta, 'utf8');
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return vacio();
-    registrar(`No se pudo leer estado.json: ${(error as Error).message}`);
+    logger.error(`No se pudo leer estado.json: ${(error as Error).message}`);
     throw error;
   }
   let dato: unknown;
   try {
     dato = JSON.parse(texto);
   } catch {
-    preservarCorrupto(ruta, 'no es JSON válido', registrar);
+    preservarCorrupto(ruta, 'no es JSON válido', logger);
     return vacio(
       'El estado guardado estaba dañado. La jornada empezó vacía; revise la copia diagnóstica y el registro.',
     );
   }
   if (!valido(dato)) {
-    preservarCorrupto(ruta, 'tiene una forma inválida', registrar);
+    preservarCorrupto(ruta, 'tiene una forma inválida', logger);
     return vacio(
       'El estado guardado tenía datos inválidos. La jornada empezó vacía; revise la copia diagnóstica y el registro.',
     );
   }
   if (!timestampsValidos(dato)) {
-    preservarCorrupto(ruta, 'tiene timestamps inválidos', registrar);
+    preservarCorrupto(ruta, 'tiene timestamps inválidos', logger);
     return vacio(
       'El estado guardado tenía fechas inválidas. La jornada empezó vacía; revise la copia diagnóstica y el registro.',
     );
   }
   if (dato.fecha !== hoy) {
-    registrar(`estado.json pertenece a ${dato.fecha}; se inicia la jornada ${hoy} vacía.`);
+    logger.info(`estado.json pertenece a ${dato.fecha}; se inicia la jornada ${hoy} vacía.`);
     return vacio();
   }
   const estado: Estado = { actual: dato.actual, llamados: dato.llamados, deshacer: null };

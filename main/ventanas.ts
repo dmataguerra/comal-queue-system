@@ -1,6 +1,6 @@
 import { BrowserWindow, screen, type Display, type WebContents } from 'electron';
 import type { Pantallas } from '../shared/contract.js';
-import type { Registrar } from './log.js';
+import type { Logger } from '../shared/logging.js';
 export type Vista = 'operador' | 'publica';
 interface OpcionesVentanas {
   preload: string;
@@ -9,7 +9,7 @@ interface OpcionesVentanas {
   pantallaPreferida: () => number | null;
   alCambiarPantallas: (pantallas: Pantallas) => void;
   alCerrarOperador: () => void;
-  registrar: Registrar;
+  logger: Logger;
 }
 const FONDO = '#021a28';
 export function crearVentanas({
@@ -19,7 +19,7 @@ export function crearVentanas({
   pantallaPreferida,
   alCambiarPantallas,
   alCerrarOperador,
-  registrar,
+  logger,
 }: OpcionesVentanas) {
   let operador: BrowserWindow | null = null;
   let publica: BrowserWindow | null = null;
@@ -41,13 +41,13 @@ export function crearVentanas({
     });
     contenido.on('did-fail-load', (_evento, codigo, descripcion, _url, esPrincipal) => {
       if (!esPrincipal || codigo === -3) return;
-      registrar(`La vista ${vista} no cargó (${descripcion}); se reintenta.`);
+      logger.warn(`La vista ${vista} no cargó (${descripcion}); se reintenta.`);
       despues(() => {
         if (!ventana.isDestroyed()) void ventana.loadURL(url(vista)).catch(() => {});
       }, 1500);
     });
     contenido.on('render-process-gone', (_evento, detalle) => {
-      registrar(`La vista ${vista} terminó (${detalle.reason}); se recarga.`);
+      logger.error(`La vista ${vista} terminó (${detalle.reason}); se recarga.`);
       if (!ventana.isDestroyed()) ventana.reload();
     });
     void ventana.loadURL(url(vista)).catch(() => {});
@@ -153,7 +153,7 @@ export function crearVentanas({
     }
     if (modo !== pantallas.publica) {
       pantallas = { publica: modo };
-      registrar(
+      logger.info(
         `Pantalla pública: ${modo} (${screen
           .getAllDisplays()
           .map(

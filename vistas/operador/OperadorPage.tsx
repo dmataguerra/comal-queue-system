@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatear, normalizar } from '../../nucleo/turnos';
-import { ultimasEntregas } from '../../shared/politica-anuncios';
+import { errorCodeOf, errorMessageOf } from '../../shared/errors';
+import { MAX_ANUNCIOS, ultimasEntregas } from '../../shared/politica-anuncios';
 import { useTurnero } from '../comun/turnero';
 import { useTema } from '../comun/tema';
 import { useClock } from '../comun/hooks/useClock';
@@ -28,7 +29,8 @@ export function OperadorPage() {
     instantanea.persistencia?.estado === 'error' &&
       'No se guardaron los turnos. Revisa Diagnóstico.',
     pantallas.publica === 'ninguna' && 'TV desconectada. Revisa la conexión.',
-    anunciosPendientes >= 5 && `Audio: ${anunciosPendientes}/6 en espera. Espera antes de llamar.`,
+    anunciosPendientes >= MAX_ANUNCIOS - 1 &&
+      `Audio: ${anunciosPendientes}/${MAX_ANUNCIOS} en espera. Espera antes de llamar.`,
     recientes.some((e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n)) &&
       'Audio fallido. Revisa los turnos marcados.',
     recientes.some((e) => e.estado === 'descartado' && [actual, ...llamados].includes(e.n)) &&
@@ -125,11 +127,10 @@ export function OperadorPage() {
     timer.current = setTimeout(() => setMensaje(''), error ? 8000 : 4000);
   }
   function notificarError(error: unknown) {
-    const texto = error instanceof Error ? error.message : String(error);
     notificar(
-      texto.includes('La cola de audio está llena')
+      errorCodeOf(error) === 'AUDIO_QUEUE_FULL'
         ? 'Audio en espera: intenta de nuevo en unos segundos. El turno no cambió.'
-        : texto.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, ''),
+        : errorMessageOf(error),
       true,
     );
   }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { messageLogger, silentLogger } from '../shared/logging.js';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -21,7 +22,14 @@ test('un fallo al crear config.json se informa y no simula guardado correcto', (
   const mensajes: string[] = [];
   try {
     const ruta = join(raiz, 'no-existe', 'config.json');
-    assert.throws(() => leerConfig(ruta, (m) => mensajes.push(m)), /No se pudo crear config.json/);
+    assert.throws(
+      () =>
+        leerConfig(
+          ruta,
+          messageLogger((m) => mensajes.push(m)),
+        ),
+      /No se pudo crear config.json/,
+    );
     assert.match(mensajes[0], /No se pudo crear config.json/);
     assert.equal(existsSync(ruta), false);
   } finally {
@@ -38,7 +46,7 @@ test('valores parciales se mezclan; inválidos y claves desconocidas usan el def
       mensajes: ['Hola'],
       color: 'rojo',
     },
-    (m) => registro.push(m),
+    messageLogger((m) => registro.push(m)),
   );
   assert.equal(config.repeticiones, 1);
   assert.equal(config.volumenMusica, CONFIG_POR_DEFECTO.volumenMusica);
@@ -48,8 +56,9 @@ test('valores parciales se mezclan; inválidos y claves desconocidas usan el def
 });
 test('una clave heredada desconocida no rompe la validación de configuración', () => {
   const mensajes: string[] = [];
-  const config = validarConfig(JSON.parse('{"__proto__":{"youtubeUrl":"malicioso"}}'), (m) =>
-    mensajes.push(m),
+  const config = validarConfig(
+    JSON.parse('{"__proto__":{"youtubeUrl":"malicioso"}}'),
+    messageLogger((m) => mensajes.push(m)),
   );
   assert.deepEqual(config, CONFIG_POR_DEFECTO);
   assert.match(mensajes[0], /clave desconocida/);
@@ -59,10 +68,7 @@ test('JSON dañado al arrancar: valores por defecto sin sobrescribir el archivo 
   try {
     const ruta = join(raiz, 'config.json');
     writeFileSync(ruta, '{ "repeticiones": 1, ');
-    assert.deepEqual(
-      leerConfig(ruta, () => {}),
-      CONFIG_POR_DEFECTO,
-    );
+    assert.deepEqual(leerConfig(ruta, silentLogger), CONFIG_POR_DEFECTO);
     assert.equal(readFileSync(ruta, 'utf8'), '{ "repeticiones": 1, ');
   } finally {
     rmSync(raiz, { recursive: true, force: true });

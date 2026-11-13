@@ -121,6 +121,11 @@ export function validarVolumen(volumen: unknown, rampa: unknown): [number, numbe
     throw new Error('Rampa no válida.');
   return [volumen, rampa];
 }
+export function validarNivel(nivel: unknown): 'info' | 'warn' | 'error' {
+  if (nivel === undefined) return 'warn';
+  if (nivel === 'info' || nivel === 'warn' || nivel === 'error') return nivel;
+  throw new Error('Nivel de registro no válido.');
+}
 export function validarMensaje(mensaje: unknown): string {
   if (typeof mensaje !== 'string' || mensaje.length > 500)
     throw new Error('Mensaje de registro no válido.');

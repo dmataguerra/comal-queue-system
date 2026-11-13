@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { messageLogger } from '../shared/logging.js';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -127,7 +128,7 @@ test('un fallo persistente rechaza llamadas sin anunciar ni alterar estado y per
     ruta: join(raiz, 'estado.json'),
     hoy: () => '2026-09-11',
     ahora: () => Date.parse('2026-09-11T15:00:00.000Z'),
-    registrar: (mensaje) => mensajes.push(mensaje),
+    logger: messageLogger((mensaje) => mensajes.push(mensaje)),
     guardar: (...args) => {
       if (falla) throw new Error('disco ocupado');
       guardarEstado(...args);

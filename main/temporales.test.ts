@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { silentLogger } from '../shared/logging.js';
 import { existsSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -14,10 +15,7 @@ test('inicio retira solo temporales JSON antiguos de nombre conocido', () => {
     for (const ruta of [viejo, reciente, ajeno, original]) writeFileSync(ruta, '{}');
     const ahora = Date.now();
     utimesSync(viejo, new Date(ahora - 120000), new Date(ahora - 120000));
-    assert.equal(
-      limpiarTemporalesJson(carpeta, () => {}, ahora),
-      1,
-    );
+    assert.equal(limpiarTemporalesJson(carpeta, silentLogger, ahora), 1);
     assert.equal(existsSync(viejo), false);
     assert.equal(existsSync(reciente), true);
     assert.equal(existsSync(ajeno), true);

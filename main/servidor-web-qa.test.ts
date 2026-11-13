@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { messageLogger } from '../shared/logging.js';
 import fs, { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { syncBuiltinESMExports } from 'node:module';
@@ -41,7 +42,7 @@ async function entorno(t: TestContext) {
     quitarContenido: () => false,
     abrirCarpetaContenido: async () => {},
     confirmarAnuncio: () => {},
-    registrar: (mensaje) => logs.push(mensaje),
+    logger: messageLogger((mensaje) => logs.push(mensaje)),
   });
   t.after(() => {
     servidor.cerrar();

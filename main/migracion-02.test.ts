@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { silentLogger } from '../shared/logging.js';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -35,10 +36,7 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
     );
     db.close();
     const original = readFileSync(rutaBase);
-    assert.equal(
-      migrarDesde02(rutaBase, datos, () => {}, ahora),
-      true,
-    );
+    assert.equal(migrarDesde02(rutaBase, datos, silentLogger, ahora), true);
     const estado = JSON.parse(readFileSync(join(datos, 'estado.json'), 'utf8'));
     const config = JSON.parse(readFileSync(join(datos, 'config.json'), 'utf8'));
     assert.deepEqual([estado.actual, estado.llamados], [42, [41]]);
@@ -46,10 +44,7 @@ test('migra turnos y configuración de 0.2.0 sin alterar la base anterior ni rep
     assert.deepEqual(config.mensajes, ['Bienvenidos']);
     assert.equal(existsSync(rutaBase), true);
     assert.deepEqual(readFileSync(rutaBase), original);
-    assert.equal(
-      migrarDesde02(rutaBase, datos, () => {}, ahora),
-      false,
-    );
+    assert.equal(migrarDesde02(rutaBase, datos, silentLogger, ahora), false);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
   }

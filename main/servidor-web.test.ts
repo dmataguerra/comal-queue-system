@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { messageLogger } from '../shared/logging.js';
 import { test } from 'node:test';
 import { crearServidorWeb } from './servidor-web.js';
 import { crearStore } from './store.js';
@@ -41,9 +42,9 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     confirmarAnuncio: (...args) => {
       recibidos.push(args);
     },
-    registrar: (mensaje) => {
+    logger: messageLogger((mensaje) => {
       logs.push(mensaje);
-    },
+    }),
   });
   try {
     const pdf = await fetch(`${servidor.origen}/manual/manual-usuario-0.4.0.pdf`);
@@ -116,7 +117,7 @@ test('HTTP acepta únicamente acuses con el mismo contrato estricto de IPC', asy
     assert.equal((await post('salud', ['audio', 'mentira'])).status, 400);
     assert.deepEqual(salud, [['audio', 'degradado']]);
     assert.equal((await post('registro', 'Audio de prueba falló')).status, 200);
-    assert.ok(logs.includes('[navegador] Audio de prueba falló'));
+    assert.ok(logs.includes('Audio de prueba falló'));
     assert.equal((await post('registro', 'x'.repeat(501))).status, 400);
   } finally {
     servidor.cerrar();

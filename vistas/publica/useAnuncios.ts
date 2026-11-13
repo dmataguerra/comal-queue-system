@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatear } from '../../nucleo/turnos';
 import { crearCola } from '../../nucleo/cola';
 import type { Anuncio } from '../../shared/contract';
+import { errorMessageOf } from '../../shared/errors';
 import { useTurnero } from '../comun/turnero';
 import { cerrarAudio, pausa, precargar, reproducir } from './audio';
 const PAUSA_REPETICION = 300;
@@ -108,7 +109,7 @@ export function useAnuncios() {
           if (!signal.aborted) {
             audioCompleto = false;
             informarSalud('audio', 'degradado');
-            registrar(`Audio: ${(error as Error).message}`);
+            registrar(`Audio: ${(error as Error).message}`, 'error');
           }
         } finally {
           clearTimeout(temporizador!);
@@ -125,7 +126,7 @@ export function useAnuncios() {
         signal.removeEventListener('abort', limpiar);
       },
       (error) => {
-        registrar(`Audio: ${String(error)}`);
+        registrar(`Audio: ${errorMessageOf(error)}`, 'error');
       },
       {
         vigente: (nuevo) => nuevo.limiteInicio === undefined || Date.now() < nuevo.limiteInicio,

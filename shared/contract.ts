@@ -127,5 +127,6 @@ export interface TurneroApi {
   alCambiarContenido(fn: (inventario: Inventario) => void): () => void;
   alCambiarPantallas(fn: (pantallas: Pantallas) => void): () => void;
   alCambiarEntregaAudio(fn: (entrega: EntregaAudio) => void): () => void;
-  registrar(mensaje: string): void;
+  /** Sends a renderer log entry to the main-process log. Level defaults to `warn`. */
+  registrar(mensaje: string, nivel?: 'info' | 'warn' | 'error'): void;
 }

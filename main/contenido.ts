@@ -13,7 +13,7 @@ import {
 } from 'node:fs';
 import { basename, dirname, extname, isAbsolute, join, parse, relative, resolve } from 'node:path';
 import type { CategoriaContenido, Inventario, ResultadoImportacion } from '../shared/contract.js';
-import type { Registrar } from './log.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 import { renombrarConReintentos } from './escritura-atomica.js';
 export const URL_CONTENIDO = 'turnero://app/contenido';
 const VIDEOS = new Set(['.mp4', '.webm']);
@@ -60,7 +60,7 @@ export async function importarArchivos(
   raiz: string,
   categoria: CategoriaContenido,
   origenes: string[],
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
   opciones: OpcionesImportacion = {},
 ): Promise<ResultadoImportacion> {
   const carpeta = join(raiz, categoria);
@@ -71,7 +71,7 @@ export async function importarArchivos(
   const omitir = (nombre: string, motivo: string) => {
     omitidos.push(nombre);
     motivos[nombre] = motivo;
-    registrar(`contenido: importación rechazada (${motivo})`);
+    logger.warn(`contenido: importación rechazada (${motivo})`);
   };
   for (const origen of origenes) {
     const nombre = basename(origen);
@@ -127,7 +127,7 @@ export async function importarArchivos(
         nombre,
         `${nombre}: no se pudo copiar el archivo. Revise permisos y espacio disponible.`,
       );
-      registrar(`contenido: error al copiar ${nombre} (${(error as Error).message})`);
+      logger.error(`contenido: error al copiar ${nombre} (${(error as Error).message})`);
     }
   }
   return { agregados, omitidos, cancelado: false, ...(omitidos.length ? { motivos } : {}) };
@@ -160,7 +160,7 @@ export function quitarArchivo(raiz: string, direccion: string): boolean {
 }
 export function inventariar(
   raiz: string,
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
   reportados = new Set<string>(),
   base = URL_CONTENIDO,
 ): Inventario {
@@ -169,7 +169,7 @@ export function inventariar(
   const ignorar = (ruta: string, motivo = 'formato no soportado') => {
     if (reportados.has(ruta)) return;
     reportados.add(ruta);
-    registrar(`contenido: ${motivo}, se ignora ${ruta}`);
+    logger.warn(`contenido: ${motivo}, se ignora ${ruta}`);
   };
   const tieneContenido = (ruta: string) => existsSync(ruta) && statSync(ruta).size > 0;
   const filtrar = (carpeta: string, permitidas: Set<string>) =>
@@ -223,11 +223,11 @@ export function inventariar(
 export function sembrarContenido(
   origen: string,
   destino: string,
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
 ): void {
   if (!existsSync(origen)) return;
   if (existsSync(destino)) {
-    repararAudioDeFabrica(origen, destino, registrar);
+    repararAudioDeFabrica(origen, destino, logger);
     return;
   }
   const temporal = `${destino}.tmp`;
@@ -235,16 +235,18 @@ export function sembrarContenido(
     rmSync(temporal, { recursive: true, force: true });
     cpSync(origen, temporal, { recursive: true });
     renombrarConReintentos(temporal, destino);
-    registrar(`contenido: se copió el contenido de fábrica a ${destino}`);
+    logger.info(`contenido: se copió el contenido de fábrica a ${destino}`);
   } catch (error) {
-    registrar(`contenido: no se pudo copiar el contenido de fábrica (${(error as Error).message})`);
+    logger.error(
+      `contenido: no se pudo copiar el contenido de fábrica (${(error as Error).message})`,
+    );
     throw new Error(
       'No se pudo preparar el contenido de fábrica. Revisa los permisos y vuelve a abrir la aplicación.',
       { cause: error },
     );
   }
 }
-function repararAudioDeFabrica(origen: string, destino: string, registrar: Registrar) {
+function repararAudioDeFabrica(origen: string, destino: string, logger: Logger) {
   const util = (ruta: string) => {
     if (!existsSync(ruta)) return false;
     const info = statSync(ruta);
@@ -266,11 +268,11 @@ function repararAudioDeFabrica(origen: string, destino: string, registrar: Regis
         if (existsSync(copia)) renameSync(copia, objetivo);
         throw error;
       }
-      registrar(
+      logger.info(
         `contenido: se reparó ${archivo}${existsSync(copia) ? `; archivo vacío conservado en ${copia}` : ''}`,
       );
     } catch (error) {
-      registrar(`contenido: no se pudo reparar ${archivo} (${(error as Error).message})`);
+      logger.error(`contenido: no se pudo reparar ${archivo} (${(error as Error).message})`);
     } finally {
       rmSync(temporal, { force: true });
     }
@@ -294,26 +296,26 @@ function repararAudioDeFabrica(origen: string, destino: string, registrar: Regis
 export function vigilarContenido(
   raiz: string,
   alCambiar: (inventario: Inventario) => void,
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
 ): {
   inicial: Inventario;
   detener: () => void;
 } {
   const reportados = new Set<string>();
-  const inicial = inventariar(raiz, registrar, reportados);
+  const inicial = inventariar(raiz, logger, reportados);
   let ultimo = JSON.stringify(inicial);
   let temporizador: ReturnType<typeof setTimeout> | undefined;
   const vigilante = watch(raiz, { recursive: true }, () => {
     clearTimeout(temporizador);
     temporizador = setTimeout(() => {
       try {
-        const inventario = inventariar(raiz, registrar, reportados);
+        const inventario = inventariar(raiz, logger, reportados);
         const texto = JSON.stringify(inventario);
         if (texto === ultimo) return;
         ultimo = texto;
         alCambiar(inventario);
       } catch (error) {
-        registrar(
+        logger.error(
           `contenido: no se pudo actualizar el inventario (${(error as Error).message}); se conserva el anterior.`,
         );
       }

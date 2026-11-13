@@ -107,10 +107,17 @@ async function verify() {
     for (const n of [10, 20, 30, 40, 50, 60]) {
       for (;;) {
         try {
-          await run(operator, 'window.turnero.despachar({tipo:"LLAMAR",entrada:"' + n + '"})');
+          const code = await run(
+            operator,
+            'window.turnero.despachar({tipo:"LLAMAR",entrada:"' +
+              n +
+              '"}).then(()=>null,(e)=>e.code||"INTERNAL")',
+          );
+          if (code && code !== 'AUDIO_QUEUE_FULL') throw new Error(`Dispatch failed: ${code}`);
+          if (code) throw Object.assign(new Error(code), { code });
           break;
         } catch (error) {
-          if (!String(error).includes('cola de audio está llena')) throw error;
+          if (error.code !== 'AUDIO_QUEUE_FULL') throw error;
           await pause(1000);
         }
       }

@@ -1,4 +1,5 @@
 import type { Anuncio, EntregaAudio, Instantanea } from '../shared/contract.js';
+import { AppError } from '../shared/errors.js';
 import {
   MAX_ANUNCIOS,
   MAX_DURACION_ANUNCIO_MS,
@@ -27,8 +28,8 @@ export function crearEntregasAudio(difundir: (entrega: EntregaAudio) => void, ah
           e,
           'descartado',
           e.estado === 'pendiente'
-            ? 'Se superaron los 45 segundos de espera. Vuelve a llamar el turno.'
-            : 'El anuncio excedió 30 segundos. Revisa el audio y vuelve a llamar.',
+            ? `Se superaron los ${MAX_ESPERA_ANUNCIO_MS / 1000} segundos de espera. Vuelve a llamar el turno.`
+            : `El anuncio excedió ${MAX_DURACION_ANUNCIO_MS / 1000} segundos. Revisa el audio y vuelve a llamar.`,
         );
     }
   }
@@ -36,8 +37,9 @@ export function crearEntregasAudio(difundir: (entrega: EntregaAudio) => void, ah
     comprobarCapacidad: () => {
       vencer();
       if ([...entregas.values()].filter(activa).length >= MAX_ANUNCIOS)
-        throw new Error(
-          'La cola de audio está llena (6 anuncios). Espera a que termine uno y vuelve a llamar. El turno no cambió.',
+        throw new AppError(
+          'AUDIO_QUEUE_FULL',
+          `La cola de audio está llena (${MAX_ANUNCIOS} anuncios). Espera a que termine uno y vuelve a llamar. El turno no cambió.`,
         );
     },
     registrar(anuncio: Anuncio) {

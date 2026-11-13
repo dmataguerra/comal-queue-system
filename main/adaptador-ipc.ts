@@ -9,9 +9,10 @@ import type {
   Pantallas,
   ResultadoImportacion,
 } from '../shared/contract.js';
-import type { Registrar } from './log.js';
+import type { Logger } from '../shared/logging.js';
 import type { Store } from './store.js';
 import { IPC_CHANNELS } from '../shared/ipc-channels.js';
+import { toApiError, type ApiResult } from '../shared/errors.js';
 import {
   autorizarIpc,
   validarAccion,
@@ -20,6 +21,7 @@ import {
   validarCategoria,
   validarCategoriaOpcional,
   validarMensaje,
+  validarNivel,
   validarSalud,
   validarSinArgumentos,
   validarUrlContenido,
@@ -42,7 +44,7 @@ interface OpcionesIpc {
   quitarContenido: (url: string) => boolean;
   abrirCarpetaContenido: (categoria?: CategoriaContenido) => Promise<void>;
   abrirManual: () => Promise<void>;
-  registrar: Registrar;
+  logger: Logger;
   diagnostico: () => Diagnostico;
   informarSalud: (tipo: 'audio' | 'youtube', estado: 'correcto' | 'degradado') => void;
   confirmarAnuncio: (
@@ -64,7 +66,7 @@ export function conectarIpc({
   abrirManual,
   configurarYouTube,
   configurarVolumen,
-  registrar,
+  logger,
   diagnostico,
   informarSalud,
   confirmarAnuncio,
@@ -76,18 +78,39 @@ export function conectarIpc({
     evento: Parameters<typeof autorizarIpc<WebContents>>[0],
     vista: 'operador' | 'publica' | 'cualquiera',
   ) => autorizarIpc(evento, vista, esOperador, esPublica, urlVista);
-  ipcMain.handle(IPC_CHANNELS.getInitial, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'cualquiera');
+  type Vista = 'operador' | 'publica' | 'cualquiera';
+  /**
+   * Registers an invoke channel. Failures are returned as an ApiResult instead of thrown, because
+   * Electron flattens thrown errors into a prefixed string and drops their code.
+   */
+  const atender = (
+    canal: string,
+    vista: Vista,
+    resolver: (argumentos: unknown[], evento: Electron.IpcMainInvokeEvent) => unknown,
+  ) =>
+    ipcMain.handle(canal, async (evento, ...argumentos: unknown[]): Promise<ApiResult<unknown>> => {
+      try {
+        autorizar(evento, vista);
+        return { ok: true, value: await resolver(argumentos, evento) };
+      } catch (error) {
+        const fallo = toApiError(error);
+        logger.debug('IPC request rejected', {
+          channel: canal,
+          code: fallo.code,
+          reason: fallo.message,
+        });
+        return { ok: false, error: fallo };
+      }
+    });
+  atender(IPC_CHANNELS.getInitial, 'cualquiera', (argumentos) => {
     validarSinArgumentos(argumentos);
     return inicial();
   });
-  ipcMain.handle(IPC_CHANNELS.diagnostics, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.diagnostics, 'operador', (argumentos) => {
     validarSinArgumentos(argumentos);
     return diagnostico();
   });
-  ipcMain.handle(IPC_CHANNELS.openManual, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.openManual, 'operador', (argumentos) => {
     validarSinArgumentos(argumentos);
     return abrirManual();
   });
@@ -109,50 +132,44 @@ export function conectarIpc({
       /* Se ignora el mensaje si no supera la validación. */
     }
   });
-  ipcMain.handle(IPC_CHANNELS.dispatch, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.dispatch, 'operador', (argumentos) => {
     validarCantidad(argumentos, 1);
     return store.despachar(validarAccion(argumentos[0]));
   });
-  ipcMain.handle(IPC_CHANNELS.setYouTube, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.setYouTube, 'operador', (argumentos) => {
     validarCantidad(argumentos, 1);
     configurarYouTube(validarYouTube(argumentos[0]));
   });
-  ipcMain.handle(IPC_CHANNELS.setVolume, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.setVolume, 'operador', (argumentos) => {
     validarCantidad(argumentos, 2);
     configurarVolumen(...validarVolumenes(argumentos[0], argumentos[1]));
   });
-  ipcMain.handle(IPC_CHANNELS.importContent, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.importContent, 'operador', (argumentos) => {
     validarCantidad(argumentos, 1);
     return importarContenido(validarCategoria(argumentos[0]));
   });
-  ipcMain.handle(IPC_CHANNELS.removeContent, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.removeContent, 'operador', (argumentos) => {
     validarCantidad(argumentos, 1);
     return quitarContenido(validarUrlContenido(argumentos[0]));
   });
-  ipcMain.handle(IPC_CHANNELS.openContentFolder, (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'operador');
+  atender(IPC_CHANNELS.openContentFolder, 'operador', (argumentos) => {
     validarCantidad(argumentos, 1);
     return abrirCarpetaContenido(validarCategoriaOpcional(argumentos[0]));
   });
   ipcMain.on(IPC_CHANNELS.log, (evento, ...argumentos: unknown[]) => {
     try {
       const vista = autorizar(evento, 'cualquiera');
-      validarCantidad(argumentos, 1);
-      registrar(
-        `[${vista === 'operador' ? 'operador' : 'pública'}] ${validarMensaje(argumentos[0])}`,
-      );
+      if (argumentos.length < 1 || argumentos.length > 2) throw new Error('Argumentos no válidos.');
+      const mensaje = validarMensaje(argumentos[0]);
+      logger
+        .child(vista === 'operador' ? 'renderer:operator' : 'renderer:public')
+        [validarNivel(argumentos[1])](mensaje);
     } catch {
       /* Se ignora el mensaje si no supera la validación. */
     }
   });
   let avisoYouTube = '';
-  ipcMain.handle(IPC_CHANNELS.setYouTubeVolume, async (evento, ...argumentos: unknown[]) => {
-    autorizar(evento, 'publica');
+  atender(IPC_CHANNELS.setYouTubeVolume, 'publica', async (argumentos, evento) => {
     validarCantidad(argumentos, 2);
     const [volumen, rampa] = validarVolumen(argumentos[0], argumentos[1]);
     const frames = evento.sender.mainFrame.framesInSubtree.filter((frame) =>
@@ -178,7 +195,7 @@ export function conectarIpc({
       frames.length > 1 || sonando > 1
         ? `YouTube duplicado: ${frames.length} iframes, ${videos} videos, ${sonando} sonando.`
         : '';
-    if (aviso && aviso !== avisoYouTube) registrar(aviso);
+    if (aviso && aviso !== avisoYouTube) logger.warn(aviso);
     avisoYouTube = aviso;
     return videos;
   });

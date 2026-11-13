@@ -222,11 +222,16 @@ async function dispatch(operator, action) {
   let result;
   for (;;) {
     try {
-      result = await run(operator, `window.turnero.despachar(${JSON.stringify(action)})`);
+      const outcome = await run(
+        operator,
+        `window.turnero.despachar(${JSON.stringify(action)}).then((value)=>({value}),(e)=>({failure:{code:e.code,message:e.message}}))`,
+      );
+      if (outcome.failure)
+        throw Object.assign(new Error(outcome.failure.message), { code: outcome.failure.code });
+      result = outcome.value;
       break;
     } catch (error) {
-      if (action.tipo !== 'LLAMAR' || !String(error).includes('cola de audio está llena'))
-        throw error;
+      if (action.tipo !== 'LLAMAR' || error.code !== 'AUDIO_QUEUE_FULL') throw error;
       assert.ok(
         performance.now() < deadline,
         'La cola de audio no liberó capacidad en 120 segundos.',
@@ -509,8 +514,8 @@ function readLogSummary() {
         summary.lines++;
         try {
           const entry = JSON.parse(line);
-          if (entry.nivel === 'error') summary.errors++;
-          if (entry.nivel === 'warning') summary.warnings++;
+          if (entry.level === 'error') summary.errors++;
+          if (entry.level === 'warn') summary.warnings++;
         } catch {
           summary.invalidJsonLines++;
         }
@@ -612,9 +617,9 @@ async function verify() {
       const beforeRejected = (await run(operator, 'window.turnero.obtener()')).instantanea;
       const capacityError = await run(
         operator,
-        "window.turnero.despachar({tipo:'LLAMAR',entrada:'31'}).then(()=>null,e=>e.message)",
+        "window.turnero.despachar({tipo:'LLAMAR',entrada:'31'}).then(()=>null,e=>e.code+': '+e.message)",
       );
-      assert.match(capacityError, /cola de audio está llena/);
+      assert.match(capacityError, /^AUDIO_QUEUE_FULL: .*cola de audio está llena/);
       assert.deepEqual(
         (await run(operator, 'window.turnero.obtener()')).instantanea,
         beforeRejected,

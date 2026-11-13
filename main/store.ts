@@ -1,8 +1,9 @@
 import { statfsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createQueueStore } from '../backend/queue-store.js';
+import { AppError, errorCodeOf } from '../shared/errors.js';
 import type { Store } from '../backend/queue-store.js';
-import type { Registrar } from './log.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 import { fechaLocal, guardarEstado, leerEstado } from './persistencia.js';
 export type { Store } from '../backend/queue-store.js';
 export const RESERVA_ESTADO = 16 * 1024 * 1024;
@@ -15,9 +16,9 @@ export function comprobarEspacioEstado(
 ): void {
   try {
     if (espacio(dirname(ruta)) < RESERVA_ESTADO)
-      throw new Error('Espacio insuficiente para guardar estado.json.');
+      throw new AppError('DISK_FULL', 'Espacio insuficiente para guardar estado.json.');
   } catch (error) {
-    if ((error as Error).message.startsWith('Espacio insuficiente')) throw error;
+    if (errorCodeOf(error) === 'DISK_FULL') throw error;
     const codigo = (error as NodeJS.ErrnoException).code;
     if (codigo === 'ENOSYS' || codigo === 'ENOTSUP') return;
     throw error;
@@ -30,7 +31,7 @@ interface StoreOptions {
   hoy?: () => string;
   ahora?: () => number;
   vigenciaMs?: number;
-  registrar?: Registrar;
+  logger?: Logger;
   guardar?: typeof guardarEstado;
 }
 export function crearStore({
@@ -40,18 +41,18 @@ export function crearStore({
   hoy = () => fechaLocal(),
   ahora,
   vigenciaMs,
-  registrar = () => {},
+  logger = silentLogger,
   guardar = guardarEstado,
 }: StoreOptions): Store {
   return createQueueStore({
     antesDeAnunciar,
     esperaAnuncioMs,
-    load: (today) => leerEstado(ruta, today, registrar),
+    load: (today) => leerEstado(ruta, today, logger),
     save: (state, date, since) => guardar(ruta, state, date, since),
     ensureCapacity: () => comprobarEspacioEstado(ruta),
     today: hoy,
     ahora,
     vigenciaMs,
-    registrar,
+    logger,
   });
 }

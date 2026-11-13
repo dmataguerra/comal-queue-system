@@ -22,7 +22,10 @@ if (!window.turnero) {
           };
     const respuesta = await fetch(ruta, opciones);
     const resultado = await respuesta.json();
-    if (!respuesta.ok) throw new Error(resultado.error || 'No se pudo comunicar con el turnero.');
+    if (!respuesta.ok)
+      throw Object.assign(new Error(resultado.error || 'No se pudo comunicar con el turnero.'), {
+        code: resultado.code || 'INTERNAL',
+      });
     return resultado;
   }
   const eventos = new EventSource('/api/events');
@@ -88,8 +91,8 @@ if (!window.turnero) {
     alCambiarContenido: (fn) => escuchar('contenido', fn),
     alCambiarPantallas: (fn) => escuchar('pantallas', fn),
     alCambiarEntregaAudio: (fn) => escuchar('entregaAudio', fn),
-    registrar: (mensaje) => {
-      void solicitar('/api/registro', mensaje).catch(console.error);
+    registrar: (mensaje, nivel) => {
+      void solicitar('/api/registro', [mensaje, nivel ?? 'warn']).catch(console.error);
     },
   };
 }

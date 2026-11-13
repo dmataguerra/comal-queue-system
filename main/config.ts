@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, watch } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import type { Config } from '../shared/contract.js';
-import type { Registrar } from './log.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 import { esYouTube } from '../nucleo/youtube.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
 export const CONFIG_POR_DEFECTO: Config = {
@@ -33,7 +33,7 @@ const validadores: {
     v.length <= 10 &&
     v.every((m) => typeof m === 'string' && m.trim() && m.length <= 160),
 };
-export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): Config {
+export function validarConfig(bruto: unknown, logger: Logger = silentLogger): Config {
   const entrada =
     bruto && typeof bruto === 'object' && !Array.isArray(bruto)
       ? (bruto as Record<string, unknown>)
@@ -41,31 +41,31 @@ export function validarConfig(bruto: unknown, registrar: Registrar = () => {}): 
   const config = structuredClone(CONFIG_POR_DEFECTO) as unknown as Record<string, unknown>;
   for (const clave of Object.keys(entrada)) {
     if (!Object.hasOwn(validadores, clave)) {
-      registrar(`config.json: se ignora la clave desconocida "${clave}".`);
+      logger.warn(`config.json: se ignora la clave desconocida "${clave}".`);
       continue;
     }
     if (validadores[clave as keyof Config](entrada[clave])) config[clave] = entrada[clave];
     else
-      registrar(
+      logger.warn(
         `config.json: valor inválido en "${clave}"; se usa ${JSON.stringify(config[clave])}.`,
       );
   }
   return config as unknown as Config;
 }
-export function leerConfig(ruta: string, registrar: Registrar = () => {}): Config {
+export function leerConfig(ruta: string, logger: Logger = silentLogger): Config {
   if (!existsSync(ruta)) {
     try {
       escribirJsonAtomico(ruta, CONFIG_POR_DEFECTO, 2);
     } catch (error) {
-      registrar(`No se pudo crear config.json: ${(error as Error).message}`);
+      logger.error(`No se pudo crear config.json: ${(error as Error).message}`);
       throw new Error('No se pudo crear config.json en la carpeta de datos.', { cause: error });
     }
     return structuredClone(CONFIG_POR_DEFECTO);
   }
   try {
-    return validarConfig(JSON.parse(readFileSync(ruta, 'utf8')), registrar);
+    return validarConfig(JSON.parse(readFileSync(ruta, 'utf8')), logger);
   } catch (error) {
-    registrar(
+    logger.warn(
       `config.json no se pudo leer (${(error as Error).message}); se usan los valores por defecto.`,
     );
     return structuredClone(CONFIG_POR_DEFECTO);
@@ -74,7 +74,7 @@ export function leerConfig(ruta: string, registrar: Registrar = () => {}): Confi
 export function vigilarConfig(
   ruta: string,
   alCambiar: (config: Config) => void,
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
 ): () => void {
   let temporizador: ReturnType<typeof setTimeout> | undefined;
   let anterior = existsSync(ruta) ? readFileSync(ruta, 'utf8') : '';
@@ -93,11 +93,11 @@ export function vigilarConfig(
       try {
         dato = JSON.parse(texto);
       } catch {
-        registrar('config.json tiene JSON inválido; se conserva la configuración anterior.');
+        logger.warn('config.json tiene JSON inválido; se conserva la configuración anterior.');
         return;
       }
       anterior = texto;
-      alCambiar(validarConfig(dato, registrar));
+      alCambiar(validarConfig(dato, logger));
     }, 300);
   });
   return () => {

@@ -46,9 +46,9 @@ async function verify() {
     assert.equal(new Set(ids).size, 6);
     const error = await run(
       operator,
-      "window.turnero.despachar({tipo:'LLAMAR',entrada:'43'}).then(()=>null,e=>e.message)",
+      "window.turnero.despachar({tipo:'LLAMAR',entrada:'43'}).then(()=>null,e=>e.code+': '+e.message)",
     );
-    assert.match(error, /cola de audio está llena/);
+    assert.match(error, /^AUDIO_QUEUE_FULL: .*cola de audio está llena/);
     assert.equal((await run(operator, 'window.turnero.obtener()')).instantanea.actual, 42);
     await wait(() => run(operator, "document.body.textContent.includes('Audio: 6/6 en espera')"));
     await run(operator, "document.querySelector('#turn-number').focus()");

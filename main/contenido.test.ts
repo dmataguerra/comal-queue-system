@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { messageLogger, silentLogger } from '../shared/logging.js';
 import {
   existsSync,
   mkdirSync,
@@ -35,7 +36,7 @@ test('una copia lenta cede el hilo y no publica archivos parciales; las importac
     continuar = resolve;
   });
   try {
-    const primera = importarArchivos(datos, 'videos', [origen], () => {}, {
+    const primera = importarArchivos(datos, 'videos', [origen], silentLogger, {
       copiar: async (desde, hasta) => {
         empezar();
         await espera;
@@ -69,11 +70,17 @@ test('una copia truncada se rechaza sin publicar ni dejar temporales', async () 
   const origen = join(raiz, 'foto.png');
   writeFileSync(origen, 'imagen completa');
   try {
-    const resultado = await importarArchivos(join(raiz, 'datos'), 'banner', [origen], () => {}, {
-      copiar: async (_desde, hasta) => {
-        writeFileSync(hasta, 'x');
+    const resultado = await importarArchivos(
+      join(raiz, 'datos'),
+      'banner',
+      [origen],
+      silentLogger,
+      {
+        copiar: async (_desde, hasta) => {
+          writeFileSync(hasta, 'x');
+        },
       },
-    });
+    );
     assert.equal(resultado.agregados.length, 0);
     assert.equal(resultado.omitidos.length, 1);
     assert.deepEqual(readdirSync(join(raiz, 'datos', 'banner')), []);
@@ -148,7 +155,11 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
     writeFileSync(join(raiz, 'voz/40.mp3'), '');
     const registro: string[] = [];
     const reportados = new Set<string>();
-    const inventario = inventariar(raiz, (m) => registro.push(m), reportados);
+    const inventario = inventariar(
+      raiz,
+      messageLogger((m) => registro.push(m)),
+      reportados,
+    );
     assert.deepEqual(inventario.videos, [
       `${URL_CONTENIDO}/videos/b.mp4`,
       `${URL_CONTENIDO}/videos/Caf%C3%A9%20lento.webm`,
@@ -165,7 +176,11 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       'voz/40.mp3',
       'voz/8.wav',
     ]);
-    inventariar(raiz, (m) => registro.push(m), reportados);
+    inventariar(
+      raiz,
+      messageLogger((m) => registro.push(m)),
+      reportados,
+    );
     assert.equal(registro.length, 4);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
@@ -189,7 +204,11 @@ test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el admi
     sembrarContenido(fabrica, datos);
     assert.equal(existsSync(join(datos, 'banner/logo.png')), false);
     const registro: string[] = [];
-    sembrarContenido(join(raiz, 'no-existe'), join(raiz, 'otro'), (m) => registro.push(m));
+    sembrarContenido(
+      join(raiz, 'no-existe'),
+      join(raiz, 'otro'),
+      messageLogger((m) => registro.push(m)),
+    );
     assert.deepEqual([existsSync(join(raiz, 'otro')), registro], [false, []]);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
@@ -208,7 +227,11 @@ test('sembrar repara audio obligatorio faltante o vacío sin sobrescribir MP3 pe
     writeFileSync(join(datos, 'voz', '08.mp3'), 'voz personalizada');
     writeFileSync(join(datos, 'voz', '09.wav'), '');
     const registro: string[] = [];
-    sembrarContenido(fabrica, datos, (mensaje) => registro.push(mensaje));
+    sembrarContenido(
+      fabrica,
+      datos,
+      messageLogger((mensaje) => registro.push(mensaje)),
+    );
     assert.equal(readFileSync(join(datos, 'voz', '08.mp3'), 'utf8'), 'voz personalizada');
     assert.equal(existsSync(join(datos, 'voz', '08.wav')), false);
     assert.equal(readFileSync(join(datos, 'voz', '09.wav'), 'utf8'), 'voz 09');
@@ -218,7 +241,11 @@ test('sembrar repara audio obligatorio faltante o vacío sin sobrescribir MP3 pe
       readdirSync(join(datos, 'voz')).some((nombre) => nombre.startsWith('09.wav.incompleto-')),
     );
     assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 2);
-    sembrarContenido(fabrica, datos, (mensaje) => registro.push(mensaje));
+    sembrarContenido(
+      fabrica,
+      datos,
+      messageLogger((mensaje) => registro.push(mensaje)),
+    );
     assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 2);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
@@ -284,11 +311,11 @@ test('importación rechaza archivos grandes o disco sin reserva y limpia una cop
     const demasiadoGrande = await importarArchivos(contenido, 'banner', [origen]);
     assert.match(demasiadoGrande.motivos?.['foto.jpeg'] ?? '', /25 MB/);
     writeFileSync(origen, 'imagen');
-    const sinEspacio = await importarArchivos(contenido, 'banner', [origen], () => {}, {
+    const sinEspacio = await importarArchivos(contenido, 'banner', [origen], silentLogger, {
       espacioLibre: () => 0,
     });
     assert.match(sinEspacio.motivos?.['foto.jpeg'] ?? '', /espacio suficiente/);
-    const copiaFallida = await importarArchivos(contenido, 'banner', [origen], () => {}, {
+    const copiaFallida = await importarArchivos(contenido, 'banner', [origen], silentLogger, {
       espacioLibre: () => Number.MAX_SAFE_INTEGER,
       copiar: (_origen, destino) => {
         writeFileSync(destino, 'parcial');

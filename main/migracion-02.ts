@@ -4,12 +4,12 @@ import { DatabaseSync } from 'node:sqlite';
 import { CONFIG_POR_DEFECTO, validarConfig } from './config.js';
 import { escribirJsonAtomico } from './escritura-atomica.js';
 import { fechaLocal } from './persistencia.js';
-import type { Registrar } from './log.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 import { esYouTube } from '../nucleo/youtube.js';
 export function migrarDesde02(
   baseAnterior: string,
   carpetaDatos: string,
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
   ahora = new Date(),
 ): boolean {
   const rutaEstado = join(carpetaDatos, 'estado.json');
@@ -66,7 +66,7 @@ export function migrarDesde02(
             ? { youtubeUrl: multimedia.url }
             : {}),
         },
-        registrar,
+        logger,
       );
       escribirJsonAtomico(rutaConfig, config, 2);
     }
@@ -79,12 +79,12 @@ export function migrarDesde02(
       guardadoEn: ahora.toISOString(),
     };
     escribirJsonAtomico(rutaEstado, estado);
-    registrar(
+    logger.info(
       `Se migró 0.2.0: ${vigentes.length} turnos vigentes a ${rutaEstado}. La base anterior permanece en ${baseAnterior}.`,
     );
     return true;
   } catch (error) {
-    registrar(`No se pudo migrar 0.2.0 desde ${baseAnterior}: ${(error as Error).message}`);
+    logger.error(`No se pudo migrar 0.2.0 desde ${baseAnterior}: ${(error as Error).message}`);
     throw new Error('No se pudo migrar la base de 0.2.0. La base anterior no se modificó.', {
       cause: error,
     });

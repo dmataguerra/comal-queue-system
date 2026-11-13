@@ -39,7 +39,7 @@ async function verificar() {
         .map((linea) => JSON.parse(linea));
       origen = entradas
         .map(
-          (entrada) => entrada.mensaje.match(/^Navegador local: (http:\/\/127\.0\.0\.1:\d+)/)?.[1],
+          (entrada) => entrada.message.match(/^Navegador local: (http:\/\/127\.0\.0\.1:\d+)/)?.[1],
         )
         .find(Boolean);
       return Boolean(origen);

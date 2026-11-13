@@ -1,4 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { messageLogger } from '../shared/logging.js';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { esEstadoPersistido } from './persistencia.js';
 import { validarConfig } from './config.js';
@@ -91,7 +92,10 @@ export function restaurarRespaldo(
       throw new Error('estado.json del respaldo tiene datos o fechas inválidos. No se restauró.');
     if (nombre === 'config.json') {
       const errores: string[] = [];
-      validarConfig(dato, (mensaje) => errores.push(mensaje));
+      validarConfig(
+        dato,
+        messageLogger((mensaje) => errores.push(mensaje)),
+      );
       if (!dato || typeof dato !== 'object' || Array.isArray(dato) || errores.length)
         throw new Error('config.json del respaldo tiene datos inválidos. No se restauró.');
     }

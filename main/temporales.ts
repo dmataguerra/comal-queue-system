@@ -1,11 +1,11 @@
 import { readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Registrar } from './log.js';
+import { silentLogger, type Logger } from '../shared/logging.js';
 const PATRON = /^(estado|config)\.json\.\d+\.[0-9a-f-]{36}\.tmp$/i;
 const EDAD_MINIMA_MS = 60000;
 export function limpiarTemporalesJson(
   carpeta: string,
-  registrar: Registrar = () => {},
+  logger: Logger = silentLogger,
   ahora = Date.now(),
 ): number {
   let borrados = 0;
@@ -19,13 +19,13 @@ export function limpiarTemporalesJson(
         rmSync(ruta);
         borrados++;
       } catch {
-        registrar('No se pudo retirar un archivo temporal de JSON; se ignora.');
+        logger.warn('No se pudo retirar un archivo temporal de JSON; se ignora.');
       }
     }
   } catch {
-    registrar('No se pudo revisar archivos temporales de JSON; se continúa.');
+    logger.warn('No se pudo revisar archivos temporales de JSON; se continúa.');
   }
   if (borrados)
-    registrar(`Se retiraron ${borrados} archivos temporales de JSON de un inicio anterior.`);
+    logger.info(`Se retiraron ${borrados} archivos temporales de JSON de un inicio anterior.`);
   return borrados;
 }

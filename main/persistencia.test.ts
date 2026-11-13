@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { messageLogger } from '../shared/logging.js';
 import {
   existsSync,
   mkdtempSync,
@@ -100,7 +101,14 @@ test('archivo ausente, dañado o con forma inválida: arranca vacío y lo regist
       '{"fecha":"2026-09-11","actual":5,"llamados":[],"desde":["2026-09-11T15:00:00Z"]}',
     ]) {
       writeFileSync(ruta, contenido);
-      assert.equal(leerEstado(ruta, '2026-09-11', (m) => registro.push(m)).estado, ESTADO_INICIAL);
+      assert.equal(
+        leerEstado(
+          ruta,
+          '2026-09-11',
+          messageLogger((m) => registro.push(m)),
+        ).estado,
+        ESTADO_INICIAL,
+      );
     }
     assert.equal(registro.length, 5);
   } finally {
@@ -130,9 +138,17 @@ test('JSON corrupto y timestamps inválidos conservan copias diagnósticas disti
   const mensajes: string[] = [];
   try {
     writeFileSync(ruta, '{');
-    leerEstado(ruta, '2026-09-11', (m) => mensajes.push(m));
+    leerEstado(
+      ruta,
+      '2026-09-11',
+      messageLogger((m) => mensajes.push(m)),
+    );
     writeFileSync(ruta, '{"fecha":"2026-09-11","actual":1,"llamados":[],"guardadoEn":"ayer"}');
-    leerEstado(ruta, '2026-09-11', (m) => mensajes.push(m));
+    leerEstado(
+      ruta,
+      '2026-09-11',
+      messageLogger((m) => mensajes.push(m)),
+    );
     const copias = readdirSync(join(ruta, '..')).filter((n) =>
       n.startsWith('estado.json.corrupto-'),
     );
@@ -148,7 +164,13 @@ test('un error de E/S al leer el estado no se confunde con un archivo ausente', 
   const mensajes: string[] = [];
   try {
     mkdirSync(ruta);
-    assert.throws(() => leerEstado(ruta, '2026-09-11', (m) => mensajes.push(m)));
+    assert.throws(() =>
+      leerEstado(
+        ruta,
+        '2026-09-11',
+        messageLogger((m) => mensajes.push(m)),
+      ),
+    );
     assert.match(mensajes[0], /No se pudo leer estado.json/);
   } finally {
     limpiar();

@@ -24,8 +24,11 @@ import {
   validarYouTube,
   validarVolumenes,
   validarMensaje,
+  validarNivel,
   validarSalud,
 } from './seguridad-ipc.js';
+import { toApiError } from '../shared/errors.js';
+import type { Logger } from '../shared/logging.js';
 import type { Store } from './store.js';
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -68,7 +71,7 @@ interface OpcionesServidor {
     n: number,
     estado: Exclude<EntregaAudio['estado'], 'pendiente'>,
   ) => void;
-  registrar: (mensaje: string) => void;
+  logger: Logger;
 }
 export async function crearServidorWeb(opciones: OpcionesServidor) {
   const clientes = new Set<ServerResponse>();
@@ -194,7 +197,8 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
           opciones.informarSalud(...validarSalud(dato[0], dato[1]));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/registro') {
-          opciones.registrar(`[navegador] ${validarMensaje(dato)}`);
+          const [mensaje, nivel] = Array.isArray(dato) ? (dato as unknown[]) : [dato];
+          opciones.logger.child('renderer:browser')[validarNivel(nivel)](validarMensaje(mensaje));
           respuestaJson(res, null);
         } else if (url.pathname === '/api/audio') {
           opciones.confirmarAnuncio(...validarAcuseAudio(dato));
@@ -235,9 +239,13 @@ export async function crearServidorWeb(opciones: OpcionesServidor) {
       }
       await servirArchivo(req, res, archivo);
     } catch (error) {
-      opciones.registrar(`Servidor navegador: ${(error as Error).message}`);
+      const fallo = toApiError(error);
+      opciones.logger.warn(`Servidor navegador: ${fallo.message}`, {
+        path: req.url,
+        code: fallo.code,
+      });
       if (!res.headersSent && !res.destroyed)
-        respuestaJson(res, { error: (error as Error).message }, 400);
+        respuestaJson(res, { error: fallo.message, code: fallo.code }, 400);
       else res.destroy();
     }
   };
