@@ -79,6 +79,18 @@ export function crearEntregasAudio(difundir: (entrega: EntregaAudio) => void, ah
       }
       vencer();
     },
+    /**
+     * The public view that was playing went away (reload, crash). Its in-flight announcements
+     * go back to pending with a fresh wait window so the next view plays them instead of
+     * letting them expire as "reproduciendo".
+     */
+    reanudarInterrumpidos() {
+      for (const e of entregas.values()) {
+        if (e.estado !== 'reproduciendo') continue;
+        limites.set(e.id, ahora() + MAX_ESPERA_ANUNCIO_MS);
+        cambiar(e, 'pendiente', 'La pantalla pública se recargó; el anuncio se repetirá.');
+      }
+    },
     vencer,
     obtener: () => [...entregas.values()],
   };

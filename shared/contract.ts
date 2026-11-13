@@ -67,6 +67,8 @@ export interface Pantallas {
 }
 export interface Inicial {
   instantanea: Instantanea;
+  /** Revision of `instantanea`; state events with a lower or equal revision are stale. */
+  revision?: number;
   config: Config;
   inventario: Inventario;
   pantallas: Pantallas;
@@ -122,7 +124,9 @@ export interface TurneroApi {
   quitarContenido(url: string): Promise<boolean>;
   abrirCarpetaContenido(categoria?: CategoriaContenido): Promise<void>;
   abrirManual(): Promise<void>;
-  alCambiarEstado(fn: (instantanea: Instantanea, anuncio: Anuncio | null) => void): () => void;
+  alCambiarEstado(
+    fn: (instantanea: Instantanea, anuncio: Anuncio | null, revision?: number) => void,
+  ): () => void;
   alCambiarConfig(fn: (config: Config) => void): () => void;
   alCambiarContenido(fn: (inventario: Inventario) => void): () => void;
   alCambiarPantallas(fn: (pantallas: Pantallas) => void): () => void;

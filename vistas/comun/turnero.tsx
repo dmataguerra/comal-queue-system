@@ -17,6 +17,7 @@ import type {
   ResultadoImportacion,
   TurneroApi,
 } from '../../shared/contract';
+import { MAX_ANUNCIOS } from '../../shared/politica-anuncios';
 import { getQueueTransport } from './transport';
 interface Contexto extends Inicial {
   youtubeAdmitido: boolean;
@@ -41,6 +42,21 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
     [error, setError] = useState('');
   const anuncios = useRef(new Set<(anuncio: Anuncio) => void>());
   const acuses = useRef(new Set<(entrega: EntregaAudio) => void>());
+  // Announcements can arrive before the public view has subscribed (startup, daily reload,
+  // crash recovery). They are held here and handed to the first subscriber, and each id is
+  // delivered once even if it comes both as an event and from the initial snapshot.
+  const enEspera = useRef<Anuncio[]>([]);
+  const entregados = useRef(new Set<number>());
+  const emitirAnuncio = useRef((anuncio: Anuncio) => {
+    if (entregados.current.has(anuncio.id)) return;
+    if (!anuncios.current.size) {
+      if (!enEspera.current.some((a) => a.id === anuncio.id))
+        enEspera.current = [...enEspera.current, anuncio].slice(-MAX_ANUNCIOS);
+      return;
+    }
+    entregados.current.add(anuncio.id);
+    anuncios.current.forEach((fn) => fn(anuncio));
+  });
   const acciones = useMemo(
     () => ({
       youtubeAdmitido: api?.youtubeAdmitido !== false,
@@ -64,6 +80,9 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
         api!.abrirCarpetaContenido(categoria),
       suscribirAnuncio: (fn: (anuncio: Anuncio) => void) => {
         anuncios.current.add(fn);
+        const retenidos = enEspera.current;
+        enEspera.current = [];
+        retenidos.forEach(emitirAnuncio.current);
         return () => {
           anuncios.current.delete(fn);
         };
@@ -82,18 +101,26 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!api) return;
     const quitar = [
-      api.alCambiarEstado((instantanea, anuncio) => {
-        setInicial(
-          (previo) =>
-            previo && {
-              ...previo,
-              instantanea,
-              entregasAudio: previo.entregasAudio?.filter((e) =>
-                [instantanea.actual, ...instantanea.llamados].includes(e.n),
-              ),
-            },
-        );
-        if (anuncio) anuncios.current.forEach((fn) => fn(anuncio));
+      api.alCambiarEstado((instantanea, anuncio, revision) => {
+        setInicial((previo) => {
+          if (!previo) return previo;
+          // Events and the initial snapshot travel on different channels; drop older ones.
+          if (
+            revision !== undefined &&
+            previo.revision !== undefined &&
+            revision <= previo.revision
+          )
+            return previo;
+          return {
+            ...previo,
+            instantanea,
+            revision: revision ?? previo.revision,
+            entregasAudio: previo.entregasAudio?.filter((e) =>
+              [instantanea.actual, ...instantanea.llamados].includes(e.n),
+            ),
+          };
+        });
+        if (anuncio) emitirAnuncio.current(anuncio);
       }),
       api.alCambiarConfig((config) => setInicial((previo) => previo && { ...previo, config })),
       api.alCambiarContenido((inventario) =>
@@ -103,6 +130,11 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
         setInicial((previo) => previo && { ...previo, pantallas }),
       ),
       api.alCambiarEntregaAudio((entregaAudio) => {
+        if (entregaAudio.estado !== 'pendiente')
+          enEspera.current = enEspera.current.filter((a) => a.id !== entregaAudio.id);
+        // Main re-queues an announcement interrupted by a reload of this view.
+        else if (entregaAudio.motivo)
+          emitirAnuncio.current({ id: entregaAudio.id, n: entregaAudio.n });
         acuses.current.forEach((fn) => fn(entregaAudio));
         setInicial(
           (previo) =>
@@ -121,7 +153,13 @@ export function TurneroProvider({ children }: { children: ReactNode }) {
     ];
     api
       .obtener()
-      .then(setInicial)
+      .then((datos) => {
+        setInicial(datos);
+        // Announcements accepted while this view was not listening are still owed.
+        for (const entrega of datos.entregasAudio ?? [])
+          if (entrega.estado === 'pendiente')
+            emitirAnuncio.current({ id: entrega.id, n: entrega.n });
+      })
       .catch((e: Error) => setError(e.message));
     return () => quitar.forEach((fn) => fn());
   }, [api]);

@@ -35,9 +35,10 @@ if (!window.turnero) {
   };
   eventos.onopen = async () => {
     try {
-      const { instantanea, config, inventario, pantallas, entregaAudio, entregasAudio } =
+      const { instantanea, revision, config, inventario, pantallas, entregaAudio, entregasAudio } =
         await solicitar('/api/inicial');
-      avisar('estado', instantanea, null);
+      // The revision lets the page ignore this snapshot if a newer event already arrived.
+      avisar('estado', instantanea, null, revision);
       avisar('config', config);
       avisar('contenido', inventario);
       avisar('pantallas', pantallas);

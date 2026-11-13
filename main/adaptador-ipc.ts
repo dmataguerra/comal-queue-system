@@ -199,8 +199,8 @@ export function conectarIpc({
     avisoYouTube = aviso;
     return videos;
   });
-  store.suscribir((instantanea, anuncio) =>
-    difundir(IPC_CHANNELS.stateChanged, instantanea, anuncio),
+  store.suscribir((instantanea, anuncio, revision) =>
+    difundir(IPC_CHANNELS.stateChanged, instantanea, anuncio, revision),
   );
   return {
     difundirEntregaAudio: (entrega: EntregaAudio) =>

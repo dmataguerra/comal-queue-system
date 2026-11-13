@@ -134,6 +134,7 @@ export async function bootstrap(
       broadcast.screens(nuevas);
     },
     alCerrarOperador: () => app.quit(),
+    alReiniciarPublica: () => entregasAudio.reanudarInterrumpidos(),
     logger,
   });
   const diagnostico = crearProveedorDiagnostico({
@@ -151,6 +152,7 @@ export async function bootstrap(
   });
   const inicial = (): Inicial => ({
     instantanea: store.obtener(),
+    revision: store.revision(),
     config: config.get(),
     inventario,
     pantallas,

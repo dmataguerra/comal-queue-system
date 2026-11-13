@@ -11,9 +11,16 @@ import {
 import type { Accion, Anuncio, Instantanea, ResultadoDespacho } from '../shared/contract.js';
 import { AppError } from '../shared/errors.js';
 import { silentLogger, type Logger } from '../shared/logging.js';
-export type Suscriptor = (instantanea: Instantanea, anuncio: Anuncio | null) => void;
+/** `revision` increases with every notification so clients can drop out-of-order snapshots. */
+export type Suscriptor = (
+  instantanea: Instantanea,
+  anuncio: Anuncio | null,
+  revision: number,
+) => void;
 export interface Store {
   obtener(): Instantanea;
+  /** Revision of the snapshot `obtener()` returns now. */
+  revision(): number;
   despachar(accion: Accion): ResultadoDespacho;
   suscribir(fn: Suscriptor): () => void;
   reiniciarSiCambioDia(): boolean;
@@ -61,6 +68,7 @@ export function createQueueStore({
   let desdePrevio: Map<number, number> | null = null;
   let temporizador: ReturnType<typeof setTimeout> | undefined;
   let siguienteAnuncio = 1;
+  let revision = 0;
   let primerFallo: string | null = null;
   let restauradaEn: string | null = null;
   let ultimoGuardado: string | null = null;
@@ -121,10 +129,11 @@ export function createQueueStore({
     notificar(null);
   }
   function notificar(anuncio: Anuncio | null) {
+    revision++;
     const instantanea = obtener();
     for (const fn of suscriptores) {
       try {
-        fn(instantanea, anuncio);
+        fn(instantanea, anuncio, revision);
       } catch (error) {
         logger.error(`Error al notificar el estado: ${(error as Error).message}`);
       }
@@ -227,6 +236,7 @@ export function createQueueStore({
   programar(primerFallo ? 5000 : 0);
   return {
     obtener,
+    revision: () => revision,
     despachar,
     suscribir(fn) {
       suscriptores.add(fn);

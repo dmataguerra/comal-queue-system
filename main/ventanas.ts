@@ -10,6 +10,8 @@ interface OpcionesVentanas {
   alCambiarPantallas: (pantallas: Pantallas) => void;
   alCerrarOperador: () => void;
   logger: Logger;
+  /** The public view is about to be replaced (navigation, reload or renderer crash). */
+  alReiniciarPublica?: () => void;
 }
 const FONDO = '#021a28';
 export function crearVentanas({
@@ -20,6 +22,7 @@ export function crearVentanas({
   alCambiarPantallas,
   alCerrarOperador,
   logger,
+  alReiniciarPublica = () => {},
 }: OpcionesVentanas) {
   let operador: BrowserWindow | null = null;
   let publica: BrowserWindow | null = null;
@@ -46,7 +49,10 @@ export function crearVentanas({
         if (!ventana.isDestroyed()) void ventana.loadURL(url(vista)).catch(() => {});
       }, 1500);
     });
+    // did-navigate fires once the old document is gone, so it can no longer acknowledge audio.
+    if (vista === 'publica') contenido.on('did-navigate', () => alReiniciarPublica());
     contenido.on('render-process-gone', (_evento, detalle) => {
+      if (vista === 'publica') alReiniciarPublica();
       logger.error(`La vista ${vista} terminó (${detalle.reason}); se recarga.`);
       if (!ventana.isDestroyed()) ventana.reload();
     });

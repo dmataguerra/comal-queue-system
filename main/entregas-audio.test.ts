@@ -84,3 +84,32 @@ test('el historial es acotado, sin borrar entregas activas', () => {
   assert.equal(entregas.obtener().length, MAX_HISTORIAL_ANUNCIOS);
   assert.equal(entregas.obtener()[0].id, 1);
 });
+test('interrupted announcements go back to pending with a fresh wait window', () => {
+  let now = 1000;
+  const entregas = crearEntregasAudio(
+    () => {},
+    () => now,
+  );
+  entregas.registrar({ id: 1, n: 27 });
+  entregas.registrar({ id: 2, n: 28 });
+  entregas.confirmar(1, 27, 'reproduciendo');
+  now += 20000;
+  entregas.reanudarInterrumpidos();
+  assert.deepEqual(
+    entregas.obtener().map((e) => [e.id, e.estado]),
+    [
+      [1, 'pendiente'],
+      [2, 'pendiente'],
+    ],
+  );
+  // The resumed one gets a full new wait window; the untouched one keeps its original limit.
+  now = 1000 + MAX_ESPERA_ANUNCIO_MS + 1;
+  entregas.vencer();
+  assert.deepEqual(
+    entregas.obtener().map((e) => [e.id, e.estado]),
+    [
+      [1, 'pendiente'],
+      [2, 'descartado'],
+    ],
+  );
+});

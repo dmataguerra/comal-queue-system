@@ -30,17 +30,24 @@ export function useAnuncios() {
     if (atenuacionLista.current?.id === anuncio?.id) atenuacionLista.current?.resolver();
   }, [anuncio?.id]);
   useEffect(() => {
+    // A newer inventory can arrive before this preload settles; only the latest may report.
+    let vigente = true;
     precargar(inventario)
       .then(() => {
+        if (!vigente) return;
         informarSalud(
           'audio',
           inventario.voz.every(Boolean) && Boolean(inventario.aviso) ? 'correcto' : 'degradado',
         );
       })
       .catch((error: Error) => {
+        if (!vigente) return;
         informarSalud('audio', 'degradado');
-        registrar(`Audio: ${error.message}`);
+        registrar(`Audio: ${error.message}`, 'error');
       });
+    return () => {
+      vigente = false;
+    };
   }, [inventario, registrar, informarSalud]);
   useEffect(() => {
     const cola = crearCola<Anuncio>(
