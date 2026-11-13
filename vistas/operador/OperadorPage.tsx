@@ -1,593 +1,117 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { formatear, normalizar } from '../../nucleo/turnos';
-import { errorCodeOf, errorMessageOf } from '../../shared/errors';
-import { MAX_ANUNCIOS, ultimasEntregas } from '../../shared/politica-anuncios';
+import { useEffect, useState } from 'react';
+import { normalizar } from '../../nucleo/turnos';
+import { ultimasEntregas } from '../../shared/politica-anuncios';
 import { useTurnero } from '../comun/turnero';
-import { useTema } from '../comun/tema';
-import { useClock } from '../comun/hooks/useClock';
-import { Brand } from '../comun/components/Brand';
 import { Icon } from '../comun/components/Icon';
-import { Modal } from '../comun/components/Modal';
 import { MultimediaPanel } from './MultimediaPanel';
-import { SizeControl } from '../comun/components/SizeControl';
-import { VolumeControl } from '../comun/components/VolumeControl';
 import { DiagnosticoPanel } from './DiagnosticoPanel';
 import { HelpCenter } from './ayuda/HelpCenter';
 import { GuidedTour } from './ayuda/GuidedTour';
-import type { RecorridoId } from './ayuda/contenido';
-import { guardarCompletado, leerProgreso } from './ayuda/progreso';
+import { CallTurnPanel } from './components/CallTurnPanel';
+import { ConfirmActionDialog } from './components/ConfirmActionDialog';
+import { NoticesBanner } from './components/NoticesBanner';
+import { OnScreenPanel } from './components/OnScreenPanel';
+import { PageHeading } from './components/PageHeading';
+import { Sidebar } from './components/Sidebar';
+import { Topbar } from './components/Topbar';
+import { UndoPanel } from './components/UndoPanel';
+import { useCaptureFocus } from './hooks/useCaptureFocus';
+import { useHelpAndTours, type OperatorPage } from './hooks/useHelpAndTours';
+import { useNotifications } from './hooks/useNotifications';
+import { useOperatorNotices } from './hooks/useOperatorNotices';
+import { useQueueActions } from './hooks/useQueueActions';
+import { useTurnConfirmation } from './hooks/useTurnConfirmation';
+import { entryHint } from './turns/entryHint';
+import { pageTitleOf } from './turns/pageTitle';
+
 export function OperadorPage() {
-  const { tema, cambiarTema } = useTema();
-  const { instantanea, pantallas, entregasAudio = [], despachar, youtubeAdmitido } = useTurnero(),
-    clock = useClock();
+  const { instantanea, pantallas, entregasAudio = [], despachar, youtubeAdmitido } = useTurnero();
   const { actual, llamados, puedeDeshacer } = instantanea;
-  const recientes = ultimasEntregas(entregasAudio);
-  const anunciosPendientes = entregasAudio.filter(
-    (e) => e.estado === 'pendiente' || e.estado === 'reproduciendo',
-  ).length;
-  const avisos = [
-    instantanea.persistencia?.estado === 'error' &&
-      'No se guardaron los turnos. Revisa Diagnóstico.',
-    pantallas.publica === 'ninguna' && 'TV desconectada. Revisa la conexión.',
-    anunciosPendientes >= MAX_ANUNCIOS - 1 &&
-      `Audio: ${anunciosPendientes}/${MAX_ANUNCIOS} en espera. Espera antes de llamar.`,
-    recientes.some((e) => e.estado === 'fallo' && [actual, ...llamados].includes(e.n)) &&
-      'Audio fallido. Revisa los turnos marcados.',
-    recientes.some((e) => e.estado === 'descartado' && [actual, ...llamados].includes(e.n)) &&
-      'Anuncios descartados. Revisa los turnos marcados.',
-    instantanea.advertenciaRecuperacion,
-    !youtubeAdmitido && 'YouTube no está admitido en navegador. Usa contenido local.',
-    actual !== null &&
-      llamados.length === 5 &&
-      `Seis turnos visibles. El siguiente retira el más antiguo (${formatear(llamados[4])}). Vencen en 5 min.`,
-  ].filter((aviso): aviso is string => Boolean(aviso));
-  const [pagina, setPagina] = useState<'turnos' | 'multimedia' | 'diagnostico'>('turnos'),
-    [entrada, setEntrada] = useState(''),
-    [ocupado, setOcupado] = useState(false),
-    [mensaje, setMensaje] = useState(''),
-    [esError, setEsError] = useState(false),
-    [ayuda, setAyuda] = useState(false),
-    [recorrido, setRecorrido] = useState<RecorridoId | null>(null),
-    [completados, setCompletados] = useState(leerProgreso),
-    [pendiente, setPendiente] = useState<{
-      numero: number;
-      tipo: 'anunciar' | 'quitar';
-    } | null>(null),
-    [noPreguntar, setNoPreguntar] = useState(false);
-  const omitirConfirmacion = useRef(false);
-  const input = useRef<HTMLInputElement>(null),
-    timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ayudaActiva = useRef(false);
-  const focoAntesAyuda = useRef<HTMLElement | null>(null);
-  const antesRecorrido = useRef({ pagina, x: 0, y: 0 });
-  const enfocarCaptura = useCallback(() => {
-    if (!ayudaActiva.current && !document.querySelector('dialog[open]')) input.current?.focus();
-  }, []);
-  const abrirAyuda = useCallback(() => {
-    if (pendiente || recorrido) return;
-    if (!ayudaActiva.current)
-      focoAntesAyuda.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    ayudaActiva.current = true;
-    setCompletados((actuales) => [...new Set([...actuales, ...leerProgreso()])]);
-    setAyuda(true);
-  }, [pendiente, recorrido]);
-  function restaurarFoco() {
-    requestAnimationFrame(() => {
-      if (ayudaActiva.current || document.querySelector('dialog[open]')) return;
-      const anterior = focoAntesAyuda.current;
-      const candidatos = [
-        anterior,
-        anterior?.id ? document.getElementById(anterior.id) : null,
-        input.current,
-        document.querySelector<HTMLElement>('.help-button'),
-        document.getElementById('admin-main'),
-      ];
-      for (const candidato of candidatos) {
-        if (
-          !candidato?.isConnected ||
-          candidato === document.body ||
-          candidato === document.documentElement ||
-          candidato.closest('[inert], [hidden]')
-        )
-          continue;
-        candidato.focus();
-        if (document.activeElement === candidato) return;
-      }
-    });
-  }
-  function cerrarAyuda() {
-    ayudaActiva.current = false;
-    setAyuda(false);
-    restaurarFoco();
-  }
-  function iniciarRecorrido(id: RecorridoId) {
-    antesRecorrido.current = { pagina, x: window.scrollX, y: window.scrollY };
-    ayudaActiva.current = true;
-    setAyuda(false);
-    setRecorrido(id);
-  }
-  function salirRecorrido(completado: boolean, volverAyuda = true) {
-    if (completado && recorrido)
-      setCompletados((actuales) => guardarCompletado(recorrido, actuales));
-    setRecorrido(null);
-    setPagina(antesRecorrido.current.pagina);
-    setAyuda(volverAyuda);
-    ayudaActiva.current = volverAyuda;
-    requestAnimationFrame(() => {
-      window.scrollTo(antesRecorrido.current.x, antesRecorrido.current.y);
-      if (!volverAyuda) restaurarFoco();
-    });
-  }
-  const previa = normalizar(entrada);
-  function notificar(texto: string, error = false) {
-    setMensaje(texto);
-    setEsError(error);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMensaje(''), error ? 8000 : 4000);
-  }
-  function notificarError(error: unknown) {
-    notificar(
-      errorCodeOf(error) === 'AUDIO_QUEUE_FULL'
-        ? 'Audio en espera: intenta de nuevo en unos segundos. El turno no cambió.'
-        : errorMessageOf(error),
-      true,
-    );
-  }
-  async function llamar(e: React.FormEvent) {
-    e.preventDefault();
-    if (ocupado) return;
-    if (normalizar(entrada) === null) {
-      notificar(
-        entrada.trim()
-          ? 'Captura inválida: usa de 1 a 6 dígitos.'
-          : 'Escribe el número del ticket.',
-        true,
-      );
-      enfocarCaptura();
-      return;
-    }
-    setOcupado(true);
-    try {
-      const resultado = await despachar({ tipo: 'LLAMAR', entrada });
-      if (resultado.efecto === 'CAPTURA_INVALIDA')
-        notificar(
-          entrada.trim()
-            ? 'Captura inválida: usa de 1 a 6 dígitos.'
-            : 'Escribe el número del ticket.',
-          true,
-        );
-      else if (resultado.anuncio) {
-        notificar(
-          resultado.anuncio.n === actual
-            ? `Turno ${formatear(resultado.anuncio.n)} en cola de audio de nuevo.`
-            : `Turno ${formatear(resultado.anuncio.n)} en cola de audio.`,
-        );
-        setEntrada('');
-      }
-    } catch (error) {
-      notificarError(error);
-    } finally {
-      setOcupado(false);
-      enfocarCaptura();
-    }
-  }
-  async function deshacerUltimo() {
-    if (ocupado || !puedeDeshacer) return;
-    setOcupado(true);
-    try {
-      const { instantanea: nueva } = await despachar({ tipo: 'DESHACER' });
-      notificar(
-        nueva.actual === null
-          ? 'Llamado deshecho. La TV quedó sin turno actual.'
-          : `Llamado deshecho. En la TV: turno ${formatear(nueva.actual)}.`,
-      );
-    } catch (error) {
-      notificarError(error);
-    } finally {
-      setOcupado(false);
-      enfocarCaptura();
-    }
-  }
-  async function accionDeFila(hacer: () => Promise<void>) {
-    if (ocupado) return;
-    setOcupado(true);
-    try {
-      await hacer();
-    } catch (error) {
-      notificarError(error);
-    } finally {
-      setOcupado(false);
-      enfocarCaptura();
-    }
-  }
-  const anunciarDeNuevo = (n: number) =>
-    accionDeFila(async () => {
-      await despachar({ tipo: 'LLAMAR', entrada: String(n) });
-      notificar(`Turno ${formatear(n)} en cola de audio de nuevo.`);
-    });
-  const quitarTurno = (n: number) =>
-    accionDeFila(async () => {
-      await despachar({ tipo: 'QUITAR', n });
-      notificar(`Turno ${formatear(n)} quitado de la TV.`);
-    });
-  function solicitarAccion(numero: number, tipo: 'anunciar' | 'quitar') {
-    if (ocupado || pendiente) return;
-    if (omitirConfirmacion.current) {
-      void (tipo === 'anunciar' ? anunciarDeNuevo(numero) : quitarTurno(numero));
-    } else {
-      setNoPreguntar(false);
-      setPendiente({ numero, tipo });
-    }
-  }
-  function confirmarAccion() {
-    if (!pendiente || ocupado) return;
-    const { numero, tipo } = pendiente;
-    setPendiente(null);
-    if (numero !== actual && !llamados.includes(numero)) {
-      notificar('Ese turno ya no está en pantalla. No se realizó la acción.', true);
-      return;
-    }
-    if (noPreguntar) omitirConfirmacion.current = true;
-    void (tipo === 'anunciar' ? anunciarDeNuevo(numero) : quitarTurno(numero));
-  }
-  useEffect(() => {
-    function tecla(e: KeyboardEvent) {
-      if (e.key === 'F1') {
-        e.preventDefault();
-        abrirAyuda();
-      }
-    }
-    const enfocar = enfocarCaptura;
-    enfocar();
-    window.addEventListener('keydown', tecla);
-    window.addEventListener('focus', enfocar);
-    return () => {
-      window.removeEventListener('keydown', tecla);
-      window.removeEventListener('focus', enfocar);
-    };
-  }, [abrirAyuda, enfocarCaptura]);
+  const [page, setPage] = useState<OperatorPage>('turnos');
+  const [entry, setEntry] = useState('');
+  const { inputRef, helpActiveRef, focusCapture } = useCaptureFocus();
+  const { message, isError, notify, notifyError } = useNotifications();
+  const notices = useOperatorNotices({
+    snapshot: instantanea,
+    screens: pantallas,
+    audioDeliveries: entregasAudio,
+    youtubeAllowed: youtubeAdmitido,
+  });
+  const actions = useQueueActions({
+    entry,
+    clearEntry: () => setEntry(''),
+    current: actual,
+    canUndo: puedeDeshacer,
+    dispatch: despachar,
+    notify,
+    notifyError,
+    focusCapture,
+  });
+  const confirmation = useTurnConfirmation({
+    busy: actions.busy,
+    current: actual,
+    called: llamados,
+    announceAgain: actions.announceAgain,
+    removeTurn: actions.removeTurn,
+    notify,
+  });
+  const help = useHelpAndTours({
+    page,
+    setPage,
+    pending: confirmation.pending,
+    inputRef,
+    helpActiveRef,
+    focusCapture,
+  });
   useEffect(() => {
     document.title = 'Troyanos · Operador';
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
   }, []);
-  const filas = [
-    ...(actual === null ? [] : [{ n: actual, destacada: true, nota: '' }]),
-    ...llamados.map((n, i) => ({
-      n,
-      destacada: false,
-      nota: i === 0 ? 'Llamado anterior' : `Hace ${i + 1} llamados`,
-    })),
-  ];
-  const pista = !entrada.trim()
-    ? 'Se usan los dos últimos dígitos del ticket.'
-    : previa === null
-      ? 'Solo números, de 1 a 6 dígitos.'
-      : previa === actual
-        ? 'Ya está en la TV: solo se repite el anuncio.'
-        : llamados.includes(previa)
-          ? 'Está en llamados: vuelve a ser el turno actual.'
-          : 'Turno nuevo.';
-  const titulo =
-    pagina === 'turnos'
-      ? { miga: 'Turnos', etiqueta: '', titulo: 'Llamar turnos', descripcion: '' }
-      : pagina === 'diagnostico'
-        ? {
-            miga: 'Diagnósticos',
-            etiqueta: 'ESTADO OPERATIVO',
-            titulo: 'Diagnósticos',
-            descripcion: 'Información para revisar y recuperar la operación.',
-          }
-        : {
-            miga: 'Multimedia',
-            etiqueta: '',
-            titulo: 'Multimedia',
-            descripcion: '',
-          };
+
+  const parsedEntry = normalizar(entry);
+  const heading = pageTitleOf(page);
+  const touring = help.tour !== null;
   return (
     <div className="admin-shell">
-      <a href="#admin-main" className="skip-link" inert={recorrido !== null}>
+      <a href="#admin-main" className="skip-link" inert={touring}>
         Ir al contenido
       </a>
-      <aside className="sidebar" inert={recorrido !== null}>
-        <Brand />
-        <span className="nav-label">ESPACIO DE TRABAJO</span>
-        <nav aria-label="Navegación principal">
-          <button
-            aria-label="Turnos"
-            title="Turnos"
-            className={pagina === 'turnos' ? 'active' : ''}
-            aria-current={pagina === 'turnos' ? 'page' : undefined}
-            onClick={() => {
-              setPagina('turnos');
-              setTimeout(enfocarCaptura);
-            }}
-          >
-            <Icon name="receipt" />
-            <span>Turnos</span>
-            {pagina === 'turnos' && <i className="nav-active-dot" />}
-          </button>
-          <button
-            aria-label="Multimedia"
-            title="Multimedia"
-            className={pagina === 'multimedia' ? 'active' : ''}
-            aria-current={pagina === 'multimedia' ? 'page' : undefined}
-            onClick={() => {
-              setPagina('multimedia');
-              window.scrollTo({ top: 0 });
-            }}
-          >
-            <Icon name="media" />
-            <span>Multimedia</span>
-            {pagina === 'multimedia' && <i className="nav-active-dot" />}
-          </button>
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="sidebar-faculty">
-            <img src="/assets/uaq-informatica-logo.png" alt="Facultad de Informática · UAQ" />
-          </div>
-        </div>
-      </aside>
-      <div className="admin-workspace" inert={recorrido !== null}>
-        <header className="admin-topbar">
-          <div className="breadcrumb">
-            Turnero
-            <Icon name="chevron" />
-            <span>{titulo.miga}</span>
-          </div>
-          <div className="theme-controls">
-            <SizeControl notificar={notificar} />
-            <VolumeControl notificar={notificar} />
-            <button
-              type="button"
-              className="theme-switch"
-              role="switch"
-              aria-checked={tema === 'morado'}
-              aria-label="Tema morado en operador y cliente"
-              title="Cambiar el tema de ambas pantallas"
-              onClick={() => {
-                try {
-                  cambiarTema();
-                } catch {
-                  notificar('No se pudo guardar el tema. Intenta de nuevo.', true);
-                }
-              }}
-            >
-              <span className="theme-switch-track" aria-hidden="true">
-                <span className="theme-switch-thumb" />
-              </span>
-              <span>{tema === 'morado' ? 'Morado' : 'Azul'}</span>
-            </button>
-            <button className="button secondary help-button" onClick={abrirAyuda}>
-              <Icon name="info" />
-              Ayuda<kbd>F1</kbd>
-            </button>
-          </div>
-        </header>
+      <Sidebar page={page} setPage={setPage} focusCapture={focusCapture} inert={touring} />
+      <div className="admin-workspace" inert={touring}>
+        <Topbar crumb={heading.crumb} notify={notify} onOpenHelp={help.openHelp} />
         <main id="admin-main" className="admin-main" tabIndex={-1}>
-          <div className="page-heading">
-            <div>
-              {titulo.etiqueta && <span className="eyebrow">{titulo.etiqueta}</span>}
-              <h1>{titulo.titulo}</h1>
-              {titulo.descripcion && <p>{titulo.descripcion}</p>}
-            </div>
-            <div className="workspace-clock">
-              <strong>{clock.time}</strong>
-              <span>{clock.date}</span>
-            </div>
-          </div>
-          {avisos.length > 0 && (
-            <details className="operator-notices">
-              <summary>
-                <Icon name="warning" />
-                {avisos[0].split('. ')[0]}
-                {avisos.length > 1 && <span> · {avisos.length - 1} más</span>}
-              </summary>
-              <div className="operator-notices-list">
-                {avisos.map((aviso) => (
-                  <p key={aviso}>{aviso}</p>
-                ))}
+          <PageHeading heading={heading} />
+          <NoticesBanner notices={notices} />
+          {page === 'turnos' ? (
+            <div className="turns-layout">
+              <div className="entry-column">
+                <CallTurnPanel
+                  entry={entry}
+                  setEntry={setEntry}
+                  parsedEntry={parsedEntry}
+                  hint={entryHint(entry, parsedEntry, actual, llamados)}
+                  busy={actions.busy}
+                  inputRef={inputRef}
+                  onSubmit={actions.call}
+                  message={message}
+                  isError={isError}
+                />
+                <UndoPanel busy={actions.busy} canUndo={puedeDeshacer} onUndo={actions.undoLast} />
               </div>
-            </details>
-          )}
-          {pagina === 'turnos' ? (
-            <>
-              <div className="turns-layout">
-                <div className="entry-column">
-                  <section className="panel new-turn-panel">
-                    <div className="section-heading with-icon">
-                      <span className="section-icon">
-                        <Icon name="receipt" />
-                      </span>
-                      <div>
-                        <h2>Llamar turno</h2>
-                        <p>
-                          Teclea el ticket y presiona Enter. Para repetir, teclea el mismo número.
-                        </p>
-                      </div>
-                    </div>
-                    <form onSubmit={(evento) => void llamar(evento)}>
-                      <label htmlFor="turn-number">
-                        Número del ticket <span className="input-format">1 a 6 dígitos</span>
-                      </label>
-                      <div className="call-entry">
-                        <input
-                          className="turn-number-input"
-                          id="turn-number"
-                          data-help="ticket"
-                          ref={input}
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="213298"
-                          autoComplete="off"
-                          value={entrada}
-                          onChange={(e) => setEntrada(e.target.value)}
-                          aria-invalid={Boolean(entrada.trim()) && previa === null}
-                          aria-describedby="call-hint ticket-feedback"
-                        />
-                      </div>
-                      <p id="call-hint" className="field-hint">
-                        {pista}
-                      </p>
-                      <button
-                        className="button primary register-button"
-                        data-help="anunciar"
-                        disabled={ocupado}
-                      >
-                        <Icon name="volume" />
-                        Anunciar en la TV<kbd>Enter</kbd>
-                      </button>
-                    </form>
-                    <div
-                      id="ticket-feedback"
-                      className={`form-feedback ${mensaje ? (esError ? 'error' : 'success') : 'neutral'}`}
-                      role="status"
-                      aria-live="polite"
-                    >
-                      <Icon name={mensaje ? (esError ? 'warning' : 'checkCircle') : 'info'} />
-                      <span>{mensaje || 'Cada llamado suena en la TV con aviso y voz.'}</span>
-                    </div>
-                  </section>
-                  <section className="panel repeat-panel" data-help="corregir">
-                    <div className="section-heading with-icon">
-                      <span className="section-icon quiet">
-                        <Icon name="undo" />
-                      </span>
-                      <div>
-                        <h2>Corregir captura</h2>
-                        <p>Quita el último llamado de la TV, sin volver a anunciar.</p>
-                      </div>
-                    </div>
-                    <div className="undo-row">
-                      <button
-                        className="button secondary"
-                        onClick={() => void deshacerUltimo()}
-                        disabled={ocupado || !puedeDeshacer}
-                      >
-                        <Icon name="undo" />
-                        Corregir última captura
-                      </button>
-                      <span>
-                        {puedeDeshacer
-                          ? 'Revierte únicamente la última captura.'
-                          : 'No hay una captura pendiente de corrección.'}
-                      </span>
-                    </div>
-                  </section>
-                </div>
-                <section
-                  className="panel ready-panel"
-                  data-help="en-pantalla"
-                  aria-labelledby="screen-heading"
-                >
-                  <div className="ready-heading">
-                    <div>
-                      <h2 id="screen-heading">
-                        <span className="section-icon">
-                          <Icon name="monitor" />
-                        </span>
-                        En pantalla{' '}
-                        <span className="count-badge">
-                          {actual === null ? 0 : llamados.length + 1}
-                        </span>
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="cashier-ready-list">
-                    {filas.map(({ n, destacada, nota }) => (
-                      <div className={`cashier-turn ${destacada ? 'most-recent' : ''}`} key={n}>
-                        <div className="cashier-ticket">
-                          <strong>{formatear(n)}</strong>
-                          {destacada && <span>Turno actual</span>}
-                        </div>
-                        <div className="cashier-counter">
-                          {recientes
-                            .filter((e) => e.n === n)
-                            .map((e) => (
-                              <span
-                                key={e.id}
-                                className={`turn-audio turn-audio-${e.estado}`}
-                                role="status"
-                                title={e.motivo}
-                                data-anuncio-id={e.id}
-                              >
-                                <Icon
-                                  name={
-                                    e.estado === 'fallo'
-                                      ? 'warning'
-                                      : e.estado === 'reproducido'
-                                        ? 'checkCircle'
-                                        : e.estado === 'pendiente'
-                                          ? 'clock'
-                                          : 'volume'
-                                  }
-                                />
-                                {
-                                  {
-                                    pendiente: 'En espera',
-                                    reproduciendo: 'Anunciando',
-                                    reproducido: 'Anunciado',
-                                    fallo: 'Falló el audio',
-                                    descartado: 'No anunciado',
-                                  }[e.estado]
-                                }
-                              </span>
-                            ))}
-                          {destacada ? (
-                            <span className="row-ready">
-                              <i />
-                              Destacado en la TV
-                            </span>
-                          ) : (
-                            <span className="counter-dash">{nota}</span>
-                          )}
-                        </div>
-                        <div
-                          className="turn-actions"
-                          role="group"
-                          aria-label={`Acciones del turno ${formatear(n)}`}
-                        >
-                          <button
-                            type="button"
-                            className="turn-action"
-                            disabled={ocupado}
-                            aria-label={`Anunciar de nuevo el turno ${formatear(n)}`}
-                            title="Anunciar de nuevo"
-                            onClick={() => solicitarAccion(n, 'anunciar')}
-                          >
-                            <Icon name="volume" />
-                          </button>
-                          <button
-                            type="button"
-                            className="turn-action danger"
-                            disabled={ocupado}
-                            aria-label={`Quitar de la pantalla el turno ${formatear(n)}`}
-                            title="Quitar de la pantalla"
-                            onClick={() => solicitarAccion(n, 'quitar')}
-                          >
-                            <Icon name="trash" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {actual === null && (
-                      <div className="empty-state">
-                        <h3>Sin llamados en esta jornada</h3>
-                      </div>
-                    )}
-                  </div>
-                </section>
-              </div>
-            </>
-          ) : pagina === 'diagnostico' ? (
+              <OnScreenPanel
+                current={actual}
+                called={llamados}
+                recentDeliveries={ultimasEntregas(entregasAudio)}
+                busy={actions.busy}
+                onRequestAction={confirmation.requestAction}
+              />
+            </div>
+          ) : page === 'diagnostico' ? (
             <DiagnosticoPanel />
           ) : null}
-          {(pagina === 'multimedia' ||
-            (recorrido !== null && antesRecorrido.current.pagina === 'multimedia')) && (
-            <div hidden={pagina !== 'multimedia'} data-help="multimedia">
-              <MultimediaPanel notificar={notificar} />
+          {(page === 'multimedia' ||
+            (help.tour !== null && help.beforeTour.current.pagina === 'multimedia')) && (
+            <div hidden={page !== 'multimedia'} data-help="multimedia">
+              <MultimediaPanel notificar={notify} />
             </div>
           )}
           <footer className="workspace-footer">
@@ -598,61 +122,32 @@ export function OperadorPage() {
           </footer>
         </main>
       </div>
-      {mensaje && pagina === 'multimedia' && (
-        <div className={`toast ${esError ? 'error' : ''}`} role="status">
-          <Icon name={esError ? 'warning' : 'checkCircle'} />
-          {mensaje}
+      {message && page === 'multimedia' && (
+        <div className={`toast ${isError ? 'error' : ''}`} role="status">
+          <Icon name={isError ? 'warning' : 'checkCircle'} />
+          {message}
         </div>
       )}
-      {pendiente && (
-        <Modal title="¿Deseas confirmar la acción?" onClose={() => setPendiente(null)}>
-          <p className="modal-copy">
-            {pendiente.tipo === 'anunciar'
-              ? `Se anunciará de nuevo el turno ${formatear(pendiente.numero)} en la TV, con aviso y voz.`
-              : `Se quitará el turno ${formatear(pendiente.numero)} de la pantalla.`}
-          </p>
-          <label className="session-confirmation">
-            <input
-              type="checkbox"
-              checked={noPreguntar}
-              onChange={(e) => setNoPreguntar(e.target.checked)}
-            />
-            <span>No volver a mostrar durante esta sesión</span>
-          </label>
-          <p className="field-hint">
-            Aplica a Anunciar y Quitar. Al volver a abrir la aplicación se pedirá confirmación otra
-            vez.
-          </p>
-          <div className="modal-actions">
-            <button type="button" className="button secondary" onClick={() => setPendiente(null)}>
-              Cancelar
-            </button>
-            <button
-              type="button"
-              className={`button ${pendiente.tipo === 'quitar' ? 'danger' : 'primary'}`}
-              onClick={confirmarAccion}
-              disabled={ocupado}
-            >
-              {pendiente.tipo === 'anunciar' ? 'Confirmar anuncio' : 'Confirmar quitar'}
-            </button>
-          </div>
-        </Modal>
-      )}
-      {ayuda && (
-        <HelpCenter
-          onClose={cerrarAyuda}
-          onStartTour={iniciarRecorrido}
-          completados={completados}
-          youtubeAdmitido={youtubeAdmitido}
-          onDiagnostics={() => {
-            ayudaActiva.current = false;
-            setAyuda(false);
-            setPagina('diagnostico');
-            requestAnimationFrame(() => document.getElementById('admin-main')?.focus());
-          }}
+      {confirmation.pending && (
+        <ConfirmActionDialog
+          pending={confirmation.pending}
+          dontAsk={confirmation.dontAsk}
+          setDontAsk={confirmation.setDontAsk}
+          busy={actions.busy}
+          onConfirm={confirmation.confirmAction}
+          onCancel={confirmation.cancelAction}
         />
       )}
-      {recorrido && <GuidedTour id={recorrido} onNavigate={setPagina} onExit={salirRecorrido} />}
+      {help.helpOpen && (
+        <HelpCenter
+          onClose={help.closeHelp}
+          onStartTour={help.startTour}
+          completados={help.completed}
+          youtubeAdmitido={youtubeAdmitido}
+          onDiagnostics={help.openDiagnostics}
+        />
+      )}
+      {help.tour && <GuidedTour id={help.tour} onNavigate={setPage} onExit={help.exitTour} />}
     </div>
   );
 }
