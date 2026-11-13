@@ -18,8 +18,8 @@ import { renombrarConReintentos } from './escritura-atomica.js';
 export const URL_CONTENIDO = 'turnero://app/contenido';
 const VIDEOS = new Set(['.mp4', '.webm']);
 const IMAGENES = new Set(['.jpg', '.jpeg', '.png', '.webp']);
-const VOZ = /^(\d{2})\.(wav|mp3)$/i;
-const EXTENSIONES_AUDIO = ['.mp3', '.wav'] as const;
+const VOZ = /^(\d{2})\.wav$/i;
+const EXTENSIONES_AUDIO = ['.wav'] as const;
 export const LIMITE_VIDEO = 2 * 1024 ** 3;
 export const LIMITE_IMAGEN = 25 * 1024 ** 2;
 export const RESERVA_DISCO = 512 * 1024 ** 2;
@@ -189,8 +189,7 @@ export function inventariar(
         continue;
       }
       const numero = Number(coincide[1]);
-      if (!voz[numero] || coincide[2].toLowerCase() === 'mp3')
-        voz[numero] = url(base, 'voz', nombre);
+      voz[numero] = url(base, 'voz', nombre);
     } else ignorar(`voz/${nombre}`);
   }
   const aviso = EXTENSIONES_AUDIO.map((extension) => `aviso${extension}`).find((nombre) =>

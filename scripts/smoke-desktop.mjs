@@ -226,7 +226,7 @@ async function verificar() {
     assert.equal(
       await ejecutar(publica, "document.querySelector('.audio-warning')?.textContent ?? ''"),
       '',
-      'La pantalla reportó un error de audio al precargar los MP3 válidos',
+      'La pantalla reportó un error de audio al precargar los WAV válidos',
     );
     await pausa(800);
     await capturar(publica, 'anuncio-multimedia.png');

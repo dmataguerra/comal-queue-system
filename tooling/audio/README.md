@@ -2,8 +2,25 @@
 
 Los audios ya se incluyen en `contenido/`. No hace falta descargar ni instalar un sintetizador para
 usar el turnero: se generan una sola vez y la aplicación reproduce los archivos tal cual (RNF-01).
-El inventario actual prefiere MP3 no vacío y usa WAV como respaldo. El turno 40 usa `40.wav`,
-recuperado del catálogo Piper del repositorio; no existe un MP3 válido para ese turno.
+El catálogo es **solo WAV**: la aplicación ignora cualquier `.mp3` en `contenido/voz/` y el
+verificador falla si encuentra uno. Las voces 00–99 (salvo 40) provienen de la voz neuronal
+que se oía en la versión anterior (MP3 de ElevenLabs), decodificada a WAV; el turno 40, que nunca
+tuvo un MP3 válido, conserva el WAV de Piper. Inventario medido en
+[docs/audio/audio-inventory.md](../../docs/audio/audio-inventory.md).
+
+### Cómo se produjo
+
+Sin ffmpeg ni dependencias nuevas: `tooling/audio/mp3-to-wav.mjs` usa el decodificador de
+Chromium que trae Electron (`OfflineAudioContext` a 22 050 Hz, mezcla a mono, PCM de 16 bits, sin
+recortar silencios):
+
+```powershell
+npx electron tooling/audio/mp3-to-wav.mjs --delete   # NN.mp3 -> NN.wav y borra el MP3
+node tooling/audio/verify-audio.mjs --table
+```
+
+`generate-azure.mjs` y `generate-elevenlabs.mjs` ya escriben WAV (ElevenLabs se pide como PCM), así
+que no producen MP3.
 
 ## Anuncios
 
@@ -144,10 +161,10 @@ node tooling/audio/verify-audio.mjs
 ```
 
 El aviso es una síntesis determinista de dos campanas, sin muestras externas. El verificador exige
-las 100 voces y el aviso, rechaza cualquier audio vacío y comprueba la selección MP3/WAV que usará
-la aplicación. Revisa el formato de los MP3 y, para WAV, la cabecera RIFF/WAVE, PCM de 16 bits,
-duración, muestras no nulas y volumen RMS. `npm run test:desktop` decodifica en Chromium los 101
-archivos seleccionados.
+las 100 WAV y el aviso, falla si hay algún MP3 en `contenido/voz`, rechaza audio vacío y comprueba
+cabecera RIFF/WAVE, PCM de 16 bits, duración, muestras no nulas y volumen RMS. Con `--table`
+escribe `docs/audio/audio-inventory.md`. `npm run test:desktop` decodifica en Chromium los 101
+archivos.
 
 ## Licencias
 
@@ -167,4 +184,4 @@ Los WAV son salida sintetizada de frases originales de este proyecto.
 
 Generar audio es una tarea de mantenimiento, no un requisito de operación ni de instalación. `npm run verify:audio` y `npm test` validan catálogo; `test:desktop` prueba decodificación y `test:hardening`/`test:browser` verifican entregas. La cola admite seis anuncios, espera hasta 45 s y tarea de hasta 30 s; falta de archivo, voz silenciada o reproducción fallida no confirma Anunciado. Véase [anuncios](../../docs/anuncios-e-importacion.md).
 
-La selección MP3/WAV no identifica qué proveedor generó cada archivo. Las referencias de licencias anteriores describen los motores/modelos citados, no una auditoría del catálogo final. Antes de distribuir, el responsable debe verificar procedencia, atribución y términos del audio efectivamente seleccionado; precios y licencias de servicios deben comprobarse con sus fuentes vigentes. No versionar claves de API.
+El WAV no identifica qué proveedor generó cada archivo. Las referencias de licencias anteriores describen los motores/modelos citados, no una auditoría del catálogo final. Antes de distribuir, el responsable debe verificar procedencia, atribución y términos del audio efectivamente seleccionado; precios y licencias de servicios deben comprobarse con sus fuentes vigentes. No versionar claves de API.

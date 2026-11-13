@@ -88,10 +88,10 @@ test('una copia truncada se rechaza sin publicar ni dejar temporales', async () 
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-test('el protocolo sirve MP3 con el tipo MIME de audio correcto', () => {
-  assert.equal(TIPOS_MIME['.mp3'], 'audio/mpeg');
+test('el protocolo sirve WAV con el tipo MIME de audio correcto', () => {
+  assert.equal(TIPOS_MIME['.wav'], 'audio/wav');
 });
-test('reemplazar una voz con el mismo nombre cambia revisión sin alterar prioridad MP3/WAV', () => {
+test('reemplazar una voz con el mismo nombre cambia revisión sin cambiar la URL', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'comal-revision-audio-'));
   try {
     inventariar(raiz);
@@ -143,8 +143,8 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       'banner/notas.txt',
       'voz/08.wav',
       'voz/08.mp3',
-      'voz/40.mp3',
-      'voz/99.mp3',
+      'voz/40.wav',
+      'voz/99.wav',
       'voz/8.wav',
       'aviso.wav',
       'aviso.mp3',
@@ -152,7 +152,7 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       mkdirSync(join(raiz, archivo, '..'), { recursive: true });
       writeFileSync(join(raiz, archivo), 'x');
     }
-    writeFileSync(join(raiz, 'voz/40.mp3'), '');
+    writeFileSync(join(raiz, 'voz/40.wav'), '');
     const registro: string[] = [];
     const reportados = new Set<string>();
     const inventario = inventariar(
@@ -165,15 +165,16 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       `${URL_CONTENIDO}/videos/Caf%C3%A9%20lento.webm`,
     ]);
     assert.deepEqual(inventario.banner, [`${URL_CONTENIDO}/banner/evento.JPG`]);
-    assert.equal(inventario.voz[8], `${URL_CONTENIDO}/voz/08.mp3`);
+    assert.equal(inventario.voz[8], `${URL_CONTENIDO}/voz/08.wav`);
     assert.equal(inventario.voz[40], null);
-    assert.equal(inventario.voz[99], `${URL_CONTENIDO}/voz/99.mp3`);
+    assert.equal(inventario.voz[99], `${URL_CONTENIDO}/voz/99.wav`);
     assert.equal(inventario.voz[0], null);
-    assert.equal(inventario.aviso, `${URL_CONTENIDO}/aviso.mp3`);
+    assert.equal(inventario.aviso, `${URL_CONTENIDO}/aviso.wav`);
     assert.deepEqual(registro.map((m) => m.split(' ').at(-1)).sort(), [
       'banner/notas.txt',
       'videos/raro.mkv',
-      'voz/40.mp3',
+      'voz/08.mp3',
+      'voz/40.wav',
       'voz/8.wav',
     ]);
     inventariar(
@@ -181,7 +182,7 @@ test('inventario: videos, banner, voz por número y aviso; lo no soportado se ig
       messageLogger((m) => registro.push(m)),
       reportados,
     );
-    assert.equal(registro.length, 4);
+    assert.equal(registro.length, 5);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
   }
@@ -214,7 +215,7 @@ test('sembrar: copia el contenido de fábrica una sola vez; lo que borre el admi
     rmSync(raiz, { recursive: true, force: true });
   }
 });
-test('sembrar repara audio obligatorio faltante o vacío sin sobrescribir MP3 personalizados ni banners borrados', () => {
+test('sembrar repara audio obligatorio faltante o vacío ignorando MP3 y sin recrear banners borrados', () => {
   const raiz = mkdtempSync(join(tmpdir(), 'turnero-reparar-'));
   const fabrica = join(raiz, 'fabrica');
   const datos = join(raiz, 'datos');
@@ -233,20 +234,20 @@ test('sembrar repara audio obligatorio faltante o vacío sin sobrescribir MP3 pe
       messageLogger((mensaje) => registro.push(mensaje)),
     );
     assert.equal(readFileSync(join(datos, 'voz', '08.mp3'), 'utf8'), 'voz personalizada');
-    assert.equal(existsSync(join(datos, 'voz', '08.wav')), false);
+    assert.equal(readFileSync(join(datos, 'voz', '08.wav'), 'utf8'), 'voz de fábrica');
     assert.equal(readFileSync(join(datos, 'voz', '09.wav'), 'utf8'), 'voz 09');
     assert.equal(readFileSync(join(datos, 'aviso.wav'), 'utf8'), 'aviso');
     assert.equal(existsSync(join(datos, 'banner', 'logo.png')), false);
     assert.ok(
       readdirSync(join(datos, 'voz')).some((nombre) => nombre.startsWith('09.wav.incompleto-')),
     );
-    assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 2);
+    assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 3);
     sembrarContenido(
       fabrica,
       datos,
       messageLogger((mensaje) => registro.push(mensaje)),
     );
-    assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 2);
+    assert.equal(registro.filter((mensaje) => mensaje.includes('se reparó')).length, 3);
   } finally {
     rmSync(raiz, { recursive: true, force: true });
   }

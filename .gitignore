@@ -27,3 +27,6 @@ docs/*.lol
 docs/*.out
 docs/*.synctex.gz
 docs/*.toc
+
+# Scratch output.
+*.tmp
