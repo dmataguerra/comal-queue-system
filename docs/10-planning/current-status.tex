@@ -1,10 +1,10 @@
 \section{Status and planning}
 \subsection{Current baseline}
 
-Package version is 0.4.0. Current architecture is local Electron/React with JSON persistence, validated IPC and HTTP/SSE loopback. The documentation baseline starts at f0d842a and includes the coordinated interface changes in the parallel session.
+Package version is 1.0.0, the first stable delivery (tag v1.0.0, prepared 4 November 2026); candidate 0.4.1 was folded into it. Current architecture is local Electron/React with JSON persistence, validated IPC and HTTP/SSE loopback. The help center with task search, informational tours and the bundled manual PDF is part of this baseline.
 
-Implemented functionality and available tests are documented separately from their executed results. Dated September/October reports remain evidence of their own runs. The current publication status requires an approved identity and operational acceptance; this documentation update does not publish a release.
+After the release commit, branch qa/automated-regression-suite added QA tooling without changing product behavior: a local Docker TestLink stack, Selenium UI automation, a 46-scenario catalog, the qa:integration, qa:ui and qa:regression commands and one additional HTTP content test. The final regression of 8 November 2026 recorded 37 PASS, 0 FAIL and 9 BLOCKED cases that need physical hardware or a person.
 
-Evidence: package.json; docs/actualizacion-documentacion-2026-10-01.md; docs/verificacion-produccion-2026-10-01.md
+Implemented functionality and available tests are documented separately from their executed results. Dated September, October and November reports remain evidence of their own runs. Publication still requires an approved signing identity and operational acceptance: when this status was written no signed 1.0.0 installer had been published, and a documentation update does not publish a release.
 
-Stable implementation snapshot d861e5f integrates the 13 final, previously uncommitted production-readiness source/test files. The remote production-readiness ref remains f0d842a. Verification and scope are recorded in docs/actualizacion-documentacion-2026-10-01.md.
+Evidence: package.json; CHANGELOG.md; docs/publicacion-1.0.0.md; qa/management/reporte-final.md; docs/CI-CD.md

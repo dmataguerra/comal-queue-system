@@ -2,10 +2,12 @@
 
 npm test validates the audio catalog and nucleo/main/lifecycle tests. npm run lint and npm run format:check validate maintained code/config. npm run build type-checks and compiles both renderer and main entry points.
 
-test:desktop covers windows and local playback; test:browser covers HTTP/SSE, browser audio reports and logs; test:hardening covers announcement identity/capacity and asynchronous import; test:media covers local media. test:interface and test:theme cover controls, help, preferences and UI synchronization. test:destructive covers destructive regressions in isolated data.
+test:desktop covers windows and local playback; test:browser covers HTTP/SSE, browser audio reports and logs; test:hardening covers announcement identity/capacity and asynchronous import; test:media covers local media. test:interface and test:theme cover controls, help, preferences and UI synchronization. test:help covers the help center, search and guided tours; test:accessibility runs an automated axe-core audit, which is not an accessibility certification. test:destructive covers destructive regressions in isolated data.
 
 test:recovery runs the actual backup/restore CLI and stores hashes/results. test:installed needs an already built installer. test:upgrade needs a verified 0.2.0 fixture. test:full-day:preflight is a short startup check; test:full-day runs 390 real minutes. Its updated preflight checks eight confirmed announcements, saturation rejection without mutation, invalid input, correction and reload without replay. The full run drains outstanding audio before corrections/reloads, checks TV/memory/file agreement, bounds capacity retries to 120 seconds and exercises recovery halfway through the real run. A preflight PASS does not establish a full-run PASS. Manual display-scale, background and audio-control smoke scripts remain available.
 
-Evidence: package.json; scripts/; docs/prueba-jornada-real.md
+The QA commands need the local TestLink stack and a Selenium-capable browser. qa:integration runs the Selenium smoke for ticket 42 and reports it to TestLink; qa:ui runs 14 Selenium scenarios with screenshots; qa:regression runs all 46 catalog scenarios through qa/automation/regression-map.mjs and reports each result, or runs locally only with -- --no-testlink. These commands are not part of CI. A scenario with a physical or human part is reported BLOCKED, never PASS.
+
+Evidence: package.json; scripts/; qa/automation/; docs/prueba-jornada-real.md
 
 The local endurance run on 2026-10-02 completed PASS after 390 real minutes: 124/124 announcements and 422 successful integrity checks. Evidence and limits: docs/resultado-jornada-2026-10-02.md. This is source-checkout evidence; final candidate identification and target hardware acceptance remain required. No prolonged video or physical audibility was validated.

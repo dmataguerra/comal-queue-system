@@ -1,0 +1,1164 @@
+{
+  "productVersion": "1.0.0",
+  "startedAt": "2026-11-08T04:35:42.336Z",
+  "finishedAt": "2026-11-08T04:45:18.985Z",
+  "testlinkBuild": 26,
+  "allReadbackConfirmed": true,
+  "summary": {
+    "total": 46,
+    "pass": 37,
+    "fail": 0,
+    "blocked": 9
+  },
+  "results": [
+    {
+      "id": "COMAL-QA-001",
+      "status": "PASS",
+      "testlinkCase": "COMAL-52",
+      "executionId": 122,
+      "attachment": "COMAL-QA-001.png",
+      "checks": [
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-001",
+          "status": "PASS",
+          "detail": "assertions passed"
+        },
+        {
+          "kind": "integration",
+          "ref": "qa/automation/integration.mjs",
+          "status": "PASS",
+          "detail": "TestLink COMAL-3 build 24: PASS and controlled FAIL read back"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-002",
+      "status": "PASS",
+      "testlinkCase": "COMAL-4",
+      "executionId": 123,
+      "attachment": "COMAL-QA-002.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /6 dígitos|un dígito/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos-propiedades.test.ts /seis dígitos/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-002",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-003",
+      "status": "PASS",
+      "testlinkCase": "COMAL-5",
+      "executionId": 124,
+      "attachment": "COMAL-QA-003.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /vacío, letras/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /captura inválida/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-003",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-004",
+      "status": "PASS",
+      "testlinkCase": "COMAL-6",
+      "executionId": 125,
+      "attachment": "COMAL-QA-004.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /número nuevo/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos-propiedades.test.ts /modelo de seis turnos/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-004",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-005",
+      "status": "PASS",
+      "testlinkCase": "COMAL-7",
+      "executionId": 126,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/vigencia.test.ts /5 minutos exactos|cada número cuenta|reinicia los 5 minutos/",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /vencidos|vence el actual|ningún vencido/",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-006",
+      "status": "PASS",
+      "testlinkCase": "COMAL-8",
+      "executionId": 127,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/entregas-audio.test.ts /saturación/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "nucleo/cola.test.ts /limita activo/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-hardening.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 13 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-007",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-9",
+      "executionId": 128,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/servidor-web-qa.test.ts /ráfaga de 100/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": "La latencia Enter→pantalla/sonido (<1 s) debe medirse en el equipo físico identificado; el automatizado solo cubre una ráfaga HTTP."
+    },
+    {
+      "id": "COMAL-QA-008",
+      "status": "PASS",
+      "testlinkCase": "COMAL-10",
+      "executionId": 129,
+      "attachment": "COMAL-QA-008.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /ya es el actual/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /también al repetir/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-008",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-009",
+      "status": "PASS",
+      "testlinkCase": "COMAL-11",
+      "executionId": 130,
+      "attachment": "COMAL-QA-009.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /número en la lista/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-009",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-010",
+      "status": "PASS",
+      "testlinkCase": "COMAL-12",
+      "executionId": 131,
+      "attachment": "COMAL-QA-010.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /ya salió de la lista/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-010",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-011",
+      "status": "PASS",
+      "testlinkCase": "COMAL-13",
+      "executionId": 132,
+      "attachment": "COMAL-QA-011.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /restaura el estado previo|sin llamado previo|dos veces seguidas/",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /deshacer difunde/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-011",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-012",
+      "status": "PASS",
+      "testlinkCase": "COMAL-14",
+      "executionId": 133,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/vigencia.test.ts /deshacer después de un vencimiento/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /sobrevive a reabrir/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/persistencia.test.ts /deshacer no se persiste/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /conserva deshacer|ya no hay qué deshacer/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-013",
+      "status": "PASS",
+      "testlinkCase": "COMAL-53",
+      "executionId": 134,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/entregas-audio.test.ts /dos llamadas del mismo número/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "nucleo/cola.test.ts /55 termina antes de 66/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-media.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 54 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-014",
+      "status": "PASS",
+      "testlinkCase": "COMAL-16",
+      "executionId": 135,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/cola.test.ts /watchdog|descarta por espera/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/entregas-audio.test.ts /caducidad/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "scripts/audio-lifecycle.test.mjs /audio:/",
+          "status": "PASS",
+          "detail": "11 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-015",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-17",
+      "executionId": 136,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/cola.test.ts /un fallo permite continuar/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-audio-controls.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 52 s"
+        }
+      ],
+      "pendingManual": "Confirmar en el equipo físico que la voz ausente/volumen 0 no produce sonido."
+    },
+    {
+      "id": "COMAL-QA-016",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-18",
+      "executionId": 137,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/volumen-youtube.test.ts /./",
+          "status": "PASS",
+          "detail": "4 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "scripts/youtube-lifecycle.test.mjs /ducking/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-media.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 54 s"
+        }
+      ],
+      "pendingManual": "Comprobar de oído la atenuación y recuperación del video en la TV/altavoces reales."
+    },
+    {
+      "id": "COMAL-QA-017",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-19",
+      "executionId": 138,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/contenido.test.ts /inventario/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-destructive-regressions.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 2 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-background.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 4 s"
+        }
+      ],
+      "pendingManual": "YouTube de escritorio requiere Internet real y aceptación en la instalación objetivo."
+    },
+    {
+      "id": "COMAL-QA-018",
+      "status": "PASS",
+      "testlinkCase": "COMAL-20",
+      "executionId": 139,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/contenido.test.ts /inventario/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-destructive-regressions.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 2 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-media.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 54 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-019",
+      "status": "PASS",
+      "testlinkCase": "COMAL-21",
+      "executionId": 140,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /un fallo persistente/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/espacio-estado.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/escritura-atomica.test.ts /./",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-hardening.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 13 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-020",
+      "status": "PASS",
+      "testlinkCase": "COMAL-22",
+      "executionId": 141,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/persistencia.test.ts /reinicio diario|la fecha de la jornada/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/reinicio-diario.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /cambio de día|sobrevive a reabrir/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/vigencia.test.ts /al reabrir/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-021",
+      "status": "PASS",
+      "testlinkCase": "COMAL-54",
+      "executionId": 142,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/persistencia.test.ts /dañado|corrupto|E/S/",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/config.test.ts /JSON dañado/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/migracion-02.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/carpeta-datos.test.ts /./",
+          "status": "PASS",
+          "detail": "5 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /estado inicial estaba corrupto/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-022",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-24",
+      "executionId": 143,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-desktop.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 89 s"
+        }
+      ],
+      "pendingManual": "Requiere 1 y 2 monitores físicos y desconectar/reconectar la TV."
+    },
+    {
+      "id": "COMAL-QA-023",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-25",
+      "executionId": 144,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-full-day.mjs --preflight",
+          "status": "PASS",
+          "detail": "exit 0 in 51 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-desktop.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 89 s"
+        }
+      ],
+      "pendingManual": "La jornada monitorizada completa (npm run test:full-day, 6.5 h) y sin Internet debe ejecutarse en el equipo objetivo."
+    },
+    {
+      "id": "COMAL-QA-024",
+      "status": "PASS",
+      "testlinkCase": "COMAL-26",
+      "executionId": 145,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/seguridad-ipc.test.ts /volúmenes|volumen/",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/servidor-web.test.ts /./",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-audio-controls.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 52 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-025",
+      "status": "PASS",
+      "testlinkCase": "COMAL-55",
+      "executionId": 146,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/config.test.ts /valores parciales|clave heredada|JSON dañado|config.json ausente/",
+          "status": "PASS",
+          "detail": "4 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-media.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 54 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-026",
+      "status": "PASS",
+      "testlinkCase": "COMAL-28",
+      "executionId": 147,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/contenido.test.ts /administración: importa|inventario|protocolo sirve MP3/",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-media.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 54 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-027",
+      "status": "PASS",
+      "testlinkCase": "COMAL-29",
+      "executionId": 148,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/contenido.test.ts /importación rechaza|archivo vacío|copia truncada|copia lenta/",
+          "status": "PASS",
+          "detail": "4 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-hardening.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 13 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-028",
+      "status": "PASS",
+      "testlinkCase": "COMAL-30",
+      "executionId": 149,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/contenido.test.ts /importa sin sobrescribir|reemplazar una voz|concurrentes/",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-destructive-regressions.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 2 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-029",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-31",
+      "executionId": 150,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/youtube.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "scripts/youtube-lifecycle.test.mjs /sin video o transporte/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-browser.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 8 s"
+        }
+      ],
+      "pendingManual": "La pérdida de red real con YouTube de escritorio requiere Internet en el equipo objetivo."
+    },
+    {
+      "id": "COMAL-QA-030",
+      "status": "PASS",
+      "testlinkCase": "COMAL-32",
+      "executionId": 151,
+      "attachment": "COMAL-QA-030.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "nucleo/turnos.test.ts /quitar\\(\\)/",
+          "status": "PASS",
+          "detail": "6 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/store.test.ts /quitar difunde/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-interface.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 14 s"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-030",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-031",
+      "status": "PASS",
+      "testlinkCase": "COMAL-33",
+      "executionId": 152,
+      "attachment": "COMAL-QA-031.png",
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-interface.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 14 s"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-031",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-032",
+      "status": "PASS",
+      "testlinkCase": "COMAL-34",
+      "executionId": 153,
+      "attachment": "COMAL-QA-032.png",
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-help.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 170 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-accessibility.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 9 s"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-032",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-033",
+      "status": "PASS",
+      "testlinkCase": "COMAL-35",
+      "executionId": 154,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-help.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 170 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-034",
+      "status": "PASS",
+      "testlinkCase": "COMAL-56",
+      "executionId": 155,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/manual-usuario.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/safe-file.test.ts /./",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-help.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 170 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-035",
+      "status": "PASS",
+      "testlinkCase": "COMAL-57",
+      "executionId": 156,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/diagnostico.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-desktop.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 89 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-036",
+      "status": "PASS",
+      "testlinkCase": "COMAL-38",
+      "executionId": 157,
+      "attachment": "COMAL-QA-036.png",
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-theme.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 7 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-display-scale.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 3 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-interface.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 14 s"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-036",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-037",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-39",
+      "executionId": 158,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-accessibility.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 9 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-display-scale.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 3 s"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-background.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 4 s"
+        }
+      ],
+      "pendingManual": "La legibilidad a distancia en la TV física es una verificación humana."
+    },
+    {
+      "id": "COMAL-QA-038",
+      "status": "PASS",
+      "testlinkCase": "COMAL-58",
+      "executionId": 159,
+      "attachment": "COMAL-QA-038.png",
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/servidor-web-qa.test.ts /SSE/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-browser.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 8 s"
+        },
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-038",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-039",
+      "status": "PASS",
+      "testlinkCase": "COMAL-59",
+      "executionId": 160,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/servidor-web-qa.test.ts /rechaza|limita cuerpos|conserva bytes|contiene errores/",
+          "status": "PASS",
+          "detail": "5 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/politica-csp.test.ts /./",
+          "status": "PASS",
+          "detail": "2 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/smoke-browser.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 8 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-040",
+      "status": "PASS",
+      "testlinkCase": "COMAL-60",
+      "executionId": 161,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/seguridad-ipc.test.ts /IPC/",
+          "status": "PASS",
+          "detail": "4 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/ipc-channels.test.ts /./",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-041",
+      "status": "PASS",
+      "testlinkCase": "COMAL-61",
+      "executionId": 162,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "integration",
+          "ref": "qa/automation/integration.mjs",
+          "status": "PASS",
+          "detail": "TestLink COMAL-3 build 24: PASS and controlled FAIL read back"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-042",
+      "status": "PASS",
+      "testlinkCase": "COMAL-44",
+      "executionId": 163,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/respaldo.test.ts /./",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "smoke",
+          "ref": "scripts/validar-recuperacion.mjs",
+          "status": "PASS",
+          "detail": "exit 0 in 2 s"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-043",
+      "status": "BLOCKED",
+      "testlinkCase": "COMAL-45",
+      "executionId": 164,
+      "attachment": null,
+      "checks": [],
+      "pendingManual": "Solo existe el instalador 0.3.0; se necesita el instalador 1.0.0 identificado y un Windows estándar para npm run test:installed / test:upgrade."
+    },
+    {
+      "id": "COMAL-QA-044",
+      "status": "PASS",
+      "testlinkCase": "COMAL-63",
+      "executionId": 165,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/servidor-web-contenido.test.ts /abrir carpeta/",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-045",
+      "status": "PASS",
+      "testlinkCase": "COMAL-64",
+      "executionId": 166,
+      "attachment": "COMAL-QA-045.png",
+      "checks": [
+        {
+          "kind": "selenium",
+          "ref": "qa/automation/ui.mjs COMAL-QA-045",
+          "status": "PASS",
+          "detail": "assertions passed"
+        }
+      ],
+      "pendingManual": null
+    },
+    {
+      "id": "COMAL-QA-046",
+      "status": "PASS",
+      "testlinkCase": "COMAL-65",
+      "executionId": 167,
+      "attachment": null,
+      "checks": [
+        {
+          "kind": "unit",
+          "ref": "main/log.test.ts /./",
+          "status": "PASS",
+          "detail": "3 tests, 0 failures"
+        },
+        {
+          "kind": "unit",
+          "ref": "main/temporales.test.ts /./",
+          "status": "PASS",
+          "detail": "1 tests, 0 failures"
+        }
+      ],
+      "pendingManual": null
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 \subsection{Persistence and legacy database migration}
 
-The active product stores config.json, estado.json, turnero.log and editable contenido/ under the effective data directory, normally \%APPDATA\%/comal-local/datos in packaged 0.3.1. TURNERO\_DATOS overrides it for isolated tests; development defaults to the repository root.
+The active product stores config.json, estado.json, turnero.log and editable contenido/ under the effective data directory, normally \%APPDATA\%/comal-local/datos in packaged builds since 0.3.1 (including 1.0.0). TURNERO\_DATOS overrides it for isolated tests; development defaults to the repository root.
 
 estado.json contains fecha, actual, llamados, optional desde timestamps and guardadoEn. Undo history and announcement deliveries are session memory and do not survive restart. Only same-day, unexpired numbers return; old announcements never replay automatically.
 

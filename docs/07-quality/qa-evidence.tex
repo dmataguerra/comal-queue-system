@@ -1,0 +1,134 @@
+\section{QA evidence: executed scope and limits}
+\label{sec:qa-evidence}
+
+\subsection{Evidence boundary}
+
+This section reports only evidence present in the repository and the dated QA
+reports. A designed scenario is not an executed scenario. The record has two
+layers: the phase 4 integration (a real local Selenium run, its TestLink
+read-back and infrastructure checks, shown first) and the final regression of
+all 46 catalog scenarios on 8 November 2026 (phases 5 and 6, below). Neither
+layer certifies physical audio, displays, the installer or the full-day run.
+
+% Wrapped table cell: the p column type is unavailable with this class/package set.
+\providecommand{\QACell}[2]{\parbox[t]{#1}{\raggedright #2\strut}}
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Document ID} & \textbf{Observed action} & \textbf{Recorded result}\\
+\midrule
+\Code{COMAL-QA-001} & \QACell{0.56\textwidth}{Selenium enters \Code{42} in the operator view and the public view reads \Code{42}.} & \textcolor{comalgreen}{PASS}\\
+\Code{COMAL-QA-003} & \QACell{0.56\textwidth}{Selenium submits an invalid capture and verifies that state is not mutated.} & \textcolor{comalgreen}{PASS}\\
+\Code{COMAL-QA-011} & \QACell{0.56\textwidth}{Selenium corrects the last capture without announcing it.} & \textcolor{comalgreen}{PASS}\\
+\Code{INFRA-ADAPTER-001} & \QACell{0.56\textwidth}{Deliberate negative report is written and read back as TestLink status \Code{f}.} & \textcolor{comalgreen}{PASS (control)}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\Evidence{qa/management/reporte-final.md; qa/management/alcance-y-entregable-final.md}
+
+The integration report identifies TestLink case \Code{COMAL-50}, build
+\Code{7}, execution \Code{9}, and the negative control in execution
+\Code{10}. The latest UI suite created build \Code{13} and read back
+executions \Code{21}, \Code{22}, and \Code{23} as PASS. These identifiers are
+the observed mappings for those runs; they are not interchangeable with the
+documentary \Code{COMAL-QA-xxx} identifiers.
+
+\subsection{TestLink and Docker infrastructure}
+
+The local TestLink stack is defined in \Code{qa/testlink/compose.yaml}. It
+binds the web service to \Code{127.0.0.1:8090}, uses pinned image digests, and
+persists the database, application, logs, and upload areas in named volumes.
+The repository records successful checks for login, authenticated index,
+XML-RPC, and HTTP blocking of \Code{/install} and \Code{/docs}. Recreating
+containers without removing volumes preserved the schema, catalog, executions,
+and attachment record.
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Repository evidence}\\
+\midrule
+TestLink & \QACell{0.74\textwidth}{\Code{qa/testlink/setup.ps1}, \Code{verify.ps1}, XML-RPC adapter, local-only endpoint}\\
+Catalog & \QACell{0.74\textwidth}{46 scenarios in \Code{qa/catalogo/casos-prueba.json} (43 original, 044--046 added to close coverage gaps); 12 use cases and traceability matrix}\\
+Persistence & \QACell{0.74\textwidth}{MySQL and TestLink named volumes; persistence check recorded as PASS}\\
+Automation & \QACell{0.74\textwidth}{\Code{qa:integration}, \Code{qa:ui} (14 Selenium scenarios) and \Code{qa:regression} (all 46 scenarios)}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Final regression (phases 5 and 6)}
+
+All 46 catalog scenarios were executed on 8 November 2026 (04:35--04:45 UTC)
+with \Code{npm run qa:regression} against Comal 1.0.0 and reported to TestLink
+build 26. Every result was read back from TestLink and matched.
+
+\begin{center}
+\begin{tabular}{lrl}
+\textbf{Status} & \textbf{Cases} & \textbf{Meaning}\\\hline
+\textcolor{comalgreen}{PASS} & 37 & every automated check passed\\
+\textcolor{comalred}{FAIL} & 0 & ---\\
+\textcolor{comalamber}{BLOCKED} & 9 & automated checks passed; physical or human part pending\\
+\end{tabular}
+\end{center}
+
+Each case is mapped in \Code{qa/automation/regression-map.mjs} to unit and
+integration tests (\Code{node:test}, 65 file/pattern mappings, each required to
+match at least one test), existing Electron smoke suites, 14 Selenium
+end-to-end scenarios and the TestLink integration smoke. A case with a manual
+component is never reported as passed. BLOCKED cases: 007 (latency on target
+hardware), 015 and 016 (audible checks), 017 and 029 (real Internet for desktop
+YouTube), 022 (one/two physical monitors), 023 (6.5-hour full-day run; only the
+preflight ran), 037 (legibility at distance) and 043 (1.0.0 installer not yet
+built). Per-case evidence: \Code{docs/qa/regression-summary.json}.
+
+\subsection{Attachments and local screenshots}
+
+The 14 Selenium screenshots were attached to their TestLink executions as
+\Code{<case>.png}. The earlier attachment error \Code{6002} was caused by
+TestLink's 20-character file-name limit and is resolved (see Known
+limitations). Representative screenshots are kept in the documentation
+directory:
+
+\begin{center}
+\IfFileExists{qa/evidence/COMAL-QA-001-publica-42.jpg}{%
+\includegraphics[width=.47\textwidth]{qa/evidence/COMAL-QA-001-publica-42.jpg}\hfill
+}{}
+\IfFileExists{qa/evidence/COMAL-QA-003-invalid-capture.jpg}{%
+\includegraphics[width=.47\textwidth]{qa/evidence/COMAL-QA-003-invalid-capture.jpg}
+}{}
+\end{center}
+\emph{Execution evidence for \Code{COMAL-QA-001} and \Code{COMAL-QA-003}.}
+
+\begin{center}
+\IfFileExists{qa/evidence/COMAL-QA-011-correct-last-capture.jpg}{%
+\includegraphics[width=.47\textwidth]{qa/evidence/COMAL-QA-011-correct-last-capture.jpg}
+}{}
+\end{center}
+\emph{Execution evidence for \Code{COMAL-QA-011}.}
+
+\subsection{Pending validation and limitations}
+
+\begin{itemize}
+\item Execute the nine BLOCKED cases on the target hardware, including the
+  6.5-hour \Code{npm run test:full-day}, and build the 1.0.0 installer for
+  \Code{test:installed}/\Code{test:upgrade}.
+\item Keep the TestLink image and PHP 7.4 compatibility limitation under
+  review; the repository does not claim current upstream support.
+\end{itemize}
+
+\subsection{Reproducible commands}
+
+From the repository root, the evidence documents the following PowerShell
+workflow. Credentials remain in the ignored local \Code{qa/testlink/.env}.
+
+\begin{CodeBlock}
+.\qa\testlink\setup.ps1
+.\qa\testlink\verify.ps1
+npm run qa:integration
+npm run qa:ui
+node qa\automation\import-catalog.mjs
+npm run qa:regression
+\end{CodeBlock}
+
+The final regression above was produced by the last command.

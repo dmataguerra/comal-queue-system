@@ -4,9 +4,11 @@ Versión estable: **1.0.0**. Consulte [las notas de versión](publicacion-1.0.0.
 
 ## Guías vigentes
 
+- [Reporte final de QA](../qa/management/reporte-final.md): regresión del 8 de noviembre de 2026 sobre 1.0.0, con 46 escenarios, 37 PASS, 0 FAIL y 9 BLOCKED. Se complementa con el [alcance](../qa/management/alcance-y-entregable-final.md), el [plan](../qa/management/plan.md), el [catálogo](../qa/catalogo/README.md), [TestLink local](../qa/testlink/README.md), el [resumen por caso](qa/regression-summary.json) y las [presentaciones](qa/README-presentation.md).
 - [Informe QA del 3 de noviembre de 2026](qa-2026-11-03.md): pruebas del último commit de ayuda, correcciones, evidencia y límites para publicación.
+- [Formularios de retroalimentación](feedback/formularios-retroalimentacion.md) para clientes y cajeros, con sus imágenes.
 - [Centro de ayuda interactivo](centro-ayuda-interactivo.md) y [evaluación de la feature](evaluacion-centro-ayuda.md): tareas, recorridos informativos y acceso local al PDF.
-- [Continuar el manual de usuario](user-manual/README.md): edición visual del 2 de noviembre, fuente editable y generación del PDF.
+- [Continuar el manual de usuario](user-manual/README.md): edición visual 0.4.0 del 2 de noviembre, fuente editable y generación del PDF.
 - [Manual del operador](user-manual/operador.md) y [requisitos multimedia](user-manual/multimedia-requisitos.md).
 - [Instalación desde USB](../README-INSTALACION-USB.md).
 - [Arquitectura](current-architecture.md), [anuncios e importación](anuncios-e-importacion.md) y [escala pública](escalado-pantalla-publica.md).
@@ -19,26 +21,31 @@ Versión estable: **1.0.0**. Consulte [las notas de versión](publicacion-1.0.0.
 
 - [Manual de Usuario](user-manual/Manual-de-Usuario.pdf).
 - [Guía Rápida de Caja](user-manual/Guia-Rapida-Cajero.pdf).
-- [Manual técnico](technical-documentation.pdf), fuentes en [technical-documentation.tex](technical-documentation.tex) y **57 capítulos** de `01-product/` a `11-reference/`.
+- [Manual técnico](technical-documentation.pdf), fuentes en [technical-documentation.tex](technical-documentation.tex) y **58 capítulos** de `01-product/` a `11-reference/`.
 
 Las fuentes técnicas están actualizadas a Electron/JSON/IPC/HTTP-SSE. NestJS/SQLite/Socket.IO solo corresponden a la versión histórica y migración.
 
-Los PDF de usuario se generan desde `user-manual/operador.md`; el técnico desde los mismos capítulos LaTeX, mediante el generador alternativo de ReportLab. Generar el PDF no acredita compilación TeX.
+Los PDF de usuario se generan desde `user-manual/operador.md` con ReportLab (se requiere Python con ReportLab y pypdf):
 
 ```powershell
-python docs/user-manual/source/build_user_manuals.py
-python docs/source/build_technical_documentation.py
+py -3 docs/user-manual/source/build_user_manuals.py
 ```
 
-Se requiere Python con ReportLab y pypdf. Para la composición LaTeX original, desde `docs/`, usar la clase incluida y paquetes de `preamble.tex`:
+El manual técnico se compila con LuaLaTeX desde `docs/`, usando la clase incluida y los paquetes de `preamble.tex` (`minted` necesita Pygments y `-shell-escape`):
 
 ```powershell
-latexmk -pdf -shell-escape -interaction=nonstopmode -halt-on-error technical-documentation.tex
+latexmk -lualatex -shell-escape -interaction=nonstopmode -halt-on-error technical-documentation.tex
 ```
+
+El exportador anterior `source/build_technical_documentation.py` (ReportLab) se conserva, pero no admite las tablas y figuras del capítulo de evidencia QA y se detiene al encontrarlas.
 
 Revisar páginas renderizadas y registrar resultados tras regenerar.
 
-Para comprobar enlaces, fuentes, rutas HTTP, comandos y contenido PDF, ejecutar `python docs/source/verify_documentation.py` (también requiere pdfplumber). El informe se guarda en `test-results/docs-validation/resultado.json`; no sustituye la revisión visual ni las pruebas de aplicación.
+Para comprobar enlaces, fuentes, rutas HTTP, comandos y contenido PDF, ejecutar `py -3 docs/source/verify_documentation.py` (también requiere pdfplumber). El informe se guarda en `test-results/docs-validation/resultado.json`; no sustituye la revisión visual ni las pruebas de aplicación.
+
+## Revisión del 12 de noviembre de 2026
+
+Se contrastaron las guías vigentes, los 58 capítulos técnicos y los documentos de `qa/` con el código de la rama `qa/automated-regression-suite`. Se actualizaron las referencias de versión a 1.0.0, el número de escenarios de QA (46), los comandos `qa:*`, las pruebas de ayuda y accesibilidad de CI y la forma de compilar el PDF técnico. Los informes fechados no se modificaron.
 
 ## Informes históricos
 

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+  :root { --navy:#073e70; --blue:#0758bd; --gold:#f7ad19; --muted:#607a91; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100vw; height:100vh; overflow:hidden; font-family:Montserrat,sans-serif; background:#fff; }
+  .wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 20px 0 100px; }
+  .col { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+  .txt { width:740px; }
+  .brand { display:flex; align-items:center; gap:22px; color:var(--blue); font-weight:800; letter-spacing:.14em; font-size:56px; position:absolute; left:100px; top:60px; z-index:2; }
+  .brand img { image-rendering:pixelated; }
+  h1 { color:var(--navy); font-weight:800; font-size:92px; line-height:1.08; margin-top:60px; }
+  h1 b { color:var(--blue); }
+  p { color:var(--muted); font-weight:500; font-size:36px; margin-top:32px; }
+  .bar { width:120px; height:12px; border-radius:6px; background:var(--gold); margin-top:40px; }
+  canvas { display:block; }
+</style>
+</head>
+<body>
+<div class="brand"><img src="../../readme/media/trojano.png" width="110" height="110">COMAL++</div>
+<div class="wrap">
+  <div class="txt">
+    <h1>Ayúdanos a mejorar.<br><b>Contesta este formulario.</b></h1>
+    <div class="bar"></div>
+  </div>
+  <div id="slot"></div>
+</div>
+<script>
+const URL_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSd1BQxdd6b2mT4WxXwKxlGBiYqqquF_0sX3tZJZu2AIfSEEsg/viewform";
+const C = { navy:"#073e70", blue:"#0758bd", gold:"#f7ad19" };
+const qr = qrcode(0, "Q"); qr.addData(URL_FORM); qr.make();
+const n = qr.getModuleCount(), quiet = 3, cells = n + quiet * 2;
+const s = Math.floor(1040 / cells), size = s * cells;
+const cv = document.createElement("canvas"); cv.width = cv.height = size;
+const g = cv.getContext("2d");
+g.fillStyle = "#fff"; g.fillRect(0, 0, size, size);
+const inFinder = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+const rr = (x, y, w, h, rad, fill) => { g.beginPath(); g.roundRect(x, y, w, h, rad); g.fillStyle = fill; g.fill(); };
+
+// módulos "líquidos": celda completa, se funde con sus vecinas y redondea solo las esquinas libres
+const dark = (r, c) => r >= 0 && c >= 0 && r < n && c < n && qr.isDark(r, c) && !inFinder(r, c);
+for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+  if (!dark(r, c)) continue;
+  const up = dark(r - 1, c), dn = dark(r + 1, c), lf = dark(r, c - 1), rt = dark(r, c + 1), R = s / 2;
+  g.beginPath();
+  g.roundRect((c + quiet) * s, (r + quiet) * s, s + .5, s + .5,
+    [up || lf ? 0 : R, up || rt ? 0 : R, dn || rt ? 0 : R, dn || lf ? 0 : R]);
+  g.fillStyle = C.navy; g.fill();
+}
+// ojos: cuadrado redondeado + centro circular, conservando la proporción 1:1:3:1:1
+const eye = (r0, c0) => {
+  const x = (c0 + quiet) * s, y = (r0 + quiet) * s;
+  rr(x, y, 7 * s, 7 * s, 2 * s, C.navy);
+  rr(x + s, y + s, 5 * s, 5 * s, 1.2 * s, "#fff");
+  g.beginPath(); g.arc(x + 3.5 * s, y + 3.5 * s, 1.5 * s, 0, Math.PI * 2); g.fillStyle = C.blue; g.fill();
+};
+eye(0, 0); eye(0, n - 7); eye(n - 7, 0);
+document.getElementById("slot").appendChild(cv);
+</script>
+</body>
+</html>

@@ -9,3 +9,7 @@ Playback acknowledgements prove software execution, not physical audio. Multiple
 Public release requires approved signing identity and hardware/endurance acceptance; documentation alone does not satisfy those gates.
 
 Evidence: README.md; docs/operacion-recuperacion.md
+
+\textbf{QA tooling defect 6002 (resolved 7 November 2026).} TestLink returned attachment insertion error \Code{6002} (``Error inserting attachment on DB'') for every Selenium UI screenshot, while the integration smoke attachment was accepted. Root cause: the pinned TestLink 1.9.20 image (\Code{ghcr.io/neiesc/testlink-code:testlink\_1\_9\_20\_fixed}) sets \Code{allowed\_filenames\_regexp} so that a file-name stem may contain at most 20 characters from \Code{[a-zA-Z0-9\_-]}. \Code{publica-42.png} passed; \Code{COMAL-QA-001-publica-42.png} did not. The same image was rejected under its long name and accepted as \Code{COMAL-QA-011.png}. \Code{report-ui.mjs} and \Code{regression.mjs} now upload evidence named after the case ID. This was a QA infrastructure defect, not a Comal product defect.
+
+Evidence: qa/testlink (container \Code{/var/www/html/config.inc.php}); qa/management/reporte-final.md

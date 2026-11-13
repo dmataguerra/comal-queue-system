@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=block" rel="stylesheet">
+<style>
+  :root { --navy:#073e70; --blue:#0758bd; --mid:#075091; --sky:#9fe7f6; --gold:#f7ad19; --paper:#f8fbfe; --muted:#607a91; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100vw; height:100vh; overflow:hidden; font-family:Montserrat,sans-serif; }
+  .v { display:none; width:100vw; height:100vh; position:relative; overflow:hidden; }
+  .v.on { display:block; }
+  /* fondo de ondas como la TV */
+  .waves { position:absolute; inset:0; background:linear-gradient(120deg,var(--navy) 0%,var(--mid) 55%,var(--blue) 100%); }
+  .waves::before,.waves::after { content:""; position:absolute; border-radius:50%; }
+  .waves::before { width:140vw; height:120vh; left:-30vw; top:62%; background:rgba(159,231,246,.14); }
+  .waves::after  { width:90vw; height:90vh; right:-35vw; top:-55%; background:rgba(159,231,246,.12); }
+  .light { position:absolute; inset:0; background:linear-gradient(135deg,#ffffff 0%,var(--paper) 60%,#e3f1fd 100%); }
+  .light::after { content:""; position:absolute; width:80vw; height:100vh; right:-30vw; bottom:-60vh; border-radius:50%; background:linear-gradient(120deg,var(--blue),var(--navy)); opacity:.9; }
+  .pix { image-rendering:pixelated; }
+  .brand { position:absolute; display:flex; align-items:center; gap:18px; color:#fff; font-weight:600; letter-spacing:.14em; font-size:22px; }
+  .brand img { width:64px; height:64px; }
+  h1 { color:#fff; font-weight:800; line-height:1.05; letter-spacing:-.01em; }
+  .tag { display:inline-block; background:var(--gold); color:var(--navy); font-weight:800; letter-spacing:.14em; font-size:20px; padding:8px 18px; border-radius:999px; }
+  .sub { color:rgba(255,255,255,.85); font-weight:500; }
+  .shot { position:absolute; border-radius:22px; overflow:hidden; box-shadow:0 30px 80px rgba(0,20,60,.45); border:6px solid rgba(255,255,255,.9); background:#fff; }
+  .shot img { width:100%; height:100%; object-fit:cover; object-position:left top; display:block; }
+  .tv { position:absolute; background:#0b1624; border-radius:18px; padding:14px; box-shadow:0 30px 80px rgba(0,20,60,.5); }
+  .tv img { width:100%; height:100%; object-fit:cover; display:block; border-radius:6px; }
+  .tv::after { content:""; position:absolute; left:42%; right:42%; bottom:-34px; height:34px; background:#0b1624; border-radius:0 0 8px 8px; }
+  .step { position:absolute; top:40px; right:56px; color:rgba(255,255,255,.55); font-weight:700; font-size:22px; letter-spacing:.2em; }
+  .dark { color:var(--navy); }
+</style>
+</head>
+<body>
+
+<!-- ============ ENCABEZADO CLIENTES 1600x400 ============ -->
+<section class="v" id="header-clientes">
+  <div class="waves"></div>
+  <div class="brand" style="left:64px;top:48px"><img class="pix" src="../../readme/media/trojano.png">COMAL++ · EL COMAL · FIF-UAQ</div>
+  <div style="position:absolute;left:64px;top:150px;width:860px">
+    <h1 style="font-size:64px">¿Cómo te fue esperando<br>tu pedido?</h1>
+    <p class="sub" style="font-size:26px;margin-top:18px">2 minutos · anónimo · nos ayuda a mejorar la pantalla</p>
+  </div>
+  <div class="tv" style="right:70px;top:46px;width:540px;height:304px;transform:rotate(-3deg)"><img src="../../readme/media/publica.png"></div>
+</section>
+
+<!-- ============ ENCABEZADO CAJEROS 1600x400 ============ -->
+<section class="v" id="header-cajeros">
+  <div class="waves"></div>
+  <div class="brand" style="left:64px;top:48px"><img class="pix" src="../../readme/media/trojano.png">COMAL++ · EQUIPO DE MOSTRADOR</div>
+  <div style="position:absolute;left:64px;top:150px;width:820px">
+    <h1 style="font-size:62px">Comal++ desde<br>el mostrador</h1>
+    <p class="sub" style="font-size:26px;margin-top:18px">Tu opinión es la más importante · 4 minutos</p>
+  </div>
+  <div class="shot" style="right:70px;top:44px;width:560px;height:330px;transform:rotate(3deg)"><img src="../../readme/media/operador.png"></div>
+</section>
+
+<!-- ============ CLIENTES · SECCIÓN 1: regla de los dos dígitos 1600x700 ============ -->
+<section class="v" id="clientes-1">
+  <div class="waves"></div>
+  <div class="step">1 / 3</div>
+  <div style="position:absolute;left:80px;top:70px"><span class="tag">TU EXPERIENCIA DE HOY</span>
+    <h1 style="font-size:54px;margin-top:22px">Tu ticket dice uno,<br>la pantalla dice otro</h1>
+    <p class="sub" style="font-size:26px;margin-top:16px">Se anuncian solo los <b style="color:var(--gold)">dos últimos dígitos</b>.</p></div>
+  <div style="position:absolute;left:80px;bottom:80px;display:flex;align-items:center;gap:40px">
+    <div style="background:#fff;border-radius:18px;padding:26px 40px;box-shadow:0 20px 50px rgba(0,0,0,.3)">
+      <div style="font-size:18px;letter-spacing:.2em;color:var(--muted);font-weight:700">TICKET</div>
+      <div style="font-size:84px;font-weight:600;color:var(--navy);letter-spacing:.06em">2132<span style="color:var(--blue);background:#fff2d1;border-radius:10px;padding:0 6px;box-shadow:inset 0 -8px 0 var(--gold)">98</span></div>
+    </div>
+    <div style="font-size:90px;color:var(--gold);font-weight:800">→</div>
+  </div>
+  <div style="position:absolute;right:90px;top:90px;width:470px;height:520px;background:linear-gradient(180deg,#fff,#eaf4fd);border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div style="font-size:24px;letter-spacing:.2em;font-weight:700;color:var(--blue)">PEDIDO LISTO</div>
+    <div style="font-size:240px;font-weight:800;color:var(--navy);line-height:1">98</div>
+    <div style="font-size:20px;color:var(--muted);margin-top:16px">Presenta tu ticket al recoger</div>
+  </div>
+</section>
+
+<!-- ============ CLIENTES · SECCIÓN 2: pantalla y audio ============ -->
+<section class="v" id="clientes-2">
+  <div class="light"></div>
+  <div class="step dark" style="color:var(--muted)">2 / 3</div>
+  <div style="position:absolute;left:80px;top:90px;width:560px"><span class="tag">PANTALLA Y AUDIO</span>
+    <h1 class="dark" style="font-size:54px;margin-top:22px">¿Lo viste?<br>¿Lo escuchaste?</h1>
+    <p style="font-size:26px;margin-top:20px;color:var(--muted);font-weight:500;line-height:1.4">Califica el número, la voz, la TV y el contenido que se muestra mientras esperas.</p>
+    <div style="display:flex;gap:16px;margin-top:34px">
+      <img src="../../readme/media/monitor.svg" style="width:56px" class="pix"><img src="../../readme/media/volume.svg" style="width:56px" class="pix"><img src="../../readme/media/play.svg" style="width:56px" class="pix">
+    </div></div>
+  <div class="tv" style="right:80px;top:110px;width:780px;height:440px"><img src="../../readme/media/publica.png"></div>
+</section>
+
+<!-- ============ CLIENTES · SECCIÓN 3 / CAJEROS · SECCIÓN 3: texto libre ============ -->
+<section class="v" id="libre">
+  <div class="waves"></div>
+  <div class="step">3 / 3</div>
+  <div style="position:absolute;left:80px;top:110px;width:900px"><span class="tag">CUÉNTANOS MÁS</span>
+    <h1 style="font-size:64px;margin-top:24px">Quejas, ideas y lo que<br>cambiarías. Sin filtro.</h1>
+    <p class="sub" style="font-size:28px;margin-top:22px;line-height:1.4">Leemos cada respuesta. Si eres de la FIF,<br>ponte técnico: nos sirve muchísimo.</p></div>
+  <div style="position:absolute;right:120px;top:130px;width:400px;height:440px">
+    <div style="position:absolute;right:0;top:0;width:360px;background:#fff;border-radius:28px 28px 28px 6px;padding:30px;font-size:26px;font-weight:600;color:var(--navy);box-shadow:0 20px 50px rgba(0,0,0,.3)">“No escuché mi número…”</div>
+    <div style="position:absolute;left:0;top:170px;width:360px;background:var(--gold);border-radius:28px 28px 6px 28px;padding:30px;font-size:26px;font-weight:700;color:var(--navy);box-shadow:0 20px 50px rgba(0,0,0,.3)">“¿Y si el número fuera más grande?”</div>
+    <div style="position:absolute;right:20px;top:330px;width:300px;background:var(--sky);border-radius:28px 28px 28px 6px;padding:26px;font-size:24px;font-weight:600;color:var(--navy);box-shadow:0 20px 50px rgba(0,0,0,.3)">“Me encanta el multimedia”</div>
+  </div>
+</section>
+
+<!-- ============ CAJEROS · SECCIÓN 1: uso diario ============ -->
+<section class="v" id="cajeros-1">
+  <div class="light"></div>
+  <div class="step" style="color:var(--muted)">1 / 3</div>
+  <div style="position:absolute;left:80px;top:90px;width:560px"><span class="tag">USO DIARIO</span>
+    <h1 class="dark" style="font-size:54px;margin-top:22px">Ticket, Enter…<br>¿y luego?</h1>
+    <p style="font-size:26px;margin-top:20px;color:var(--muted);font-weight:500;line-height:1.4">Llamar, repetir, corregir, quitar, volumen, multimedia y ayuda. ¿Qué tan cómodo es cada uno?</p>
+    <div style="display:flex;gap:14px;margin-top:30px;font-weight:700;color:var(--navy);font-size:22px">
+      <span style="border:3px solid var(--navy);border-radius:10px;padding:6px 14px">Enter</span>
+      <span style="border:3px solid var(--navy);border-radius:10px;padding:6px 14px">F1</span>
+      <span style="border:3px solid var(--navy);border-radius:10px;padding:6px 14px">Esc</span></div></div>
+  <div class="shot" style="right:80px;top:90px;width:820px;height:520px"><img src="../../readme/media/operador.png"></div>
+</section>
+
+<!-- ============ CAJEROS · SECCIÓN 2: clientes ============ -->
+<section class="v" id="cajeros-2">
+  <div class="waves"></div>
+  <div class="step">2 / 3</div>
+  <div style="position:absolute;left:80px;top:90px;width:560px"><span class="tag">LO QUE ESCUCHAS EN EL MOSTRADOR</span>
+    <h1 style="font-size:54px;margin-top:22px">“¿Ya está<br>el 45?”</h1>
+    <p class="sub" style="font-size:26px;margin-top:20px;line-height:1.4">Tú escuchas lo que los clientes no nos dicen. Cuéntanos qué te preguntan y de qué se quejan.</p></div>
+  <div class="shot" style="right:80px;top:110px;width:840px;height:470px;border-color:rgba(159,231,246,.9)"><img src="../../readme/media/dos-pantallas.png" style="object-position:center"></div>
+</section>
+
+<!-- ============ GRACIAS (cierre / carrusel) ============ -->
+<section class="v" id="gracias">
+  <div class="waves"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <img class="pix" src="../../readme/media/trojano.png" style="width:120px;height:120px">
+    <h1 style="font-size:72px;margin-top:24px">¡Gracias!</h1>
+    <p class="sub" style="font-size:30px;margin-top:16px">Lo que nos digas lo verás en la pantalla de El Comal.</p>
+  </div>
+</section>
+
+<script>
+  const id = new URLSearchParams(location.search).get('v') || 'header-clientes';
+  document.getElementById(id).classList.add('on');
+</script>
+</body>
+</html>

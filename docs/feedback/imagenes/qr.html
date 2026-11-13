@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+  :root { --navy:#073e70; --blue:#0758bd; --mid:#075091; --sky:#9fe7f6; --gold:#f7ad19; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100vw; height:100vh; overflow:hidden; font-family:Montserrat,sans-serif; }
+  .bg { position:absolute; inset:0; background:linear-gradient(135deg,var(--navy),var(--mid) 55%,var(--blue)); overflow:hidden; }
+  .bg::before,.bg::after { content:""; position:absolute; border-radius:50%; background:rgba(159,231,246,.13); }
+  .bg::before { width:150%; height:70%; left:-25%; top:72%; }
+  .bg::after  { width:90%; height:60%; right:-40%; top:-30%; }
+  .card { position:absolute; background:#fff; border-radius:36px; padding:36px; box-shadow:0 30px 80px rgba(0,15,50,.45); }
+  /* borde pixel art de 3 escalones */
+  .card::before { content:""; position:absolute; inset:-14px; border-radius:46px; border:6px dashed rgba(247,173,25,.9); }
+  canvas { display:block; image-rendering:pixelated; }
+  .brand { display:flex; align-items:center; gap:16px; color:#fff; font-weight:700; letter-spacing:.16em; }
+  .brand img { image-rendering:pixelated; }
+  h1 { color:#fff; font-weight:800; line-height:1.05; }
+  .tag { display:inline-block; background:var(--gold); color:var(--navy); font-weight:800; letter-spacing:.14em; padding:10px 22px; border-radius:999px; }
+  .sub { color:rgba(255,255,255,.88); font-weight:500; }
+  .pixline { height:12px; background:repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 24px); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div id="root"></div>
+<script>
+const URL_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSd1BQxdd6b2mT4WxXwKxlGBiYqqquF_0sX3tZJZu2AIfSEEsg/viewform";
+const C = { navy:"#073e70", blue:"#0758bd", gold:"#f7ad19" };
+const layout = new URLSearchParams(location.search).get("v") || "vertical";
+
+function drawQR(px) {
+  const qr = qrcode(0, "H"); qr.addData(URL_FORM); qr.make();
+  const n = qr.getModuleCount(), quiet = 2, cells = n + quiet * 2;
+  const s = Math.floor(px / cells), size = s * cells;
+  const cv = document.createElement("canvas"); cv.width = cv.height = size;
+  const g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+  g.fillStyle = "#fff"; g.fillRect(0, 0, size, size);
+  const inFinder = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+  // módulos de datos: "píxeles" cuadrados con sombra de 1/6 para efecto bit
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (!qr.isDark(r, c) || inFinder(r, c)) continue;
+    const x = (c + quiet) * s, y = (r + quiet) * s;
+    g.fillStyle = C.navy; g.fillRect(x, y, s, s);
+    g.fillStyle = C.blue; g.fillRect(x, y, s, Math.max(1, Math.round(s / 6)));
+  }
+  // ojos: marco azul marino, centro azul con brillo dorado en esquina (estilo pixel)
+  const eye = (r0, c0) => {
+    const x = (c0 + quiet) * s, y = (r0 + quiet) * s;
+    g.fillStyle = C.navy; g.fillRect(x, y, 7 * s, 7 * s);
+    g.fillStyle = "#fff"; g.fillRect(x + s, y + s, 5 * s, 5 * s);
+    g.fillStyle = C.blue; g.fillRect(x + 2 * s, y + 2 * s, 3 * s, 3 * s);
+    g.fillStyle = C.gold; g.fillRect(x + 2 * s, y + 2 * s, s, s);
+  };
+  eye(0, 0); eye(0, n - 7); eye(n - 7, 0);
+  // logo central (≈ 22% del ancho, dentro del margen de corrección H)
+  const logoCells = Math.round(n * 0.22) | 1;
+  const lx = Math.floor((cells - logoCells) / 2) * s;
+  g.fillStyle = "#fff"; g.fillRect(lx - s, lx - s, (logoCells + 2) * s, (logoCells + 2) * s);
+  g.fillStyle = C.navy; g.fillRect(lx, lx, logoCells * s, logoCells * s);
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => { const p = Math.round(s * 0.6); g.drawImage(img, lx + p, lx + p, logoCells * s - 2 * p, logoCells * s - 2 * p); res(cv); };
+    img.src = "../../readme/media/trojano.png";
+  });
+}
+
+const tpl = {
+  vertical: q => `
+    <div class="brand" style="position:absolute;left:80px;top:70px;font-size:24px"><img src="../../readme/media/trojano.png" width="64" height="64">COMAL++ · EL COMAL · FIF</div>
+    <div style="position:absolute;left:80px;top:180px;right:80px">
+      <span class="tag" style="font-size:22px">TU OPINIÓN CUENTA</span>
+      <h1 style="font-size:76px;margin-top:26px">¿Cómo te fue<br>esperando tu pedido?</h1>
+    </div>
+    <div class="card" style="left:50%;top:470px;transform:translateX(-50%);padding:28px" id="slot"></div>
+    <div style="position:absolute;left:0;right:0;bottom:70px;text-align:center">
+      <p class="sub" style="font-size:34px;font-weight:700;color:#fff">Escanéame · 2 minutos · anónimo</p>
+      <div class="pixline" style="width:420px;margin:26px auto 0"></div>
+    </div>`,
+  tv: q => `
+    <div class="brand" style="position:absolute;left:110px;top:90px;font-size:26px"><img src="../../readme/media/trojano.png" width="72" height="72">COMAL++ · EL COMAL · FIF</div>
+    <div style="position:absolute;left:110px;top:260px;width:900px">
+      <span class="tag" style="font-size:24px">TU OPINIÓN CUENTA</span>
+      <h1 style="font-size:96px;margin-top:30px">¿Cómo te fue<br>esperando<br>tu pedido?</h1>
+      <p class="sub" style="font-size:38px;margin-top:34px">Escanea el código · <b style="color:var(--gold)">2 minutos</b> · anónimo</p>
+      <div class="pixline" style="width:480px;margin-top:40px"></div>
+    </div>
+    <div class="card" style="right:150px;top:50%;transform:translateY(-50%)" id="slot"></div>`,
+  solo: q => `<div class="card" style="left:50%;top:50%;transform:translate(-50%,-50%);padding:28px;box-shadow:none" id="slot"></div>`
+};
+const qrPx = { vertical: 600, tv: 640, solo: 900 }[layout];
+document.getElementById("root").innerHTML = tpl[layout]();
+if (layout === "solo") document.querySelector(".bg").style.background = "#fff";
+drawQR(qrPx).then(cv => { document.getElementById("slot").appendChild(cv); document.title = "ready"; });
+</script>
+</body>
+</html>
